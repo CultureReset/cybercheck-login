@@ -13,14 +13,20 @@ var _policies = {
 };
 
 async function loadAddons() {
-  var apiData = await CC.dashboard.getAddons();
-  if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-    _addons = apiData.map(function(a) {
-      return { id: a.id, name: a.name || '', description: a.description || '', price: a.price || 0, category: a.category || 'extra' };
-    });
-    _addonIdCounter = _addons.length;
-  } else if (_addons.length === 0) {
-    // Fallback for first-time setup only
+  try {
+    var apiData = await CC.dashboard.getAddons();
+    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
+      _addons = apiData.map(function(a) {
+        return { id: a.id, name: a.name || '', description: a.description || '', price: a.price || 0, category: a.category || 'extra' };
+      });
+      _addonIdCounter = _addons.length;
+    }
+  } catch(e) {
+    console.warn('Could not load addons from database:', e);
+  }
+
+  // Always show defaults if nothing loaded from DB
+  if (_addons.length === 0) {
     _addons = [
       { id: 1, name: 'Mini Dock', description: '8\'4" x 44" platform for gear, yoga, sunbathing.', price: 50.00, category: 'dock' },
       { id: 2, name: 'X Dock', description: '5\' x 5\' floating dock, holds a 58-qt cooler.', price: 50.00, category: 'dock' },
