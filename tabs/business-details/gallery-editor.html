@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery Editor</title>
+    <link rel="stylesheet" href="details.css">
+    <style>
+        .gallery-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .gallery-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 4px;
+        }
+
+        .gallery-header .card-desc {
+            font-size: 13px;
+            color: #657786;
+        }
+
+        .photo-count-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e8edff;
+            color: #667eea;
+            white-space: nowrap;
+        }
+
+        /* Photo Grid */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 0;
+        }
+
+        .photo-slot {
+            aspect-ratio: 1;
+            background: #f0f3f7;
+            border-radius: 12px;
+            border: 2px dashed #e1e8ed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-slot:hover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .photo-slot.has-photo {
+            border-style: solid;
+            border-color: #e1e8ed;
+            background: #e8edff;
+        }
+
+        .photo-slot.has-photo:hover {
+            border-color: #667eea;
+        }
+
+        .photo-emoji {
+            font-size: 48px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .photo-slot .photo-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            line-height: 1;
+        }
+
+        .photo-slot:hover .photo-remove {
+            display: flex;
+        }
+
+        /* Caption overlay */
+        .caption-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(28, 41, 56, 0.85);
+            padding: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .photo-slot:hover .caption-overlay,
+        .caption-overlay.editing {
+            opacity: 1;
+        }
+
+        .caption-overlay input {
+            width: 100%;
+            padding: 8px 10px;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 12px;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .caption-overlay input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .caption-overlay input:focus {
+            outline: none;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Caption display below photo */
+        .photo-caption-display {
+            font-size: 11px;
+            color: #657786;
+            text-align: center;
+            margin-top: 4px;
+            padding: 0 6px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: absolute;
+            bottom: 6px;
+            left: 0;
+            right: 0;
+        }
+
+        /* Add Photo slot */
+        .photo-add {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 12px;
+            border: 2px dashed #667eea;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .photo-add:hover {
+            background: #f0f3ff;
+            border-style: solid;
+        }
+
+        .photo-add .plus {
+            font-size: 32px;
+            line-height: 1;
+        }
+
+        /* Display count setting */
+        .settings-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+        }
+
+        .settings-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 6px;
+        }
+
+        .settings-card .card-desc {
+            font-size: 13px;
+            color: #657786;
+            margin-bottom: 16px;
+        }
+
+        .display-count-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .count-option {
+            padding: 12px 24px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+
+        .count-option:hover {
+            border-color: #667eea;
+        }
+
+        .count-option.active {
+            border-color: #667eea;
+            background: #667eea;
+        }
+
+        .count-option .count-num {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c2938;
+            display: block;
+        }
+
+        .count-option.active .count-num {
+            color: white;
+        }
+
+        .count-option .count-label {
+            font-size: 11px;
+            color: #657786;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .count-option.active .count-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .photo-emoji {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1>Photo Gallery</h1>
+                <div class="subtitle">Manage photos that appear on your public business page</div>
+            </div>
+        </div>
+
+        <!-- Gallery Card -->
+        <div class="gallery-card">
+            <div class="gallery-header">
+                <div>
+                    <h2>Gallery Photos</h2>
+                    <div class="card-desc">Click an empty slot to add a photo, or hover over existing photos to edit captions or remove them.</div>
+                </div>
+                <span class="photo-count-badge" id="photo-count-badge">0 photos</span>
+            </div>
+
+            <div class="photo-grid" id="photo-grid">
+                <!-- Built by JS -->
+            </div>
+        </div>
+
+        <!-- Display Count Setting -->
+        <div class="settings-card">
+            <h3>Photos on Public Page</h3>
+            <div class="card-desc">Choose how many photos to display on your public bio page gallery section.</div>
+            <div class="display-count-options" id="display-count-options">
+                <div class="count-option" data-count="6" onclick="setDisplayCount(6)">
+                    <span class="count-num">6</span>
+                    <span class="count-label">photos</span>
+                </div>
+                <div class="count-option" data-count="9" onclick="setDisplayCount(9)">
+                    <span class="count-num">9</span>
+                    <span class="count-label">photos</span>
+                </div>
+                <div class="count-option" data-count="12" onclick="setDisplayCount(12)">
+                    <span class="count-num">12</span>
+                    <span class="count-label">photos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Indicator -->
+    <div class="save-indicator" id="save-indicator">Saved</div>
+
+    <script src="details.js"></script>
+    <script>
+        // Emoji sets for demo "photo upload"
+        var FOOD_EMOJIS = [
+            '🍕', '🍔', '🌮', '🍣', '🍰', '🧁', '🥐', '🍩',
+            '🥗', '🍝', '🍜', '🥘', '🍗', '🥩', '🧀', '🍪',
+            '🥧', '🍦', '🥑', '🥖', '🍞', '🥮', '🍱', '🫕'
+        ];
+        var BUSINESS_EMOJIS = [
+            '🏪', '💈', '🏋️', '🧖', '🔧', '🛠️', '🏗️', '💅',
+            '✂️', '🧴', '🪴', '🛋️', '📦', '🎨', '🧵', '💐',
+            '🪑', '🖼️', '🏠', '🚿', '🪞', '🧹', '🧰', '🔨'
+        ];
+
+        var photos = [];
+        var displayCount = 9;
+        var nextId = 1;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            Details.init();
+
+            // Load existing gallery data
+            var stored = Details.get('biopage.gallery_photos');
+            if (Array.isArray(stored) && stored.length > 0) {
+                photos = stored;
+                // Track next ID
+                photos.forEach(function(p) {
+                    var numId = parseInt(p.id);
+                    if (numId >= nextId) nextId = numId + 1;
+                });
+            }
+
+            // Load display count setting
+            var storedCount = Details.get('biopage.gallery_display_count');
+            if (storedCount && [6, 9, 12].indexOf(storedCount) !== -1) {
+                displayCount = storedCount;
+            }
+
+            renderGrid();
+            updateDisplayCountUI();
+
+            // Notify parent
+            window.parent.postMessage({ type: 'app_loaded', app: 'gallery-editor' }, '*');
+        });
+
+        // Render the photo grid
+        function renderGrid() {
+            var grid = document.getElementById('photo-grid');
+            var html = '';
+
+            // Render existing photos
+            photos.forEach(function(photo, index) {
+                html += '<div class="photo-slot has-photo" id="slot-' + photo.id + '">';
+                html += '  <button class="photo-remove" onclick="removePhoto(\'' + photo.id + '\')" title="Remove photo">&times;</button>';
+                html += '  <span class="photo-emoji">' + photo.emoji + '</span>';
+                html += '  <div class="caption-overlay" id="caption-overlay-' + photo.id + '">';
+                html += '    <input type="text" placeholder="Add caption..." value="' + escapeAttr(photo.caption || '') + '" onfocus="showCaptionOverlay(\'' + photo.id + '\')" onblur="hideCaptionOverlay(\'' + photo.id + '\')" oninput="updateCaption(\'' + photo.id + '\', this.value)">';
+                html += '  </div>';
+                if (photo.caption) {
+                    html += '  <div class="photo-caption-display">' + escapeHtml(photo.caption) + '</div>';
+                }
+                html += '</div>';
+            });
+
+            // Add photo button
+            html += '<div class="photo-add" onclick="addPhoto()">';
+            html += '  <span class="plus">+</span>';
+            html += '  <span>Add Photo</span>';
+            html += '</div>';
+
+            grid.innerHTML = html;
+
+            // Update count badge
+            var badge = document.getElementById('photo-count-badge');
+            badge.textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
+        }
+
+        // Add a new photo (demo: random emoji)
+        function addPhoto() {
+            var allEmojis = FOOD_EMOJIS.concat(BUSINESS_EMOJIS);
+            // Pick a random emoji not already used (if possible)
+            var usedEmojis = photos.map(function(p) { return p.emoji; });
+            var available = allEmojis.filter(function(e) { return usedEmojis.indexOf(e) === -1; });
+            if (available.length === 0) available = allEmojis;
+
+            var emoji = available[Math.floor(Math.random() * available.length)];
+            var newPhoto = {
+                id: String(nextId++),
+                emoji: emoji,
+                caption: ''
+            };
+
+            photos.push(newPhoto);
+            renderGrid();
+            saveGallery();
+        }
+
+        // Remove a photo
+        function removePhoto(id) {
+            photos = photos.filter(function(p) { return p.id !== id; });
+            renderGrid();
+            saveGallery();
+        }
+
+        // Update a photo's caption
+        function updateCaption(id, value) {
+            var photo = photos.find(function(p) { return p.id === id; });
+            if (photo) {
+                photo.caption = value;
+                Details.debouncedSave('biopage.gallery_photos', JSON.parse(JSON.stringify(photos)), 400);
+            }
+        }
+
+        // Show caption overlay (keep visible while editing)
+        function showCaptionOverlay(id) {
+            var overlay = document.getElementById('caption-overlay-' + id);
+            if (overlay) overlay.classList.add('editing');
+        }
+
+        // Hide caption overlay after editing
+        function hideCaptionOverlay(id) {
+            var overlay = document.getElementById('caption-overlay-' + id);
+            if (overlay) overlay.classList.remove('editing');
+            // Re-render to update caption display below the photo
+            renderGrid();
+            saveGallery();
+        }
+
+        // Set display count
+        function setDisplayCount(count) {
+            displayCount = count;
+            updateDisplayCountUI();
+            Details.save('biopage.gallery_display_count', count);
+        }
+
+        // Update display count buttons
+        function updateDisplayCountUI() {
+            var options = document.querySelectorAll('.count-option');
+            options.forEach(function(opt) {
+                var c = parseInt(opt.getAttribute('data-count'));
+                if (c === displayCount) {
+                    opt.classList.add('active');
+                } else {
+                    opt.classList.remove('active');
+                }
+            });
+        }
+
+        // Save gallery to shared data
+        function saveGallery() {
+            Details.save('biopage.gallery_photos', JSON.parse(JSON.stringify(photos)));
+        }
+
+        // Escape HTML for display
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Escape for attribute values
+        function escapeAttr(str) {
+            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Handle data updates from other tabs
+        function onDataUpdated() {
+            var stored = Details.get('biopage.gallery_photos');
+            if (Array.isArray(stored)) {
+                photos = stored;
+                renderGrid();
+            }
+        }
+    </script>
+</body>
+</html>

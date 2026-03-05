@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: #1c2938;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #657786;
+            font-size: 14px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.success { border-left-color: #27ae60; }
+        .stat-card.warning { border-left-color: #f39c12; }
+        .stat-card.danger { border-left-color: #e74c3c; }
+        .stat-card.info { border-left-color: #3498db; }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            font-size: 13px;
+            color: #657786;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1c2938;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            color: #27ae60;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.negative {
+            color: #e74c3c;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .quick-actions h2 {
+            font-size: 18px;
+            color: #1c2938;
+            margin-bottom: 20px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .action-btn.secondary:hover {
+            background: #f7f9fc;
+        }
+
+        .action-icon {
+            font-size: 24px;
+        }
+
+        /* Activity Feed */
+        .activity-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .activity-section h2 {
+            font-size: 18px;
+            color: #1c2938;
+            margin-bottom: 20px;
+        }
+
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f7f9fc;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s;
+        }
+
+        .activity-item:hover {
+            background: #eef2f7;
+        }
+
+        .activity-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1c2938;
+            margin-bottom: 4px;
+        }
+
+        .activity-description {
+            font-size: 13px;
+            color: #657786;
+            margin-bottom: 6px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #8899a6;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #657786;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Dashboard Overview</h1>
+            <p>Welcome back! Here's what's happening with your business today.</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">AI Conversations</span>
+                    <span class="stat-icon">💬</span>
+                </div>
+                <div class="stat-value" id="conversations-count">Loading...</div>
+                <div class="stat-change">
+                    <span>↗</span>
+                    <span id="conversations-change">+0% from last week</span>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <span class="stat-title">Revenue This Month</span>
+                    <span class="stat-icon">💰</span>
+                </div>
+                <div class="stat-value" id="revenue-count">Loading...</div>
+                <div class="stat-change">
+                    <span>↗</span>
+                    <span id="revenue-change">+0% from last month</span>
+                </div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-header">
+                    <span class="stat-title">Total Customers</span>
+                    <span class="stat-icon">👥</span>
+                </div>
+                <div class="stat-value" id="customers-count">Loading...</div>
+                <div class="stat-change">
+                    <span>↗</span>
+                    <span id="customers-change">+0 this week</span>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <span class="stat-title">Active Workflows</span>
+                    <span class="stat-icon">⚡</span>
+                </div>
+                <div class="stat-value" id="workflows-count">Loading...</div>
+                <div class="stat-change">
+                    <span>→</span>
+                    <span id="workflows-change">Running smoothly</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+                <button class="action-btn" onclick="quickAction('add-product')">
+                    <span class="action-icon">➕</span>
+                    <span>Add Product/Service</span>
+                </button>
+                <button class="action-btn" onclick="quickAction('send-sms')">
+                    <span class="action-icon">💬</span>
+                    <span>Send SMS Campaign</span>
+                </button>
+                <button class="action-btn" onclick="quickAction('new-booking')">
+                    <span class="action-icon">📅</span>
+                    <span>View Bookings</span>
+                </button>
+                <button class="action-btn secondary" onclick="quickAction('train-ai')">
+                    <span class="action-icon">🤖</span>
+                    <span>Train AI Assistant</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+            <h2>Recent Activity</h2>
+            <div class="activity-feed" id="activity-feed">
+                <!-- Activity items will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load dashboard data
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardStats();
+            loadActivityFeed();
+        });
+
+        function loadDashboardStats() {
+            // Mock data - In production, this would call /api/dashboard/stats
+            const mockStats = {
+                conversations: { count: 342, change: 23 },
+                revenue: { count: 5234.50, change: 18 },
+                customers: { count: 127, change: 12 },
+                workflows: { count: 5, change: 0 }
+            };
+
+            // Update stats
+            document.getElementById('conversations-count').textContent = mockStats.conversations.count.toLocaleString();
+            document.getElementById('conversations-change').textContent = `+${mockStats.conversations.change}% from last week`;
+
+            document.getElementById('revenue-count').textContent = `$${mockStats.revenue.count.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            document.getElementById('revenue-change').textContent = `+${mockStats.revenue.change}% from last month`;
+
+            document.getElementById('customers-count').textContent = mockStats.customers.count.toLocaleString();
+            document.getElementById('customers-change').textContent = `+${mockStats.customers.change} this week`;
+
+            document.getElementById('workflows-count').textContent = mockStats.workflows.count;
+        }
+
+        function loadActivityFeed() {
+            // Mock activity data - In production, this would call /api/activity/recent
+            const mockActivities = [
+                {
+                    icon: '📅',
+                    title: 'New Booking Received',
+                    description: 'Sarah Johnson booked "Deep Sea Fishing" for March 15',
+                    time: '5 minutes ago'
+                },
+                {
+                    icon: '⭐',
+                    title: '5-Star Review',
+                    description: 'Mike Davis left a review: "Amazing experience!"',
+                    time: '23 minutes ago'
+                },
+                {
+                    icon: '💬',
+                    title: 'SMS Campaign Sent',
+                    description: 'Weekend Special campaign delivered to 127 customers',
+                    time: '1 hour ago'
+                },
+                {
+                    icon: '🔗',
+                    title: 'Instagram Connected',
+                    description: 'Successfully connected Instagram account',
+                    time: '3 hours ago'
+                },
+                {
+                    icon: '🤖',
+                    title: 'AI Training Updated',
+                    description: 'Added 5 new Q&A pairs to AI knowledge base',
+                    time: '5 hours ago'
+                }
+            ];
+
+            const feedContainer = document.getElementById('activity-feed');
+
+            if (mockActivities.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+
+            feedContainer.innerHTML = mockActivities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon">${activity.icon}</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-description">${activity.description}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function quickAction(action) {
+            // Send message to parent dashboard to navigate
+            switch(action) {
+                case 'add-product':
+                    if (window.parent) {
+                        window.parent.postMessage({
+                            type: 'navigate',
+                            app: 'menu'
+                        }, '*');
+                    }
+                    break;
+                case 'send-sms':
+                    if (window.parent) {
+                        window.parent.postMessage({
+                            type: 'navigate',
+                            app: 'sms'
+                        }, '*');
+                    }
+                    break;
+                case 'new-booking':
+                    if (window.parent) {
+                        window.parent.postMessage({
+                            type: 'navigate',
+                            app: 'booking'
+                        }, '*');
+                    }
+                    break;
+                case 'train-ai':
+                    alert('AI Training feature coming soon!');
+                    break;
+            }
+        }
+
+        // Reload stats every 30 seconds
+        setInterval(loadDashboardStats, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.DS_Store
+*.log
+.vscode/
+
+# SSH keys - NEVER commit these
+12345
+12345.pub
+id_rsa
+id_ed25519
+*.pem
+*.key

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Feeds - Business Details</title>
+    <link rel="stylesheet" href="details.css">
+    <style>
+        /* Platform rows */
+        .platform-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .platform-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .platform-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .platform-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 22px;
+        }
+
+        .platform-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .platform-icon.instagram { background: linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7); color: white; }
+        .platform-icon.facebook { background: #1877f2; color: white; }
+        .platform-icon.google { background: #e8f0fe; color: #4285f4; }
+        .platform-icon.tiktok { background: #010101; color: white; }
+        .platform-icon.twitter { background: #15202b; color: white; }
+
+        .platform-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .platform-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1c2938;
+        }
+        .platform-handle {
+            font-size: 13px;
+            color: #657786;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .platform-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-connect {
+            padding: 7px 18px;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #667eea;
+            color: white;
+        }
+        .btn-connect:hover {
+            background: #5568d3;
+        }
+
+        .btn-disconnect {
+            padding: 7px 14px;
+            border: 2px solid #fdd;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff0f0;
+            color: #e74c3c;
+            transition: all 0.2s;
+        }
+        .btn-disconnect:hover {
+            background: #fdd;
+        }
+
+        .connected-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e8f8ef;
+            color: #27ae60;
+        }
+
+        /* Settings panel under connected platforms */
+        .platform-settings {
+            padding: 0 22px 22px;
+            display: none;
+        }
+        .platform-settings.open {
+            display: block;
+        }
+
+        .settings-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-top: 1px solid #f0f3f7;
+        }
+
+        .settings-section {
+            padding: 14px 16px;
+            background: #f7f9fc;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .settings-row:last-child {
+            margin-bottom: 0;
+        }
+        .settings-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #657786;
+        }
+
+        /* Feed preview */
+        .preview-section {
+            margin-top: 14px;
+        }
+        .preview-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #657786;
+            margin-bottom: 8px;
+        }
+        .feed-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .feed-preview.list-mode {
+            grid-template-columns: 1fr;
+        }
+        .feed-preview.compact-mode {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+        .feed-preview.compact-mode .feed-item {
+            aspect-ratio: 4/3;
+            font-size: 18px;
+            border-radius: 6px;
+        }
+        .feed-item {
+            aspect-ratio: 1;
+            background: #f0f3f7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .feed-preview.list-mode .feed-item {
+            aspect-ratio: auto;
+            flex-direction: row;
+            gap: 10px;
+            padding: 10px 14px;
+            justify-content: flex-start;
+            font-size: 20px;
+        }
+        .list-item-text {
+            display: none;
+            font-size: 12px;
+            color: #999;
+        }
+        .feed-preview.list-mode .list-item-text {
+            display: block;
+        }
+
+        /* Expand/collapse toggle for settings */
+        .settings-expand {
+            font-size: 12px;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 4px 0;
+            user-select: none;
+        }
+        .settings-expand:hover {
+            color: #5568d3;
+        }
+
+        @media (max-width: 600px) {
+            .platform-row {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .platform-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1>&#x1f4f1; Social Feeds</h1>
+            <div class="subtitle">Connect social accounts and configure how feeds appear on your landing page</div>
+        </div>
+    </div>
+
+    <!-- Platform List -->
+    <div class="platform-list" id="platform-list">
+        <!-- Rendered by JS -->
+    </div>
+</div>
+
+<!-- Save Indicator -->
+<div class="save-indicator" id="save-indicator">Saved</div>
+
+<script src="details.js"></script>
+<script>
+(function() {
+    // Platform definitions
+    const PLATFORMS = [
+        {
+            id: 'instagram',
+            name: 'Instagram',
+            icon: '\uD83D\uDCF7',
+            iconClass: 'instagram',
+            settingsKey: 'instagram',
+            handleKey: 'handle',
+            placeholderEmojis: ['\uD83C\uDF82', '\uD83C\uDF70', '\uD83C\uDF69', '\uD83C\uDF66', '\uD83C\uDF6A', '\uD83C\uDF67', '\uD83C\uDF53', '\uD83E\uDDC1', '\uD83C\uDF81']
+        },
+        {
+            id: 'facebook',
+            name: 'Facebook',
+            icon: 'f',
+            iconClass: 'facebook',
+            settingsKey: 'facebook',
+            handleKey: 'page',
+            placeholderEmojis: ['\uD83D\uDC4D', '\u2764\uFE0F', '\uD83D\uDE0D', '\uD83D\uDE02', '\uD83D\uDE2E', '\uD83D\uDE22', '\uD83D\uDCAC', '\uD83D\uDCF0', '\uD83C\uDF89']
+        },
+        {
+            id: 'google_business',
+            name: 'Google Business / Reviews',
+            icon: 'G',
+            iconClass: 'google',
+            settingsKey: 'google',
+            handleKey: 'name',
+            placeholderEmojis: ['\u2B50', '\u2B50', '\u2B50', '\u2B50', '\u2B50', '\u2B50', '\uD83D\uDCAC', '\uD83D\uDCAC', '\uD83D\uDCAC']
+        },
+        {
+            id: 'tiktok',
+            name: 'TikTok',
+            icon: '\u266B',
+            iconClass: 'tiktok',
+            settingsKey: 'tiktok',
+            handleKey: 'handle',
+            placeholderEmojis: ['\uD83C\uDFB5', '\uD83D\uDCF9', '\uD83D\uDD7A', '\uD83D\uDC83', '\uD83C\uDFB6', '\uD83C\uDFA4', '\uD83D\uDE0E', '\uD83D\uDD25', '\u2728']
+        },
+        {
+            id: 'twitter',
+            name: 'Twitter / X',
+            icon: '\uD835\uDD4F',
+            iconClass: 'twitter',
+            settingsKey: 'twitter',
+            handleKey: 'handle',
+            placeholderEmojis: ['\uD83D\uDCAC', '\uD83D\uDD01', '\u2764\uFE0F', '\uD83D\uDCAC', '\uD83D\uDD01', '\u2764\uFE0F', '\uD83D\uDCAC', '\uD83D\uDD01', '\u2764\uFE0F']
+        }
+    ];
+
+    const DEFAULT_SETTINGS = { show_feed: false, display: 'grid', count: 3 };
+
+    // Get feed settings for a platform
+    function getFeedSettings(platform) {
+        var stored = Details.get('biopage.social_feed_settings.' + platform.settingsKey);
+        return Object.assign({}, DEFAULT_SETTINGS, stored || {});
+    }
+
+    // Save a single feed setting
+    function saveFeedSetting(platform, key, value) {
+        var settings = getFeedSettings(platform);
+        settings[key] = value;
+        Details.debouncedSave('biopage.social_feed_settings.' + platform.settingsKey, settings);
+    }
+
+    // Render a single platform card
+    function renderPlatform(platform) {
+        var connected = Details.isConnected(platform.id);
+        var info = Details.getConnectionInfo(platform.id);
+        var settings = getFeedSettings(platform);
+        var handleValue = info[platform.handleKey] || '';
+
+        var html = '<div class="platform-card" id="card-' + platform.id + '">';
+
+        // -- Top row --
+        html += '<div class="platform-row">';
+        html += '  <div class="platform-icon ' + platform.iconClass + '">' + platform.icon + '</div>';
+        html += '  <div class="platform-info">';
+        html += '    <div class="platform-name">' + platform.name + '</div>';
+        if (connected && handleValue) {
+            html += '    <div class="platform-handle">' + escapeHtml(handleValue) + '</div>';
+        }
+        html += '  </div>';
+        html += '  <div class="platform-actions">';
+        if (connected) {
+            html += '    <span class="connected-badge">Connected</span>';
+            html += '    <button class="btn-disconnect" onclick="disconnectPlatform(\'' + platform.id + '\')" title="Disconnect">Disconnect</button>';
+            html += '    <span class="settings-expand" onclick="toggleSettings(\'' + platform.id + '\')" id="expand-' + platform.id + '">Feed Settings &#x25BC;</span>';
+        } else {
+            html += '    <button class="btn-connect" onclick="connectPlatform(\'' + platform.id + '\')">Connect</button>';
+        }
+        html += '  </div>';
+        html += '</div>';
+
+        // -- Feed settings (only when connected) --
+        if (connected) {
+            html += '<div class="platform-settings" id="settings-' + platform.id + '">';
+
+            // Show feed toggle
+            html += '  <div class="settings-toggle-row">';
+            html += '    <span class="settings-label">Show feed on landing page</span>';
+            html += '    <label class="toggle">';
+            html += '      <input type="checkbox" ' + (settings.show_feed ? 'checked' : '') + ' onchange="onToggleFeed(\'' + platform.id + '\', this.checked)">';
+            html += '      <span class="toggle-slider"></span>';
+            html += '    </label>';
+            html += '  </div>';
+
+            // Display mode + post count
+            html += '  <div class="settings-section">';
+
+            // Display mode
+            html += '    <div class="settings-row">';
+            html += '      <span class="settings-label">Display mode</span>';
+            html += '      <div class="radio-group">';
+            ['grid', 'list', 'compact'].forEach(function(mode) {
+                var activeClass = settings.display === mode ? ' active' : '';
+                html += '        <span class="radio-pill' + activeClass + '" onclick="onDisplayMode(\'' + platform.id + '\', \'' + mode + '\')">' + capitalize(mode) + '</span>';
+            });
+            html += '      </div>';
+            html += '    </div>';
+
+            // Post count
+            html += '    <div class="settings-row">';
+            html += '      <span class="settings-label">Post count</span>';
+            html += '      <div class="radio-group">';
+            [3, 6, 9].forEach(function(count) {
+                var activeClass = settings.count === count ? ' active' : '';
+                html += '        <span class="radio-pill' + activeClass + '" onclick="onPostCount(\'' + platform.id + '\', ' + count + ')">' + count + '</span>';
+            });
+            html += '      </div>';
+            html += '    </div>';
+
+            html += '  </div>'; // .settings-section
+
+            // Feed preview
+            html += '  <div class="preview-section">';
+            html += '    <div class="preview-title">Feed preview</div>';
+            html += renderFeedPreview(platform, settings);
+            html += '  </div>';
+
+            html += '</div>'; // .platform-settings
+        }
+
+        html += '</div>'; // .platform-card
+        return html;
+    }
+
+    // Render feed preview grid
+    function renderFeedPreview(platform, settings) {
+        var modeClass = '';
+        if (settings.display === 'list') modeClass = ' list-mode';
+        if (settings.display === 'compact') modeClass = ' compact-mode';
+
+        var count = settings.count || 3;
+        var emojis = platform.placeholderEmojis;
+
+        var html = '<div class="feed-preview' + modeClass + '" id="preview-' + platform.id + '">';
+        for (var i = 0; i < count; i++) {
+            var emoji = emojis[i % emojis.length];
+            html += '<div class="feed-item">' + emoji + '<span class="list-item-text">Sample post ' + (i + 1) + '</span></div>';
+        }
+        html += '</div>';
+        return html;
+    }
+
+    // Render all platforms
+    function renderAll() {
+        var container = document.getElementById('platform-list');
+        if (!container) return;
+        var html = '';
+        PLATFORMS.forEach(function(p) {
+            html += renderPlatform(p);
+        });
+        container.innerHTML = html;
+    }
+
+    // Find platform object by id
+    function findPlatform(id) {
+        for (var i = 0; i < PLATFORMS.length; i++) {
+            if (PLATFORMS[i].id === id) return PLATFORMS[i];
+        }
+        return null;
+    }
+
+    // -- Event handlers (global scope for onclick) --
+
+    window.connectPlatform = function(id) {
+        Details.toggleConnection(id);
+        renderAll();
+    };
+
+    window.disconnectPlatform = function(id) {
+        Details.toggleConnection(id);
+        renderAll();
+    };
+
+    window.toggleSettings = function(id) {
+        var el = document.getElementById('settings-' + id);
+        var expand = document.getElementById('expand-' + id);
+        if (!el) return;
+        var isOpen = el.classList.contains('open');
+        el.classList.toggle('open');
+        if (expand) {
+            expand.innerHTML = isOpen ? 'Feed Settings &#x25BC;' : 'Feed Settings &#x25B2;';
+        }
+    };
+
+    window.onToggleFeed = function(id, checked) {
+        var platform = findPlatform(id);
+        if (!platform) return;
+        saveFeedSetting(platform, 'show_feed', checked);
+    };
+
+    window.onDisplayMode = function(id, mode) {
+        var platform = findPlatform(id);
+        if (!platform) return;
+        saveFeedSetting(platform, 'display', mode);
+
+        // Update pills
+        var card = document.getElementById('card-' + id);
+        if (!card) return;
+        var rows = card.querySelectorAll('.settings-section .settings-row');
+        if (rows[0]) {
+            var pills = rows[0].querySelectorAll('.radio-pill');
+            pills.forEach(function(pill) {
+                pill.classList.toggle('active', pill.textContent.toLowerCase() === mode);
+            });
+        }
+
+        // Re-render preview
+        var settings = getFeedSettings(platform);
+        var previewContainer = document.getElementById('preview-' + id);
+        if (previewContainer) {
+            previewContainer.outerHTML = renderFeedPreview(platform, settings);
+        }
+    };
+
+    window.onPostCount = function(id, count) {
+        var platform = findPlatform(id);
+        if (!platform) return;
+        saveFeedSetting(platform, 'count', count);
+
+        // Update pills
+        var card = document.getElementById('card-' + id);
+        if (!card) return;
+        var rows = card.querySelectorAll('.settings-section .settings-row');
+        if (rows[1]) {
+            var pills = rows[1].querySelectorAll('.radio-pill');
+            pills.forEach(function(pill) {
+                pill.classList.toggle('active', parseInt(pill.textContent, 10) === count);
+            });
+        }
+
+        // Re-render preview
+        var settings = getFeedSettings(platform);
+        var previewContainer = document.getElementById('preview-' + id);
+        if (previewContainer) {
+            previewContainer.outerHTML = renderFeedPreview(platform, settings);
+        }
+    };
+
+    // -- Helpers --
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Called by Details.js when shared data updates from another iframe
+    window.onDataUpdated = function() {
+        renderAll();
+    };
+
+    // -- Init --
+    document.addEventListener('DOMContentLoaded', function() {
+        Details.init();
+        renderAll();
+    });
+})();
+</script>
+
+</body>
+</html>

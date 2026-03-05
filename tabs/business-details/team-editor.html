@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Members Editor</title>
+    <link rel="stylesheet" href="details.css">
+    <style>
+        .team-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .team-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .team-card-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 4px;
+        }
+
+        .team-card-header .card-desc {
+            font-size: 13px;
+            color: #657786;
+        }
+
+        .member-count-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e8edff;
+            color: #667eea;
+            white-space: nowrap;
+        }
+
+        /* Not applicable notice */
+        .not-applicable {
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 40px 28px;
+            text-align: center;
+        }
+
+        .not-applicable-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .not-applicable h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 8px;
+        }
+
+        .not-applicable p {
+            font-size: 14px;
+            color: #657786;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .not-applicable .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e8edff;
+            color: #667eea;
+            margin-top: 12px;
+        }
+
+        /* Team list */
+        .team-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .team-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            background: #f7f9fc;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .team-row:hover {
+            background: #eef2f7;
+        }
+
+        .team-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 17px;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .team-avatar.color-1 { background: #667eea; }
+        .team-avatar.color-2 { background: #764ba2; }
+        .team-avatar.color-3 { background: #27ae60; }
+        .team-avatar.color-4 { background: #e67e22; }
+        .team-avatar.color-5 { background: #3498db; }
+        .team-avatar.color-6 { background: #e74c3c; }
+
+        .team-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .team-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1c2938;
+            margin-bottom: 2px;
+        }
+
+        .team-role {
+            font-size: 13px;
+            color: #657786;
+        }
+
+        .team-remove {
+            background: none;
+            border: 2px solid transparent;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .team-remove:hover {
+            color: #e74c3c;
+            background: #fff0f0;
+            border-color: #fdd;
+        }
+
+        /* Empty state */
+        .team-empty {
+            text-align: center;
+            padding: 30px 20px;
+            color: #657786;
+        }
+
+        .team-empty-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+
+        .team-empty p {
+            font-size: 14px;
+        }
+
+        /* Add form */
+        .add-form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+        }
+
+        .add-form-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .add-form .form-field {
+            flex: 1;
+        }
+
+        .add-form .form-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #657786;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .add-form .form-field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            color: #1c2938;
+        }
+
+        .add-form .form-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-form .form-field input::placeholder {
+            color: #aab8c2;
+        }
+
+        .add-btn {
+            padding: 10px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            height: 42px;
+        }
+
+        .add-btn:hover {
+            background: #5568d3;
+        }
+
+        .add-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Role suggestions */
+        .role-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .role-suggestion {
+            padding: 4px 10px;
+            border-radius: 16px;
+            border: 1px solid #e1e8ed;
+            background: #f7f9fc;
+            font-size: 12px;
+            color: #657786;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .role-suggestion:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f0f3ff;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .add-form {
+                flex-direction: column;
+            }
+
+            .add-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1>Team Members</h1>
+                <div class="subtitle">Manage your team that appears on your public page</div>
+            </div>
+        </div>
+
+        <!-- Main Content (shown/hidden based on business type) -->
+        <div id="team-content" style="display: none;">
+            <!-- Team List Card -->
+            <div class="team-card">
+                <div class="team-card-header">
+                    <div>
+                        <h2>Your Team</h2>
+                        <div class="card-desc">Team members are displayed on your public bio page. Customers can see who they'll be working with.</div>
+                    </div>
+                    <span class="member-count-badge" id="member-count-badge">0 members</span>
+                </div>
+
+                <div class="team-list" id="team-list">
+                    <!-- Built by JS -->
+                </div>
+            </div>
+
+            <!-- Add Member Form -->
+            <div class="add-form-card">
+                <h3>Add Team Member</h3>
+                <div class="add-form">
+                    <div class="form-field">
+                        <label>Name</label>
+                        <input type="text" id="member-name" placeholder="Full name" maxlength="100" onkeydown="handleEnter(event)">
+                    </div>
+                    <div class="form-field">
+                        <label>Role / Title</label>
+                        <input type="text" id="member-role" placeholder="e.g. Senior Stylist" maxlength="100" onkeydown="handleEnter(event)">
+                    </div>
+                    <button class="add-btn" id="add-btn" onclick="addMember()">Add</button>
+                </div>
+                <div class="role-suggestions" id="role-suggestions">
+                    <!-- Built by JS based on business type -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Not applicable notice -->
+        <div id="not-applicable" style="display: none;">
+            <div class="not-applicable">
+                <div class="not-applicable-icon">👤</div>
+                <h2>Team Members Not Needed</h2>
+                <p>The team members section is designed for businesses where customers interact with specific staff members, such as salons, medical practices, fitness studios, and trade services.</p>
+                <span class="type-badge" id="type-badge">Your business type: loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Indicator -->
+    <div class="save-indicator" id="save-indicator">Saved</div>
+
+    <script src="details.js"></script>
+    <script>
+        var AVATAR_COLORS = ['color-1', 'color-2', 'color-3', 'color-4', 'color-5', 'color-6'];
+
+        var ROLE_SUGGESTIONS = {
+            salon: ['Senior Stylist', 'Junior Stylist', 'Colorist', 'Nail Technician', 'Barber', 'Receptionist', 'Manager', 'Esthetician'],
+            medical: ['Doctor', 'Nurse Practitioner', 'Physician Assistant', 'Nurse', 'Medical Assistant', 'Receptionist', 'Office Manager', 'Specialist'],
+            fitness: ['Head Trainer', 'Personal Trainer', 'Group Instructor', 'Yoga Instructor', 'Nutritionist', 'Front Desk', 'Manager', 'Pilates Instructor'],
+            trades: ['Lead Technician', 'Apprentice', 'Project Manager', 'Foreman', 'Estimator', 'Office Manager', 'Electrician', 'Plumber']
+        };
+
+        var TYPE_LABELS = {
+            restaurant: 'Restaurant',
+            bakery: 'Bakery',
+            salon: 'Salon / Barbershop',
+            medical: 'Medical / Healthcare',
+            fitness: 'Fitness / Gym',
+            trades: 'Trades / Home Services',
+            retail: 'Retail / Shop'
+        };
+
+        var members = [];
+        var nextId = 1;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            Details.init();
+
+            var type = Details.getBusinessType();
+            var showTeam = Details.showsTeam();
+
+            if (showTeam) {
+                document.getElementById('team-content').style.display = 'block';
+                document.getElementById('not-applicable').style.display = 'none';
+
+                // Load existing members
+                var stored = Details.get('biopage.team_members');
+                if (Array.isArray(stored) && stored.length > 0) {
+                    members = stored;
+                    members.forEach(function(m) {
+                        var numId = parseInt(m.id);
+                        if (numId >= nextId) nextId = numId + 1;
+                    });
+                }
+
+                renderTeamList();
+                renderRoleSuggestions(type);
+            } else {
+                document.getElementById('team-content').style.display = 'none';
+                document.getElementById('not-applicable').style.display = 'block';
+                document.getElementById('type-badge').textContent = 'Your business type: ' + (TYPE_LABELS[type] || type);
+            }
+
+            // Notify parent
+            window.parent.postMessage({ type: 'app_loaded', app: 'team-editor' }, '*');
+        });
+
+        // Render the team list
+        function renderTeamList() {
+            var list = document.getElementById('team-list');
+
+            if (members.length === 0) {
+                list.innerHTML = '<div class="team-empty"><div class="team-empty-icon">👥</div><p>No team members yet. Add your first team member below.</p></div>';
+            } else {
+                var html = '';
+                members.forEach(function(member, index) {
+                    var initials = getInitials(member.name);
+                    var colorClass = AVATAR_COLORS[index % AVATAR_COLORS.length];
+
+                    html += '<div class="team-row" id="member-' + member.id + '">';
+                    html += '  <div class="team-avatar ' + colorClass + '">' + initials + '</div>';
+                    html += '  <div class="team-info">';
+                    html += '    <div class="team-name">' + escapeHtml(member.name) + '</div>';
+                    html += '    <div class="team-role">' + escapeHtml(member.role) + '</div>';
+                    html += '  </div>';
+                    html += '  <button class="team-remove" onclick="removeMember(\'' + member.id + '\')" title="Remove member">&times;</button>';
+                    html += '</div>';
+                });
+                list.innerHTML = html;
+            }
+
+            // Update count badge
+            var badge = document.getElementById('member-count-badge');
+            badge.textContent = members.length + (members.length === 1 ? ' member' : ' members');
+        }
+
+        // Render role suggestion pills
+        function renderRoleSuggestions(type) {
+            var container = document.getElementById('role-suggestions');
+            var roles = ROLE_SUGGESTIONS[type] || [];
+
+            if (roles.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            var html = '';
+            roles.forEach(function(role) {
+                html += '<span class="role-suggestion" onclick="useRoleSuggestion(\'' + escapeAttr(role) + '\')">' + escapeHtml(role) + '</span>';
+            });
+            container.innerHTML = html;
+        }
+
+        // Use a role suggestion
+        function useRoleSuggestion(role) {
+            document.getElementById('member-role').value = role;
+            document.getElementById('member-name').focus();
+        }
+
+        // Add a team member
+        function addMember() {
+            var nameInput = document.getElementById('member-name');
+            var roleInput = document.getElementById('member-role');
+            var name = nameInput.value.trim();
+            var role = roleInput.value.trim();
+
+            if (!name) {
+                nameInput.focus();
+                nameInput.style.borderColor = '#e74c3c';
+                setTimeout(function() { nameInput.style.borderColor = ''; }, 1500);
+                return;
+            }
+
+            if (!role) {
+                roleInput.focus();
+                roleInput.style.borderColor = '#e74c3c';
+                setTimeout(function() { roleInput.style.borderColor = ''; }, 1500);
+                return;
+            }
+
+            var newMember = {
+                id: String(nextId++),
+                name: name,
+                role: role
+            };
+
+            members.push(newMember);
+            renderTeamList();
+            saveTeam();
+
+            // Clear form
+            nameInput.value = '';
+            roleInput.value = '';
+            nameInput.focus();
+        }
+
+        // Remove a team member
+        function removeMember(id) {
+            members = members.filter(function(m) { return m.id !== id; });
+            renderTeamList();
+            saveTeam();
+        }
+
+        // Handle Enter key in form
+        function handleEnter(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addMember();
+            }
+        }
+
+        // Get initials from name
+        function getInitials(name) {
+            if (!name) return '?';
+            var parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return parts[0].substring(0, 2).toUpperCase();
+        }
+
+        // Save team to shared data
+        function saveTeam() {
+            Details.save('biopage.team_members', JSON.parse(JSON.stringify(members)));
+        }
+
+        // Escape HTML
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Escape for attribute values
+        function escapeAttr(str) {
+            return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Handle data updates from other tabs
+        function onDataUpdated() {
+            if (!Details.showsTeam()) return;
+            var stored = Details.get('biopage.team_members');
+            if (Array.isArray(stored)) {
+                members = stored;
+                renderTeamList();
+            }
+        }
+    </script>
+</body>
+</html>

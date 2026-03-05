@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us Editor</title>
+    <link rel="stylesheet" href="details.css">
+    <style>
+        .about-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .about-card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 6px;
+        }
+
+        .about-card .card-desc {
+            font-size: 13px;
+            color: #657786;
+            margin-bottom: 20px;
+        }
+
+        .textarea-wrap {
+            position: relative;
+        }
+
+        .textarea-wrap textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 14px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.2s;
+            color: #1c2938;
+        }
+
+        .textarea-wrap textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .textarea-wrap textarea::placeholder {
+            color: #aab8c2;
+        }
+
+        .textarea-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .char-count {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .char-count.warning {
+            color: #e67e22;
+        }
+
+        .char-count.danger {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .typing-indicator {
+            font-size: 12px;
+            color: #667eea;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .typing-indicator.visible {
+            opacity: 1;
+        }
+
+        /* Placeholder examples */
+        .placeholder-examples {
+            background: #f7f9fc;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .placeholder-examples h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .example-text {
+            font-size: 13px;
+            color: #657786;
+            line-height: 1.6;
+            font-style: italic;
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px dashed #d8dfe6;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .example-text:hover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .example-label {
+            font-size: 11px;
+            color: #999;
+            font-style: normal;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Preview section */
+        .preview-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .preview-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #e8edff;
+            color: #667eea;
+        }
+
+        .preview-body {
+            background: #f7f9fc;
+            border-radius: 10px;
+            padding: 24px;
+            min-height: 80px;
+        }
+
+        .preview-body .rendered-text {
+            font-size: 15px;
+            color: #1c2938;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .preview-body .empty-preview {
+            color: #aab8c2;
+            font-style: italic;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1>About Us</h1>
+                <div class="subtitle">Write a description of your business for your public page</div>
+            </div>
+        </div>
+
+        <!-- Placeholder Examples -->
+        <div class="placeholder-examples" id="examples-section">
+            <h3>Example for your business type</h3>
+            <div class="example-text" id="example-text" onclick="useExample()">
+                <span class="example-label">Click to use this example as a starting point:</span>
+                <span id="example-content">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Editor Card -->
+        <div class="about-card">
+            <h2>Business Description</h2>
+            <div class="card-desc">This text appears on your public bio page under "About Us." Write in your own voice - your AI assistant will use this to understand your business.</div>
+
+            <div class="textarea-wrap">
+                <textarea
+                    id="about-textarea"
+                    placeholder="Tell your customers about your business..."
+                    maxlength="2000"
+                    oninput="handleInput()"
+                ></textarea>
+            </div>
+
+            <div class="textarea-footer">
+                <span class="typing-indicator" id="typing-indicator">Saving...</span>
+                <span class="char-count" id="char-count">0 / 2,000</span>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="preview-card">
+            <div class="preview-header">
+                <h2>Preview</h2>
+                <span class="preview-badge">Public Page</span>
+            </div>
+            <div class="preview-body">
+                <div id="preview-content" class="empty-preview">
+                    Your about text will appear here as you type...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Indicator -->
+    <div class="save-indicator" id="save-indicator">Saved</div>
+
+    <script src="details.js"></script>
+    <script>
+        // Business-type-specific placeholder examples
+        const EXAMPLES = {
+            restaurant: "Welcome to our family-owned restaurant, where every dish tells a story. For over 15 years, we've been serving authentic home-cooked meals made from locally sourced ingredients. Whether you're joining us for a quick lunch or a special dinner, our warm atmosphere and dedicated staff make every visit memorable. We believe great food brings people together.",
+            bakery: "Welcome to our artisan bakery! Every morning, we hand-craft fresh breads, pastries, and custom cakes using time-honored recipes and the finest ingredients. From our signature sourdough to our decadent chocolate croissants, everything is baked with love. We also create stunning custom cakes for weddings, birthdays, and special occasions.",
+            salon: "We're a full-service salon dedicated to helping you look and feel your best. Our talented team of stylists stays current with the latest trends and techniques, offering everything from precision cuts and color to blowouts and special occasion styling. We use only premium, salon-grade products to ensure beautiful, lasting results.",
+            medical: "Our practice is committed to providing compassionate, patient-centered healthcare. With a team of experienced professionals and state-of-the-art facilities, we offer comprehensive medical services tailored to your needs. We believe in building lasting relationships with our patients through trust, transparency, and exceptional care.",
+            fitness: "We're more than just a gym - we're a community dedicated to helping you achieve your fitness goals. Whether you're a beginner or a seasoned athlete, our certified trainers and diverse class schedule have something for everyone. Join us and discover what it means to train in a supportive, motivating environment.",
+            trades: "With over 20 years of experience, we provide reliable, high-quality workmanship for residential and commercial projects. Our licensed and insured team takes pride in every job, from small repairs to large-scale renovations. We stand behind our work with a satisfaction guarantee and always provide upfront, honest pricing.",
+            retail: "Welcome to our shop! We carefully curate our collection to bring you unique, high-quality products you won't find anywhere else. Our knowledgeable staff is always happy to help you find exactly what you're looking for. We believe shopping should be an experience, not just a transaction.",
+            default: "Welcome to our business! We take pride in delivering exceptional service and quality to every customer who walks through our doors. Our dedicated team is passionate about what we do, and it shows in every interaction. We'd love the opportunity to earn your business and show you why our customers keep coming back."
+        };
+
+        let typingTimeout = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            const cc = Details.init();
+
+            // Load existing about text
+            const aboutText = Details.get('biopage.about_text') || '';
+            const textarea = document.getElementById('about-textarea');
+            textarea.value = aboutText;
+            updateCharCount(aboutText.length);
+            updatePreview(aboutText);
+
+            // Set business-type-specific example
+            const type = Details.getBusinessType();
+            const example = EXAMPLES[type] || EXAMPLES.default;
+            document.getElementById('example-content').textContent = example;
+
+            // Set placeholder based on type
+            const typeLabels = {
+                restaurant: 'Tell customers about your restaurant, your cuisine, and what makes dining with you special...',
+                bakery: 'Describe your bakery, your specialties, and what makes your baked goods unique...',
+                salon: 'Share your salon\'s story, your team\'s expertise, and the experience you offer...',
+                medical: 'Describe your practice, your specialties, and your approach to patient care...',
+                fitness: 'Tell members about your gym, your programs, and what sets your training apart...',
+                trades: 'Describe your trade services, your experience, and why customers can trust you...',
+                retail: 'Tell shoppers about your store, your products, and what makes your shop special...'
+            };
+            textarea.placeholder = typeLabels[type] || 'Tell your customers about your business...';
+
+            // Notify parent that we're loaded
+            window.parent.postMessage({ type: 'app_loaded', app: 'about-editor' }, '*');
+        });
+
+        // Handle textarea input
+        function handleInput() {
+            const textarea = document.getElementById('about-textarea');
+            const text = textarea.value;
+            const len = text.length;
+
+            updateCharCount(len);
+            updatePreview(text);
+
+            // Show typing indicator
+            const indicator = document.getElementById('typing-indicator');
+            indicator.classList.add('visible');
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(function() {
+                indicator.classList.remove('visible');
+            }, 800);
+
+            // Debounced save
+            Details.debouncedSave('biopage.about_text', text, 500);
+        }
+
+        // Update character count display
+        function updateCharCount(len) {
+            const el = document.getElementById('char-count');
+            el.textContent = len.toLocaleString() + ' / 2,000';
+            el.className = 'char-count';
+            if (len > 1800) {
+                el.classList.add('danger');
+            } else if (len > 1500) {
+                el.classList.add('warning');
+            }
+        }
+
+        // Update preview
+        function updatePreview(text) {
+            const preview = document.getElementById('preview-content');
+            if (!text || text.trim() === '') {
+                preview.className = 'empty-preview';
+                preview.textContent = 'Your about text will appear here as you type...';
+            } else {
+                preview.className = 'rendered-text';
+                preview.textContent = text;
+            }
+        }
+
+        // Use example text
+        function useExample() {
+            const exampleText = document.getElementById('example-content').textContent;
+            const textarea = document.getElementById('about-textarea');
+
+            if (textarea.value.trim() !== '') {
+                if (!confirm('Replace your current text with this example?')) return;
+            }
+
+            textarea.value = exampleText;
+            handleInput();
+        }
+
+        // Handle data updates from other tabs
+        function onDataUpdated() {
+            const aboutText = Details.get('biopage.about_text') || '';
+            const textarea = document.getElementById('about-textarea');
+            if (document.activeElement !== textarea) {
+                textarea.value = aboutText;
+                updateCharCount(aboutText.length);
+                updatePreview(aboutText);
+            }
+        }
+    </script>
+</body>
+</html>

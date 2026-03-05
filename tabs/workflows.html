@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflows</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: #1c2938;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Workflow Cards */
+        .workflows-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .workflow-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .workflow-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .workflow-card.inactive {
+            opacity: 0.6;
+            border-left-color: #95a5a6;
+        }
+
+        .workflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .workflow-info {
+            flex: 1;
+        }
+
+        .workflow-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 6px;
+        }
+
+        .workflow-description {
+            font-size: 14px;
+            color: #657786;
+            margin-bottom: 10px;
+        }
+
+        .workflow-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f0f3f7;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #657786;
+        }
+
+        .workflow-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .workflow-agents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .agent-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #e8f0fe;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .workflow-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f7f9fc;
+            border-radius: 8px;
+        }
+
+        .workflow-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workflow-stat-label {
+            font-size: 12px;
+            color: #657786;
+            margin-bottom: 4px;
+        }
+
+        .workflow-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1c2938;
+        }
+
+        .workflow-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2980b9;
+        }
+
+        .btn-run {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-run:hover {
+            background: #229954;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            color: #1c2938;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: #657786;
+            margin-bottom: 30px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .page-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+            .workflow-header { flex-direction: column; gap: 15px; }
+            .workflow-stats { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>Workflows</h1>
+                <p style="color: #657786; font-size: 14px; margin-top: 5px;">Automate your business with AI-powered workflows</p>
+            </div>
+            <button class="btn-primary" onclick="createWorkflow()">
+                <span>⚡</span>
+                <span>Create Workflow</span>
+            </button>
+        </div>
+
+        <!-- Workflows Grid -->
+        <div class="workflows-grid" id="workflows-grid">
+            <!-- Workflows will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // Mock workflows data
+        const WORKFLOWS = [
+            {
+                id: 1,
+                name: 'Daily Sales Report',
+                description: 'Get daily sales summary via SMS at 9 PM',
+                trigger: {
+                    type: 'schedule',
+                    label: '⏰ Daily at 9:00 PM'
+                },
+                agents: [
+                    { name: 'Get Stripe Sales', icon: '💳' },
+                    { name: 'Format as SMS', icon: '📝' },
+                    { name: 'Send via Twilio', icon: '📲' }
+                ],
+                stats: {
+                    runs: 45,
+                    lastRun: '2 hours ago',
+                    status: 'success'
+                },
+                active: true
+            },
+            {
+                id: 2,
+                name: 'New Booking Confirmation',
+                description: 'Send SMS confirmation when customer books appointment',
+                trigger: {
+                    type: 'webhook',
+                    label: '🔗 Webhook Trigger'
+                },
+                agents: [
+                    { name: 'Get Booking Details', icon: '📅' },
+                    { name: 'Format Confirmation', icon: '✅' },
+                    { name: 'Send SMS', icon: '📲' }
+                ],
+                stats: {
+                    runs: 127,
+                    lastRun: '15 minutes ago',
+                    status: 'success'
+                },
+                active: true
+            },
+            {
+                id: 3,
+                name: '5-Star Review to Instagram',
+                description: 'Auto-post 5-star reviews to Instagram Stories',
+                trigger: {
+                    type: 'webhook',
+                    label: '🔗 Webhook Trigger'
+                },
+                agents: [
+                    { name: 'Get New Review', icon: '⭐' },
+                    { name: 'Generate Image', icon: '🎨' },
+                    { name: 'Post to Instagram', icon: '📷' }
+                ],
+                stats: {
+                    runs: 23,
+                    lastRun: '1 day ago',
+                    status: 'success'
+                },
+                active: true
+            },
+            {
+                id: 4,
+                name: 'Weekly Loyalty Rewards',
+                description: 'Send weekly points summary to loyalty members',
+                trigger: {
+                    type: 'schedule',
+                    label: '⏰ Every Monday 10 AM'
+                },
+                agents: [
+                    { name: 'Get Loyalty Points', icon: '⭐' },
+                    { name: 'Generate Report', icon: '📊' },
+                    { name: 'Send Email', icon: '✉️' }
+                ],
+                stats: {
+                    runs: 8,
+                    lastRun: '3 days ago',
+                    status: 'success'
+                },
+                active: false
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderWorkflows();
+        });
+
+        function renderWorkflows() {
+            const grid = document.getElementById('workflows-grid');
+
+            if (WORKFLOWS.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚡</div>
+                        <h2>No workflows yet</h2>
+                        <p>Create your first workflow to automate your business tasks</p>
+                        <button class="btn-primary" onclick="createWorkflow()">
+                            <span>⚡</span>
+                            <span>Create Your First Workflow</span>
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = WORKFLOWS.map(workflow => `
+                <div class="workflow-card ${workflow.active ? '' : 'inactive'}">
+                    <div class="workflow-header">
+                        <div class="workflow-info">
+                            <div class="workflow-name">${workflow.name}</div>
+                            <div class="workflow-description">${workflow.description}</div>
+                            <div class="workflow-trigger">${workflow.trigger.label}</div>
+                        </div>
+                        <div class="workflow-toggle">
+                            <label class="switch">
+                                <input type="checkbox" ${workflow.active ? 'checked' : ''} onchange="toggleWorkflow(${workflow.id})">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="workflow-agents">
+                        ${workflow.agents.map(agent => `
+                            <div class="agent-badge">
+                                <span>${agent.icon}</span>
+                                <span>${agent.name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="workflow-stats">
+                        <div class="workflow-stat">
+                            <div class="workflow-stat-label">Total Runs</div>
+                            <div class="workflow-stat-value">${workflow.stats.runs}</div>
+                        </div>
+                        <div class="workflow-stat">
+                            <div class="workflow-stat-label">Last Run</div>
+                            <div class="workflow-stat-value">${workflow.stats.lastRun}</div>
+                        </div>
+                        <div class="workflow-stat">
+                            <div class="workflow-stat-label">Status</div>
+                            <div class="workflow-stat-value" style="color: ${workflow.stats.status === 'success' ? '#27ae60' : '#e74c3c'}">
+                                ${workflow.stats.status === 'success' ? '✓ Success' : '✗ Failed'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-actions">
+                        <button class="btn btn-edit" onclick="editWorkflow(${workflow.id})">✏️ Edit</button>
+                        <button class="btn btn-run" onclick="runWorkflow(${workflow.id})">▶️ Run Now</button>
+                        <button class="btn btn-delete" onclick="deleteWorkflow(${workflow.id})">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createWorkflow() {
+            alert('Opening workflow builder...\n\nYou can:\n1. Choose a trigger (Schedule, Webhook, Manual)\n2. Add agents to process data\n3. Connect agents together\n4. Test and deploy');
+        }
+
+        function editWorkflow(id) {
+            const workflow = WORKFLOWS.find(w => w.id === id);
+            alert(`Editing workflow: ${workflow.name}`);
+        }
+
+        function runWorkflow(id) {
+            const workflow = WORKFLOWS.find(w => w.id === id);
+            alert(`Running workflow: ${workflow.name}\n\nThis will execute all agents in sequence...`);
+
+            // Simulate workflow execution
+            setTimeout(() => {
+                workflow.stats.runs++;
+                workflow.stats.lastRun = 'Just now';
+                renderWorkflows();
+            }, 1000);
+        }
+
+        function toggleWorkflow(id) {
+            const workflow = WORKFLOWS.find(w => w.id === id);
+            workflow.active = !workflow.active;
+            renderWorkflows();
+
+            if (workflow.active) {
+                alert(`✓ Workflow "${workflow.name}" activated`);
+            } else {
+                alert(`⏸ Workflow "${workflow.name}" deactivated`);
+            }
+        }
+
+        function deleteWorkflow(id) {
+            const workflow = WORKFLOWS.find(w => w.id === id);
+
+            if (confirm(`Are you sure you want to delete "${workflow.name}"?\n\nThis action cannot be undone.`)) {
+                const index = WORKFLOWS.findIndex(w => w.id === id);
+                WORKFLOWS.splice(index, 1);
+                renderWorkflows();
+                alert('Workflow deleted');
+            }
+        }
+    </script>
+</body>
+</html>

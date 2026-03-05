@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Hours Editor</title>
+    <link rel="stylesheet" href="details.css">
+    <style>
+        .hours-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .hours-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .hours-card-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 4px;
+        }
+
+        .hours-card-header .card-desc {
+            font-size: 13px;
+            color: #657786;
+        }
+
+        /* Day Grid */
+        .hours-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .hour-row {
+            display: grid;
+            grid-template-columns: 110px 1fr 30px 1fr 80px;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 10px;
+            transition: background 0.15s;
+        }
+
+        .hour-row:nth-child(odd) {
+            background: #f7f9fc;
+        }
+
+        .hour-row:hover {
+            background: #eef2f7;
+        }
+
+        .hour-row.is-closed {
+            opacity: 0.55;
+        }
+
+        .hour-day {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1c2938;
+        }
+
+        .hour-day .day-short {
+            display: none;
+        }
+
+        .hour-separator {
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .hour-row input[type="time"] {
+            padding: 9px 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1c2938;
+            background: white;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .hour-row input[type="time"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .hour-row input[type="time"]:disabled {
+            background: #f0f3f7;
+            color: #aab8c2;
+            cursor: not-allowed;
+        }
+
+        /* Closed toggle */
+        .closed-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .closed-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #657786;
+        }
+
+        .closed-label.is-off {
+            color: #e74c3c;
+        }
+
+        /* Copy button */
+        .copy-btn-wrap {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Quick preset buttons */
+        .presets-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 28px;
+        }
+
+        .presets-section h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1c2938;
+            margin-bottom: 14px;
+        }
+
+        .presets-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preset-btn {
+            padding: 10px 18px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #657786;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .preset-btn .preset-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hour-row {
+                grid-template-columns: 70px 1fr 20px 1fr 60px;
+                gap: 6px;
+                padding: 10px 12px;
+            }
+
+            .hour-day .day-full { display: none; }
+            .hour-day .day-short { display: inline; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1>Business Hours</h1>
+                <div class="subtitle">Set your operating hours for each day of the week</div>
+            </div>
+        </div>
+
+        <!-- Hours Editor Card -->
+        <div class="hours-card">
+            <div class="hours-card-header">
+                <div>
+                    <h2>Weekly Schedule</h2>
+                    <div class="card-desc">These hours display on your public page and help your AI respond to "Are you open?" questions.</div>
+                </div>
+            </div>
+
+            <div class="hours-grid" id="hours-grid">
+                <!-- Rows built by JS -->
+            </div>
+
+            <div class="copy-btn-wrap">
+                <button class="btn btn-secondary btn-sm" onclick="copyToWeekdays()">Copy Monday to All Weekdays</button>
+                <button class="btn btn-secondary btn-sm" onclick="copyToWeekend()">Copy Saturday to Sunday</button>
+            </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="presets-section">
+            <h3>Quick Presets</h3>
+            <div class="presets-grid">
+                <button class="preset-btn" onclick="applyPreset('standard')">
+                    9 AM - 5 PM
+                    <span class="preset-label">Mon-Fri</span>
+                </button>
+                <button class="preset-btn" onclick="applyPreset('retail')">
+                    10 AM - 9 PM
+                    <span class="preset-label">Mon-Sat</span>
+                </button>
+                <button class="preset-btn" onclick="applyPreset('restaurant')">
+                    11 AM - 10 PM
+                    <span class="preset-label">Every day</span>
+                </button>
+                <button class="preset-btn" onclick="applyPreset('early')">
+                    6 AM - 2 PM
+                    <span class="preset-label">Mon-Fri</span>
+                </button>
+                <button class="preset-btn" onclick="applyPreset('allday')">
+                    24 Hours
+                    <span class="preset-label">Every day</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Indicator -->
+    <div class="save-indicator" id="save-indicator">Saved</div>
+
+    <script src="details.js"></script>
+    <script>
+        const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const DAY_LABELS = {
+            monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
+            thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday'
+        };
+        const DAY_SHORT = {
+            monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed',
+            thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun'
+        };
+
+        const DEFAULT_HOURS = {};
+        DAYS.forEach(function(day) {
+            var isSunday = day === 'sunday';
+            DEFAULT_HOURS[day] = {
+                open: isSunday ? '10:00 AM' : '7:00 AM',
+                close: isSunday ? '4:00 PM' : '6:00 PM',
+                closed: false
+            };
+        });
+
+        let currentHours = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            Details.init();
+
+            // Load hours from shared data, fallback to defaults
+            var stored = Details.get('business.hours');
+            if (stored && typeof stored === 'object') {
+                // Merge stored with defaults for any missing days
+                DAYS.forEach(function(day) {
+                    currentHours[day] = stored[day] || Object.assign({}, DEFAULT_HOURS[day]);
+                });
+            } else {
+                DAYS.forEach(function(day) {
+                    currentHours[day] = Object.assign({}, DEFAULT_HOURS[day]);
+                });
+            }
+
+            renderGrid();
+
+            // Notify parent
+            window.parent.postMessage({ type: 'app_loaded', app: 'hours-editor' }, '*');
+        });
+
+        // Convert 12h display time to 24h input value
+        function to24(time12) {
+            if (!time12) return '09:00';
+            // If already in 24h format (HH:MM), return as is
+            if (/^\d{2}:\d{2}$/.test(time12)) return time12;
+
+            var parts = time12.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!parts) return '09:00';
+            var h = parseInt(parts[1]);
+            var m = parts[2];
+            var ampm = parts[3].toUpperCase();
+            if (ampm === 'PM' && h !== 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return (h < 10 ? '0' : '') + h + ':' + m;
+        }
+
+        // Convert 24h input value to 12h display time
+        function to12(time24) {
+            if (!time24) return '9:00 AM';
+            var parts = time24.split(':');
+            var h = parseInt(parts[0]);
+            var m = parts[1];
+            var ampm = h >= 12 ? 'PM' : 'AM';
+            if (h === 0) h = 12;
+            else if (h > 12) h -= 12;
+            return h + ':' + m + ' ' + ampm;
+        }
+
+        // Render the hours grid
+        function renderGrid() {
+            var grid = document.getElementById('hours-grid');
+            var html = '';
+
+            DAYS.forEach(function(day) {
+                var info = currentHours[day];
+                var isClosed = info.closed;
+                var openVal = to24(info.open);
+                var closeVal = to24(info.close);
+
+                html += '<div class="hour-row' + (isClosed ? ' is-closed' : '') + '" id="row-' + day + '">';
+                html += '  <div class="hour-day"><span class="day-full">' + DAY_LABELS[day] + '</span><span class="day-short">' + DAY_SHORT[day] + '</span></div>';
+                html += '  <input type="time" id="open-' + day + '" value="' + openVal + '" ' + (isClosed ? 'disabled' : '') + ' onchange="updateHour(\'' + day + '\')">';
+                html += '  <div class="hour-separator">to</div>';
+                html += '  <input type="time" id="close-' + day + '" value="' + closeVal + '" ' + (isClosed ? 'disabled' : '') + ' onchange="updateHour(\'' + day + '\')">';
+                html += '  <div class="closed-toggle">';
+                html += '    <label class="toggle">';
+                html += '      <input type="checkbox" ' + (isClosed ? '' : 'checked') + ' onchange="toggleClosed(\'' + day + '\', this)">';
+                html += '      <span class="toggle-slider"></span>';
+                html += '    </label>';
+                html += '  </div>';
+                html += '</div>';
+            });
+
+            grid.innerHTML = html;
+        }
+
+        // Update a single day's hours
+        function updateHour(day) {
+            var openInput = document.getElementById('open-' + day);
+            var closeInput = document.getElementById('close-' + day);
+
+            currentHours[day].open = to12(openInput.value);
+            currentHours[day].close = to12(closeInput.value);
+
+            saveHours();
+        }
+
+        // Toggle closed status for a day
+        function toggleClosed(day, checkbox) {
+            var isClosed = !checkbox.checked;
+            currentHours[day].closed = isClosed;
+
+            var row = document.getElementById('row-' + day);
+            var openInput = document.getElementById('open-' + day);
+            var closeInput = document.getElementById('close-' + day);
+
+            if (isClosed) {
+                row.classList.add('is-closed');
+                openInput.disabled = true;
+                closeInput.disabled = true;
+            } else {
+                row.classList.remove('is-closed');
+                openInput.disabled = false;
+                closeInput.disabled = false;
+            }
+
+            saveHours();
+        }
+
+        // Copy Monday hours to all weekdays (Tue-Fri)
+        function copyToWeekdays() {
+            var mondayHours = Object.assign({}, currentHours.monday);
+            var weekdays = ['tuesday', 'wednesday', 'thursday', 'friday'];
+            weekdays.forEach(function(day) {
+                currentHours[day] = Object.assign({}, mondayHours);
+            });
+            renderGrid();
+            saveHours();
+        }
+
+        // Copy Saturday hours to Sunday
+        function copyToWeekend() {
+            currentHours.sunday = Object.assign({}, currentHours.saturday);
+            renderGrid();
+            saveHours();
+        }
+
+        // Apply a preset schedule
+        function applyPreset(preset) {
+            switch (preset) {
+                case 'standard':
+                    DAYS.forEach(function(day) {
+                        var isWeekend = day === 'saturday' || day === 'sunday';
+                        currentHours[day] = {
+                            open: '9:00 AM',
+                            close: '5:00 PM',
+                            closed: isWeekend
+                        };
+                    });
+                    break;
+                case 'retail':
+                    DAYS.forEach(function(day) {
+                        var isSunday = day === 'sunday';
+                        currentHours[day] = {
+                            open: '10:00 AM',
+                            close: '9:00 PM',
+                            closed: isSunday
+                        };
+                    });
+                    break;
+                case 'restaurant':
+                    DAYS.forEach(function(day) {
+                        currentHours[day] = {
+                            open: '11:00 AM',
+                            close: '10:00 PM',
+                            closed: false
+                        };
+                    });
+                    break;
+                case 'early':
+                    DAYS.forEach(function(day) {
+                        var isWeekend = day === 'saturday' || day === 'sunday';
+                        currentHours[day] = {
+                            open: '6:00 AM',
+                            close: '2:00 PM',
+                            closed: isWeekend
+                        };
+                    });
+                    break;
+                case 'allday':
+                    DAYS.forEach(function(day) {
+                        currentHours[day] = {
+                            open: '12:00 AM',
+                            close: '11:59 PM',
+                            closed: false
+                        };
+                    });
+                    break;
+            }
+            renderGrid();
+            saveHours();
+        }
+
+        // Save hours to shared data
+        function saveHours() {
+            Details.save('business.hours', JSON.parse(JSON.stringify(currentHours)));
+        }
+
+        // Handle data updates from other tabs
+        function onDataUpdated() {
+            var stored = Details.get('business.hours');
+            if (stored && typeof stored === 'object') {
+                DAYS.forEach(function(day) {
+                    if (stored[day]) {
+                        currentHours[day] = stored[day];
+                    }
+                });
+                renderGrid();
+            }
+        }
+    </script>
+</body>
+</html>

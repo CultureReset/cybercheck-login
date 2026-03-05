@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Details</title>
+    <link rel="stylesheet" href="details.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1><span style="font-size: 28px;">&#128203;</span> Business Details</h1>
+                <div class="subtitle">Manage the public-facing information about your business</div>
+            </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid" id="cards-grid">
+
+            <!-- About Your Business -->
+            <div class="detail-card" id="card-about">
+                <div class="card-header" onclick="Details.toggleCard('about')">
+                    <div class="card-icon blue">&#9997;&#65039;</div>
+                    <div class="card-info">
+                        <div class="card-title">About Your Business</div>
+                        <div class="card-subtitle">Description, tagline, and story</div>
+                    </div>
+                    <span class="card-status" id="about-status">--</span>
+                    <span class="card-chevron" id="about-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="about-body">
+                    <div class="form-group">
+                        <label>Tagline</label>
+                        <input type="text" id="about-tagline" placeholder="A short catchy tagline for your business"
+                               oninput="Details.debouncedSave('business.tagline', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>About / Description</label>
+                        <textarea id="about-description" placeholder="Tell customers about your business, what makes you special, your history..."
+                                  maxlength="1000"
+                                  oninput="updateCharCount(this, 'about-charcount'); Details.debouncedSave('business.description', this.value)"></textarea>
+                        <div class="char-count" id="about-charcount">0 / 1000</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Hours -->
+            <div class="detail-card" id="card-hours">
+                <div class="card-header" onclick="Details.toggleCard('hours')">
+                    <div class="card-icon green">&#128339;</div>
+                    <div class="card-info">
+                        <div class="card-title">Business Hours</div>
+                        <div class="card-subtitle">Set your weekly schedule</div>
+                    </div>
+                    <span class="card-status" id="hours-status">--</span>
+                    <span class="card-chevron" id="hours-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="hours-body">
+                    <div class="hours-grid" id="hours-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Feeds -->
+            <div class="detail-card" id="card-social">
+                <div class="card-header" onclick="Details.toggleCard('social')">
+                    <div class="card-icon purple">&#128241;</div>
+                    <div class="card-info">
+                        <div class="card-title">Social Feeds</div>
+                        <div class="card-subtitle">Connected platforms and display settings</div>
+                    </div>
+                    <span class="card-status" id="social-status">--</span>
+                    <span class="card-chevron" id="social-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="social-body">
+                    <div id="social-platforms">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="feed-settings" id="feed-settings">
+                        <div class="feed-row">
+                            <span class="feed-label">Show social feed on bio page</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="feed-show-toggle" onchange="saveFeedSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="feed-row">
+                            <span class="feed-label">Display mode</span>
+                            <div class="radio-group" id="feed-display-mode">
+                                <span class="radio-pill active" data-value="grid" onclick="setFeedMode(this)">Grid</span>
+                                <span class="radio-pill" data-value="list" onclick="setFeedMode(this)">List</span>
+                                <span class="radio-pill" data-value="compact" onclick="setFeedMode(this)">Compact</span>
+                            </div>
+                        </div>
+                        <div class="feed-row">
+                            <span class="feed-label">Posts to show</span>
+                            <div class="radio-group" id="feed-count">
+                                <span class="radio-pill active" data-value="3" onclick="setFeedCount(this)">3</span>
+                                <span class="radio-pill" data-value="6" onclick="setFeedCount(this)">6</span>
+                                <span class="radio-pill" data-value="9" onclick="setFeedCount(this)">9</span>
+                            </div>
+                        </div>
+                        <div class="feed-preview" id="feed-preview">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo Gallery -->
+            <div class="detail-card" id="card-gallery">
+                <div class="card-header" onclick="Details.toggleCard('gallery')">
+                    <div class="card-icon orange">&#128247;</div>
+                    <div class="card-info">
+                        <div class="card-title">Photo Gallery</div>
+                        <div class="card-subtitle">Showcase your business with photos</div>
+                    </div>
+                    <span class="card-status" id="gallery-status">--</span>
+                    <span class="card-chevron" id="gallery-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="gallery-body">
+                    <div class="photo-grid" id="photo-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Members (conditional) -->
+            <div class="detail-card" id="card-team" style="display: none;">
+                <div class="card-header" onclick="Details.toggleCard('team')">
+                    <div class="card-icon pink">&#128101;</div>
+                    <div class="card-info">
+                        <div class="card-title">Team Members</div>
+                        <div class="card-subtitle">Staff and team displayed on your page</div>
+                    </div>
+                    <span class="card-status" id="team-status">--</span>
+                    <span class="card-chevron" id="team-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="team-body">
+                    <div class="team-list" id="team-list">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="margin-top: 16px; padding: 16px; background: #f7f9fc; border-radius: 10px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #657786; margin-bottom: 10px;">Add Team Member</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" id="team-new-name" placeholder="Name" style="flex: 1; min-width: 120px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <input type="text" id="team-new-role" placeholder="Role (e.g., Stylist)" style="flex: 1; min-width: 120px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <button class="btn btn-primary btn-sm" onclick="addTeamMember()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="detail-card" id="card-contact">
+                <div class="card-header" onclick="Details.toggleCard('contact')">
+                    <div class="card-icon blue">&#128222;</div>
+                    <div class="card-info">
+                        <div class="card-title">Contact Info</div>
+                        <div class="card-subtitle">Phone, address, email, and website</div>
+                    </div>
+                    <span class="card-status" id="contact-status">--</span>
+                    <span class="card-chevron" id="contact-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="contact-body">
+                    <div class="contact-grid">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="contact-phone" placeholder="(555) 123-4567"
+                                   oninput="Details.debouncedSave('business.phone', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Emergency / After Hours Phone</label>
+                            <input type="tel" id="contact-emergency-phone" placeholder="(555) 123-4568"
+                                   oninput="Details.debouncedSave('business.emergency_phone', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="contact-email" placeholder="info@yourbusiness.com"
+                                   oninput="Details.debouncedSave('business.email', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Website</label>
+                            <input type="url" id="contact-website" placeholder="https://yourbusiness.com"
+                                   oninput="Details.debouncedSave('business.website', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="contact-address" placeholder="123 Main St, City, State ZIP"
+                               oninput="Details.debouncedSave('business.address', this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Links -->
+            <div class="detail-card" id="card-links">
+                <div class="card-header" onclick="Details.toggleCard('links')">
+                    <div class="card-icon gray">&#128279;</div>
+                    <div class="card-info">
+                        <div class="card-title">Custom Links</div>
+                        <div class="card-subtitle">Patient portal, booking page, or other URLs</div>
+                    </div>
+                    <span class="card-status" id="links-status">--</span>
+                    <span class="card-chevron" id="links-chevron">&#9654;</span>
+                </div>
+                <div class="card-body" id="links-body">
+                    <div id="custom-links-list">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="margin-top: 16px; padding: 16px; background: #f7f9fc; border-radius: 10px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #657786; margin-bottom: 10px;">Add Custom Link</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" id="link-new-label" placeholder="Label (e.g., Patient Portal)" style="flex: 1; min-width: 140px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <input type="url" id="link-new-url" placeholder="https://..." style="flex: 1; min-width: 180px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <button class="btn btn-primary btn-sm" onclick="addCustomLink()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /cards-grid -->
+    </div><!-- /container -->
+
+    <!-- Save Indicator -->
+    <div class="save-indicator" id="save-indicator">Saved</div>
+
+    <script src="details.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        // --- State ---
+        var cc = null;
+        var DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        var DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        var SOCIAL_PLATFORMS = [
+            { id: 'instagram',       icon: '\uD83D\uDCF7', name: 'Instagram',       handleKey: 'handle' },
+            { id: 'facebook',        icon: '\uD83D\uDCD8', name: 'Facebook',         handleKey: 'page' },
+            { id: 'google_business', icon: '\uD83D\uDCCD', name: 'Google Business',  handleKey: 'name' },
+            { id: 'tiktok',          icon: '\uD83C\uDFB5', name: 'TikTok',           handleKey: 'handle' }
+        ];
+        var DEMO_PHOTOS = [
+            { emoji: '\uD83E\uDDC1', caption: 'Fresh cupcakes' },
+            { emoji: '\uD83C\uDF82', caption: 'Birthday cake' },
+            { emoji: '\uD83C\uDF6A', caption: 'Chocolate chip cookies' },
+            { emoji: '\u2615',       caption: 'Morning coffee' },
+            { emoji: '\uD83E\uDD50', caption: 'Cinnamon rolls' }
+        ];
+
+        // --- Helpers ---
+
+        function getCyberCheck() {
+            if (window.CyberCheck) return window.CyberCheck;
+            if (window.parent && window.parent.CyberCheck) return window.parent.CyberCheck;
+            return null;
+        }
+
+        function getInitials(name) {
+            if (!name) return '??';
+            return name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+        }
+
+        // Convert "7:00 AM" display format to 24h "07:00" for time input
+        function to24h(timeStr) {
+            if (!timeStr) return '';
+            // Already in HH:MM format
+            if (/^\d{1,2}:\d{2}$/.test(timeStr) && !timeStr.match(/[AaPp]/)) return timeStr;
+            var match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (!match) return '';
+            var h = parseInt(match[1], 10);
+            var m = match[2];
+            var ampm = match[3].toUpperCase();
+            if (ampm === 'PM' && h < 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return (h < 10 ? '0' : '') + h + ':' + m;
+        }
+
+        // Convert 24h "07:00" to display "7:00 AM"
+        function to12h(timeStr) {
+            if (!timeStr) return '';
+            var parts = timeStr.split(':');
+            var h = parseInt(parts[0], 10);
+            var m = parts[1];
+            var ampm = h >= 12 ? 'PM' : 'AM';
+            if (h === 0) h = 12;
+            else if (h > 12) h -= 12;
+            return h + ':' + m + ' ' + ampm;
+        }
+
+        // --- Render: About ---
+
+        function renderAbout() {
+            var tagline = Details.get('business.tagline') || '';
+            var description = Details.get('business.description') || '';
+            document.getElementById('about-tagline').value = tagline;
+            document.getElementById('about-description').value = description;
+            updateCharCount(document.getElementById('about-description'), 'about-charcount');
+
+            var filled = (tagline ? 1 : 0) + (description ? 1 : 0);
+            setStatus('about', filled === 2 ? 'connected' : (filled > 0 ? 'partial' : 'empty'),
+                       filled === 2 ? 'Complete' : (filled > 0 ? 'Partial' : 'Empty'));
+        }
+
+        // --- Render: Hours ---
+
+        function renderHours() {
+            var hours = Details.get('business.hours') || {};
+            var grid = document.getElementById('hours-grid');
+            var html = '';
+            var openDays = 0;
+
+            for (var i = 0; i < DAYS.length; i++) {
+                var day = DAYS[i];
+                var label = DAY_LABELS[i];
+                var data = hours[day] || { open: '', close: '', closed: true };
+                var isClosed = !!data.closed;
+                if (!isClosed) openDays++;
+                var openVal = to24h(data.open);
+                var closeVal = to24h(data.close);
+
+                html += '<div class="hour-row" data-day="' + day + '">';
+                html += '  <span class="hour-day">' + label + '</span>';
+                html += '  <input type="time" value="' + openVal + '"' + (isClosed ? ' disabled' : '') +
+                         ' onchange="saveHourField(\'' + day + '\', \'open\', this.value)">';
+                html += '  <input type="time" value="' + closeVal + '"' + (isClosed ? ' disabled' : '') +
+                         ' onchange="saveHourField(\'' + day + '\', \'close\', this.value)">';
+                html += '  <label class="toggle" title="' + (isClosed ? 'Closed - toggle to open' : 'Open - toggle to close') + '">';
+                html += '    <input type="checkbox"' + (isClosed ? '' : ' checked') +
+                         ' onchange="toggleDayClosed(\'' + day + '\', this)">';
+                html += '    <span class="toggle-slider"></span>';
+                html += '  </label>';
+                html += '</div>';
+            }
+
+            grid.innerHTML = html;
+
+            setStatus('hours', openDays > 0 ? 'connected' : 'empty',
+                       openDays + '/7 days open');
+        }
+
+        // --- Render: Social ---
+
+        function renderSocial() {
+            var container = document.getElementById('social-platforms');
+            var html = '';
+            var connectedCount = 0;
+
+            for (var i = 0; i < SOCIAL_PLATFORMS.length; i++) {
+                var p = SOCIAL_PLATFORMS[i];
+                var connected = Details.isConnected(p.id);
+                var info = Details.getConnectionInfo(p.id);
+                var handleText = connected ? (info[p.handleKey] || 'Connected') : 'Not connected';
+                if (connected) connectedCount++;
+
+                html += '<div class="oauth-row">';
+                html += '  <span class="oauth-icon">' + p.icon + '</span>';
+                html += '  <div class="oauth-info">';
+                html += '    <div class="oauth-name">' + p.name + '</div>';
+                html += '    <div class="oauth-handle">' + handleText + '</div>';
+                html += '  </div>';
+                html += '  ' + Details.renderOAuthBadge(p.id);
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+
+            // Feed settings state
+            var feedSettings = Details.get('business.feed_settings') || { show_feed: true, display_mode: 'grid', count: 3 };
+            document.getElementById('feed-show-toggle').checked = feedSettings.show_feed !== false;
+
+            // Display mode pills
+            var modePills = document.querySelectorAll('#feed-display-mode .radio-pill');
+            for (var j = 0; j < modePills.length; j++) {
+                modePills[j].classList.toggle('active', modePills[j].getAttribute('data-value') === (feedSettings.display_mode || 'grid'));
+            }
+
+            // Count pills
+            var countPills = document.querySelectorAll('#feed-count .radio-pill');
+            var countVal = String(feedSettings.count || 3);
+            for (var k = 0; k < countPills.length; k++) {
+                countPills[k].classList.toggle('active', countPills[k].getAttribute('data-value') === countVal);
+            }
+
+            renderFeedPreview(parseInt(countVal, 10));
+
+            setStatus('social', connectedCount === SOCIAL_PLATFORMS.length ? 'connected' :
+                       (connectedCount > 0 ? 'partial' : 'empty'),
+                       connectedCount + '/' + SOCIAL_PLATFORMS.length + ' connected');
+        }
+
+        function renderFeedPreview(count) {
+            var preview = document.getElementById('feed-preview');
+            var emojis = ['\uD83E\uDDC1', '\uD83C\uDF82', '\uD83C\uDF6A', '\u2615', '\uD83E\uDD50', '\uD83C\uDF70', '\uD83C\uDF69', '\uD83C\uDF6B', '\uD83C\uDF7C'];
+            var html = '';
+            for (var i = 0; i < count; i++) {
+                html += '<div class="feed-item">' + emojis[i % emojis.length] + '</div>';
+            }
+            preview.innerHTML = html;
+        }
+
+        // --- Render: Gallery ---
+
+        function renderGallery() {
+            var photos = Details.get('business.photos') || DEMO_PHOTOS.slice();
+            // If no photos stored yet, use demo
+            if (!Details.get('business.photos')) {
+                Details.save('business.photos', DEMO_PHOTOS.slice());
+                photos = DEMO_PHOTOS.slice();
+            }
+            var grid = document.getElementById('photo-grid');
+            var html = '';
+
+            for (var i = 0; i < photos.length; i++) {
+                var p = photos[i];
+                html += '<div class="photo-slot has-photo">';
+                html += '  <span style="font-size: 40px;">' + (p.emoji || '\uD83D\uDDBC') + '</span>';
+                html += '  <button class="photo-remove" onclick="removePhoto(' + i + ')" title="Remove">&times;</button>';
+                if (p.caption) html += '  <span class="photo-caption">' + p.caption + '</span>';
+                html += '</div>';
+            }
+
+            // Add button
+            html += '<div class="photo-add" onclick="addPhoto()">';
+            html += '  <span class="plus">+</span>';
+            html += '  <span>Add Photo</span>';
+            html += '</div>';
+
+            grid.innerHTML = html;
+
+            setStatus('gallery', photos.length > 0 ? 'connected' : 'empty',
+                       photos.length + ' photo' + (photos.length !== 1 ? 's' : ''));
+        }
+
+        // --- Render: Team ---
+
+        function renderTeam() {
+            var card = document.getElementById('card-team');
+            if (!Details.showsTeam()) {
+                card.style.display = 'none';
+                return;
+            }
+            card.style.display = '';
+
+            var members = Details.get('business.team_members') || [];
+            var list = document.getElementById('team-list');
+            var html = '';
+
+            if (members.length === 0) {
+                html = '<div style="text-align: center; padding: 20px; color: #999; font-size: 14px;">No team members added yet</div>';
+            } else {
+                for (var i = 0; i < members.length; i++) {
+                    var m = members[i];
+                    var initials = getInitials(m.name);
+                    html += '<div class="team-row">';
+                    html += '  <div class="team-avatar">' + initials + '</div>';
+                    html += '  <div class="team-info">';
+                    html += '    <div class="team-name">' + m.name + '</div>';
+                    html += '    <div class="team-role">' + (m.role || 'Staff') + '</div>';
+                    html += '  </div>';
+                    html += '  <button class="team-remove" onclick="removeTeamMember(' + i + ')" title="Remove">&times;</button>';
+                    html += '</div>';
+                }
+            }
+
+            list.innerHTML = html;
+
+            setStatus('team', members.length > 0 ? 'connected' : 'empty',
+                       members.length + ' member' + (members.length !== 1 ? 's' : ''));
+        }
+
+        // --- Render: Contact ---
+
+        function renderContact() {
+            var phone = Details.get('business.phone') || '';
+            var emergencyPhone = Details.get('business.emergency_phone') || '';
+            var email = Details.get('business.email') || '';
+            var website = Details.get('business.website') || '';
+            var address = Details.get('business.address') || '';
+
+            document.getElementById('contact-phone').value = phone;
+            document.getElementById('contact-emergency-phone').value = emergencyPhone;
+            document.getElementById('contact-email').value = email;
+            document.getElementById('contact-website').value = website;
+            document.getElementById('contact-address').value = address;
+
+            var filled = (phone ? 1 : 0) + (email ? 1 : 0) + (address ? 1 : 0);
+            setStatus('contact', filled >= 3 ? 'connected' : (filled > 0 ? 'partial' : 'empty'),
+                       filled + '/3 required fields');
+        }
+
+        // --- Render: Custom Links ---
+
+        function renderCustomLinks() {
+            var links = Details.get('business.custom_links') || [];
+            var container = document.getElementById('custom-links-list');
+            var html = '';
+
+            if (links.length === 0) {
+                html = '<div style="text-align: center; padding: 20px; color: #999; font-size: 14px;">No custom links added yet</div>';
+            } else {
+                for (var i = 0; i < links.length; i++) {
+                    var lnk = links[i];
+                    html += '<div class="oauth-row">';
+                    html += '  <span class="oauth-icon">\uD83D\uDD17</span>';
+                    html += '  <div class="oauth-info">';
+                    html += '    <div class="oauth-name">' + (lnk.label || 'Untitled') + '</div>';
+                    html += '    <div class="oauth-handle">' + (lnk.url || '') + '</div>';
+                    html += '  </div>';
+                    html += '  <button class="team-remove" onclick="removeCustomLink(' + i + ')" title="Remove">&times;</button>';
+                    html += '</div>';
+                }
+            }
+
+            container.innerHTML = html;
+
+            setStatus('links', links.length > 0 ? 'connected' : 'empty',
+                       links.length + ' link' + (links.length !== 1 ? 's' : ''));
+        }
+
+        // --- Status badge helper ---
+
+        function setStatus(cardId, type, text) {
+            var el = document.getElementById(cardId + '-status');
+            if (!el) return;
+            el.className = 'card-status ' + type;
+            el.textContent = text;
+        }
+
+        // --- Expose globals for inline handlers ---
+
+        window.updateCharCount = function(textarea, counterId) {
+            var el = document.getElementById(counterId);
+            if (el) el.textContent = textarea.value.length + ' / ' + (textarea.maxLength || 1000);
+        };
+
+        window.saveHourField = function(day, field, value) {
+            var hours = Details.get('business.hours') || {};
+            if (!hours[day]) hours[day] = { open: '', close: '', closed: true };
+            hours[day][field] = to12h(value);
+            Details.save('business.hours', hours);
+            // Update status count
+            var openDays = 0;
+            for (var i = 0; i < DAYS.length; i++) {
+                if (hours[DAYS[i]] && !hours[DAYS[i]].closed) openDays++;
+            }
+            setStatus('hours', openDays > 0 ? 'connected' : 'empty', openDays + '/7 days open');
+        };
+
+        window.toggleDayClosed = function(day, checkbox) {
+            var hours = Details.get('business.hours') || {};
+            if (!hours[day]) hours[day] = { open: '', close: '', closed: true };
+            hours[day].closed = !checkbox.checked;
+            Details.save('business.hours', hours);
+
+            // Enable/disable sibling time inputs
+            var row = checkbox.closest('.hour-row');
+            var timeInputs = row.querySelectorAll('input[type="time"]');
+            for (var t = 0; t < timeInputs.length; t++) {
+                timeInputs[t].disabled = !checkbox.checked;
+            }
+
+            // Update status count
+            var openDays = 0;
+            for (var i = 0; i < DAYS.length; i++) {
+                if (hours[DAYS[i]] && !hours[DAYS[i]].closed) openDays++;
+            }
+            setStatus('hours', openDays > 0 ? 'connected' : 'empty', openDays + '/7 days open');
+        };
+
+        window.setFeedMode = function(pill) {
+            var siblings = pill.parentElement.querySelectorAll('.radio-pill');
+            for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('active');
+            pill.classList.add('active');
+            saveFeedSettings();
+        };
+
+        window.setFeedCount = function(pill) {
+            var siblings = pill.parentElement.querySelectorAll('.radio-pill');
+            for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('active');
+            pill.classList.add('active');
+            saveFeedSettings();
+            renderFeedPreview(parseInt(pill.getAttribute('data-value'), 10));
+        };
+
+        window.saveFeedSettings = function() {
+            var showFeed = document.getElementById('feed-show-toggle').checked;
+            var modeEl = document.querySelector('#feed-display-mode .radio-pill.active');
+            var countEl = document.querySelector('#feed-count .radio-pill.active');
+            var settings = {
+                show_feed: showFeed,
+                display_mode: modeEl ? modeEl.getAttribute('data-value') : 'grid',
+                count: countEl ? parseInt(countEl.getAttribute('data-value'), 10) : 3
+            };
+            Details.save('business.feed_settings', settings);
+        };
+
+        window.addPhoto = function() {
+            var photos = Details.get('business.photos') || [];
+            var randomEmojis = ['\uD83C\uDF70', '\uD83C\uDF69', '\uD83C\uDF6B', '\uD83C\uDF7C', '\uD83C\uDF81', '\uD83C\uDF3B', '\uD83C\uDF89'];
+            var idx = photos.length % randomEmojis.length;
+            photos.push({ emoji: randomEmojis[idx], caption: 'New photo ' + (photos.length + 1) });
+            Details.save('business.photos', photos);
+            renderGallery();
+        };
+
+        window.removePhoto = function(index) {
+            var photos = Details.get('business.photos') || [];
+            photos.splice(index, 1);
+            Details.save('business.photos', photos);
+            renderGallery();
+        };
+
+        window.addTeamMember = function() {
+            var nameInput = document.getElementById('team-new-name');
+            var roleInput = document.getElementById('team-new-role');
+            var name = nameInput.value.trim();
+            var role = roleInput.value.trim();
+            if (!name) { nameInput.focus(); return; }
+
+            var members = Details.get('business.team_members') || [];
+            members.push({ name: name, role: role || 'Staff' });
+            Details.save('business.team_members', members);
+            nameInput.value = '';
+            roleInput.value = '';
+            renderTeam();
+        };
+
+        window.removeTeamMember = function(index) {
+            var members = Details.get('business.team_members') || [];
+            members.splice(index, 1);
+            Details.save('business.team_members', members);
+            renderTeam();
+        };
+
+        window.addCustomLink = function() {
+            var labelInput = document.getElementById('link-new-label');
+            var urlInput = document.getElementById('link-new-url');
+            var label = labelInput.value.trim();
+            var url = urlInput.value.trim();
+            if (!label || !url) {
+                if (!label) labelInput.focus();
+                else urlInput.focus();
+                return;
+            }
+
+            var links = Details.get('business.custom_links') || [];
+            links.push({ label: label, url: url });
+            Details.save('business.custom_links', links);
+            labelInput.value = '';
+            urlInput.value = '';
+            renderCustomLinks();
+        };
+
+        window.removeCustomLink = function(index) {
+            var links = Details.get('business.custom_links') || [];
+            links.splice(index, 1);
+            Details.save('business.custom_links', links);
+            renderCustomLinks();
+        };
+
+        // --- Data updated handler (called by details.js when parent broadcasts) ---
+
+        window.onDataUpdated = function() {
+            renderAll();
+        };
+
+        // --- Render all ---
+
+        function renderAll() {
+            renderAbout();
+            renderHours();
+            renderSocial();
+            renderGallery();
+            renderTeam();
+            renderContact();
+            renderCustomLinks();
+        }
+
+        // --- Init on DOMContentLoaded ---
+
+        document.addEventListener('DOMContentLoaded', function() {
+            cc = Details.init();
+            if (!cc) {
+                console.warn('BusinessDetails: CyberCheck data not available, using standalone mode');
+            }
+            renderAll();
+
+            // Notify parent that this app has loaded
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'app_loaded', app: 'business-details' }, '*');
+            }
+        });
+
+    })();
+    </script>
+</body>
+</html>
