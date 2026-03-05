@@ -20,9 +20,9 @@
 // │  clicks pay  │     │  creates session  │     │  charges card│
 // └──────────────┘     │  with:            │     └──────────────┘
 //                       │  - account_id     │           │
-//                       │  - app_fee (3%)   │     ┌─────┴────────┐
-//                       └──────────────────┘     │  97% → Owner  │
-//                                                 │  3%  → You    │
+//                       │  - app_fee (1%)   │     ┌─────┴────────┐
+//                       └──────────────────┘     │  99% → Owner  │
+//                                                 │  1%  → You    │
 //                                                 └──────────────┘
 //
 // NO API KEYS EVER TOUCH YOUR PLATFORM.
@@ -33,7 +33,7 @@ var STRIPE_CONNECT_STORAGE = 'beachside_stripe_connect';
 
 // Your platform's Stripe Connect client ID (set this in production)
 var PLATFORM_CLIENT_ID = 'ca_DEMO_your_platform_client_id';
-var PLATFORM_FEE_PERCENT = 3; // Your cut: 3% of every transaction
+var PLATFORM_FEE_PERCENT = 1; // Your cut: 1% of every transaction
 
 var _stripeConnect = {
   accountId: '',
@@ -65,7 +65,7 @@ function loadConnections() {
   // Fetch Stripe status from API
   var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
   if (token) {
-    fetch('/api/stripe/status', {
+    fetch((window.CC_API_BASE || '') + '/api/stripe/status', {
       headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(function(r) { return r.json(); })
@@ -242,7 +242,7 @@ function startStripeConnect() {
     return;
   }
 
-  fetch('/api/stripe/connect-url', {
+  fetch((window.CC_API_BASE || '') + '/api/stripe/connect-url', {
     headers: { 'Authorization': 'Bearer ' + token }
   })
   .then(function(r) { return r.json(); })
@@ -265,7 +265,7 @@ function disconnectStripe() {
   if (!confirm('Disconnect Stripe? Customers won\'t be able to pay online until you reconnect.')) return;
 
   var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
-  fetch('/api/stripe/disconnect', {
+  fetch((window.CC_API_BASE || '') + '/api/stripe/disconnect', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + token }
   })
