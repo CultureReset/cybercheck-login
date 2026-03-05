@@ -247,12 +247,9 @@ async function wcUploadImg(inputId, fileInput) {
   const btn = fileInput.previousElementSibling;
   if (btn) btn.textContent = 'Uploading…';
   try {
-    const form = new FormData();
-    form.append('image', file);
-    const context = fileInput.dataset.context || 'default';
-    const res = await fetch(WC_BASE + '/api/upload-image?context=' + context, { method: 'POST', body: form });
-    if (!res.ok) throw new Error(res.status);
-    const { url } = await res.json();
+    const context = fileInput.dataset.context || 'website';
+    const url = await uploadToSupabase(file, context);
+    if (!url) throw new Error('Upload returned no URL');
     document.getElementById(inputId).value = url;
     wcRefreshPreview(inputId);
     toast('Image uploaded ✓');
@@ -583,11 +580,8 @@ async function wcFeatureImageUpload(fileInput, index) {
   const btn = fileInput.previousElementSibling;
   if (btn) btn.textContent = 'Uploading…';
   try {
-    const form = new FormData();
-    form.append('image', file);
-    const res = await fetch(WC_BASE + '/api/upload-image?context=feature', { method: 'POST', body: form });
-    if (!res.ok) throw new Error(res.status);
-    const { url } = await res.json();
+    const url = await uploadToSupabase(file, 'feature');
+    if (!url) throw new Error('Upload returned no URL');
     if (!_wc_data.features) _wc_data.features = [];
     if (!_wc_data.features[index]) _wc_data.features[index] = {};
     _wc_data.features[index].image = url;
@@ -641,12 +635,8 @@ async function wcGalleryAdd(fileInput) {
   if (!_wc_data.gallery) _wc_data.gallery = [];
   try {
     for (const file of files) {
-      const form = new FormData();
-      form.append('image', file);
-      const res = await fetch(WC_BASE + '/api/upload-image?context=gallery', { method: 'POST', body: form });
-      if (!res.ok) throw new Error(res.status);
-      const { url } = await res.json();
-      _wc_data.gallery.push(url);
+      const url = await uploadToSupabase(file, 'gallery');
+      if (url) _wc_data.gallery.push(url);
     }
     await wcPush();
     renderWCSection('gallery');
