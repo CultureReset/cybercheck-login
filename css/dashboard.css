@@ -549,6 +549,14 @@ table tr:hover td {
   padding: 28px;
 }
 
+/* Payment modal must not clip Stripe iframe */
+#modal-payment .modal {
+  overflow: visible;
+}
+#modal-payment {
+  overflow-y: auto;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
