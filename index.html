@@ -1196,12 +1196,25 @@
       loadSEO();
       loadSocial();
 
-      // Update overview stats
-      document.getElementById('stat-status').textContent = 'Draft';
-      document.getElementById('stat-media').textContent = typeof _mediaItems !== 'undefined' ? _mediaItems.length : 0;
-      document.getElementById('stat-pages').textContent = typeof _pages !== 'undefined' ? _pages.length : 0;
-      document.getElementById('stat-items').textContent = typeof _inventoryItems !== 'undefined'
-        ? _inventoryItems.reduce(function(s, i) { return s + i.qty; }, 0) : 0;
+      // Update overview stats with real data
+      (async function() {
+        var bookings = await CC.dashboard.getBookings().catch(function() { return []; });
+        var customers = await CC.dashboard.getCustomers().catch(function() { return []; });
+        var today = new Date().toISOString().split('T')[0];
+        var thisMonth = today.slice(0, 7); // 'YYYY-MM'
+
+        var monthRevenue = bookings
+          .filter(function(b) { return b.status !== 'cancelled' && (b.booking_date || '').slice(0, 7) === thisMonth; })
+          .reduce(function(sum, b) { return sum + (parseFloat(b.total) || 0); }, 0);
+
+        var todayCount = bookings.filter(function(b) { return b.booking_date === today && b.status !== 'cancelled'; }).length;
+        var pendingCount = bookings.filter(function(b) { return b.status === 'pending'; }).length;
+
+        document.getElementById('stat-status').textContent = '$' + monthRevenue.toFixed(2);
+        document.getElementById('stat-media').textContent = todayCount;
+        document.getElementById('stat-items').textContent = customers.length || 0;
+        document.getElementById('stat-pages').textContent = pendingCount;
+      })();
     })();
 
     function openModal(id) { document.getElementById(id).classList.add('open'); }

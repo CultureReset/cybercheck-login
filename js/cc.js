@@ -428,7 +428,9 @@ const CC = (function() {
     // --- Bookings ---
     getBookings: async function(params) {
       var siteId = await ensureSiteId(); if (!siteId) return [];
-      var query = supabase.from('bookings').select('*').eq('site_id', siteId).order('booking_date', { ascending: true });
+      var query = supabase.from('bookings')
+        .select('*, fleet_types(name), rental_time_slots(name, start_time, end_time)')
+        .eq('site_id', siteId).order('booking_date', { ascending: true });
       if (params) {
         if (params.status) query = query.eq('status', params.status);
         if (params.date) query = query.eq('booking_date', params.date);
