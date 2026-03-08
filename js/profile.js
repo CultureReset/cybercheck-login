@@ -184,35 +184,7 @@ async function saveProfile() {
 
   document.getElementById('sidebar-biz-name').textContent = _profileData.name || 'My Business';
 
-  // Save to local API (Circle Boats)
-  try {
-    const apiRes = await fetch('http://localhost:3001/api/public/save-section', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        section: 'business',
-        data: {
-          name: _profileData.name,
-          phone: _profileData.phone,
-          email: _profileData.email,
-          address: _profileData.address,
-          hours: _profileData.hours,
-          tagline: _profileData.tagline || 'Your Day on the Water Just Got an Upgrade',
-          description: _profileData.description
-        }
-      })
-    });
-
-    if (apiRes.ok) {
-      toast('✅ Profile saved!', 'success');
-    } else {
-      toast('⚠️ Local save failed', 'warning');
-    }
-  } catch (e) {
-    toast('Local API unavailable - ' + e.message, 'warning');
-  }
-
-  // Also try Supabase if available
+  // Save to Supabase
   try {
     await CC.dashboard.updateProfile({
       business: { name: _profileData.name, logo_url: _profileData.logo },
@@ -229,8 +201,10 @@ async function saveProfile() {
         hours: _profileData.hours
       }
     });
+    toast('Profile saved!', 'success');
   } catch (e) {
-    console.log('Supabase unavailable - using local API only');
+    console.error('Failed to save profile:', e);
+    toast('Save failed — ' + e.message, 'error');
   }
   } catch (e) { console.error('Failed to save profile:', e); toast('Save failed — ' + e.message, 'error'); }
 }

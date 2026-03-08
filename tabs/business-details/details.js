@@ -27,11 +27,51 @@
         return cc;
     }
 
+    // Debounced push to Supabase — batches rapid field changes into one API call
+    var _pushTimer = null;
+    function schedulePushToAPI() {
+        clearTimeout(_pushTimer);
+        _pushTimer = setTimeout(pushToAPI, 1200);
+    }
+
+    async function pushToAPI() {
+        var CC = window.CC || (window.parent && window.parent.CC);
+        if (!cc || !CC || !CC.dashboard) return;
+        try {
+            var biz = cc.get('business') || {};
+            var tools = cc.get('connected_tools') || {};
+            await CC.dashboard.updateProfile({
+                business: {
+                    name:      biz.name,
+                    logo_url:  biz.logo_url || biz.logo
+                },
+                content: {
+                    about_text:    biz.description,
+                    contact_phone: biz.phone,
+                    contact_email: biz.email,
+                    website_url:   biz.website,
+                    address:       biz.address,
+                    city:          biz.city,
+                    state:         biz.state,
+                    zip:           biz.zip,
+                    social_links: {
+                        facebook:  (tools.facebook  && tools.facebook.page)      || '',
+                        instagram: (tools.instagram && tools.instagram.handle)   || '',
+                        tiktok:    (tools.tiktok    && tools.tiktok.handle)      || ''
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn('Details pushToAPI failed:', e.message);
+        }
+    }
+
     // Save a field and show indicator
     function saveField(path, value) {
         if (!cc) return;
         cc.set(path, value);
         showSaved();
+        schedulePushToAPI();
     }
 
     // Get a field value
