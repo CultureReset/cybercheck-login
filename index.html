@@ -944,10 +944,23 @@
   <div class="modal-overlay" id="modal-payment"><div class="modal" style="max-width:480px;">
     <div class="modal-header"><h3>Add Payment Method</h3><button class="modal-close" onclick="closeModal('modal-payment')">&times;</button></div>
     <div style="padding:4px 0 20px;">
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Enter your card details below. Processed securely by Stripe.</p>
-      <div id="stripe-card-element" style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;min-height:46px;"></div>
-      <div id="stripe-card-error" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Enter your card details. Processed securely by Stripe.</p>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Card Number</label>
+        <div id="stripe-card-number" style="position:relative;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;height:46px;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">Expiry</label>
+          <div id="stripe-card-expiry" style="position:relative;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;height:46px;"></div>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px;">CVC</label>
+          <div id="stripe-card-cvc" style="position:relative;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;height:46px;"></div>
+        </div>
+      </div>
+      <div id="stripe-card-error" style="color:#ef4444;font-size:12px;margin-bottom:12px;display:none;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-outline" onclick="closeModal('modal-payment')">Cancel</button>
         <button class="btn btn-primary" id="stripe-save-btn" onclick="savePaymentMethod()">Save Card</button>
       </div>

@@ -220,48 +220,41 @@ function renderPaymentMethod() {
 }
 
 var _stripe = null;
-var _stripeCardElement = null;
+var _stripeElements = { number: null, expiry: null, cvc: null };
 
-// Mount Stripe card — called AFTER modal is visible so iframe gets real dimensions
 function mountStripeCard() {
   var pk = window.CC_STRIPE_PUBLISHABLE_KEY;
-  if (!pk || pk.indexOf('pk_') !== 0) {
-    document.getElementById('stripe-card-element').innerHTML =
-      '<p style="color:#ef4444;font-size:13px;padding:4px 0;">Stripe key not configured.</p>';
-    return;
-  }
-  if (typeof Stripe === 'undefined') {
-    document.getElementById('stripe-card-element').innerHTML =
-      '<p style="color:#ef4444;font-size:13px;padding:4px 0;">Stripe.js not loaded.</p>';
-    return;
-  }
+  if (!pk || pk.indexOf('pk_') !== 0) return;
+  if (typeof Stripe === 'undefined') return;
 
-  // Destroy previous element if re-opening modal
-  if (_stripeCardElement) {
-    try { _stripeCardElement.destroy(); } catch(e) {}
-    _stripeCardElement = null;
-  }
+  // Destroy any previous instances
+  ['number', 'expiry', 'cvc'].forEach(function(k) {
+    if (_stripeElements[k]) { try { _stripeElements[k].destroy(); } catch(e) {} _stripeElements[k] = null; }
+  });
 
   try {
     if (!_stripe) _stripe = Stripe(pk);
     var elements = _stripe.elements();
-    _stripeCardElement = elements.create('card', {
-      style: {
-        base: {
-          fontSize: '15px',
-          color: '#e2e8f0',
-          '::placeholder': { color: '#64748b' },
-          backgroundColor: 'transparent'
-        },
-        invalid: { color: '#ef4444' }
-      }
-    });
-    _stripeCardElement.mount('#stripe-card-element');
-    _stripeCardElement.on('change', function(e) {
-      var errEl = document.getElementById('stripe-card-error');
-      if (!errEl) return;
-      if (e.error) { errEl.textContent = e.error.message; errEl.style.display = 'block'; }
-      else { errEl.style.display = 'none'; }
+    var style = {
+      base: { fontSize: '14px', color: '#e2e8f0', '::placeholder': { color: '#64748b' } },
+      invalid: { color: '#ef4444' }
+    };
+
+    _stripeElements.number = elements.create('cardNumber', { style: style });
+    _stripeElements.expiry = elements.create('cardExpiry', { style: style });
+    _stripeElements.cvc    = elements.create('cardCvc',    { style: style });
+
+    _stripeElements.number.mount('#stripe-card-number');
+    _stripeElements.expiry.mount('#stripe-card-expiry');
+    _stripeElements.cvc.mount('#stripe-card-cvc');
+
+    ['number', 'expiry', 'cvc'].forEach(function(k) {
+      _stripeElements[k].on('change', function(e) {
+        var errEl = document.getElementById('stripe-card-error');
+        if (!errEl) return;
+        if (e.error) { errEl.textContent = e.error.message; errEl.style.display = 'block'; }
+        else { errEl.style.display = 'none'; }
+      });
     });
   } catch(e) {
     console.error('Stripe mount error:', e);
@@ -269,23 +262,21 @@ function mountStripeCard() {
 }
 
 function updatePaymentMethod() {
-  // Open modal first so the container is visible (non-zero size) before Stripe mounts
   openModal('modal-payment');
-  // Use requestAnimationFrame to ensure the browser has painted the modal as visible
   requestAnimationFrame(function() {
     requestAnimationFrame(mountStripeCard);
   });
 }
 
 async function savePaymentMethod() {
-  if (!_stripe || !_stripeCardElement) return;
+  if (!_stripe || !_stripeElements.number) return;
   var btn = document.getElementById('stripe-save-btn');
   btn.disabled = true;
   btn.textContent = 'Saving...';
 
   var { paymentMethod, error } = await _stripe.createPaymentMethod({
     type: 'card',
-    card: _stripeCardElement
+    card: _stripeElements.number
   });
 
   if (error) {
