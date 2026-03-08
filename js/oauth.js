@@ -32,14 +32,14 @@
 var STRIPE_CONNECT_STORAGE = 'beachside_stripe_connect';
 
 // Your platform's Stripe Connect client ID (set this in production)
-var PLATFORM_CLIENT_ID = 'ca_DEMO_your_platform_client_id';
+var PLATFORM_CLIENT_ID = window.CC_STRIPE_CLIENT_ID || 'ca_DEMO_your_platform_client_id';
 var PLATFORM_FEE_PERCENT = 1; // Your cut: 1% of every transaction
 
 var _stripeConnect = {
-  accountId: '',
-  connected: false,
-  businessName: '',
-  email: ''
+  accountId: 'acct_1SmhDo0pR4BTjK5e',
+  connected: true,
+  businessName: 'Beachside Circle Boats',
+  email: 'beachsideboats@myyahoo.com'
 };
 
 var _connections = {
