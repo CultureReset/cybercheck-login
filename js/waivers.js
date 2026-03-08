@@ -425,7 +425,7 @@ function disconnectWaiverProvider(key) {
 
 // ---- Waiver Document Upload ----
 
-function uploadWaiverDocument() {
+async function uploadWaiverDocument() {
   var fileInput = document.getElementById('waiver-doc-input');
   var file = fileInput.files[0];
   if (!file) {
@@ -436,43 +436,29 @@ function uploadWaiverDocument() {
   var statusDiv = document.getElementById('waiver-upload-status');
   statusDiv.textContent = '⏳ Uploading...';
 
-  var formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', 'waiver');
+  try {
+    var siteId = CC.getSiteId ? CC.getSiteId() : 'default';
+    var ext = file.name.split('.').pop();
+    var fileName = 'waivers/' + siteId + '/waiver-doc-' + Date.now() + '.' + ext;
 
-  fetch('http://localhost:3001/api/upload-doc', {
-    method: 'POST',
-    body: formData
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(result) {
-    if (result.success && result.url) {
-      _waiverSettings.documentUrl = result.url;
-      _waiverSettings.documentName = result.originalName;
-      saveWaivers();
+    var { data, error } = await supabase.storage
+      .from('documents')
+      .upload(fileName, file, { upsert: true, contentType: file.type });
 
-      // Also save to site-data
-      fetch('http://localhost:3001/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          section: 'waivers',
-          data: {
-            documentUrl: result.url,
-            documentName: result.originalName
-          }
-        })
-      });
+    if (error) throw error;
 
-      statusDiv.textContent = '✅ Document uploaded!';
-      setTimeout(function() { renderWaiverSettings(); }, 1000);
-    } else {
-      statusDiv.textContent = '❌ Error: ' + (result.error || 'Unknown error');
-    }
-  })
-  .catch(function(e) {
-    statusDiv.textContent = '❌ Error: ' + e.message;
-  });
+    var { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
+    var publicUrl = urlData.publicUrl;
+
+    _waiverSettings.documentUrl = publicUrl;
+    _waiverSettings.documentName = file.name;
+    saveWaivers();
+
+    statusDiv.textContent = '✅ Document uploaded!';
+    setTimeout(function() { renderWaiverSettings(); }, 1000);
+  } catch(e) {
+    statusDiv.textContent = '❌ Error: ' + (e.message || 'Upload failed');
+  }
 }
 
 function downloadWaiverDoc() {
