@@ -222,7 +222,7 @@ function renderPaymentMethod() {
 function updatePaymentMethod() {
   var html = '<div style="padding:20px;">';
   html += '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Enter your card details below. Processed securely by Stripe.</p>';
-  html += '<div id="stripe-card-element" style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;min-height:44px;"></div>';
+  html += '<div id="stripe-card-element" style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;height:44px;line-height:20px;"></div>';
   html += '<div id="stripe-card-error" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;"></div>';
   html += '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">';
   html += '<button class="btn btn-outline" onclick="closeModal(\'modal-payment\')">Cancel</button>';
