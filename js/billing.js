@@ -219,66 +219,51 @@ function renderPaymentMethod() {
   container.innerHTML = html;
 }
 
-function updatePaymentMethod() {
-  var html = '<div style="padding:20px;">';
-  html += '<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Enter your card details below. Processed securely by Stripe.</p>';
-  html += '<div id="stripe-card-element" style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;height:44px;line-height:20px;"></div>';
-  html += '<div id="stripe-card-error" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;"></div>';
-  html += '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">';
-  html += '<button class="btn btn-outline" onclick="closeModal(\'modal-payment\')">Cancel</button>';
-  html += '<button class="btn btn-primary" id="stripe-save-btn" onclick="savePaymentMethod()">Save Card</button>';
-  html += '</div>';
-  html += '</div>';
-
-  document.getElementById('payment-modal-title').textContent = 'Add Payment Method';
-  document.getElementById('payment-modal-body').innerHTML = html;
-  openModal('modal-payment');
-
-  // Mount Stripe Elements
-  setTimeout(function() {
-    var pk = window.CC_STRIPE_PUBLISHABLE_KEY;
-    if (!pk || pk.indexOf('pk_') !== 0) {
-      document.getElementById('stripe-card-element').innerHTML = '<p style="color:#ef4444;font-size:13px;">Stripe not configured. Add publishable key to index.html.</p>';
-      return;
-    }
-    if (typeof Stripe === 'undefined') {
-      var script = document.createElement('script');
-      script.src = 'https://js.stripe.com/v3/';
-      script.onload = function() { mountStripeCard(pk); };
-      document.head.appendChild(script);
-    } else {
-      mountStripeCard(pk);
-    }
-  }, 100);
-}
-
 var _stripe = null;
 var _stripeCardElement = null;
 
-function mountStripeCard(pk) {
-  _stripe = Stripe(pk);
-  var elements = _stripe.elements();
-  _stripeCardElement = elements.create('card', {
-    style: {
-      base: {
-        fontSize: '14px',
-        color: '#e2e8f0',
-        '::placeholder': { color: '#64748b' },
-        backgroundColor: 'transparent'
-      },
-      invalid: { color: '#ef4444' }
-    }
-  });
-  _stripeCardElement.mount('#stripe-card-element');
-  _stripeCardElement.on('change', function(e) {
-    var errEl = document.getElementById('stripe-card-error');
-    if (e.error) {
-      errEl.textContent = e.error.message;
-      errEl.style.display = 'block';
-    } else {
-      errEl.style.display = 'none';
-    }
-  });
+// Mount Stripe card once after page load — card element lives in static HTML
+function initStripeCard() {
+  var pk = window.CC_STRIPE_PUBLISHABLE_KEY;
+  if (!pk || pk.indexOf('pk_') !== 0) return;
+  if (typeof Stripe === 'undefined') return;
+  if (_stripeCardElement) return; // already mounted
+  try {
+    _stripe = Stripe(pk);
+    var elements = _stripe.elements();
+    _stripeCardElement = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '15px',
+          color: '#e2e8f0',
+          '::placeholder': { color: '#64748b' },
+          backgroundColor: 'transparent'
+        },
+        invalid: { color: '#ef4444' }
+      }
+    });
+    _stripeCardElement.mount('#stripe-card-element');
+    _stripeCardElement.on('change', function(e) {
+      var errEl = document.getElementById('stripe-card-error');
+      if (!errEl) return;
+      if (e.error) {
+        errEl.textContent = e.error.message;
+        errEl.style.display = 'block';
+      } else {
+        errEl.style.display = 'none';
+      }
+    });
+  } catch(e) {
+    console.error('Stripe init error:', e);
+  }
+}
+
+function updatePaymentMethod() {
+  openModal('modal-payment');
+  // If Stripe isn't mounted yet, try now
+  if (!_stripeCardElement) {
+    setTimeout(initStripeCard, 200);
+  }
 }
 
 async function savePaymentMethod() {
@@ -347,4 +332,8 @@ function renderInvoices() {
   container.innerHTML = html;
 }
 
-onPageLoad('billing', loadBilling);
+onPageLoad('billing', function() {
+  loadBilling();
+  // Mount Stripe card element after billing tab loads
+  setTimeout(initStripeCard, 500);
+});

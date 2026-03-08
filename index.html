@@ -942,8 +942,16 @@
 
   <!-- Payment Method Modal -->
   <div class="modal-overlay" id="modal-payment"><div class="modal" style="max-width:480px;">
-    <div class="modal-header"><h3 id="payment-modal-title">Add Payment Method</h3><button class="modal-close" onclick="closeModal('modal-payment')">&times;</button></div>
-    <div id="payment-modal-body"></div>
+    <div class="modal-header"><h3>Add Payment Method</h3><button class="modal-close" onclick="closeModal('modal-payment')">&times;</button></div>
+    <div style="padding:4px 0 20px;">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Enter your card details below. Processed securely by Stripe.</p>
+      <div id="stripe-card-element" style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;min-height:46px;"></div>
+      <div id="stripe-card-error" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-outline" onclick="closeModal('modal-payment')">Cancel</button>
+        <button class="btn btn-primary" id="stripe-save-btn" onclick="savePaymentMethod()">Save Card</button>
+      </div>
+    </div>
   </div></div>
 
   <!-- Insert Data Token Modal -->
