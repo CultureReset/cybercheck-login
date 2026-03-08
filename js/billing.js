@@ -222,14 +222,28 @@ function renderPaymentMethod() {
 var _stripe = null;
 var _stripeCardElement = null;
 
-// Mount Stripe card once after page load — card element lives in static HTML
-function initStripeCard() {
+// Mount Stripe card — called AFTER modal is visible so iframe gets real dimensions
+function mountStripeCard() {
   var pk = window.CC_STRIPE_PUBLISHABLE_KEY;
-  if (!pk || pk.indexOf('pk_') !== 0) return;
-  if (typeof Stripe === 'undefined') return;
-  if (_stripeCardElement) return; // already mounted
+  if (!pk || pk.indexOf('pk_') !== 0) {
+    document.getElementById('stripe-card-element').innerHTML =
+      '<p style="color:#ef4444;font-size:13px;padding:4px 0;">Stripe key not configured.</p>';
+    return;
+  }
+  if (typeof Stripe === 'undefined') {
+    document.getElementById('stripe-card-element').innerHTML =
+      '<p style="color:#ef4444;font-size:13px;padding:4px 0;">Stripe.js not loaded.</p>';
+    return;
+  }
+
+  // Destroy previous element if re-opening modal
+  if (_stripeCardElement) {
+    try { _stripeCardElement.destroy(); } catch(e) {}
+    _stripeCardElement = null;
+  }
+
   try {
-    _stripe = Stripe(pk);
+    if (!_stripe) _stripe = Stripe(pk);
     var elements = _stripe.elements();
     _stripeCardElement = elements.create('card', {
       style: {
@@ -246,24 +260,21 @@ function initStripeCard() {
     _stripeCardElement.on('change', function(e) {
       var errEl = document.getElementById('stripe-card-error');
       if (!errEl) return;
-      if (e.error) {
-        errEl.textContent = e.error.message;
-        errEl.style.display = 'block';
-      } else {
-        errEl.style.display = 'none';
-      }
+      if (e.error) { errEl.textContent = e.error.message; errEl.style.display = 'block'; }
+      else { errEl.style.display = 'none'; }
     });
   } catch(e) {
-    console.error('Stripe init error:', e);
+    console.error('Stripe mount error:', e);
   }
 }
 
 function updatePaymentMethod() {
+  // Open modal first so the container is visible (non-zero size) before Stripe mounts
   openModal('modal-payment');
-  // If Stripe isn't mounted yet, try now
-  if (!_stripeCardElement) {
-    setTimeout(initStripeCard, 200);
-  }
+  // Use requestAnimationFrame to ensure the browser has painted the modal as visible
+  requestAnimationFrame(function() {
+    requestAnimationFrame(mountStripeCard);
+  });
 }
 
 async function savePaymentMethod() {
@@ -332,8 +343,4 @@ function renderInvoices() {
   container.innerHTML = html;
 }
 
-onPageLoad('billing', function() {
-  loadBilling();
-  // Mount Stripe card element after billing tab loads
-  setTimeout(initStripeCard, 500);
-});
+onPageLoad('billing', loadBilling);
