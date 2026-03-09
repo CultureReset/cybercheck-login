@@ -58,6 +58,8 @@ var _socialConnections = {
   youtube: { connected: false, label: 'YouTube', desc: 'Upload videos, manage your channel', icon: 'YT', color: '#ff0000', scope: 'youtube.upload' }
 };
 
+var _manualKeyStatus = { saved: false, mode: '' };
+
 function loadConnections() {
   // Check URL for OAuth callback first (after Stripe redirect)
   checkStripeCallback();
@@ -72,11 +74,12 @@ function loadConnections() {
     .then(function(data) {
       _stripeConnect.connected = data.connected;
       _stripeConnect.accountId = data.accountId || '';
+      _manualKeyStatus.saved = !!data.manualKey;
+      _manualKeyStatus.mode  = data.manualKey ? (data.accountName || 'saved') : '';
       try { localStorage.setItem(STRIPE_CONNECT_STORAGE, JSON.stringify(_stripeConnect)); } catch(e) {}
       renderStripeSection();
     })
     .catch(function() {
-      // Fallback to localStorage
       try {
         var saved = localStorage.getItem(STRIPE_CONNECT_STORAGE);
         if (saved) {
@@ -231,7 +234,84 @@ function renderStripeSection() {
     html += '</div>';
   }
 
+  // ---- MANUAL KEY SECTION (always shown below, temp option) ----
+  html += '<div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--card-border);">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">';
+  html += '<span style="font-size:13px;font-weight:600;color:var(--text);">Temporary: Enter Stripe API Key Directly</span>';
+  if (_manualKeyStatus.saved) {
+    html += '<span class="badge badge-success">Active</span>';
+  }
+  html += '</div>';
+
+  if (_manualKeyStatus.saved) {
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);margin-bottom:12px;">';
+    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+    html += '<span style="font-size:13px;color:var(--text);">API key saved and encrypted &nbsp;·&nbsp; <strong>' + escHtml(_manualKeyStatus.mode) + '</strong></span>';
+    html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove Key</button>';
+    html += '</div>';
+  } else {
+    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Use this while waiting for Stripe Connect approval. Your key is encrypted before storing — never stored in plain text.</p>';
+    html += '<div style="display:flex;gap:10px;align-items:flex-start;">';
+    html += '<input id="stripe-manual-key-input" type="password" placeholder="sk_test_... or sk_live_..." autocomplete="off" style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+    html += '<button class="btn btn-primary btn-sm" onclick="saveStripeKey()" style="white-space:nowrap;">Save Key</button>';
+    html += '</div>';
+    html += '<p style="font-size:11px;color:var(--text-dim);margin:8px 0 0;">Find your key: <strong>Stripe Dashboard → Developers → API Keys</strong></p>';
+  }
+  html += '</div>';
+
   container.innerHTML = html;
+}
+
+function saveStripeKey() {
+  var input = document.getElementById('stripe-manual-key-input');
+  var key = input ? input.value.trim() : '';
+  if (!key || !key.startsWith('sk_')) {
+    toast('Key must start with sk_test_ or sk_live_', 'error');
+    return;
+  }
+  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  if (!token) { toast('Please log in first', 'error'); return; }
+
+  var btn = document.querySelector('[onclick="saveStripeKey()"]');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+
+  fetch((window.CC_API_BASE || '') + '/api/stripe/save-key', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret_key: key })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      toast(data.error, 'error');
+      if (btn) { btn.textContent = 'Save Key'; btn.disabled = false; }
+      return;
+    }
+    _manualKeyStatus.saved = true;
+    _manualKeyStatus.mode  = data.mode === 'live' ? 'Live Key' : 'Test Key';
+    toast('Stripe key saved and encrypted! Payments are now active.');
+    renderStripeSection();
+  })
+  .catch(function(err) {
+    toast('Error saving key: ' + err.message, 'error');
+    if (btn) { btn.textContent = 'Save Key'; btn.disabled = false; }
+  });
+}
+
+function deleteStripeKey() {
+  if (!confirm('Remove your Stripe API key? Payments will stop working until you add a key or connect via Stripe.')) return;
+  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  fetch((window.CC_API_BASE || '') + '/api/stripe/delete-key', {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function() {
+    _manualKeyStatus.saved = false;
+    _manualKeyStatus.mode  = '';
+    toast('Stripe key removed');
+    renderStripeSection();
+  })
+  .catch(function() { toast('Error removing key', 'error'); });
 }
 
 function startStripeConnect() {
