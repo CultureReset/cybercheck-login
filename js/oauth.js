@@ -36,10 +36,10 @@ var PLATFORM_CLIENT_ID = window.CC_STRIPE_CLIENT_ID || 'ca_DEMO_your_platform_cl
 var PLATFORM_FEE_PERCENT = 1; // Your cut: 1% of every transaction
 
 var _stripeConnect = {
-  accountId: 'acct_1SmhDo0pR4BTjK5e',
-  connected: true,
-  businessName: 'Beachside Circle Boats',
-  email: 'beachsideboats@myyahoo.com'
+  accountId: '',
+  connected: false,
+  businessName: '',
+  email: ''
 };
 
 var _connections = {
