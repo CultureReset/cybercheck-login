@@ -3,5 +3,19 @@
   "devCommand": null,
   "installCommand": null,
   "framework": null,
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "headers": [
+    {
+      "source": "/login.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    }
+  ]
 }

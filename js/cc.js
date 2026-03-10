@@ -514,6 +514,53 @@ const CC = (function() {
       return data;
     },
 
+    // --- Review Questions (per-business) ---
+    getReviewQuestions: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return [];
+      var { data } = await supabase.from('review_questions').select('*').eq('site_id', siteId).order('display_order', { ascending: true });
+      return data || [];
+    },
+    createReviewQuestion: async function(d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var obj = Object.assign({}, d, { site_id: siteId });
+      var { data } = await supabase.from('review_questions').insert(obj).select().single();
+      return data;
+    },
+    updateReviewQuestion: async function(id, d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
+      var { data } = await supabase.from('review_questions').update(obj).eq('id', id).eq('site_id', siteId).select().single();
+      return data;
+    },
+    deleteReviewQuestion: async function(id) {
+      var siteId = await ensureSiteId(); if (!siteId) return false;
+      var { error } = await supabase.from('review_questions').delete().eq('id', id).eq('site_id', siteId);
+      return !error;
+    },
+
+    // --- Review Request (create with token & send SMS) ---
+    createReviewWithToken: async function(reviewData) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var obj = Object.assign({}, reviewData, { site_id: siteId });
+      var { data, error } = await supabase.from('reviews').insert(obj).select().single();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+
+    sendSMS: async function(smsData) {
+      // Call backend SMS API to send message
+      var response = await fetch('/api/sms/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(smsData)
+      });
+      if (!response.ok) {
+        var err = await response.json();
+        throw new Error(err.error || 'SMS send failed');
+      }
+      return await response.json();
+    },
+
     // --- Waivers ---
     getWaivers: async function() {
       var siteId = await ensureSiteId(); if (!siteId) return [];

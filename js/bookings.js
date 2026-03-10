@@ -91,6 +91,7 @@ function mapApiBookings(apiData) {
       smsDelivered: b.sms_delivered || false,
       reviewRequested: b.review_requested || false,
       bookingToken: b.booking_token || '',
+      source: b.payment_provider || 'direct',  // wix | direct | ai | phone
       _apiId: b.id
     };
   });
@@ -293,7 +294,7 @@ function renderBookingsTable() {
 
   var html = '<div class="table-wrap"><table>';
   html += '<thead><tr>';
-  html += '<th>ID</th><th>Customer</th><th>Date</th><th>Time Slot</th><th>Boats</th><th>Guests</th><th>Total</th><th>Status</th><th>Payment</th><th>Actions</th>';
+  html += '<th>ID</th><th>Customer</th><th>Date</th><th>Time Slot</th><th>Boats</th><th>Guests</th><th>Total</th><th>Status</th><th>Payment</th><th>Source</th><th>Actions</th>';
   html += '</tr></thead><tbody>';
 
   filtered.forEach(function(b) {
@@ -312,6 +313,7 @@ function renderBookingsTable() {
     html += '<td style="font-weight:600;">$' + b.total.toFixed(2) + '</td>';
     html += '<td>' + statusBadge + '</td>';
     html += '<td>' + payBadge + '</td>';
+    html += '<td>' + getSourceBadge(b.source) + '</td>';
     html += '<td style="white-space:nowrap;">';
     if (b.status === 'pending') {
       html += '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();confirmBooking(\'' + b.id + '\')">Confirm</button> ';
@@ -352,6 +354,17 @@ function getPaymentBadge(status) {
     refunded: '<span class="badge" style="background:rgba(107,114,128,0.1);color:#6B7280;">Refunded</span>'
   };
   return map[status] || status;
+}
+
+function getSourceBadge(source) {
+  var map = {
+    wix:    '<span class="badge" style="background:rgba(0,100,220,0.1);color:#0064dc;">Wix</span>',
+    direct: '<span class="badge" style="background:rgba(0,173,168,0.1);color:#00ada8;">Direct</span>',
+    ai:     '<span class="badge" style="background:rgba(168,85,247,0.1);color:#a855f7;">AI</span>',
+    phone:  '<span class="badge" style="background:rgba(245,158,11,0.1);color:#d97706;">Phone</span>',
+    stripe: '<span class="badge" style="background:rgba(0,173,168,0.1);color:#00ada8;">Direct</span>'
+  };
+  return map[source] || '<span class="badge" style="background:rgba(107,114,128,0.1);color:#6b7280;">' + (source || 'Direct') + '</span>';
 }
 
 function formatBookingDate(dateStr) {

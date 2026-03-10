@@ -137,15 +137,34 @@ async function loadReviews() {
     }
   }
 
-  // Load custom questions from localStorage (not in schema yet)
+  // Load custom questions from API
   try {
-    var savedQ = localStorage.getItem(REVIEW_QUESTIONS_STORAGE);
-    if (savedQ) {
-      _reviewQuestions = JSON.parse(savedQ);
+    if (CC && CC.dashboard && typeof CC.dashboard.getReviewQuestions === 'function') {
+      var apiQuestions = await CC.dashboard.getReviewQuestions();
+      if (apiQuestions && Array.isArray(apiQuestions) && apiQuestions.length > 0) {
+        _reviewQuestions = apiQuestions.map(function(q) {
+          return {
+            id: q.id,
+            text: q.question_text,
+            type: q.question_type,
+            enabled: q.enabled !== false,
+            _apiId: q.id
+          };
+        });
+      } else {
+        _reviewQuestions = _defaultQuestions.slice();
+      }
     } else {
-      _reviewQuestions = _defaultQuestions.slice();
+      // Fallback to localStorage
+      var savedQ = localStorage.getItem(REVIEW_QUESTIONS_STORAGE);
+      if (savedQ) {
+        _reviewQuestions = JSON.parse(savedQ);
+      } else {
+        _reviewQuestions = _defaultQuestions.slice();
+      }
     }
   } catch(e) {
+    console.warn('Error loading review questions, using defaults:', e);
     _reviewQuestions = _defaultQuestions.slice();
   }
 
@@ -158,6 +177,27 @@ async function loadReviews() {
 
 function saveReviews() { /* saved via CC.dashboard on each action */ }
 function saveReviewQuestions() {
+  // Save to API
+  _reviewQuestions.forEach(function(q) {
+    if (q._apiId) {
+      // Update existing
+      CC.dashboard.updateReviewQuestion(q._apiId, {
+        question_text: q.text,
+        question_type: q.type,
+        enabled: q.enabled
+      }).catch(function(e) { console.warn('Failed to update question:', e); });
+    } else {
+      // Create new
+      CC.dashboard.createReviewQuestion({
+        question_text: q.text,
+        question_type: q.type,
+        display_order: _reviewQuestions.indexOf(q)
+      }).then(function(created) {
+        q._apiId = created.id;
+      }).catch(function(e) { console.warn('Failed to create question:', e); });
+    }
+  });
+  // Backup to localStorage
   try { localStorage.setItem(REVIEW_QUESTIONS_STORAGE, JSON.stringify(_reviewQuestions)); } catch(e) {}
 }
 
@@ -171,6 +211,9 @@ function renderReviewStats() {
   var pending = _reviews.filter(function(r) { return r.status === 'pending'; }).length;
   var published = _reviews.filter(function(r) { return r.publishedToSite; }).length;
   var avgRating = total > 0 ? (_reviews.reduce(function(s, r) { return s + r.rating; }, 0) / total).toFixed(1) : '0.0';
+
+  // Also render send review request section
+  renderSendReviewRequest();
 
   var html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">';
   html += buildReviewStatCard(avgRating, 'Avg Rating', renderStarsSmall(parseFloat(avgRating)), '#f59e0b');
@@ -463,6 +506,92 @@ function copyForGoogleReview(id) {
   toast('Review copied! Paste it into Google Reviews.', 'success');
 }
 
+// ---- Send Review Request ----
+
+function renderSendReviewRequest() {
+  var container = document.getElementById('send-review-request');
+  if (!container) return;
+
+  var html = '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:20px;">';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">';
+  html += '<div style="width:40px;height:40px;border-radius:50%;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;">📧</div>';
+  html += '<div>';
+  html += '<strong style="font-size:14px;display:block;">Send Review Request</strong>';
+  html += '<p style="font-size:12px;color:var(--text-dim);margin:2px 0;">Send a one-time link to a customer so they can leave a review</p>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">';
+  html += '<input type="text" id="review-customer-name" placeholder="Customer name" style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;min-width:150px;">';
+  html += '<input type="tel" id="review-customer-phone" placeholder="Phone (SMS)" style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;min-width:150px;">';
+  html += '<button class="btn btn-primary btn-sm" onclick="sendReviewRequest()" style="white-space:nowrap;">Send Review Link</button>';
+  html += '</div>';
+
+  html += '<div style="font-size:12px;color:var(--text-dim);line-height:1.6;">';
+  html += '✓ Customer gets unique link via SMS<br>';
+  html += '✓ Only they can access it<br>';
+  html += '✓ Link works one time only';
+  html += '</div>';
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function sendReviewRequest() {
+  var name = document.getElementById('review-customer-name').value.trim();
+  var phone = document.getElementById('review-customer-phone').value.trim();
+
+  if (!name || !phone) {
+    toast('Please enter customer name and phone', 'error');
+    return;
+  }
+
+  // Generate unique token
+  var token = 'rv_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+
+  // Create review record with token
+  var reviewRecord = {
+    customer_name: name,
+    phone: phone,
+    review_token: token,
+    status: 'pending'
+  };
+
+  // Save to API and send SMS
+  try {
+    await CC.dashboard.createReviewWithToken(reviewRecord);
+
+    var reviewUrl = window.location.origin + '/review.html?token=' + token;
+    var smsBody = 'Hi ' + name + '! Thank you for booking with us. Please share your experience: ' + reviewUrl;
+
+    await CC.dashboard.sendSMS({
+      to: phone,
+      body: smsBody
+    });
+
+    // Notify business owner that a review was submitted
+    try {
+      var ownerPhone = sessionStorage.getItem('ownerPhone') || sessionStorage.getItem('owner_phone');
+      if (ownerPhone) {
+        var ownerSmsBody = 'New review from ' + name + '! 📝 They\'ll submit their feedback via the link you sent. Approve it in your dashboard when ready.';
+        await CC.dashboard.sendSMS({
+          to: ownerPhone,
+          body: ownerSmsBody
+        });
+      }
+    } catch (err) {
+      console.warn('Could not send owner notification SMS:', err);
+      // Don't fail the whole flow if owner notification fails
+    }
+
+    toast('Review request sent! Customer will receive SMS with link.', 'success');
+    document.getElementById('review-customer-name').value = '';
+    document.getElementById('review-customer-phone').value = '';
+  } catch (err) {
+    toast('Error sending review request: ' + err.message, 'error');
+  }
+}
+
 // ---- Custom Review Questions ----
 
 function renderCustomQuestions() {
@@ -531,6 +660,13 @@ function toggleQuestion(id, enabled) {
 
 function deleteQuestion(id) {
   if (!confirm('Delete this question?')) return;
+  var q = _reviewQuestions.find(function(x) { return x.id === id; });
+  if (q && q._apiId) {
+    // Delete from API
+    CC.dashboard.deleteReviewQuestion(q._apiId).catch(function(e) {
+      console.warn('Failed to delete from API:', e);
+    });
+  }
   _reviewQuestions = _reviewQuestions.filter(function(x) { return x.id !== id; });
   saveReviewQuestions();
   renderCustomQuestions();
