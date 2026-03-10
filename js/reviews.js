@@ -222,6 +222,20 @@ function renderReviewStats() {
   html += buildReviewStatCard(published, 'Published', 'on your site', '#22c55e');
   html += '</div>';
 
+  // Add reminder SMS button if there are old pending reviews
+  var oldPending = _reviews.filter(function(r) {
+    if (r.status !== 'pending') return false;
+    var daysSince = (new Date() - new Date(r.submittedAt || r.createdAt)) / (1000 * 60 * 60 * 24);
+    return daysSince > 2;
+  });
+
+  if (oldPending.length > 0) {
+    html = '<div style="margin-bottom:16px;padding:12px;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;">';
+    html += '<span style="font-size:13px;color:var(--text);">📱 ' + oldPending.length + ' review' + (oldPending.length !== 1 ? 's' : '') + ' pending 2+ days</span>';
+    html += '<button class="btn btn-sm btn-primary" onclick="sendReviewReminders()" style="white-space:nowrap;">Send Reminders</button>';
+    html += '</div>' + html;
+  }
+
   container.innerHTML = html;
 }
 
@@ -400,6 +414,25 @@ function buildReviewCard(r) {
 
   html += '</div>';
 
+  // Reply section (if review is published and has no owner reply yet)
+  if (r.publishedToSite || r.status === 'approved') {
+    html += '<div style="border-top:1px solid var(--card-border);padding-top:14px;margin-top:14px;">';
+    if (r.ownerReply) {
+      html += '<div style="padding:10px;background:var(--card-bg);border-radius:var(--radius);margin-bottom:10px;">';
+      html += '<div style="font-size:12px;color:var(--text-dim);font-weight:600;margin-bottom:4px;">Your Reply:</div>';
+      html += '<div style="font-size:13px;color:var(--text);">"' + escHtml(r.ownerReply) + '"</div>';
+      html += '<button class="btn btn-outline btn-xs" onclick="deleteOwnerReply(\'' + r.id + '\')" style="margin-top:6px;font-size:11px;">Delete Reply</button>';
+      html += '</div>';
+    } else {
+      html += '<div style="margin-bottom:10px;">';
+      html += '<div style="font-size:12px;color:var(--text-dim);font-weight:600;margin-bottom:6px;">Reply to this review (sent via SMS)</div>';
+      html += '<textarea id="reply-text-' + r.id + '" placeholder="Type your reply..." style="width:100%;padding:8px;border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;min-height:60px;font-family:inherit;resize:vertical;"></textarea>';
+      html += '<button class="btn btn-primary btn-sm" onclick="sendReplyToReview(\'' + r.id + '\')" style="margin-top:6px;white-space:nowrap;">Send Reply via SMS</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
   html += '</div>';
   return html;
 }
@@ -506,6 +539,99 @@ function copyForGoogleReview(id) {
   toast('Review copied! Paste it into Google Reviews.', 'success');
 }
 
+// ---- Owner Replies ----
+
+async function sendReplyToReview(id) {
+  var r = _reviews.find(function(x) { return x.id === id; });
+  if (!r) return;
+
+  var replyText = document.getElementById('reply-text-' + id).value.trim();
+  if (!replyText) {
+    toast('Please type a reply', 'error');
+    return;
+  }
+
+  if (replyText.length > 160) {
+    toast('Reply must be 160 characters or less for SMS', 'error');
+    return;
+  }
+
+  try {
+    // Save reply to review record
+    r.ownerReply = replyText;
+    await CC.dashboard.updateReview(r._apiId || id, { owner_reply: replyText });
+
+    // Send SMS to customer
+    var smsBody = 'Thanks for your review, ' + r.customerName + '! We appreciate the feedback: ' + replyText;
+    await CC.dashboard.sendSMS({
+      to: r.customerPhone || r.phone,
+      body: smsBody
+    });
+
+    renderReviewsList();
+    toast('Reply sent to ' + r.customerName + ' via SMS!', 'success');
+  } catch (err) {
+    toast('Error sending reply: ' + err.message, 'error');
+  }
+}
+
+async function deleteOwnerReply(id) {
+  var r = _reviews.find(function(x) { return x.id === id; });
+  if (!r) return;
+
+  if (!confirm('Delete your reply to this review?')) return;
+
+  try {
+    r.ownerReply = null;
+    await CC.dashboard.updateReview(r._apiId || id, { owner_reply: null });
+    renderReviewsList();
+    toast('Reply deleted');
+  } catch (err) {
+    toast('Error deleting reply: ' + err.message, 'error');
+  }
+}
+
+// ---- Review Reminders ----
+
+async function sendReviewReminders() {
+  var oldPending = _reviews.filter(function(r) {
+    if (r.status !== 'pending') return false;
+    var daysSince = (new Date() - new Date(r.submittedAt || r.createdAt)) / (1000 * 60 * 60 * 24);
+    return daysSince > 2;
+  });
+
+  if (oldPending.length === 0) {
+    toast('No pending reviews to remind', 'info');
+    return;
+  }
+
+  if (!confirm('Send reminder SMS to ' + oldPending.length + ' customer(s)?')) {
+    return;
+  }
+
+  var sent = 0;
+  var failed = 0;
+
+  for (var i = 0; i < oldPending.length; i++) {
+    var r = oldPending[i];
+    try {
+      var reviewUrl = window.location.origin + '/review.html?token=' + r.reviewToken;
+      var smsBody = 'Hi ' + r.customerName + ', just following up! 😊 We\'d love to hear about your experience. Review link: ' + reviewUrl;
+      await CC.dashboard.sendSMS({
+        to: r.customerPhone,
+        body: smsBody
+      });
+      sent++;
+    } catch (err) {
+      console.warn('Failed to send reminder to ' + r.customerName, err);
+      failed++;
+    }
+  }
+
+  toast('Sent ' + sent + ' reminders' + (failed > 0 ? ' (' + failed + ' failed)' : ''), 'success');
+  renderReviewStats();
+}
+
 // ---- Send Review Request ----
 
 function renderSendReviewRequest() {
@@ -524,13 +650,15 @@ function renderSendReviewRequest() {
   html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">';
   html += '<input type="text" id="review-customer-name" placeholder="Customer name" style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;min-width:150px;">';
   html += '<input type="tel" id="review-customer-phone" placeholder="Phone (SMS)" style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;min-width:150px;">';
+  html += '<input type="text" id="review-booking-id" placeholder="Booking ID (optional)" style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;min-width:150px;">';
   html += '<button class="btn btn-primary btn-sm" onclick="sendReviewRequest()" style="white-space:nowrap;">Send Review Link</button>';
   html += '</div>';
 
   html += '<div style="font-size:12px;color:var(--text-dim);line-height:1.6;">';
   html += '✓ Customer gets unique link via SMS<br>';
   html += '✓ Only they can access it<br>';
-  html += '✓ Link works one time only';
+  html += '✓ Link works one time only<br>';
+  html += '✓ One review per booking prevented';
   html += '</div>';
 
   html += '</div>';
@@ -540,10 +668,26 @@ function renderSendReviewRequest() {
 async function sendReviewRequest() {
   var name = document.getElementById('review-customer-name').value.trim();
   var phone = document.getElementById('review-customer-phone').value.trim();
+  var bookingId = document.getElementById('review-booking-id').value.trim();
 
   if (!name || !phone) {
     toast('Please enter customer name and phone', 'error');
     return;
+  }
+
+  // Check for duplicate reviews (prevent customer from reviewing same booking twice)
+  var existingReview = _reviews.find(function(r) {
+    var phoneMatch = r.customerPhone && r.customerPhone.replace(/\D/g, '') === phone.replace(/\D/g, '');
+    var bookingMatch = bookingId ? (r.bookingId === bookingId) : false;
+    var notRejected = r.status !== 'rejected';
+    return phoneMatch && bookingMatch && notRejected;
+  });
+
+  if (existingReview && bookingId) {
+    var confirm_msg = 'This customer already has a ' + existingReview.status + ' review for booking ' + bookingId + '. Send anyway?';
+    if (!confirm(confirm_msg)) {
+      return;
+    }
   }
 
   // Generate unique token
@@ -554,7 +698,8 @@ async function sendReviewRequest() {
     customer_name: name,
     phone: phone,
     review_token: token,
-    status: 'pending'
+    status: 'pending',
+    booking_id: bookingId || null
   };
 
   // Save to API and send SMS
@@ -587,6 +732,8 @@ async function sendReviewRequest() {
     toast('Review request sent! Customer will receive SMS with link.', 'success');
     document.getElementById('review-customer-name').value = '';
     document.getElementById('review-customer-phone').value = '';
+    document.getElementById('review-booking-id').value = '';
+    loadReviews(); // Refresh to show the new pending review
   } catch (err) {
     toast('Error sending review request: ' + err.message, 'error');
   }
