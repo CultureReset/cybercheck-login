@@ -392,8 +392,25 @@ function buildReviewCard(r) {
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--card-border);">';
 
   if (r.status === 'pending') {
-    html += '<button class="btn btn-primary btn-sm" onclick="approveReview(\'' + r.id + '\')">Approve</button>';
-    html += '<button class="btn btn-outline btn-sm" onclick="rejectReview(\'' + r.id + '\')" style="color:var(--danger);">Reject</button>';
+    html += '<div style="width:100%;margin-bottom:10px;padding:10px;background:rgba(59,130,246,0.05);border-radius:var(--radius);border:1px solid rgba(59,130,246,0.2);">';
+    html += '<div style="font-size:12px;color:var(--text-dim);font-weight:600;margin-bottom:6px;">What would you like to approve?</div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+
+    // Approve just text
+    html += '<button class="btn btn-sm btn-outline" onclick="approveReviewText(\'' + r.id + '\')" style="padding:6px 12px;font-size:12px;">Text Only</button>';
+
+    // Approve just photos
+    if (r.photos && r.photos.length > 0) {
+      html += '<button class="btn btn-sm btn-outline" onclick="approveReviewPhotos(\'' + r.id + '\')" style="padding:6px 12px;font-size:12px;">Photos Only</button>';
+      html += '<button class="btn btn-sm btn-primary" onclick="approveReviewBoth(\'' + r.id + '\')" style="padding:6px 12px;font-size:12px;">Text + Photos</button>';
+    } else {
+      html += '<button class="btn btn-sm btn-primary" onclick="approveReview(\'' + r.id + '\')" style="padding:6px 12px;font-size:12px;">Approve</button>';
+    }
+
+    // Reject
+    html += '<button class="btn btn-sm btn-outline" onclick="rejectReview(\'' + r.id + '\')" style="color:var(--danger);padding:6px 12px;font-size:12px;">Reject</button>';
+    html += '</div>';
+    html += '</div>';
   }
 
   if (r.status === 'approved' && !r.publishedToSite) {
@@ -404,10 +421,10 @@ function buildReviewCard(r) {
   }
 
   if (r.photos && r.photos.length > 0 && !r.photoAddedToGallery) {
-    html += '<button class="btn btn-outline btn-sm" onclick="addReviewPhotosToGallery(\'' + r.id + '\')">Add Photos to Gallery</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="addReviewPhotosToGallery(\'' + r.id + '\')" style="font-size:11px;">Add Photos to Gallery</button>';
   }
   if (r.photoAddedToGallery) {
-    html += '<span class="badge badge-success" style="font-size:11px;">Photos in Gallery</span>';
+    html += '<span class="badge badge-success" style="font-size:11px;">✓ Photos in Gallery</span>';
   }
 
   html += '<button class="btn btn-outline btn-sm" onclick="copyForGoogleReview(\'' + r.id + '\')" style="margin-left:auto;">Copy for Google Reviews</button>';
@@ -471,6 +488,50 @@ async function approveReview(id) {
   renderReviewStats();
   renderReviewsList();
   toast('Review from ' + r.customerName + ' approved!');
+}
+
+async function approveReviewText(id) {
+  var r = _reviews.find(function(x) { return x.id === id; });
+  if (!r) return;
+  r.status = 'approved';
+  await CC.dashboard.updateReview(r._apiId || id, { status: 'approved', publish_text: true, publish_photos: false });
+  renderReviewStats();
+  renderReviewsList();
+  toast('Review text approved (photos not published)!');
+}
+
+async function approveReviewPhotos(id) {
+  var r = _reviews.find(function(x) { return x.id === id; });
+  if (!r) return;
+  r.status = 'approved';
+  r.photoAddedToGallery = true;
+  await CC.dashboard.updateReview(r._apiId || id, { status: 'approved', publish_text: false, publish_photos: true, photo_added_to_gallery: true });
+  // Also add photos to gallery
+  if (r.photos && r.photos.length > 0) {
+    for (var i = 0; i < r.photos.length; i++) {
+      await CC.dashboard.uploadMedia({ url: r.photos[i], type: 'review-photo', review_id: id });
+    }
+  }
+  renderReviewStats();
+  renderReviewsList();
+  toast(r.photos.length + ' photo(s) approved and added to gallery!');
+}
+
+async function approveReviewBoth(id) {
+  var r = _reviews.find(function(x) { return x.id === id; });
+  if (!r) return;
+  r.status = 'approved';
+  r.photoAddedToGallery = true;
+  await CC.dashboard.updateReview(r._apiId || id, { status: 'approved', publish_text: true, publish_photos: true, photo_added_to_gallery: true });
+  // Also add photos to gallery
+  if (r.photos && r.photos.length > 0) {
+    for (var i = 0; i < r.photos.length; i++) {
+      await CC.dashboard.uploadMedia({ url: r.photos[i], type: 'review-photo', review_id: id });
+    }
+  }
+  renderReviewStats();
+  renderReviewsList();
+  toast('Review and photos approved!');
 }
 
 async function rejectReview(id) {
