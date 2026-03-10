@@ -80,6 +80,10 @@ async function loadProfile() {
       if (content.zip) _profileData.zip = content.zip;
       if (content.social_links) _profileData.socials = Object.assign({}, _profileData.socials, content.social_links);
       if (content.hours) _profileData.hours = content.hours;
+      // Store owner phone for SMS notifications
+      if (content.owner_phone) {
+        sessionStorage.setItem('owner_phone', content.owner_phone);
+      }
     }
   } catch (e) {
     console.log('Supabase unavailable - using local API data');
