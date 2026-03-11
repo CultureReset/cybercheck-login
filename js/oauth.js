@@ -65,7 +65,7 @@ function loadConnections() {
   checkStripeCallback();
 
   // Fetch Stripe status from API
-  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  var token = getAuthToken();
   if (token) {
     fetch((window.CC_API_BASE || '') + '/api/stripe/status', {
       headers: { 'Authorization': 'Bearer ' + token }
@@ -269,7 +269,7 @@ function saveStripeKey() {
     toast('Key must start with sk_test_ or sk_live_', 'error');
     return;
   }
-  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  var token = getAuthToken();
   if (!token) { toast('Please log in first', 'error'); return; }
 
   var btn = document.querySelector('[onclick="saveStripeKey()"]');
@@ -300,7 +300,7 @@ function saveStripeKey() {
 
 function deleteStripeKey() {
   if (!confirm('Remove your Stripe API key? Payments will stop working until you add a key or connect via Stripe.')) return;
-  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  var token = getAuthToken();
   fetch((window.CC_API_BASE || '') + '/api/stripe/delete-key', {
     method: 'DELETE',
     headers: { 'Authorization': 'Bearer ' + token }
@@ -314,9 +314,22 @@ function deleteStripeKey() {
   .catch(function() { toast('Error removing key', 'error'); });
 }
 
+function getAuthToken() {
+  // Check Supabase session first (primary auth method)
+  try {
+    var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+    if (sbKey) {
+      var sbSession = JSON.parse(localStorage.getItem(sbKey));
+      if (sbSession && sbSession.access_token) return sbSession.access_token;
+    }
+  } catch(e) {}
+  // Fallback to legacy token
+  return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || localStorage.getItem('auth_token') || null;
+}
+
 function startStripeConnect() {
   // Fetch the OAuth URL from backend, then redirect to Stripe
-  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  var token = getAuthToken();
   if (!token) {
     toast('Please log in first', 'error');
     return;
@@ -344,7 +357,7 @@ function startStripeConnect() {
 function disconnectStripe() {
   if (!confirm('Disconnect Stripe? Customers won\'t be able to pay online until you reconnect.')) return;
 
-  var token = localStorage.getItem('cc_token') || localStorage.getItem('auth_token');
+  var token = getAuthToken();
   fetch((window.CC_API_BASE || '') + '/api/stripe/disconnect', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + token }
