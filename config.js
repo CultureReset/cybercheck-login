@@ -67,10 +67,12 @@ async function initConfig() {
     USER_CONFIG.user_id = session.user.id;
     USER_CONFIG.user_name = session.user.name;
     USER_CONFIG.user_email = session.user.email;
-    USER_CONFIG.business_id = session.business.site_id;
-    USER_CONFIG.business_name = session.business.name;
-    USER_CONFIG.business_type = session.business.type;
-    USER_CONFIG.plan = session.business.plan || 'free';
+    if (session.business) {
+        USER_CONFIG.business_id = session.business.site_id;
+        USER_CONFIG.business_name = session.business.name;
+        USER_CONFIG.business_type = session.business.type;
+        USER_CONFIG.plan = session.business.plan || 'free';
+    }
     USER_CONFIG._fromApi = true;
 
     // Update sidebar with real business name
