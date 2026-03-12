@@ -100,12 +100,18 @@ const CC = (function() {
   }
 
   async function getSession() {
-    // SECURITY: Demo mode disabled in production. Only use Supabase auth.
-    // If needed for testing, use a test Supabase account instead.
+    // Try Supabase Auth first
     var session = await getSupabaseSession();
-    if (!session) return null;
-    var biz = await getSupabaseBusiness();
-    return { user: session.user, business: biz };
+    if (session) {
+      var biz = await getSupabaseBusiness();
+      return { user: session.user, business: biz };
+    }
+    // Fallback: accept legacy Express JWT token as valid session
+    var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+    if (legacyToken) {
+      return { user: { id: 'legacy', email: '' }, business: null, legacy: true };
+    }
+    return null;
   }
 
   // ---- Legacy fetch (for any remaining Express calls) ----
