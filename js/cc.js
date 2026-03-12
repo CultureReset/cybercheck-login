@@ -88,16 +88,8 @@ const CC = (function() {
   }
 
   async function getSession() {
-    // Check for demo token first
-    var demoToken = localStorage.getItem('cc_demo_token');
-    if (demoToken && demoToken.startsWith('demo_')) {
-      var demoUser = JSON.parse(localStorage.getItem('cc_demo_user') || '{}');
-      return {
-        user: demoUser,
-        business: { site_id: 'beachside-circle-boats', name: 'Beachside Circle Boat Rentals and Sales LLC', type: 'rental' }
-      };
-    }
-
+    // SECURITY: Demo mode disabled in production. Only use Supabase auth.
+    // If needed for testing, use a test Supabase account instead.
     var session = await getSupabaseSession();
     if (!session) return null;
     var biz = await getSupabaseBusiness();
