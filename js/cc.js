@@ -41,18 +41,30 @@ const CC = (function() {
   // Signup: Routes through backend API (uses service key to bypass RLS for initial record creation)
 
   async function login(email, password, remember) {
-    if (!supabase || !supabase.auth) return { error: 'Supabase not loaded — check your internet connection and refresh' };
+    // 1. Try Supabase Auth first (new accounts)
+    if (supabase && supabase.auth) {
+      try {
+        var { data, error } = await supabase.auth.signInWithPassword({ email: email, password: password });
+        if (!error && data && data.session) {
+          clearSupabaseCache();
+          await getSupabaseBusiness();
+          return { token: data.session.access_token, user: data.user };
+        }
+      } catch (e) { /* fall through to Express fallback */ }
+    }
+    // 2. Fallback: Express JWT login (accounts created before Supabase Auth migration)
     try {
-      var { data, error } = await supabase.auth.signInWithPassword({ email: email, password: password });
-      if (error) return { error: error.message };
-      if (data && data.session) {
-        clearSupabaseCache();
-        await getSupabaseBusiness();
-        return { token: data.session.access_token, user: data.user };
-      }
-      return { error: 'Login failed — no session returned' };
+      var res = await fetch(API_BASE + '/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      var data = await res.json();
+      if (!res.ok) return { error: data.error || 'Invalid credentials' };
+      setToken(data.token, remember !== false);
+      return { token: data.token, user: data.user };
     } catch (e) {
-      return { error: e.message || 'Login failed' };
+      return { error: e.message || 'Login failed — check your connection and try again' };
     }
   }
 
