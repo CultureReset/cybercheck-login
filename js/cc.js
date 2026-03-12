@@ -812,6 +812,28 @@ const CC = (function() {
       return { success: true };
     },
 
+    // --- Locations ---
+    getLocations: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return [];
+      var { data } = await supabase.from('locations').select('*').eq('site_id', siteId).order('sort_order').order('created_at');
+      return data || [];
+    },
+    createLocation: async function(d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var { data } = await supabase.from('locations').insert(Object.assign({}, d, { site_id: siteId })).select().single();
+      return data;
+    },
+    updateLocation: async function(id, d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var { data } = await supabase.from('locations').update(Object.assign({}, d, { updated_at: new Date().toISOString() })).eq('id', id).eq('site_id', siteId).select().single();
+      return data;
+    },
+    deleteLocation: async function(id) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('locations').delete().eq('id', id).eq('site_id', siteId);
+      return { success: true };
+    },
+
     // --- Publish ---
     publish: async function() {
       var siteId = await ensureSiteId(); if (!siteId) return null;
