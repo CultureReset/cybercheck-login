@@ -473,19 +473,6 @@ function deleteWaiverDoc() {
     _waiverSettings.documentName = null;
     saveWaivers();
 
-    // Also update site-data
-    fetch('http://localhost:3001/api/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        section: 'waivers',
-        data: {
-          documentUrl: '',
-          documentName: ''
-        }
-      })
-    });
-
     toast('Document deleted');
     renderWaiverSettings();
   }
