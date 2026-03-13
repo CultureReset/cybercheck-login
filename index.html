@@ -1096,32 +1096,18 @@
     window.CC_API_BASE = 'https://cybercheck-api-database.vercel.app';
     window.CC_STRIPE_PUBLISHABLE_KEY = 'pk_test_51SmhDo0pR4BTjK5e8Dzz6VUlW7q8osjZilWVuh3nBESdyT0pdNMyH7rXXfxjx07wY8tU4LSt8hwDFsiTjSuXm74u00JReWlp2Q';
   </script>
-  <script src="js/supabase-client.js?v=5"></script>
-  <script src="js/cc.js?v=5"></script>
   <script>
-    // Auth guard — runs before anything else renders
-    // If no valid session, redirect to login immediately
-    (async function() {
-      try {
-        var session = null;
-        // Check Supabase session first
-        if (typeof supabase !== 'undefined' && supabase.auth) {
-          var { data } = await supabase.auth.getSession();
-          session = data && data.session ? data.session : null;
-        }
-        // Fallback: check legacy token
-        if (!session) {
-          var token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
-          session = token ? { token: token } : null;
-        }
-        if (!session) {
-          window.location.replace('login.html');
-        }
-      } catch(e) {
+    // Auth guard — checks localStorage directly before any client loads
+    (function() {
+      var sbToken = localStorage.getItem('sb-mhafixflyffflwjhcgfn-auth-token');
+      var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+      if (!sbToken && !legacyToken) {
         window.location.replace('login.html');
       }
     })();
   </script>
+  <script src="js/supabase-client.js?v=5"></script>
+  <script src="js/cc.js?v=5"></script>
   <script src="js/upload.js?v=4"></script>
   <script src="shared-data.js?v=4"></script>
   <script src="config.js?v=4"></script>
