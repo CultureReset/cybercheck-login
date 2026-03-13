@@ -9,6 +9,35 @@ let _wc_activeSection = 'business';
 
 const WC_BASE = 'https://cybercheck-api-database.vercel.app';
 
+// Sections that have dedicated DB columns (saved to site_content via dashboard API)
+const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks'];
+
+function wcGetAuthToken() {
+  // Try Supabase session token
+  try {
+    var keys = Object.keys(localStorage);
+    for (var k of keys) {
+      if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        var s = JSON.parse(localStorage.getItem(k));
+        if (s && s.access_token) return s.access_token;
+      }
+    }
+  } catch(e) {}
+  return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || null;
+}
+
+async function wcSaveSection(section, data) {
+  const token = wcGetAuthToken();
+  if (!token) return; // no auth, skip — blob save is the fallback
+  try {
+    await fetch(WC_BASE + '/api/dashboard/website-content/' + section, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ value: data })
+    });
+  } catch(e) { /* silent — blob already saved */ }
+}
+
 // Normalize any image URL to a full displayable URL
 function wcToUrl(url) {
   if (!url) return '';
@@ -49,6 +78,32 @@ async function loadWebsiteContent() {
     toast('Could not load site data — is the server running?', 'error');
     return;
   }
+  // Overlay fresh DB content sections (more up-to-date than blob)
+  try {
+    const token = wcGetAuthToken();
+    if (token) {
+      const dbRes = await fetch(WC_BASE + '/api/dashboard/website-content', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (dbRes.ok) {
+        const dbData = await dbRes.json();
+        WC_DB_SECTIONS.forEach(function(section) {
+          if (dbData[section] !== undefined && dbData[section] !== null) {
+            const isEmpty = Array.isArray(dbData[section])
+              ? dbData[section].length === 0
+              : (typeof dbData[section] === 'object' ? Object.keys(dbData[section]).length === 0 : !dbData[section]);
+            if (!isEmpty) _wc_data[section] = dbData[section];
+          }
+        });
+        // hero CTA
+        if (dbData.hero_cta_text || dbData.hero_cta_url) {
+          if (!_wc_data.hero) _wc_data.hero = {};
+          if (dbData.hero_cta_text) _wc_data.hero.ctaText = dbData.hero_cta_text;
+          if (dbData.hero_cta_url)  _wc_data.hero.ctaUrl  = dbData.hero_cta_url;
+        }
+      }
+    }
+  } catch(e) { /* use blob data */ }
   renderWCNav();
   renderWCSection(_wc_activeSection);
 }
@@ -86,6 +141,10 @@ function renderWCSection(id) {
 async function wcSave(section, data) {
   _wc_data[section] = data;
   await wcPush();
+  // Also save to proper DB column for supported sections
+  if (WC_DB_SECTIONS.includes(section)) {
+    wcSaveSection(section, data);  // fire and forget
+  }
 }
 
 async function wcPush() {
@@ -324,7 +383,22 @@ function renderHero() {
   ${saveBtn('saveHero')}`;
 }
 function saveHero() {
-  wcSave('hero', { location:val('h-loc'), title:val('h-title'), subtitle:val('h-sub'), ctaText:val('h-cta'), ctaUrl:val('h-url') });
+  const heroData = { location:val('h-loc'), title:val('h-title'), subtitle:val('h-sub'), ctaText:val('h-cta'), ctaUrl:val('h-url') };
+  wcSave('hero', heroData);
+  // Save CTA fields to DB separately
+  const token = wcGetAuthToken();
+  if (token && heroData.ctaText) {
+    fetch(WC_BASE + '/api/dashboard/website-content/hero_cta_text', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ value: heroData.ctaText })
+    }).catch(function(){});
+  }
+  if (token && heroData.ctaUrl) {
+    fetch(WC_BASE + '/api/dashboard/website-content/hero_cta_url', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ value: heroData.ctaUrl })
+    }).catch(function(){});
+  }
 }
 
 // ─── About ────────────────────────────────────────────────────────────────────
