@@ -1098,6 +1098,30 @@
   </script>
   <script src="js/supabase-client.js?v=5"></script>
   <script src="js/cc.js?v=5"></script>
+  <script>
+    // Auth guard — runs before anything else renders
+    // If no valid session, redirect to login immediately
+    (async function() {
+      try {
+        var session = null;
+        // Check Supabase session first
+        if (typeof supabase !== 'undefined' && supabase.auth) {
+          var { data } = await supabase.auth.getSession();
+          session = data && data.session ? data.session : null;
+        }
+        // Fallback: check legacy token
+        if (!session) {
+          var token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+          session = token ? { token: token } : null;
+        }
+        if (!session) {
+          window.location.replace('login.html');
+        }
+      } catch(e) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
   <script src="js/upload.js?v=4"></script>
   <script src="shared-data.js?v=4"></script>
   <script src="config.js?v=4"></script>
