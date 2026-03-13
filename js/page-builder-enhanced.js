@@ -75,14 +75,7 @@ async function initEnhancedPageBuilder() {
   renderPreview();
 }
 
-// Load site data from API
-// Detect API base — works locally and in production
-const PB_BASE = (function() {
-  const h = window.location.hostname;
-  return (h === 'localhost' || h === '127.0.0.1')
-    ? window.location.protocol + '//' + h + ':3000'
-    : window.location.origin;
-})();
+const PB_BASE = 'https://cybercheck-api-database.vercel.app';
 
 function pbToUrl(url) {
   if (!url) return '';
@@ -656,7 +649,7 @@ function renderPreview() {
     return;
   }
 
-  preview.innerHTML = `<iframe id="cms-preview-iframe" style="width:100%;height:100%;border:none;border-radius:var(--radius);display:block;margin:0;padding:0;" src="http://localhost:3000/beachside-site/"></iframe>`;
+  preview.innerHTML = `<iframe id="cms-preview-iframe" style="width:100%;height:100%;border:none;border-radius:var(--radius);display:block;margin:0;padding:0;" src="https://circle-boats-main.vercel.app"></iframe>`;
   console.log('✅ Preview iframe created');
 }
 
@@ -666,7 +659,7 @@ function updatePreview() {
   if (iframe) {
     // Reload by changing src to avoid CORS issues
     const timestamp = new Date().getTime();
-    iframe.src = `http://localhost:3000/beachside-site/?t=${timestamp}`;
+    iframe.src = `https://circle-boats-main.vercel.app?t=${timestamp}`;
   }
 }
 

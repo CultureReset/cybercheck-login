@@ -7,12 +7,7 @@
 let _wc_data = null;
 let _wc_activeSection = 'business';
 
-const WC_BASE = (function() {
-  const h = window.location.hostname;
-  return (h === 'localhost' || h === '127.0.0.1')
-    ? `${window.location.protocol}//${h}:3000`
-    : 'https://cybercheck-api-database.vercel.app';
-})();
+const WC_BASE = 'https://cybercheck-api-database.vercel.app';
 
 // Normalize any image URL to a full displayable URL
 function wcToUrl(url) {

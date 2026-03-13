@@ -10,11 +10,13 @@ var _editorCss = '';
 var _previewMode = 'desktop';
 var _siteEditorData = null;
 
+const SITE_EDITOR_PREVIEW_BASE = 'https://circle-boats-main.vercel.app';
+
 function toPreviewUrl(url) {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  if (url.startsWith('/')) return 'http://localhost:3000' + url;
-  return 'http://localhost:3000/beachside-site/' + url;
+  if (url.startsWith('/')) return SITE_EDITOR_PREVIEW_BASE + url;
+  return SITE_EDITOR_PREVIEW_BASE + '/beachside-site/' + url;
 }
 
 function loadSiteEditor() {

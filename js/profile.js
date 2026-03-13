@@ -259,7 +259,7 @@ function updateLivePreview() {
   _profileData.description = document.getElementById('prof-description').value;
 
   // Update website preview if it exists
-  const previewIframe = document.querySelector('iframe[src*="localhost:3000"]');
+  const previewIframe = document.getElementById('cms-preview-iframe') || document.querySelector('iframe[id*="preview"]');
   if (previewIframe && previewIframe.contentWindow) {
     try {
       // Update preview with current data
@@ -278,7 +278,7 @@ function updateLivePreview() {
     } catch (e) {
       // CORS error - reload iframe instead
       const timestamp = new Date().getTime();
-      previewIframe.src = `http://localhost:3000?t=${timestamp}`;
+      previewIframe.src = `https://circle-boats-main.vercel.app?t=${timestamp}`;
     }
   }
 

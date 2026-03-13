@@ -9,10 +9,12 @@ var _docksImages = {};
 var _featuresImages = {};
 var _stepsImages = {};
 
+const MA_API = 'https://cybercheck-api-database.vercel.app';
+
 async function loadMediaAccessories() {
   console.log('🔄 Loading media accessories...');
   try {
-    const response = await fetch('http://localhost:3001/api/data');
+    const response = await fetch(MA_API + '/api/data');
     if (!response.ok) throw new Error('Failed to load data');
     const data = await response.json();
     console.log('✅ Data loaded:', data);
@@ -222,7 +224,7 @@ async function uploadDockImage(dockId) {
   formData.append('type', 'dock');
 
   try {
-    const response = await fetch('http://localhost:3001/api/upload', {
+    const response = await fetch(MA_API + '/api/upload', {
       method: 'POST',
       body: formData
     });
@@ -232,7 +234,7 @@ async function uploadDockImage(dockId) {
     const imageUrl = result.url;
 
     // Save to site-data
-    await fetch('http://localhost:3001/api/save', {
+    await fetch(MA_API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -265,7 +267,7 @@ async function uploadFeatureImage(featureId) {
   formData.append('type', 'feature');
 
   try {
-    const response = await fetch('http://localhost:3001/api/upload', {
+    const response = await fetch(MA_API + '/api/upload', {
       method: 'POST',
       body: formData
     });
@@ -275,7 +277,7 @@ async function uploadFeatureImage(featureId) {
     const imageUrl = result.url;
 
     // Save to site-data
-    await fetch('http://localhost:3001/api/save', {
+    await fetch(MA_API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -308,7 +310,7 @@ async function uploadStepImage(stepId) {
   formData.append('type', 'step');
 
   try {
-    const response = await fetch('http://localhost:3001/api/upload', {
+    const response = await fetch(MA_API + '/api/upload', {
       method: 'POST',
       body: formData
     });
@@ -318,7 +320,7 @@ async function uploadStepImage(stepId) {
     const imageUrl = result.url;
 
     // Save to site-data
-    await fetch('http://localhost:3001/api/save', {
+    await fetch(MA_API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -355,7 +357,7 @@ async function saveDock(dockId) {
   };
 
   try {
-    await fetch('http://localhost:3001/api/save', {
+    await fetch(MA_API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section: 'docks', data: dockData })
@@ -379,7 +381,7 @@ async function saveFeature(featureId) {
   };
 
   try {
-    await fetch('http://localhost:3001/api/save', {
+    await fetch(MA_API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section: 'features', data: featureData })
@@ -403,7 +405,7 @@ async function saveStep(stepId) {
   };
 
   try {
-    await fetch('http://localhost:3001/api/save', {
+    await fetch(MA_API + '/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section: 'steps', data: stepData })
