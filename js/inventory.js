@@ -38,7 +38,7 @@ async function loadInventory() {
         halfDayPM: (ft.specs && ft.specs.halfDayPM) || 0,
         allDay: (ft.specs && ft.specs.allDay) || 0,
         deposit: (ft.specs && ft.specs.deposit) || 0,
-        qty: (ft.specs && ft.specs.qty) || ft.total_count || 0,
+        qty: (ft.specs && ft.specs.qty) || (Array.isArray(ft.fleet_items) ? ft.fleet_items.filter(function(fi) { return fi.condition !== 'retired'; }).length : 0),
         specs: (ft.specs && ft.specs.specsText) || '',
         photos: ft.image_url ? [ft.image_url] : [],
         _apiId: ft.id

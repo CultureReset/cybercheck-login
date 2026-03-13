@@ -364,11 +364,30 @@ function renderBusiness() {
   ${saveBtn('saveBusiness')}`;
 }
 function saveBusiness() {
-  wcSave('business', {
+  const bizData = {
     name:val('b-name'), phone:val('b-phone'), email:val('b-email'), location:val('b-loc'),
     address:val('b-addr'), tagline:val('b-tag'), description:val('b-desc'),
     hours:val('b-hrs'), hoursNote:val('b-hrsnote')
-  });
+  };
+  wcSave('business', bizData);
+  // Write to DB tables so server.js overlay picks up the changes
+  const token = wcGetAuthToken();
+  if (token) {
+    fetch(WC_BASE + '/api/dashboard/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        business: { name: bizData.name },
+        content: {
+          about_text:    bizData.description,
+          contact_phone: bizData.phone,
+          contact_email: bizData.email,
+          address:       bizData.address,
+          hero_text:     bizData.tagline
+        }
+      })
+    }).catch(function(){});
+  }
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
