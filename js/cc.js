@@ -328,9 +328,15 @@ const CC = (function() {
 
     // --- Fleet Types (rentals) ---
     getFleetTypes: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('fleet_types').select('*, fleet_items(id, unit_name, serial_number, condition)').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
+      try {
+        var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+        var token = null;
+        if (sbKey) { try { var s = JSON.parse(localStorage.getItem(sbKey)); token = s && s.access_token ? s.access_token : null; } catch(e) {} }
+        if (!token) token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+        var res = await fetch(API_BASE + '/api/dashboard/fleet', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch(e) { return []; }
     },
     createFleetType: async function(d) {
       var siteId = await ensureSiteId(); if (!siteId) return null;
