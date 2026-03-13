@@ -87,3 +87,9 @@ function toast(message, type = 'success') {
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
 }
+
+// Global HTML escape — prevents XSS when inserting user data into innerHTML
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
