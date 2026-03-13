@@ -466,7 +466,9 @@
                     }
                     break;
                 case 'train-ai':
-                    alert('AI Training feature coming soon!');
+                    if (window.parent && window.parent.dashboardAI) {
+                        window.parent.dashboardAI.show();
+                    }
                     break;
             }
         }

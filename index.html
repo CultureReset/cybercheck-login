@@ -6,6 +6,7 @@
   <title>Business Dashboard - CyberCheck</title>
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/analytics-seo-social.css">
+  <link rel="stylesheet" href="css/ai-assistant.css">
   <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
@@ -1224,5 +1225,30 @@
       o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('open'); });
     });
   </script>
+
+<!-- AI Assistant -->
+<button id="ai-toggle-btn" onclick="window.dashboardAI.toggle()">🤖</button>
+<div id="ai-assistant">
+  <div class="ai-assistant-header">
+    <div class="ai-assistant-title">
+      <span class="ai-icon">🤖</span>
+      <span>Business Assistant</span>
+    </div>
+    <div class="ai-assistant-controls">
+      <button class="ai-control-btn" onclick="window.dashboardAI.clearChat()">🗑</button>
+      <button class="ai-control-btn" onclick="window.dashboardAI.toggle()">✕</button>
+    </div>
+  </div>
+  <div class="ai-chat-container" id="ai-chat-messages"></div>
+  <div class="ai-input-container">
+    <div class="ai-input-wrapper">
+      <input type="text" id="ai-input" placeholder="Ask about your business..."
+        onkeydown="if(event.key==='Enter')window.dashboardAI.handleTextInput()">
+    </div>
+    <button id="ai-mic-btn" class="ai-input-btn" onclick="window.dashboardAI.toggleVoice()">🎤</button>
+    <button id="ai-send-btn" class="ai-input-btn" onclick="window.dashboardAI.handleTextInput()">➤</button>
+  </div>
+</div>
+<script src="js/ai-assistant.js"></script>
 </body>
 </html>
