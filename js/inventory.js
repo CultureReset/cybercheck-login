@@ -34,9 +34,12 @@ async function loadInventory() {
         id: ft.id,
         name: ft.name || '',
         description: ft.description || '',
-        halfDayAM: 0, halfDayPM: 0, allDay: 0, deposit: 0,
-        qty: ft.total_count || 0,
-        specs: ft.specs || '',
+        halfDayAM: (ft.specs && ft.specs.halfDayAM) || 0,
+        halfDayPM: (ft.specs && ft.specs.halfDayPM) || 0,
+        allDay: (ft.specs && ft.specs.allDay) || 0,
+        deposit: (ft.specs && ft.specs.deposit) || 0,
+        qty: (ft.specs && ft.specs.qty) || ft.total_count || 0,
+        specs: (ft.specs && ft.specs.specsText) || '',
         photos: ft.image_url ? [ft.image_url] : [],
         _apiId: ft.id
       };
