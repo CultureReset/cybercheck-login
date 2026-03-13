@@ -1,435 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OAuth Connections</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+<!-- Connections Tab — rendered by js/oauth.js (loadConnections) -->
+<div style="max-width:900px;margin:0 auto;padding:0 4px;">
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: #f5f7fa;
-            padding: 30px;
-        }
+  <div style="margin-bottom:28px;">
+    <h2 style="font-size:22px;font-weight:700;color:var(--text);margin:0 0 6px;">Connections</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin:0;">Connect your payment processor and other tools.</p>
+  </div>
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-            font-size: 28px;
-            color: #1c2938;
-            margin-bottom: 8px;
-        }
-
-        .page-header p {
-            color: #657786;
-            font-size: 14px;
-        }
-
-        /* Filter Tabs */
-        .filter-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .filter-tab {
-            padding: 10px 20px;
-            background: white;
-            border: 2px solid #e1e8ed;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #657786;
-            transition: all 0.2s;
-        }
-
-        .filter-tab:hover {
-            border-color: #667eea;
-            color: #667eea;
-        }
-
-        .filter-tab.active {
-            background: #667eea;
-            border-color: #667eea;
-            color: white;
-        }
-
-        /* Tools Grid */
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .tool-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .tool-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border-color: #667eea;
-        }
-
-        .tool-card.connected {
-            border-color: #27ae60;
-            background: #f0fff4;
-        }
-
-        .tool-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .tool-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #f0f3f7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .tool-info {
-            flex: 1;
-        }
-
-        .tool-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1c2938;
-            margin-bottom: 4px;
-        }
-
-        .tool-category {
-            font-size: 12px;
-            color: #657786;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .tool-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-
-        .tool-status.connected {
-            background: #d4edda;
-            color: #27ae60;
-        }
-
-        .tool-status.not-connected {
-            background: #f8f9fa;
-            color: #657786;
-        }
-
-        .tool-status-icon {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .tool-description {
-            font-size: 13px;
-            color: #657786;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-
-        .tool-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-connect {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-connect:hover {
-            background: #5568d3;
-        }
-
-        .btn-disconnect {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-disconnect:hover {
-            background: #c0392b;
-        }
-
-        .btn-reconnect {
-            background: #f39c12;
-            color: white;
-        }
-
-        .btn-reconnect:hover {
-            background: #e67e22;
-        }
-
-        .btn-manage {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-manage:hover {
-            background: #2980b9;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 12px;
-        }
-
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            body { padding: 15px; }
-            .tools-grid { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="page-header">
-            <h1>Connected Tools</h1>
-            <p>Connect your business tools to unlock powerful automation</p>
-        </div>
-
-        <!-- Filter Tabs -->
-        <div class="filter-tabs">
-            <div class="filter-tab active" onclick="filterTools('all')">All Tools</div>
-            <div class="filter-tab" onclick="filterTools('connected')">✓ Connected</div>
-            <div class="filter-tab" onclick="filterTools('payments')">💳 Payments</div>
-            <div class="filter-tab" onclick="filterTools('calendar')">📅 Calendar</div>
-            <div class="filter-tab" onclick="filterTools('communication')">✉️ Communication</div>
-            <div class="filter-tab" onclick="filterTools('social')">📱 Social Media</div>
-            <div class="filter-tab" onclick="filterTools('crm')">👥 CRM</div>
-        </div>
-
-        <!-- Tools Grid -->
-        <div class="tools-grid" id="tools-grid">
-            <!-- Tools will be loaded here by JavaScript -->
-        </div>
+  <!-- Stripe Connect -->
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;">
+    <div id="stripe-settings">
+      <div style="display:flex;align-items:center;gap:12px;padding:20px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;border:3px solid var(--primary);border-top-color:transparent;animation:spin 0.8s linear infinite;"></div>
+        <span style="color:var(--text-muted);font-size:14px;">Loading Stripe status…</span>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // 42 Tools Configuration
-        const TOOLS = [
-            // Payments
-            { id: 'stripe', name: 'Stripe', category: 'payments', icon: '💳', description: 'Accept payments, manage subscriptions', connected: true },
-            { id: 'square', name: 'Square', category: 'payments', icon: '🟦', description: 'POS system and payment processing', connected: true },
-            { id: 'paypal', name: 'PayPal', category: 'payments', icon: '💰', description: 'Payment processing and invoicing', connected: false },
+  <!-- Other Payment Processors -->
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;">
+    <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 16px;">Other Payment Processors</h3>
+    <div id="payment-connections">
+      <div style="color:var(--text-muted);font-size:13px;">Loading…</div>
+    </div>
+  </div>
 
-            // Calendars
-            { id: 'google-calendar', name: 'Google Calendar', category: 'calendar', icon: '📅', description: 'Sync appointments and bookings', connected: true },
-            { id: 'outlook-calendar', name: 'Outlook Calendar', category: 'calendar', icon: '📆', description: 'Microsoft calendar integration', connected: false },
-            { id: 'calendly', name: 'Calendly', category: 'calendar', icon: '⏰', description: 'Scheduling and booking tool', connected: false },
+  <!-- Google -->
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;">
+    <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 16px;">Google</h3>
+    <div id="google-connections">
+      <div style="color:var(--text-muted);font-size:13px;">Loading…</div>
+    </div>
+  </div>
 
-            // Communication
-            { id: 'gmail', name: 'Gmail', category: 'communication', icon: '✉️', description: 'Email integration', connected: true },
-            { id: 'outlook', name: 'Outlook', category: 'communication', icon: '📧', description: 'Microsoft email integration', connected: false },
-            { id: 'mailchimp', name: 'Mailchimp', category: 'communication', icon: '🐵', description: 'Email marketing campaigns', connected: false },
-            { id: 'twilio', name: 'Twilio', category: 'communication', icon: '📲', description: 'SMS and voice messaging', connected: true },
-            { id: 'sendgrid', name: 'SendGrid', category: 'communication', icon: '📨', description: 'Transactional email service', connected: false },
+  <!-- Social Media -->
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:28px;">
+    <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 16px;">Social Media</h3>
+    <div id="social-connections">
+      <div style="color:var(--text-muted);font-size:13px;">Loading…</div>
+    </div>
+  </div>
 
-            // Social Media
-            { id: 'instagram', name: 'Instagram', category: 'social', icon: '📷', description: 'Post photos and stories', connected: true },
-            { id: 'facebook', name: 'Facebook', category: 'social', icon: '👍', description: 'Facebook page management', connected: false },
-            { id: 'tiktok', name: 'TikTok', category: 'social', icon: '🎵', description: 'Short video content', connected: false },
-            { id: 'linkedin', name: 'LinkedIn', category: 'social', icon: '💼', description: 'Professional networking', connected: false },
-            { id: 'twitter', name: 'Twitter/X', category: 'social', icon: '🐦', description: 'Social media posting', connected: false },
+</div>
 
-            // CRM
-            { id: 'hubspot', name: 'HubSpot', category: 'crm', icon: '🎯', description: 'Customer relationship management', connected: false },
-            { id: 'salesforce', name: 'Salesforce', category: 'crm', icon: '☁️', description: 'Enterprise CRM platform', connected: false },
-            { id: 'zoho', name: 'Zoho CRM', category: 'crm', icon: '📊', description: 'Business CRM solution', connected: false },
-
-            // E-commerce
-            { id: 'shopify', name: 'Shopify', category: 'ecommerce', icon: '🛍️', description: 'E-commerce platform', connected: false },
-            { id: 'woocommerce', name: 'WooCommerce', category: 'ecommerce', icon: '🛒', description: 'WordPress e-commerce plugin', connected: false },
-            { id: 'bigcommerce', name: 'BigCommerce', category: 'ecommerce', icon: '🏪', description: 'Online store platform', connected: false },
-
-            // Cloud Storage
-            { id: 'google-drive', name: 'Google Drive', category: 'storage', icon: '💾', description: 'Cloud file storage', connected: false },
-            { id: 'dropbox', name: 'Dropbox', category: 'storage', icon: '📦', description: 'File sync and storage', connected: false },
-            { id: 'onedrive', name: 'OneDrive', category: 'storage', icon: '☁️', description: 'Microsoft cloud storage', connected: false },
-
-            // Analytics
-            { id: 'google-analytics', name: 'Google Analytics', category: 'analytics', icon: '📈', description: 'Website analytics', connected: false },
-            { id: 'mixpanel', name: 'Mixpanel', category: 'analytics', icon: '📊', description: 'Product analytics', connected: false },
-
-            // POS Systems
-            { id: 'toast', name: 'Toast POS', category: 'pos', icon: '🍞', description: 'Restaurant POS system', connected: false },
-            { id: 'lightspeed', name: 'Lightspeed', category: 'pos', icon: '⚡', description: 'Retail POS system', connected: false },
-
-            // Business Tools
-            { id: 'quickbooks', name: 'QuickBooks', category: 'accounting', icon: '💵', description: 'Accounting software', connected: false },
-            { id: 'xero', name: 'Xero', category: 'accounting', icon: '📒', description: 'Online accounting', connected: false },
-            { id: 'airtable', name: 'Airtable', category: 'productivity', icon: '📋', description: 'Database and spreadsheets', connected: false },
-            { id: 'notion', name: 'Notion', category: 'productivity', icon: '📝', description: 'Workspace and docs', connected: false },
-            { id: 'slack', name: 'Slack', category: 'communication', icon: '💬', description: 'Team communication', connected: false },
-            { id: 'zoom', name: 'Zoom', category: 'communication', icon: '📹', description: 'Video conferencing', connected: false },
-
-            // Review Platforms
-            { id: 'yelp', name: 'Yelp', category: 'reviews', icon: '⭐', description: 'Customer reviews', connected: false },
-            { id: 'google-business', name: 'Google Business', category: 'reviews', icon: '🗺️', description: 'Google My Business', connected: false },
-            { id: 'tripadvisor', name: 'TripAdvisor', category: 'reviews', icon: '🦉', description: 'Travel reviews', connected: false },
-
-            // Booking Platforms
-            { id: 'opentable', name: 'OpenTable', category: 'booking', icon: '🍽️', description: 'Restaurant reservations', connected: false },
-            { id: 'resy', name: 'Resy', category: 'booking', icon: '🍴', description: 'Dining reservations', connected: false },
-            { id: 'mindbody', name: 'Mindbody', category: 'booking', icon: '🧘', description: 'Fitness & wellness booking', connected: false },
-            { id: 'acuity', name: 'Acuity Scheduling', category: 'booking', icon: '📅', description: 'Appointment scheduling', connected: false }
-        ];
-
-        let currentFilter = 'all';
-
-        document.addEventListener('DOMContentLoaded', function() {
-            renderTools();
-        });
-
-        function renderTools() {
-            const grid = document.getElementById('tools-grid');
-            let filteredTools = TOOLS;
-
-            if (currentFilter === 'connected') {
-                filteredTools = TOOLS.filter(tool => tool.connected);
-            } else if (currentFilter !== 'all') {
-                filteredTools = TOOLS.filter(tool => tool.category === currentFilter);
-            }
-
-            if (filteredTools.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔌</div>
-                        <p>No tools found in this category</p>
-                    </div>
-                `;
-                return;
-            }
-
-            grid.innerHTML = filteredTools.map(tool => `
-                <div class="tool-card ${tool.connected ? 'connected' : ''}">
-                    <div class="tool-header">
-                        <div class="tool-icon">${tool.icon}</div>
-                        <div class="tool-info">
-                            <div class="tool-name">${tool.name}</div>
-                            <div class="tool-category">${tool.category}</div>
-                        </div>
-                    </div>
-
-                    <div class="tool-status ${tool.connected ? 'connected' : 'not-connected'}">
-                        <div class="tool-status-icon"></div>
-                        ${tool.connected ? 'Connected' : 'Not Connected'}
-                    </div>
-
-                    <div class="tool-description">${tool.description}</div>
-
-                    <div class="tool-actions">
-                        ${tool.connected ? `
-                            <button class="btn btn-manage" onclick="manageTool('${tool.id}')">Manage</button>
-                            <button class="btn btn-disconnect" onclick="disconnectTool('${tool.id}')">Disconnect</button>
-                        ` : `
-                            <button class="btn btn-connect" onclick="connectTool('${tool.id}')">Connect</button>
-                        `}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function filterTools(category) {
-            currentFilter = category;
-
-            // Update active tab
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            renderTools();
-        }
-
-        function connectTool(toolId) {
-            const tool = TOOLS.find(t => t.id === toolId);
-            if (!tool) return;
-
-            // Simulate OAuth flow
-            alert(`Opening OAuth connection for ${tool.name}...`);
-
-            // In production, this would redirect to OAuth provider
-            // window.location.href = `/api/oauth/${toolId}/authorize`;
-
-            // Simulate successful connection
-            setTimeout(() => {
-                tool.connected = true;
-                renderTools();
-                alert(`Successfully connected to ${tool.name}!`);
-            }, 1000);
-        }
-
-        function disconnectTool(toolId) {
-            const tool = TOOLS.find(t => t.id === toolId);
-            if (!tool) return;
-
-            if (confirm(`Are you sure you want to disconnect ${tool.name}?`)) {
-                tool.connected = false;
-                renderTools();
-                alert(`Disconnected from ${tool.name}`);
-            }
-        }
-
-        function manageTool(toolId) {
-            const tool = TOOLS.find(t => t.id === toolId);
-            alert(`Managing ${tool.name} connection...\n\nPermissions:\n• Read data\n• Write data\n\nToken expires: March 15, 2026`);
-        }
-    </script>
-</body>
-</html>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.oauth-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.oauth-card:last-child { border-bottom: none; }
+.provider-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.provider-info { flex: 1; min-width: 0; }
+.provider-info h4 { font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 2px; }
+.provider-info p { font-size: 12px; color: var(--text-muted); margin: 0; }
+</style>

@@ -79,7 +79,7 @@ class BusinessAIAssistant {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && token !== 'supabase' ? { 'Authorization': 'Bearer ' + token } : {})
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
         },
         body: JSON.stringify({ message: msg, history: this.history.slice(-10) })
       });

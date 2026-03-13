@@ -34,6 +34,8 @@ var _messagingData = {
   // Assigned by admin (manually for now)
   ownerPhone: '',
   customerPhone: '',
+  // Business enters this — where booking SMS alerts get sent
+  notificationPhone: '',
 
   // Booking confirmation templates
   customerBookingTemplate: 'Hi {{customer_name}}! Your booking with {{business_name}} is confirmed.\n\nDate: {{date}}\nTime: {{time_slot}}\nBoats: {{boat_count}}x {{boat_type}}\nAdd-ons: {{addons}}\nTotal: ${{total}}\n\nLocation: {{location}}\n\nQuestions? Reply to this number or call us!\n\nSee you on the water! 🚤',
@@ -60,6 +62,7 @@ async function loadMessaging() {
   if (apiData && typeof apiData === 'object') {
     var map = {
       owner_phone: 'ownerPhone', customer_phone: 'customerPhone',
+      notification_phone: 'notificationPhone',
       customer_booking_template: 'customerBookingTemplate',
       owner_booking_template: 'ownerBookingTemplate',
       photo_gallery_enabled: 'photoGalleryEnabled',
@@ -99,6 +102,7 @@ function saveMessagingData() {
   CC.dashboard.updateMessaging({
     owner_phone: _messagingData.ownerPhone,
     customer_phone: _messagingData.customerPhone,
+    notification_phone: _messagingData.notificationPhone,
     customer_booking_template: _messagingData.customerBookingTemplate,
     owner_booking_template: _messagingData.ownerBookingTemplate,
     photo_gallery_enabled: _messagingData.photoGalleryEnabled,
@@ -137,46 +141,65 @@ function renderPhoneNumbers() {
 
   var html = '';
 
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">';
-
-  // Owner phone
-  html += '<div style="padding:20px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);">';
-  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">';
+  // ── Booking notification number (business enters this) ────────────────────
+  html += '<div style="padding:20px;background:var(--bg);border:2px solid var(--primary);border-radius:var(--radius-lg);margin-bottom:20px;">';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
   html += '<div style="width:36px;height:36px;border-radius:50%;background:rgba(0,173,168,0.15);display:flex;align-items:center;justify-content:center;">';
   html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ada8" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
   html += '</div>';
-  html += '<div><strong style="font-size:14px;">Your Business Line</strong>';
-  html += '<div style="font-size:12px;color:var(--text-muted);">Text/call this number to control your dashboard</div></div>';
+  html += '<div>';
+  html += '<strong style="font-size:14px;">Your Booking Notification Number</strong>';
+  html += '<div style="font-size:12px;color:var(--text-muted);">This is YOUR phone number — you\'ll get an SMS every time a new booking comes in</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:10px;align-items:center;">';
+  html += '<input id="notification-phone-input" type="tel" placeholder="(555) 555-5555" value="' + escHtml(_messagingData.notificationPhone || '') + '" style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--card-bg);color:var(--text);font-size:15px;" />';
+  html += '<button class="btn btn-primary" onclick="saveNotificationPhone()">Save</button>';
+  html += '</div>';
+  if (_messagingData.notificationPhone) {
+    html += '<div style="margin-top:8px;font-size:12px;color:var(--success);">✓ Booking alerts will be sent to ' + formatPhone(_messagingData.notificationPhone) + '</div>';
+  } else {
+    html += '<div style="margin-top:8px;font-size:12px;color:var(--text-dim);">Enter your cell number above to receive booking alerts via SMS</div>';
+  }
   html += '</div>';
 
+  // ── Platform-assigned lines (read-only, admin assigns) ────────────────────
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">';
+
+  // Owner Twilio line
+  html += '<div style="padding:20px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);">';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">';
+  html += '<div style="width:36px;height:36px;border-radius:50%;background:rgba(168,85,247,0.15);display:flex;align-items:center;justify-content:center;">';
+  html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
+  html += '</div>';
+  html += '<div><strong style="font-size:14px;">Your Business Line</strong>';
+  html += '<div style="font-size:12px;color:var(--text-muted);">Text/call this to control your dashboard via AI</div></div>';
+  html += '</div>';
   if (_messagingData.ownerPhone) {
-    html += '<div style="font-size:24px;font-weight:700;color:var(--primary);margin-bottom:8px;">' + formatPhone(_messagingData.ownerPhone) + '</div>';
-    html += '<div style="font-size:12px;color:var(--text-dim);">Text photos to add to gallery | Ask questions about your bookings | Get AI-powered answers</div>';
+    html += '<div style="font-size:22px;font-weight:700;color:#a855f7;margin-bottom:6px;">' + formatPhone(_messagingData.ownerPhone) + '</div>';
+    html += '<div style="font-size:12px;color:var(--text-dim);">Text photos → auto-add to gallery | Ask AI questions about bookings</div>';
   } else {
-    html += '<div style="padding:16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);text-align:center;">';
-    html += '<div style="font-size:13px;color:var(--warning);">Not assigned yet</div>';
-    html += '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Your CyberCheck admin will assign this number during setup</div>';
+    html += '<div style="padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);text-align:center;">';
+    html += '<div style="font-size:12px;color:var(--warning);">Assigned by admin during setup</div>';
     html += '</div>';
   }
   html += '</div>';
 
-  // Customer phone
+  // Customer Twilio line
   html += '<div style="padding:20px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);">';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">';
   html += '<div style="width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;">';
   html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
   html += '</div>';
   html += '<div><strong style="font-size:14px;">Customer SMS Line</strong>';
-  html += '<div style="font-size:12px;color:var(--text-muted);">Customers receive booking confirmations from this number</div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);">Customers get booking confirmations from this number</div></div>';
   html += '</div>';
-
   if (_messagingData.customerPhone) {
-    html += '<div style="font-size:24px;font-weight:700;color:var(--success);margin-bottom:8px;">' + formatPhone(_messagingData.customerPhone) + '</div>';
+    html += '<div style="font-size:22px;font-weight:700;color:var(--success);margin-bottom:6px;">' + formatPhone(_messagingData.customerPhone) + '</div>';
     html += '<div style="font-size:12px;color:var(--text-dim);">Booking confirmations | Cancellation notices | Reminders</div>';
   } else {
-    html += '<div style="padding:16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);text-align:center;">';
-    html += '<div style="font-size:13px;color:var(--warning);">Not assigned yet</div>';
-    html += '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Your CyberCheck admin will assign this number during setup</div>';
+    html += '<div style="padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);text-align:center;">';
+    html += '<div style="font-size:12px;color:var(--warning);">Assigned by admin during setup</div>';
     html += '</div>';
   }
   html += '</div>';
@@ -184,6 +207,15 @@ function renderPhoneNumbers() {
   html += '</div>';
 
   container.innerHTML = html;
+}
+
+function saveNotificationPhone() {
+  var input = document.getElementById('notification-phone-input');
+  if (!input) return;
+  _messagingData.notificationPhone = input.value.trim();
+  saveMessagingData();
+  renderPhoneNumbers();
+  toast('Notification number saved — you\'ll get booking alerts at ' + formatPhone(_messagingData.notificationPhone));
 }
 
 function formatPhone(phone) {

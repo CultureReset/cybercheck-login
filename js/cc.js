@@ -15,9 +15,14 @@ const CC = (function() {
   // Kept for backwards compat with auth guard + modules that check CC.getToken()
 
   function getToken() {
-    // Check Supabase session first
-    var sbToken = localStorage.getItem('sb-mhafixflyffflwjhcgfn-auth-token');
-    if (sbToken) return 'supabase';
+    // Check Supabase session first — return actual JWT, not a placeholder
+    try {
+      var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+      if (sbKey) {
+        var s = JSON.parse(localStorage.getItem(sbKey));
+        if (s && s.access_token) return s.access_token;
+      }
+    } catch(e) {}
     // Fallback to legacy token
     return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || null;
   }
@@ -122,7 +127,7 @@ const CC = (function() {
     try {
       var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
       var token = getToken();
-      if (token && token !== 'supabase') opts.headers['Authorization'] = 'Bearer ' + token;
+      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
       if (body && method !== 'GET') opts.body = JSON.stringify(body);
       var res = await fetch(API_BASE + path, opts);
       if (!res.ok) return null;
