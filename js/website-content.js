@@ -485,13 +485,42 @@ function renderProducts() {
   ${prods.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted);border:2px dashed var(--card-border);border-radius:10px;">No boats yet — click "+ Add Boat" above</div>` : ''}
   ${saveBtn('saveProducts')}`;
 }
-function saveProducts() {
+async function saveProducts() {
   const prods = (_wc_data.products||[]).map((_,i)=>({
     name:val('p-name-'+i), description:val('p-desc-'+i), image:val('p-img-'+i),
     specs:val('p-specs-'+i), featured:chk('p-feat-'+i),
     halfDayAM:num('p-am-'+i), halfDayPM:num('p-pm-'+i), allDay:num('p-all-'+i)
   }));
   wcSave('products', prods);
+
+  // Sync images + pricing to fleet_types so inventory tab and booking engine stay in sync
+  try {
+    const fleetTypes = await CC.dashboard.getFleetTypes();
+    if (Array.isArray(fleetTypes) && fleetTypes.length) {
+      for (const ft of fleetTypes) {
+        const match = prods.find(function(p) {
+          return p.name && ft.name && p.name.trim().toLowerCase() === ft.name.trim().toLowerCase();
+        });
+        if (!match) continue;
+        const token = CC.getToken();
+        if (!token) continue;
+        fetch(WC_BASE + '/api/dashboard/fleet/' + ft.id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({
+            description: match.description || ft.description || '',
+            image_url: match.image || ft.image_url || null,
+            specs: Object.assign({}, ft.specs || {}, {
+              halfDayAM: match.halfDayAM || 0,
+              halfDayPM: match.halfDayPM || 0,
+              allDay: match.allDay || 0,
+              specsText: match.specs || ''
+            })
+          })
+        }).catch(function(){});
+      }
+    }
+  } catch(e) {}
 }
 
 // ─── Group Rate ───────────────────────────────────────────────────────────────
