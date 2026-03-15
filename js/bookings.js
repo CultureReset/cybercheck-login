@@ -179,7 +179,7 @@ function renderBookingsStats() {
   var upcoming = _bookings.filter(function(b) { return b.date >= today && b.status !== 'cancelled'; });
   var todayBookings = _bookings.filter(function(b) { return b.date === today && b.status !== 'cancelled'; });
   var totalRevenue = _bookings.filter(function(b) { return b.status !== 'cancelled'; })
-    .reduce(function(sum, b) { return sum + b.total; }, 0);
+    .reduce(function(sum, b) { return sum + (parseFloat(b.total) || 0); }, 0);
   var pending = _bookings.filter(function(b) { return b.status === 'pending'; });
 
   var html = '';
