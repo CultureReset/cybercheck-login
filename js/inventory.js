@@ -39,7 +39,7 @@ async function loadInventory() {
         halfDayPM: s.halfDayPM || 0,
         allDay: s.allDay || 0,
         deposit: s.deposit || 0,
-        qty: ft.total_count || s.qty || (Array.isArray(ft.fleet_items) ? ft.fleet_items.filter(function(fi) { return fi.condition !== 'retired'; }).length : 0),
+        qty: s.qty || (Array.isArray(ft.fleet_items) ? ft.fleet_items.filter(function(fi) { return fi.condition !== 'retired'; }).length : 0),
         specs: s.specsText || '',
         photos: ft.image_url ? [ft.image_url] : [],
         _apiId: ft.id
@@ -158,7 +158,6 @@ async function finishSaveInventory(id, name, desc, halfAM, halfPM, allDay, depos
   var fleetData = {
     name: name,
     description: desc,
-    total_count: qty,
     specs: { halfDayAM: halfAM, halfDayPM: halfPM, allDay: allDay, deposit: deposit, qty: qty, specsText: specs },
     image_url: (photos && photos.length > 0) ? photos[0] : null
   };
