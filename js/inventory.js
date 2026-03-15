@@ -30,16 +30,17 @@ async function loadInventory() {
   var apiData = await CC.dashboard.getFleetTypes();
   if (apiData && Array.isArray(apiData) && apiData.length > 0) {
     _inventoryItems = apiData.map(function(ft) {
+      var s = (ft.specs && typeof ft.specs === 'object') ? ft.specs : {};
       return {
         id: ft.id,
         name: ft.name || '',
         description: ft.description || '',
-        halfDayAM: (ft.specs && ft.specs.halfDayAM) || 0,
-        halfDayPM: (ft.specs && ft.specs.halfDayPM) || 0,
-        allDay: (ft.specs && ft.specs.allDay) || 0,
-        deposit: (ft.specs && ft.specs.deposit) || 0,
-        qty: (ft.specs && ft.specs.qty) || (Array.isArray(ft.fleet_items) ? ft.fleet_items.filter(function(fi) { return fi.condition !== 'retired'; }).length : 0),
-        specs: (ft.specs && ft.specs.specsText) || '',
+        halfDayAM: s.halfDayAM || 0,
+        halfDayPM: s.halfDayPM || 0,
+        allDay: s.allDay || 0,
+        deposit: s.deposit || 0,
+        qty: ft.total_count || s.qty || (Array.isArray(ft.fleet_items) ? ft.fleet_items.filter(function(fi) { return fi.condition !== 'retired'; }).length : 0),
+        specs: s.specsText || '',
         photos: ft.image_url ? [ft.image_url] : [],
         _apiId: ft.id
       };
@@ -157,6 +158,7 @@ async function finishSaveInventory(id, name, desc, halfAM, halfPM, allDay, depos
   var fleetData = {
     name: name,
     description: desc,
+    total_count: qty,
     specs: { halfDayAM: halfAM, halfDayPM: halfPM, allDay: allDay, deposit: deposit, qty: qty, specsText: specs },
     image_url: (photos && photos.length > 0) ? photos[0] : null
   };
