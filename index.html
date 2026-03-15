@@ -166,10 +166,11 @@
         <!-- OVERVIEW -->
         <div class="page-section active" id="page-overview">
           <div class="stats-row">
-            <div class="stat-card"><div class="stat-label">Site Status</div><div class="stat-value" id="stat-status">Draft</div></div>
-            <div class="stat-card"><div class="stat-label">Media Files</div><div class="stat-value" id="stat-media">0</div></div>
-            <div class="stat-card"><div class="stat-label">Fleet Items</div><div class="stat-value" id="stat-items">0</div></div>
-            <div class="stat-card"><div class="stat-label">Pages</div><div class="stat-value" id="stat-pages">0</div></div>
+            <div class="stat-card"><div class="stat-label">Revenue This Month</div><div class="stat-value" id="stat-revenue">$0.00</div></div>
+            <div class="stat-card"><div class="stat-label">Bookings Today</div><div class="stat-value" id="stat-today">0</div></div>
+            <div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value" id="stat-customers">0</div></div>
+            <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">0</div></div>
+            <div class="stat-card" style="display:none;"><div class="stat-label">Fleet Items</div><div class="stat-value" id="stat-items">0</div></div>
           </div>
           <div class="card">
             <div class="card-header"><h3>Quick Actions</h3></div>
@@ -1221,10 +1222,10 @@
         var todayCount = bookings.filter(function(b) { return b.booking_date === today && b.status !== 'cancelled'; }).length;
         var pendingCount = bookings.filter(function(b) { return b.status === 'pending'; }).length;
 
-        document.getElementById('stat-status').textContent = '$' + monthRevenue.toFixed(2);
-        document.getElementById('stat-media').textContent = todayCount;
-        document.getElementById('stat-items').textContent = customers.length || 0;
-        document.getElementById('stat-pages').textContent = pendingCount;
+        document.getElementById('stat-revenue').textContent = '$' + monthRevenue.toFixed(2);
+        document.getElementById('stat-today').textContent = todayCount;
+        document.getElementById('stat-customers').textContent = customers.length || 0;
+        document.getElementById('stat-pending').textContent = pendingCount;
       })();
     })();
 
