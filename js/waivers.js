@@ -429,7 +429,7 @@ async function uploadWaiverDocument() {
   var fileInput = document.getElementById('waiver-doc-input');
   var file = fileInput.files[0];
   if (!file) {
-    alert('Please select a file');
+    toast('Please select a file', 'error');
     return;
   }
 

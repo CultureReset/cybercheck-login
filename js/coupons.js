@@ -334,7 +334,7 @@ function previewSmsCampaign() {
   var coupon = document.getElementById('campaign-coupon').value;
   var preview = msg.replace(/\{\{customer_name\}\}/g, 'John');
   if (coupon) preview += '\n\nUse code ' + coupon + ' at checkout!';
-  alert('SMS Preview:\n\n' + preview);
+  toast('SMS Preview: ' + preview);
 }
 
 function sendSmsCampaign() {
