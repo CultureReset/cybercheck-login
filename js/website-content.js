@@ -503,39 +503,42 @@ async function saveProducts() {
   wcSave('products', prods);
 
   // Sync images + pricing to fleet_types so inventory tab and booking engine stay in sync
+  const token = wcGetAuthToken();
+  if (!token) return;
   try {
-    const fleetTypes = await CC.dashboard.getFleetTypes();
-    if (Array.isArray(fleetTypes) && fleetTypes.length) {
-      for (const ft of fleetTypes) {
-        const match = prods.find(function(p) {
-          return p.name && ft.name && p.name.trim().toLowerCase() === ft.name.trim().toLowerCase();
-        });
-        if (!match) continue;
-        const token = wcGetAuthToken();
-        if (!token) continue;
-        try {
-          const r = await fetch(WC_BASE + '/api/dashboard/fleet/' + ft.id, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({
-              description: match.description || ft.description || '',
-              image_url: match.image || ft.image_url || null,
-              specs: Object.assign({}, ft.specs || {}, {
-                halfDayAM: match.halfDayAM || 0,
-                halfDayPM: match.halfDayPM || 0,
-                allDay: match.allDay || 0,
-                specsText: match.specs || '',
-                qty: match.qty || (ft.specs && ft.specs.qty) || 1
-              })
-            })
-          });
-          if (!r.ok) toast('Price sync failed for ' + ft.name + ' — try saving again', 'error');
-        } catch(e) {
-          toast('Price sync error: ' + e.message, 'error');
-        }
-      }
+    // Fetch fleet types directly — don't depend on CC.dashboard module
+    const ftRes = await fetch(WC_BASE + '/api/dashboard/fleet', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!ftRes.ok) { toast('Price sync failed — could not load fleet types', 'error'); return; }
+    const fleetTypes = await ftRes.json();
+    if (!Array.isArray(fleetTypes) || !fleetTypes.length) return;
+
+    for (const ft of fleetTypes) {
+      const match = prods.find(function(p) {
+        return p.name && ft.name && p.name.trim().toLowerCase() === ft.name.trim().toLowerCase();
+      });
+      if (!match) continue;
+      const r = await fetch(WC_BASE + '/api/dashboard/fleet/' + ft.id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          description: match.description || ft.description || '',
+          image_url: match.image || ft.image_url || null,
+          specs: Object.assign({}, ft.specs || {}, {
+            halfDayAM: match.halfDayAM || 0,
+            halfDayPM: match.halfDayPM || 0,
+            allDay: match.allDay || 0,
+            specsText: match.specs || '',
+            qty: match.qty || (ft.specs && ft.specs.qty) || 1
+          })
+        })
+      });
+      if (!r.ok) toast('Price sync failed for ' + ft.name + ' — try saving again', 'error');
     }
-  } catch(e) {}
+  } catch(e) {
+    toast('Price sync error: ' + e.message, 'error');
+  }
 }
 
 // ─── Group Rate ───────────────────────────────────────────────────────────────
