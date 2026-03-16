@@ -480,6 +480,7 @@ function renderProducts() {
         ${fi('Half Day AM ($)','p-am-'+i,p.halfDayAM??p.halfDay,'number')}
         ${fi('Half Day PM ($)','p-pm-'+i,p.halfDayPM??p.halfDay,'number')}
         ${fi('All Day ($)','p-all-'+i,p.allDay,'number')}
+        ${fi('Qty Available','p-qty-'+i,p.qty??1,'number')}
       </div>
     </div>`).join('')}
   ${prods.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted);border:2px dashed var(--card-border);border-radius:10px;">No boats yet — click "+ Add Boat" above</div>` : ''}
@@ -489,7 +490,8 @@ async function saveProducts() {
   const prods = (_wc_data.products||[]).map((_,i)=>({
     name:val('p-name-'+i), description:val('p-desc-'+i), image:val('p-img-'+i),
     specs:val('p-specs-'+i), featured:chk('p-feat-'+i),
-    halfDayAM:num('p-am-'+i), halfDayPM:num('p-pm-'+i), allDay:num('p-all-'+i)
+    halfDayAM:num('p-am-'+i), halfDayPM:num('p-pm-'+i), allDay:num('p-all-'+i),
+    qty:num('p-qty-'+i)||1
   }));
   wcSave('products', prods);
 
@@ -502,22 +504,28 @@ async function saveProducts() {
           return p.name && ft.name && p.name.trim().toLowerCase() === ft.name.trim().toLowerCase();
         });
         if (!match) continue;
-        const token = CC.getToken();
+        const token = wcGetAuthToken();
         if (!token) continue;
-        fetch(WC_BASE + '/api/dashboard/fleet/' + ft.id, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-          body: JSON.stringify({
-            description: match.description || ft.description || '',
-            image_url: match.image || ft.image_url || null,
-            specs: Object.assign({}, ft.specs || {}, {
-              halfDayAM: match.halfDayAM || 0,
-              halfDayPM: match.halfDayPM || 0,
-              allDay: match.allDay || 0,
-              specsText: match.specs || ''
+        try {
+          const r = await fetch(WC_BASE + '/api/dashboard/fleet/' + ft.id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({
+              description: match.description || ft.description || '',
+              image_url: match.image || ft.image_url || null,
+              specs: Object.assign({}, ft.specs || {}, {
+                halfDayAM: match.halfDayAM || 0,
+                halfDayPM: match.halfDayPM || 0,
+                allDay: match.allDay || 0,
+                specsText: match.specs || '',
+                qty: match.qty || (ft.specs && ft.specs.qty) || 1
+              })
             })
-          })
-        }).catch(function(){});
+          });
+          if (!r.ok) toast('Price sync failed for ' + ft.name + ' — try saving again', 'error');
+        } catch(e) {
+          toast('Price sync error: ' + e.message, 'error');
+        }
       }
     }
   } catch(e) {}
