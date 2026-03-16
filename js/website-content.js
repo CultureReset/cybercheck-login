@@ -621,12 +621,27 @@ function renderAddons() {
   ${addons.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted);border:2px dashed var(--card-border);border-radius:10px;">No add-ons yet — click "+ Add Add-on" above</div>` : ''}
   ${saveBtn('saveAddons')}`;
 }
-function saveAddons() {
+async function saveAddons() {
   const addons = (_wc_data.addons||[]).map((_,i)=>({
     icon:val('ao-icon-'+i), name:val('ao-name-'+i), description:val('ao-desc-'+i),
     price:num('ao-price-'+i), unit:val('ao-unit-'+i), image:val('ao-img-'+i)||undefined
   }));
   wcSave('addons', addons);
+
+  // Sync to rental_addons table so website reads live data
+  try {
+    const token = wcGetAuthToken();
+    if (token) {
+      const r = await fetch(WC_BASE + '/api/dashboard/addons/sync', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(addons)
+      });
+      if (!r.ok) toast('Add-on sync failed — try saving again', 'error');
+    }
+  } catch(e) {
+    toast('Add-on sync error: ' + e.message, 'error');
+  }
 }
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
