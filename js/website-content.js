@@ -211,7 +211,8 @@ function wcCollect(section) {
   } else if (section === 'locations') {
     _wc_data.locations = (_wc_data.locations||[]).map((_,i) => ({
       id:val('lc-id-'+i)||('loc'+(i+1)), name:val('lc-name-'+i),
-      address:val('lc-addr-'+i), description:val('lc-desc-'+i), mapUrl:val('lc-map-'+i)
+      address:val('lc-addr-'+i), description:val('lc-desc-'+i), mapUrl:val('lc-map-'+i),
+      image:val('lc-img-'+i)||undefined
     }));
   }
 }
@@ -940,6 +941,7 @@ function renderLocations() {
         ${wcDelBtn('locations', i)}
       </div>
       <input type="hidden" id="lc-id-${i}" value="${esc(l.id||'')}">
+      ${imgPickerHtml('lc-img-'+i, l.image||'', 'Location Photo', 'locations')}
       <div class="form-row">${fi('Address','lc-addr-'+i,l.address,'text','25856 Canal Road...')}</div>
       ${ta('Description (shown in booking)','lc-desc-'+i,l.description,2)}
       ${fi('Google Maps URL (optional)','lc-map-'+i,l.mapUrl,'url','https://maps.google.com/?q=...')}
