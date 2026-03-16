@@ -203,7 +203,7 @@ function wcCollect(section) {
       ..._wc_data.about,
       title:val('a-title'), subtitle:val('a-sub'), description:val('a-desc'), perfectFor:val('a-for'),
       image: val('a-img') || _wc_data.about?.image || '',
-      features: Array.from({length:count},(_,i)=>({ icon:val('af-icon-'+i), title:val('af-title-'+i), description:val('af-desc-'+i) }))
+      features: Array.from({length:count},(_,i)=>({ icon:val('af-icon-'+i), title:val('af-title-'+i), description:val('af-desc-'+i), image:val('af-img-'+i)||'' }))
     };
   } else if (section === 'reviews') {
     const count = (_wc_data.reviews?.items||[]).length;
@@ -451,8 +451,9 @@ function renderAbout() {
         <strong style="font-size:14px;color:var(--text-muted);">Feature ${i+1}</strong>
         ${wcDelBtn('about', i)}
       </div>
-      <div class="form-row">${fi('Icon (optional)','af-icon-'+i,f.icon,'text','⚡')}${fi('Title','af-title-'+i,f.title)}</div>
+      <div class="form-row">${fi('Icon (optional — hidden when photo is set)','af-icon-'+i,f.icon,'text','⚡')}${fi('Title','af-title-'+i,f.title)}</div>
       ${ta('Description','af-desc-'+i,f.description,2)}
+      ${imgPickerHtml('af-img-'+i, f.image||'', 'Photo (optional)', 'about')}
     </div>`).join('')}
   ${feats.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted);border:2px dashed var(--card-border);border-radius:10px;">No features yet — click "+ Add Feature" above</div>` : ''}
   ${saveBtn('saveAbout')}`;
@@ -462,7 +463,7 @@ function saveAbout() {
   wcSave('about', {
     title:val('a-title'), subtitle:val('a-sub'), description:val('a-desc'), perfectFor:val('a-for'),
     image: val('a-img') || (_wc_data.about?.image || ''),
-    features: Array.from({length:count},(_,i)=>({ icon:val('af-icon-'+i), title:val('af-title-'+i), description:val('af-desc-'+i) }))
+    features: Array.from({length:count},(_,i)=>({ icon:val('af-icon-'+i), title:val('af-title-'+i), description:val('af-desc-'+i), image:val('af-img-'+i)||'' }))
   });
 }
 
