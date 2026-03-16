@@ -55,6 +55,7 @@ const WC_SECTIONS = [
   { id: 'docks',          label: '🛟 Docks' },
   { id: 'whats_included', label: '✅ What\'s Included' },
   { id: 'addons',         label: '🎁 Add-ons' },
+  { id: 'booking_settings', label: '💳 Booking & Payment' },
   { id: 'steps',          label: '👣 How It Works' },
   { id: 'features',       label: '⭐ Why Circle Boats' },
   { id: 'locations',      label: '📍 Launch Locations' },
@@ -129,6 +130,7 @@ function renderWCSection(id) {
     business: renderBusiness, hero: renderHero, about: renderAbout,
     products: renderProducts, group_rate: renderGroupRate, docks: renderDocks,
     whats_included: renderWhatsIncluded, addons: renderAddons,
+    booking_settings: renderBookingSettings,
     steps: renderSteps, features: renderFeatures, locations: renderLocations,
     links_page: renderLinksPage,
     gallery: renderGallery,
@@ -652,6 +654,89 @@ async function saveAddons() {
   } catch(e) {
     toast('Add-on sync error: ' + e.message, 'error');
   }
+}
+
+// ─── Booking & Payment Settings ───────────────────────────────────────────────
+
+function renderBookingSettings() {
+  const d = _wc_data.booking_settings || {};
+  const mode = d.paymentMode || 'full';
+  return `<h2 class="wc-title">Booking & Payment</h2>
+  <p style="color:var(--text-muted);margin-bottom:24px;font-size:14px;">
+    Choose how customers pay when they book on your website. This setting applies to every booking.
+  </p>
+
+  <div class="form-group">
+    <label style="font-weight:600;margin-bottom:12px;display:block;">Payment Policy</label>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+
+      <label style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:2px solid ${mode==='full'?'var(--primary)':'var(--card-border)'};border-radius:10px;cursor:pointer;background:${mode==='full'?'var(--primary-bg,rgba(0,173,168,0.06))':'var(--bg)'};">
+        <input type="radio" name="bs-mode" value="full" ${mode==='full'?'checked':''} onchange="bsToggleMode()" style="margin-top:3px;flex-shrink:0;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">Pay in Full at Booking</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">Customer pays the full amount via credit card when they book.</div>
+        </div>
+      </label>
+
+      <label style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:2px solid ${mode==='deposit'?'var(--primary)':'var(--card-border)'};border-radius:10px;cursor:pointer;background:${mode==='deposit'?'var(--primary-bg,rgba(0,173,168,0.06))':'var(--bg)'};">
+        <input type="radio" name="bs-mode" value="deposit" ${mode==='deposit'?'checked':''} onchange="bsToggleMode()" style="margin-top:3px;flex-shrink:0;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">Deposit at Booking</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">Customer pays a deposit now. Balance due at time of rental.</div>
+        </div>
+      </label>
+
+      <label style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:2px solid ${mode==='at_location'?'var(--primary)':'var(--card-border)'};border-radius:10px;cursor:pointer;background:${mode==='at_location'?'var(--primary-bg,rgba(0,173,168,0.06))':'var(--bg)'};">
+        <input type="radio" name="bs-mode" value="at_location" ${mode==='at_location'?'checked':''} onchange="bsToggleMode()" style="margin-top:3px;flex-shrink:0;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">Book Now — Pay at Location</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">No payment collected at booking. Customer pays when they arrive.</div>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <div id="bs-deposit-fields" style="display:${mode==='deposit'?'block':'none'};margin-top:4px;">
+    <div class="form-row">
+      ${fi('Deposit %','bs-pct',d.depositPct||25,'number','25')}
+      ${fi('Deposit label shown to customer','bs-label',d.depositLabel||'Deposit required to secure your booking','text')}
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    ${fi('Booking button label (optional override)','bs-btnlabel',d.buttonLabel||'','text','e.g. Reserve Now')}
+  </div>
+
+  ${saveBtn('saveBookingSettings')}`;
+}
+
+function bsToggleMode() {
+  const mode = document.querySelector('input[name="bs-mode"]:checked')?.value || 'full';
+  const depositFields = document.getElementById('bs-deposit-fields');
+  if (depositFields) depositFields.style.display = mode === 'deposit' ? 'block' : 'none';
+  // Update border highlight
+  document.querySelectorAll('input[name="bs-mode"]').forEach(function(r) {
+    const card = r.closest('label');
+    if (!card) return;
+    if (r.checked) {
+      card.style.borderColor = 'var(--primary)';
+      card.style.background = 'var(--primary-bg,rgba(0,173,168,0.06))';
+    } else {
+      card.style.borderColor = 'var(--card-border)';
+      card.style.background = 'var(--bg)';
+    }
+  });
+}
+
+function saveBookingSettings() {
+  const mode = document.querySelector('input[name="bs-mode"]:checked')?.value || 'full';
+  wcSave('booking_settings', {
+    paymentMode: mode,
+    depositPct: mode === 'deposit' ? num('bs-pct') || 25 : 0,
+    depositLabel: val('bs-label'),
+    buttonLabel: val('bs-btnlabel')
+  });
 }
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
