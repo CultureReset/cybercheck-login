@@ -638,7 +638,7 @@ async function saveAddons() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify(addons)
       });
-      if (!r.ok) toast('Add-on sync failed — try saving again', 'error');
+      if (!r.ok) { const err = await r.json().catch(()=>({})); toast('Add-on sync failed: ' + (err.error || r.status), 'error'); }
     }
   } catch(e) {
     toast('Add-on sync error: ' + e.message, 'error');
