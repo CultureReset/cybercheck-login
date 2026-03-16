@@ -918,7 +918,7 @@ function saveLinksPage() {
     url: val('lp-url-' + i) || l.url || ''
   }));
   _wc_data.links_page.links = links;
-  wcPush();
+  wcSave('links_page', _wc_data.links_page);
 }
 
 // ─── Launch Locations ─────────────────────────────────────────────────────────
@@ -951,7 +951,7 @@ function renderLocations() {
 }
 function saveLocations() {
   wcCollect('locations');
-  wcPush();
+  wcSave('locations', _wc_data.locations);
 }
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
