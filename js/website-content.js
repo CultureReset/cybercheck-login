@@ -10,7 +10,7 @@ let _wc_activeSection = 'business';
 const WC_BASE = 'https://cybercheck-api-database.vercel.app';
 
 // Sections that have dedicated DB columns (saved to site_content via dashboard API)
-const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks'];
+const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks','qna'];
 
 function wcGetAuthToken() {
   // Try Supabase session token
@@ -61,6 +61,7 @@ const WC_SECTIONS = [
   { id: 'links_page',     label: '🔗 Bio Links Page' },
   { id: 'gallery',        label: '🖼️ Gallery' },
   { id: 'reviews',        label: '💬 Reviews' },
+  { id: 'qna',            label: '❓ Q&A / FAQ' },
   { id: 'contact',        label: '📞 Contact' },
   { id: 'footer',         label: '📋 Footer' }
 ];
@@ -131,7 +132,7 @@ function renderWCSection(id) {
     steps: renderSteps, features: renderFeatures, locations: renderLocations,
     links_page: renderLinksPage,
     gallery: renderGallery,
-    reviews: renderReviews, contact: renderContact, footer: renderFooter
+    reviews: renderReviews, qna: renderQnA, contact: renderContact, footer: renderFooter
   };
   panel.innerHTML = (map[id] || (() => '<p>Section not found</p>'))();
 }
@@ -214,6 +215,10 @@ function wcCollect(section) {
       address:val('lc-addr-'+i), description:val('lc-desc-'+i), mapUrl:val('lc-map-'+i),
       image:val('lc-img-'+i)||undefined
     }));
+  } else if (section === 'qna') {
+    _wc_data.qna = (_wc_data.qna||[]).map((_,i) => ({
+      question:val('qa-q-'+i), answer:val('qa-a-'+i)
+    }));
   }
 }
 
@@ -227,7 +232,8 @@ function wcAddItem(section) {
     addons:    {name:'New Add-on', description:'', icon:'', price:0, unit:'per trip', image:''},
     steps:     {step:(_wc_data.steps||[]).length+1, title:'New Step', description:'', image:''},
     features:  {title:'New Feature', icon:'', description:'', image:''},
-    locations: {id:'loc'+Date.now(), name:'New Location', address:'', description:'', mapUrl:''}
+    locations: {id:'loc'+Date.now(), name:'New Location', address:'', description:'', mapUrl:''},
+    qna: {question:'', answer:''}
   };
   if (section === 'reviews') {
     if (!_wc_data.reviews) _wc_data.reviews = {rating:5, source:'Google Reviews', items:[]};
@@ -830,6 +836,35 @@ function saveReviews() {
     items:(_wc_data.reviews?.items||[]).map((_,i)=>({ name:val('rv-name-'+i), initial:val('rv-init-'+i), timeAgo:val('rv-time-'+i), stars:num('rv-stars-'+i), text:val('rv-text-'+i) }))
   };
   wcPush();
+}
+
+// ─── Q&A / FAQ ───────────────────────────────────────────────────────────────
+
+function renderQnA() {
+  const items = _wc_data.qna || [];
+  return `<h2 class="wc-title">Q&A / FAQ</h2>
+  <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px;">Add frequently asked questions. These appear in an expandable accordion on your website.</p>
+  ${wcAddBar('qna', 'Question')}
+  ${items.map((q,i) => `
+    <div class="wc-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="flex-shrink:0;font-size:16px;">❓</span>
+        <input type="text" id="qa-q-${i}" value="${esc(q.question)}" placeholder="Question…"
+          style="font-size:15px;font-weight:600;border:none;background:transparent;padding:2px 0;flex:1;color:inherit;outline:none;border-bottom:1px dashed var(--card-border);"
+          onfocus="this.style.borderBottomColor='var(--primary)'" onblur="this.style.borderBottomColor='var(--card-border)'">
+        ${wcDelBtn('qna', i)}
+      </div>
+      ${ta('Answer','qa-a-'+i,q.answer,3)}
+    </div>`).join('')}
+  ${items.length === 0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted);border:2px dashed var(--card-border);border-radius:10px;">No questions yet — click "+ Add Question" above</div>` : ''}
+  ${saveBtn('saveQnA')}`;
+}
+function saveQnA() {
+  const items = (_wc_data.qna||[]).map((_,i) => ({
+    question: val('qa-q-'+i),
+    answer: val('qa-a-'+i)
+  }));
+  wcSave('qna', items);
 }
 
 // ─── Contact ──────────────────────────────────────────────────────────────────
