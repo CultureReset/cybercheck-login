@@ -79,7 +79,7 @@ function renderInventory() {
     );
     var imgSrc = (item.photos && item.photos.length > 0) ? item.photos[0] : placeholderImg;
 
-    html += '<div class="grid-item" onclick="editInventoryItem(' + item.id + ')">';
+    html += '<div class="grid-item" onclick="editInventoryItem(\'' + item.id + '\')">';
     html += '<img src="' + imgSrc + '" alt="' + escHtml(item.name) + '">';
     html += '<div class="item-info">';
     html += '<h4>' + escHtml(item.name) + '</h4>';
