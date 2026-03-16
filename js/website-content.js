@@ -202,6 +202,7 @@ function wcCollect(section) {
     _wc_data.about = {
       ..._wc_data.about,
       title:val('a-title'), subtitle:val('a-sub'), description:val('a-desc'), perfectFor:val('a-for'),
+      image: val('a-img') || _wc_data.about?.image || '',
       features: Array.from({length:count},(_,i)=>({ icon:val('af-icon-'+i), title:val('af-title-'+i), description:val('af-desc-'+i) }))
     };
   } else if (section === 'reviews') {
@@ -439,6 +440,7 @@ function renderAbout() {
   ${fi('Subtitle','a-sub',d.subtitle)}
   ${ta('Main Description','a-desc',d.description,4)}
   ${ta('"Perfect For" line','a-for',d.perfectFor)}
+  ${imgPickerHtml('a-img', d.image||'', 'Section Photo (displays full-width on website)', 'about')}
   <div style="display:flex;justify-content:space-between;align-items:center;margin:24px 0 12px;">
     <h3 style="margin:0;font-size:15px;font-weight:600;">Feature Highlights</h3>
     <button class="btn btn-outline btn-sm" onclick="wcAddItem('about')">+ Add Feature</button>
@@ -459,6 +461,7 @@ function saveAbout() {
   const count = (_wc_data.about?.features||[]).length;
   wcSave('about', {
     title:val('a-title'), subtitle:val('a-sub'), description:val('a-desc'), perfectFor:val('a-for'),
+    image: val('a-img') || (_wc_data.about?.image || ''),
     features: Array.from({length:count},(_,i)=>({ icon:val('af-icon-'+i), title:val('af-title-'+i), description:val('af-desc-'+i) }))
   });
 }
