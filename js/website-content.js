@@ -895,7 +895,10 @@ function renderGallery() {
             ondragover="wcGalDragOver(event)"
             ondrop="wcGalDrop(event,${i})"
             ondragend="wcGalDragEnd(event)"
-            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${isHomepage ? 'var(--primary)' : (assignedIdx >= 0 ? '#8b5cf6' : 'var(--card-border)')};cursor:grab;">
+            ontouchstart="wcGalTouchStart(event,${i})"
+            ontouchmove="wcGalTouchMove(event)"
+            ontouchend="wcGalTouchEnd(event,${i})"
+            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${isHomepage ? 'var(--primary)' : (assignedIdx >= 0 ? '#8b5cf6' : 'var(--card-border)')};cursor:grab;touch-action:none;">
             <img src="${esc(full)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='#f1f5f9'">
             ${isHomepage ? `<div style="position:absolute;top:4px;left:4px;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">HOME</div>` : ''}
             ${!isHomepage && assignedIdx >= 0 ? `<div style="position:absolute;top:4px;left:4px;background:#8b5cf6;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(sections[assignedIdx].name)}</div>` : ''}
@@ -979,6 +982,34 @@ function wcGalDrop(e, i) {
 function wcGalDragEnd(e) {
   _galDragSrc = null;
   e.currentTarget.style.opacity = '';
+}
+
+// ── Touch drag support (mobile) ──
+var _galTouchSrc = null;
+var _galTouchSrcEl = null;
+
+function wcGalTouchStart(e, i) {
+  _galTouchSrc = i;
+  _galTouchSrcEl = e.currentTarget;
+  _galTouchSrcEl.style.opacity = '0.4';
+}
+
+function wcGalTouchMove(e) {
+  if (_galTouchSrc === null) return;
+  e.preventDefault(); // stop page scroll while dragging
+}
+
+function wcGalTouchEnd(e, i) {
+  if (_galTouchSrc === null) return;
+  if (_galTouchSrcEl) _galTouchSrcEl.style.opacity = '';
+  if (_galTouchSrc !== i) {
+    const gallery = _wc_data.gallery;
+    const moved = gallery.splice(_galTouchSrc, 1)[0];
+    gallery.splice(i, 0, moved);
+    wcPush().then(() => renderWCSection('gallery'));
+  }
+  _galTouchSrc = null;
+  _galTouchSrcEl = null;
 }
 
 async function wcGalleryAdd(fileInput) {
