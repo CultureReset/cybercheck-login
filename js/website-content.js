@@ -843,28 +843,65 @@ function wcFeatureImageRemove(index) {
 
 // ─── Gallery ──────────────────────────────────────────────────────────────────
 
+var _galDragSrc = null;
+
 function renderGallery() {
   const gallery = _wc_data.gallery || [];
+  const HOMEPAGE_COUNT = 12;
   const gridHtml = gallery.length === 0
     ? `<div style="background:var(--bg);border:2px dashed var(--card-border);border-radius:12px;padding:48px;text-align:center;color:var(--text-muted);">No gallery photos yet. Upload your first photo above.</div>`
-    : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
+    : `<div id="galGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
         ${gallery.map((img, i) => {
           const url = typeof img === 'string' ? img : img.url;
           const full = wcToUrl(url);
-          return `<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--card-border);">
+          const isHomepage = i < HOMEPAGE_COUNT;
+          return `<div draggable="true" data-gal-index="${i}"
+            ondragstart="wcGalDragStart(event,${i})"
+            ondragover="wcGalDragOver(event)"
+            ondrop="wcGalDrop(event,${i})"
+            ondragend="wcGalDragEnd(event)"
+            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${isHomepage ? 'var(--primary)' : 'var(--card-border)'};cursor:grab;">
             <img src="${esc(full)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='#f1f5f9'">
+            ${isHomepage ? `<div style="position:absolute;top:4px;left:4px;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">HOME</div>` : ''}
+            <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:1px 5px;border-radius:3px;">${i+1}</div>
             <button onclick="wcGalleryRemove(${i})" title="Remove photo"
               style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.65);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;">✕</button>
           </div>`;
         }).join('')}
       </div>`;
+
   return `<h2 class="wc-title">Gallery</h2>
-  <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px;">Upload photos that appear in the Gallery section of your website. Each photo uploads and saves instantly.</p>
+  <p style="color:var(--text-muted);margin-bottom:8px;font-size:14px;">Upload photos for your website gallery. <strong>Drag to reorder</strong> — the first 12 (shown with a blue border + HOME badge) appear on your home page. The rest appear in "See All Photos".</p>
   <div style="margin-bottom:24px;">
     <button type="button" class="btn btn-primary" onclick="document.getElementById('gal-upload-file').click()">+ Upload Photo</button>
     <input type="file" id="gal-upload-file" accept="image/*" multiple style="display:none" onchange="wcGalleryAdd(this)">
   </div>
   ${gridHtml}`;
+}
+
+function wcGalDragStart(e, i) {
+  _galDragSrc = i;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.style.opacity = '0.4';
+}
+
+function wcGalDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function wcGalDrop(e, i) {
+  e.preventDefault();
+  if (_galDragSrc === null || _galDragSrc === i) return;
+  const gallery = _wc_data.gallery;
+  const moved = gallery.splice(_galDragSrc, 1)[0];
+  gallery.splice(i, 0, moved);
+  wcPush().then(() => renderWCSection('gallery'));
+}
+
+function wcGalDragEnd(e) {
+  _galDragSrc = null;
+  e.currentTarget.style.opacity = '';
 }
 
 async function wcGalleryAdd(fileInput) {
