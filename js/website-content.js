@@ -410,10 +410,16 @@ function renderHero() {
   ${fi('Headline (H1)','h-title',d.title)}
   ${ta('Subtitle','h-sub',d.subtitle)}
   <div class="form-row">${fi('CTA Button Text','h-cta',d.ctaText,'text','Book Now')}${fi('CTA URL','h-url',d.ctaUrl,'text','#rentals')}</div>
+  <div style="margin-top:16px;padding:16px;background:var(--bg);border-radius:12px;border:1px solid var(--card-border);">
+    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:14px;">Hero Video URL</label>
+    <p style="color:var(--text-muted);font-size:12px;margin-bottom:8px;">Paste a YouTube or video URL. Leave blank to hide the video entirely.</p>
+    <input type="text" id="h-video" value="${esc(d.videoUrl || '')}" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:10px 14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--text);font-size:14px;">
+    ${d.videoUrl ? `<div style="margin-top:8px;"><button type="button" class="btn btn-sm" style="background:#ef4444;color:white;border:none;font-size:12px;padding:4px 12px;" onclick="document.getElementById('h-video').value='';toast('Video cleared — click Save to apply')">Remove Video</button></div>` : ''}
+  </div>
   ${saveBtn('saveHero')}`;
 }
 function saveHero() {
-  const heroData = { location:val('h-loc'), title:val('h-title'), subtitle:val('h-sub'), ctaText:val('h-cta'), ctaUrl:val('h-url') };
+  const heroData = { location:val('h-loc'), title:val('h-title'), subtitle:val('h-sub'), ctaText:val('h-cta'), ctaUrl:val('h-url'), videoUrl:val('h-video').trim() };
   wcSave('hero', heroData);
   // Save CTA fields to DB separately
   const token = wcGetAuthToken();
@@ -847,7 +853,28 @@ var _galDragSrc = null;
 
 function renderGallery() {
   const gallery = _wc_data.gallery || [];
+  const sections = _wc_data.gallery_sections || [];
   const HOMEPAGE_COUNT = 12;
+
+  // Build sections panel
+  const sectionsPanel = `
+    <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <strong style="font-size:14px;">Gallery Sections <span style="font-weight:400;color:var(--text-muted);">(tabs in "See All Photos" popup)</span></strong>
+        ${sections.length < 5 ? `<button class="btn btn-sm btn-primary" onclick="wcAddGallerySection()" style="font-size:12px;padding:4px 12px;">+ Add Section</button>` : `<span style="font-size:12px;color:var(--text-muted);">Max 5</span>`}
+      </div>
+      ${sections.length === 0
+        ? `<p style="color:var(--text-muted);font-size:13px;margin:0;">No sections yet. Add sections to create category tabs in the gallery popup. Then assign photos below.</p>`
+        : sections.map((s, i) => `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <input value="${esc(s.name)}" onchange="wcRenameGallerySection(${i},this.value)"
+              style="flex:1;padding:7px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--text);font-size:13px;">
+            <span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${(s.images||[]).length} photo${(s.images||[]).length!==1?'s':''}</span>
+            <button onclick="wcDeleteGallerySection(${i})" title="Delete section" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;">×</button>
+          </div>`).join('')
+      }
+    </div>`;
+
   const gridHtml = gallery.length === 0
     ? `<div style="background:var(--bg);border:2px dashed var(--card-border);border-radius:12px;padding:48px;text-align:center;color:var(--text-muted);">No gallery photos yet. Upload your first photo above.</div>`
     : `<div id="galGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
@@ -855,28 +882,78 @@ function renderGallery() {
           const url = typeof img === 'string' ? img : img.url;
           const full = wcToUrl(url);
           const isHomepage = i < HOMEPAGE_COUNT;
+          const assignedIdx = sections.findIndex(s => (s.images||[]).includes(url));
+          const sectionSelector = sections.length > 0 ? `
+            <select onchange="wcGalAssignSection(${i},this.value)" onclick="event.stopPropagation()"
+              style="position:absolute;bottom:4px;left:4px;right:28px;font-size:10px;padding:2px 4px;border-radius:4px;background:rgba(0,0,0,0.7);color:white;border:none;cursor:pointer;max-width:calc(100% - 32px);">
+              <option value="-1">${assignedIdx >= 0 ? esc(sections[assignedIdx].name) : '+ Add to section'}</option>
+              ${sections.map((s,si) => si !== assignedIdx ? `<option value="${si}">${esc(s.name)}</option>` : '').join('')}
+              ${assignedIdx >= 0 ? `<option value="-1">✕ Remove from section</option>` : ''}
+            </select>` : '';
           return `<div draggable="true" data-gal-index="${i}"
             ondragstart="wcGalDragStart(event,${i})"
             ondragover="wcGalDragOver(event)"
             ondrop="wcGalDrop(event,${i})"
             ondragend="wcGalDragEnd(event)"
-            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${isHomepage ? 'var(--primary)' : 'var(--card-border)'};cursor:grab;">
+            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${isHomepage ? 'var(--primary)' : (assignedIdx >= 0 ? '#8b5cf6' : 'var(--card-border)')};cursor:grab;">
             <img src="${esc(full)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='#f1f5f9'">
             ${isHomepage ? `<div style="position:absolute;top:4px;left:4px;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">HOME</div>` : ''}
-            <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:1px 5px;border-radius:3px;">${i+1}</div>
-            <button onclick="wcGalleryRemove(${i})" title="Remove photo"
-              style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.65);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;">✕</button>
+            ${!isHomepage && assignedIdx >= 0 ? `<div style="position:absolute;top:4px;left:4px;background:#8b5cf6;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(sections[assignedIdx].name)}</div>` : ''}
+            <div style="position:absolute;top:4px;right:4px;display:flex;gap:3px;">
+              <div style="background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:2px 5px;border-radius:3px;">${i+1}</div>
+              <button onclick="wcGalleryRemove(${i})" title="Remove photo"
+                style="background:rgba(0,0,0,0.65);color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;line-height:1;padding:0;">✕</button>
+            </div>
+            ${sectionSelector}
           </div>`;
         }).join('')}
-      </div>`;
+      </div>
+      ${sections.length > 0 ? `<p style="margin-top:10px;font-size:12px;color:var(--text-muted);">🔵 Blue border = on home page &nbsp;|&nbsp; 🟣 Purple border = assigned to a section</p>` : ''}`;
 
   return `<h2 class="wc-title">Gallery</h2>
-  <p style="color:var(--text-muted);margin-bottom:8px;font-size:14px;">Upload photos for your website gallery. <strong>Drag to reorder</strong> — the first 12 (shown with a blue border + HOME badge) appear on your home page. The rest appear in "See All Photos".</p>
-  <div style="margin-bottom:24px;">
-    <button type="button" class="btn btn-primary" onclick="document.getElementById('gal-upload-file').click()">+ Upload Photo</button>
+  <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px;">Upload photos for your website gallery. <strong>Drag to reorder</strong> — the first 12 (blue border) appear on your home page.</p>
+  ${sectionsPanel}
+  <div style="margin-bottom:20px;">
+    <button type="button" class="btn btn-primary" onclick="document.getElementById('gal-upload-file').click()">+ Upload Photos</button>
     <input type="file" id="gal-upload-file" accept="image/*" multiple style="display:none" onchange="wcGalleryAdd(this)">
+    <span id="gal-upload-status" style="margin-left:12px;font-size:13px;color:var(--text-muted);"></span>
   </div>
   ${gridHtml}`;
+}
+
+function wcAddGallerySection() {
+  if (!_wc_data.gallery_sections) _wc_data.gallery_sections = [];
+  if (_wc_data.gallery_sections.length >= 5) return;
+  _wc_data.gallery_sections.push({ id: 'sec_' + Date.now(), name: 'New Section', images: [] });
+  wcPush().then(() => renderWCSection('gallery'));
+}
+
+function wcDeleteGallerySection(i) {
+  if (!_wc_data.gallery_sections) return;
+  _wc_data.gallery_sections.splice(i, 1);
+  wcPush().then(() => renderWCSection('gallery'));
+}
+
+function wcRenameGallerySection(i, name) {
+  if (!_wc_data.gallery_sections || !_wc_data.gallery_sections[i]) return;
+  _wc_data.gallery_sections[i].name = name;
+  wcPush();
+}
+
+function wcGalAssignSection(imgIdx, sectionIdx) {
+  const gallery = _wc_data.gallery || [];
+  const sections = _wc_data.gallery_sections || [];
+  const url = typeof gallery[imgIdx] === 'string' ? gallery[imgIdx] : (gallery[imgIdx] || {}).url;
+  if (!url) return;
+  // Remove from all sections first
+  sections.forEach(s => { if (s.images) s.images = s.images.filter(u => u !== url); });
+  // Add to new section if valid
+  const si = parseInt(sectionIdx);
+  if (si >= 0 && sections[si]) {
+    if (!sections[si].images) sections[si].images = [];
+    sections[si].images.push(url);
+  }
+  wcPush().then(() => renderWCSection('gallery'));
 }
 
 function wcGalDragStart(e, i) {
@@ -908,20 +985,24 @@ async function wcGalleryAdd(fileInput) {
   const files = Array.from(fileInput.files);
   if (!files.length) return;
   const btn = fileInput.previousElementSibling;
-  if (btn) btn.textContent = `Uploading ${files.length} photo${files.length>1?'s':''}…`;
+  const status = document.getElementById('gal-upload-status');
   if (!_wc_data.gallery) _wc_data.gallery = [];
-  try {
-    for (const file of files) {
+  let uploaded = 0, failed = 0;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (btn) btn.textContent = `Uploading ${i+1} of ${files.length}…`;
+    if (status) status.textContent = file.name;
+    try {
       const url = await uploadToSupabase(file, 'gallery');
-      if (url) _wc_data.gallery.push(url);
-    }
-    await wcPush();
-    renderWCSection('gallery');
-    toast(`${files.length} photo${files.length>1?'s':''} added to gallery ✓`);
-  } catch(e) {
-    toast('Upload failed: ' + e.message, 'error');
+      if (url) { _wc_data.gallery.push(url); uploaded++; }
+      else failed++;
+    } catch(e) { failed++; }
   }
-  if (btn) btn.textContent = '+ Upload Photo';
+  await wcPush();
+  renderWCSection('gallery');
+  if (btn) btn.textContent = '+ Upload Photos';
+  if (status) status.textContent = '';
+  toast(`${uploaded} photo${uploaded!==1?'s':''} added${failed>0?' ('+failed+' failed)':''} ✓`);
   fileInput.value = '';
 }
 
