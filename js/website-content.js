@@ -8,6 +8,7 @@ let _wc_data = null;
 let _wc_activeSection = 'business';
 
 const WC_BASE = 'https://cybercheck-api-database.vercel.app';
+const WC_SITE_BASE = 'https://circle-boats-main-.vercel.app'; // customer website domain
 
 // Sections that have dedicated DB columns (saved to site_content via dashboard API)
 const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks','qna'];
@@ -980,7 +981,7 @@ function saveContact() {
 function renderLinksPage() {
   const lp = _wc_data.links_page || {};
   const links = lp.links || [];
-  const shareUrl = WC_BASE + '/beachside-site/links.html';
+  const shareUrl = WC_SITE_BASE + '/links.html';
   return `<h2 class="wc-title">Bio Links Page</h2>
   <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px;">
     This is your shareable Linktree-style page. Choose which sections appear as buttons, and add any custom links (website, booking tool, etc.).
