@@ -3,25 +3,38 @@
 // All image uploads go through here → Supabase Storage → media table
 // ============================================
 
-// Resize + compress image client-side before upload
-// maxW/maxH: max dimension in px. quality: 0-1 for JPEG/WebP.
-function resizeImageFile(file, maxW, maxH, quality) {
-  maxW = maxW || 1600;
-  maxH = maxH || 1600;
-  quality = quality || 0.82;
+// Per-folder resize settings.
+// gallery + media = no resize (upload original for full quality).
+// Other folders resize only if image exceeds max dimension.
+var _folderResizeConfig = {
+  gallery:  null,                              // skip — upload original
+  media:    null,                              // skip — upload original
+  hero:     { maxW: 2400, maxH: 2400, q: 0.95 },
+  step:     { maxW: 2000, maxH: 2000, q: 0.92 },
+  location: { maxW: 2000, maxH: 2000, q: 0.92 },
+  feature:  { maxW: 1200, maxH: 1200, q: 0.92 },
+  logo:     { maxW: 400,  maxH: 400,  q: 0.92 }
+};
+var _defaultResizeConfig = { maxW: 2000, maxH: 2000, q: 0.92 };
+
+function resizeImageFile(file, folder) {
+  // Skip non-images or GIFs (preserve animation)
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+    return Promise.resolve(file);
+  }
+  // gallery and media: upload original — no canvas processing
+  var cfg = _folderResizeConfig.hasOwnProperty(folder) ? _folderResizeConfig[folder] : _defaultResizeConfig;
+  if (!cfg) return Promise.resolve(file);
+
+  var maxW = cfg.maxW, maxH = cfg.maxH, quality = cfg.q;
   return new Promise(function(resolve) {
-    // Skip non-images or GIFs (preserve animation)
-    if (!file.type.startsWith('image/') || file.type === 'image/gif') {
-      resolve(file);
-      return;
-    }
     var reader = new FileReader();
     reader.onload = function(e) {
       var img = new Image();
       img.onload = function() {
         var w = img.naturalWidth;
         var h = img.naturalHeight;
-        // Scale down only if needed
+        // Only scale down if image exceeds max dimension
         if (w <= maxW && h <= maxH) { resolve(file); return; }
         var scale = Math.min(maxW / w, maxH / h);
         var canvas = document.createElement('canvas');
@@ -50,8 +63,8 @@ async function uploadToSupabase(file, folder) {
     return null;
   }
 
-  // Resize before upload — keeps storage and page-load times reasonable
-  file = await resizeImageFile(file);
+  // Resize before upload (gallery/media skip resize entirely — original quality)
+  file = await resizeImageFile(file, folder);
   if (!supabase || !file) return null;
   var siteId = getSiteId();
   if (!siteId) { await getSupabaseBusiness(); siteId = getSiteId(); }
