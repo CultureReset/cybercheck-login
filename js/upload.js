@@ -43,6 +43,13 @@ function resizeImageFile(file, maxW, maxH, quality) {
 }
 
 async function uploadToSupabase(file, folder) {
+  // Block HEIC/HEIF — Chrome can't display them and Safari canvas produces black images
+  if (file.type === 'image/heic' || file.type === 'image/heif' ||
+      /\.heic$/i.test(file.name) || /\.heif$/i.test(file.name)) {
+    toast('HEIC photos not supported. On iPhone: Settings → Camera → Formats → Most Compatible to shoot in JPEG.', 'error');
+    return null;
+  }
+
   // Resize before upload — keeps storage and page-load times reasonable
   file = await resizeImageFile(file);
   if (!supabase || !file) return null;
