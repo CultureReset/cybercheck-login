@@ -1113,16 +1113,116 @@ function saveQnA() {
 
 function renderContact() {
   const d = _wc_data.contact || {};
+  const fields = d.customFields || [];
   return `<h2 class="wc-title">Contact Form</h2>
-  ${fi('Form Title','ct-title',d.formTitle,'text','Send a Message')}
-  <div class="form-group">
-    <label>"Interested In" dropdown options (one per line)</label>
-    <textarea id="ct-int" rows="10">${esc((d.interests||[]).join('\n'))}</textarea>
+
+  <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Section Text</div>
+    ${fi('Section Heading','ct-heading',d.heading,'text','Book or Ask a Question')}
+    ${fi('Section Subtitle','ct-subtitle',d.subtitle,'text','Send us a message or call. We respond fast.')}
   </div>
+
+  <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Form Labels</div>
+    ${fi('Form Title (above fields)','ct-title',d.formTitle,'text','Send a Message')}
+    ${fi('Submit Button Text','ct-submit',d.submitLabel,'text','Send Message')}
+  </div>
+
+  <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">"Interested In" Dropdown</div>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">One option per line. If empty, options auto-build from your fleet prices.</p>
+    <textarea id="ct-int" rows="8" style="width:100%;padding:10px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;">${esc((d.interests||[]).join('\n'))}</textarea>
+  </div>
+
+  <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Custom Questions</div>
+        <p style="font-size:12px;color:var(--text-dim);margin:4px 0 0;">Extra fields shown on the contact form above the Message box.</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="ctAddField()">+ Add Question</button>
+    </div>
+    <div id="ct-fields-list">
+      ${fields.length === 0
+        ? `<div style="text-align:center;padding:24px;color:var(--text-dim);border:2px dashed var(--card-border);border-radius:8px;font-size:13px;">No custom questions yet — click "+ Add Question"</div>`
+        : fields.map((f,i) => ctFieldCard(f,i)).join('')}
+    </div>
+  </div>
+
   ${saveBtn('saveContact')}`;
 }
+
+function ctFieldCard(f, i) {
+  const typeOpts = ['text','email','tel','number','textarea','select','checkbox'].map(t =>
+    `<option value="${t}"${f.type===t?' selected':''}>${t}</option>`).join('');
+  return `<div id="ct-field-${i}" style="border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--card-bg);">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+      <div style="flex:1;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Question Label</label>
+        <input type="text" id="ct-fl-${i}" value="${esc(f.label||'')}" placeholder="e.g. Preferred Date" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+      </div>
+      <div style="width:120px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Type</label>
+        <select id="ct-ft-${i}" onchange="ctToggleOptions(${i})" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">${typeOpts}</select>
+      </div>
+      <div style="padding-top:20px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);cursor:pointer;white-space:nowrap;">
+          <input type="checkbox" id="ct-fr-${i}"${f.required?' checked':''} style="width:14px;height:14px;"> Required
+        </label>
+      </div>
+      <button onclick="ctRemoveField(${i})" style="margin-top:18px;background:none;border:none;cursor:pointer;color:var(--danger);font-size:18px;line-height:1;padding:2px 4px;" title="Remove">&#10005;</button>
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Placeholder Text</label>
+      <input type="text" id="ct-fp-${i}" value="${esc(f.placeholder||'')}" placeholder="Optional hint shown inside the field" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+    </div>
+    <div id="ct-fopts-${i}" style="${f.type==='select'?'':'display:none;'}margin-top:10px;">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Dropdown Options (one per line)</label>
+      <textarea id="ct-fo-${i}" rows="4" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;resize:vertical;">${esc((f.options||[]).join('\n'))}</textarea>
+    </div>
+  </div>`;
+}
+
+function ctToggleOptions(i) {
+  var sel = document.getElementById('ct-ft-' + i);
+  var opts = document.getElementById('ct-fopts-' + i);
+  if (opts) opts.style.display = sel && sel.value === 'select' ? '' : 'none';
+}
+
+function ctAddField() {
+  if (!_wc_data.contact) _wc_data.contact = {};
+  if (!_wc_data.contact.customFields) _wc_data.contact.customFields = [];
+  _wc_data.contact.customFields.push({ id: 'cf' + Date.now(), label: '', type: 'text', required: false, placeholder: '', options: [] });
+  renderWCSection('contact');
+}
+
+function ctRemoveField(i) {
+  if (_wc_data.contact && _wc_data.contact.customFields) {
+    _wc_data.contact.customFields.splice(i, 1);
+    renderWCSection('contact');
+  }
+}
+
 function saveContact() {
-  wcSave('contact', { formTitle:val('ct-title'), interests:val('ct-int').split('\n').map(s=>s.trim()).filter(Boolean) });
+  const fields = (_wc_data.contact && _wc_data.contact.customFields || []).map(function(f, i) {
+    return {
+      id: f.id || ('cf' + i),
+      label: val('ct-fl-' + i),
+      type: val('ct-ft-' + i) || 'text',
+      required: document.getElementById('ct-fr-' + i) ? document.getElementById('ct-fr-' + i).checked : false,
+      placeholder: val('ct-fp-' + i),
+      options: (document.getElementById('ct-fo-' + i) ? document.getElementById('ct-fo-' + i).value : '')
+        .split('\n').map(function(s) { return s.trim(); }).filter(Boolean)
+    };
+  });
+  wcSave('contact', {
+    heading: val('ct-heading'),
+    subtitle: val('ct-subtitle'),
+    formTitle: val('ct-title'),
+    submitLabel: val('ct-submit'),
+    interests: val('ct-int').split('\n').map(function(s) { return s.trim(); }).filter(Boolean),
+    customFields: fields
+  });
 }
 
 // ─── Bio Links Page ───────────────────────────────────────────────────────────
