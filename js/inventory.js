@@ -52,6 +52,7 @@ async function loadInventory() {
   }
 
   renderInventory();
+  renderOverviewTimeSlots();
   updateInventoryStats();
 }
 
@@ -90,6 +91,38 @@ function renderInventory() {
   });
 
   grid.innerHTML = html;
+}
+
+function renderOverviewTimeSlots() {
+  var el = document.getElementById('overview-time-slots');
+  if (!el) return;
+
+  if (_inventoryItems.length === 0) {
+    el.innerHTML = '<p style="color:var(--text-dim);padding:8px 0;">No fleet items configured.</p>';
+    return;
+  }
+
+  var slotDefs = [
+    { label: 'Half Day AM', time: '9:00 AM - 1:00 PM', key: 'halfDayAM' },
+    { label: 'Half Day PM', time: '2:00 PM - 6:00 PM', key: 'halfDayPM' },
+    { label: 'All Day', time: '9:00 AM - 6:00 PM', key: 'allDay' }
+  ];
+
+  var headers = '<tr><th>Slot</th><th>Time</th>';
+  _inventoryItems.forEach(function(item) { headers += '<th>' + escHtml(item.name) + '</th>'; });
+  headers += '</tr>';
+
+  var rows = '';
+  slotDefs.forEach(function(slot) {
+    rows += '<tr><td>' + slot.label + '</td><td>' + slot.time + '</td>';
+    _inventoryItems.forEach(function(item) {
+      var price = item[slot.key];
+      rows += '<td>' + (price ? '$' + Number(price).toFixed(0) : '—') + '</td>';
+    });
+    rows += '</tr>';
+  });
+
+  el.innerHTML = '<div class="table-wrap"><table><thead>' + headers + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 function openInventoryModal(id) {

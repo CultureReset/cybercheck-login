@@ -183,7 +183,7 @@ function renderBookingsStats() {
   var pending = _bookings.filter(function(b) { return b.status === 'pending'; });
 
   var html = '';
-  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;">';
 
   html += buildStatCard('Today', todayBookings.length, 'bookings', '#00ada8');
   html += buildStatCard('Upcoming', upcoming.length, 'scheduled', '#4DA6FF');
