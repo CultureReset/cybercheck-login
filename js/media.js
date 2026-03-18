@@ -57,10 +57,19 @@ function renderMediaGrid() {
     return;
   }
 
+  var brokenPlaceholder = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">' +
+    '<rect width="200" height="200" fill="#1e293b"/>' +
+    '<text x="100" y="88" text-anchor="middle" fill="#f59e0b" font-family="sans-serif" font-size="28">⚠</text>' +
+    '<text x="100" y="114" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="11">Unsupported format</text>' +
+    '<text x="100" y="132" text-anchor="middle" fill="#64748b" font-family="sans-serif" font-size="10">Delete &amp; re-upload as JPG</text>' +
+    '</svg>'
+  );
+
   var html = '';
   _mediaItems.forEach(function(item) {
     html += '<div class="grid-item" onclick="openMediaDetail(' + item.id + ')">';
-    html += '<img src="' + item.url + '" alt="' + item.name + '">';
+    html += '<img src="' + item.url + '" alt="' + item.name + '" onerror="this.src=\'' + brokenPlaceholder + '\';this.onerror=null;">';
     html += '<div class="item-info">';
     html += '<h4>' + item.name + '</h4>';
     html += '<p>' + formatFileSize(item.size) + '</p>';
