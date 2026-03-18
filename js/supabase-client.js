@@ -115,3 +115,39 @@ async function requireSupabaseAuth() {
   }
   return session;
 }
+
+// ============================================
+// Inactivity timeout — 1 hour, then force re-login
+// ============================================
+var INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 hour in ms
+var _inactivityTimer = null;
+
+function _resetInactivityTimer() {
+  localStorage.setItem('cc_last_active', Date.now());
+}
+
+function _checkInactivity() {
+  var last = parseInt(localStorage.getItem('cc_last_active') || '0');
+  if (last && (Date.now() - last) >= INACTIVITY_LIMIT) {
+    clearSupabaseCache();
+    if (supabase) supabase.auth.signOut();
+    window.location.href = 'login.html';
+  }
+}
+
+function startInactivityWatch() {
+  _resetInactivityTimer();
+  // Update last active on any user interaction
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function(evt) {
+    document.addEventListener(evt, _resetInactivityTimer, { passive: true });
+  });
+  // Check every 5 minutes
+  _inactivityTimer = setInterval(_checkInactivity, 5 * 60 * 1000);
+}
+
+function stopInactivityWatch() {
+  if (_inactivityTimer) clearInterval(_inactivityTimer);
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function(evt) {
+    document.removeEventListener(evt, _resetInactivityTimer);
+  });
+}
