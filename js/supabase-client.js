@@ -23,12 +23,35 @@ var _session = null;
 var _business = null;
 var _siteId = null;
 
+// Listen for session expiry and force re-login immediately
+if (supabase) {
+  supabase.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+      clearSupabaseCache();
+      window.location.href = 'login.html';
+    }
+    if (event === 'TOKEN_REFRESHED' && session) {
+      // Keep cache in sync with refreshed token
+      _session = session;
+    }
+  });
+}
+
 async function getSupabaseSession() {
+  // Always re-validate if cached session is expired
+  if (_session && _session.expires_at) {
+    var nowSecs = Math.floor(Date.now() / 1000);
+    if (nowSecs >= _session.expires_at - 60) {
+      // Within 60s of expiry or already expired — clear and re-fetch
+      _session = null;
+    }
+  }
   if (_session) return _session;
   if (!supabase) return null;
   try {
     var { data, error } = await supabase.auth.getSession();
     if (error) { console.error('Session error:', error.message); return null; }
+    if (!data.session) return null;
     _session = data.session;
     return _session;
   } catch (e) {
