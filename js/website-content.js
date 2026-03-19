@@ -371,7 +371,8 @@ function renderBusiness() {
   ${fi('Address','b-addr',d.address)}
   ${fi('Tagline','b-tag',d.tagline)}
   ${ta('Description','b-desc',d.description)}
-  <div class="form-row">${fi('Hours','b-hrs',d.hours)}${fi('Hours note','b-hrsnote',d.hoursNote)}</div>
+  ${ta('Hours (one line per day, e.g. Mon–Fri: 9 AM – 6 PM)','b-hrs',d.hours||'',8)}
+  ${fi('Hours note','b-hrsnote',d.hoursNote)}
   ${saveBtn('saveBusiness')}`;
 }
 function saveBusiness() {
