@@ -138,6 +138,8 @@ function renderWCSection(id) {
     reviews: renderReviews, qna: renderQnA, contact: renderContact, footer: renderFooter
   };
   panel.innerHTML = (map[id] || (() => '<p>Section not found</p>'))();
+  // Trigger live previews that need DOM to be ready
+  if (id === 'booking_settings') setTimeout(bsPreview, 0);
 }
 
 // ─── Save ─────────────────────────────────────────────────────────────────────
@@ -720,6 +722,34 @@ function renderBookingSettings() {
     ${fi('Booking button label (optional override)','bs-btnlabel',d.buttonLabel||'','text','e.g. Reserve Now')}
   </div>
 
+  <!-- SMS Confirmation Preview -->
+  <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--card-border);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label style="font-weight:600;font-size:15px;">Booking Confirmation SMS</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-muted);">
+        <input type="checkbox" id="bs-sms-enabled" onchange="bsPreview()"
+          ${d.smsEnabled !== false ? 'checked' : ''}
+          style="width:16px;height:16px;accent-color:var(--primary);">
+        Send automatically
+      </label>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+      Sent to the customer immediately after they book. Use: <code style="background:var(--bg2,#f0f4f8);padding:1px 5px;border-radius:4px;">{customer_name}</code> <code style="background:var(--bg2,#f0f4f8);padding:1px 5px;border-radius:4px;">{date}</code> <code style="background:var(--bg2,#f0f4f8);padding:1px 5px;border-radius:4px;">{time}</code> <code style="background:var(--bg2,#f0f4f8);padding:1px 5px;border-radius:4px;">{service}</code> <code style="background:var(--bg2,#f0f4f8);padding:1px 5px;border-radius:4px;">{business_name}</code>
+    </p>
+    <textarea id="bs-sms-template" rows="4" oninput="bsPreview()"
+      style="width:100%;padding:12px;border:1px solid var(--card-border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;background:var(--bg);color:inherit;"
+      placeholder="Confirmation SMS text…">${esc(d.smsTemplate || 'Hi {customer_name}! Your {service} is confirmed for {date} at {time}. See you at the dock! Questions? Reply to this message.')}</textarea>
+    <div style="margin-top:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Live Preview</div>
+      <div style="display:flex;gap:12px;align-items:flex-end;">
+        <div style="background:var(--bg2,#f0f0f4);border-radius:18px 18px 18px 4px;padding:12px 16px;max-width:320px;font-size:14px;line-height:1.55;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);">
+          <span id="bs-sms-preview-text"></span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:5px;padding-left:2px;">Delivered · just now</div>
+    </div>
+  </div>
+
   ${saveBtn('saveBookingSettings')}`;
 }
 
@@ -741,13 +771,39 @@ function bsToggleMode() {
   });
 }
 
+function bsPreview() {
+  const tmpl    = (document.getElementById('bs-sms-template')?.value || '').trim();
+  const enabled = document.getElementById('bs-sms-enabled')?.checked !== false;
+  const preview = document.getElementById('bs-sms-preview-text');
+  if (!preview) return;
+
+  if (!enabled) {
+    preview.textContent = '(SMS disabled — customers will not receive a confirmation text)';
+    preview.style.color = 'var(--text-muted)';
+    return;
+  }
+
+  const biz  = (typeof window.SITE_DATA !== 'undefined' && window.SITE_DATA?.business?.name) || 'Beachside Circle Boats';
+  const text = tmpl
+    .replace(/\{customer_name\}/g,  'Alex')
+    .replace(/\{service\}/g,        'Single Seater (AM)')
+    .replace(/\{date\}/g,           'Sat Jun 21')
+    .replace(/\{time\}/g,           '9:00 AM')
+    .replace(/\{business_name\}/g,  biz);
+
+  preview.textContent = text || '(enter template above)';
+  preview.style.color = '';
+}
+
 function saveBookingSettings() {
   const mode = document.querySelector('input[name="bs-mode"]:checked')?.value || 'full';
   wcSave('booking_settings', {
-    paymentMode: mode,
-    depositPct: mode === 'deposit' ? num('bs-pct') || 25 : 0,
+    paymentMode:  mode,
+    depositPct:   mode === 'deposit' ? num('bs-pct') || 25 : 0,
     depositLabel: val('bs-label'),
-    buttonLabel: val('bs-btnlabel')
+    buttonLabel:  val('bs-btnlabel'),
+    smsEnabled:   document.getElementById('bs-sms-enabled')?.checked !== false,
+    smsTemplate:  (document.getElementById('bs-sms-template')?.value || '').trim() || null
   });
 }
 
@@ -851,90 +907,127 @@ function wcFeatureImageRemove(index) {
 // ─── Gallery ──────────────────────────────────────────────────────────────────
 
 var _galDragSrc = null;
+var _galActiveTab = -1; // -1 = All, 0+ = section index
 
 function renderGallery() {
   const gallery = _wc_data.gallery || [];
   const sections = _wc_data.gallery_sections || [];
   const HOMEPAGE_COUNT = 12;
 
-  // Build sections panel
-  const sectionsPanel = `
-    <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:12px;padding:16px;margin-bottom:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <strong style="font-size:14px;">Gallery Sections <span style="font-weight:400;color:var(--text-muted);">(tabs in "See All Photos" popup)</span></strong>
-        ${sections.length < 5 ? `<button class="btn btn-sm btn-primary" onclick="wcAddGallerySection()" style="font-size:12px;padding:4px 12px;">+ Add Section</button>` : `<span style="font-size:12px;color:var(--text-muted);">Max 5</span>`}
-      </div>
-      ${sections.length === 0
-        ? `<p style="color:var(--text-muted);font-size:13px;margin:0;">No sections yet. Add sections to create category tabs in the gallery popup. Then assign photos below.</p>`
-        : sections.map((s, i) => `
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <input value="${esc(s.name)}" onchange="wcRenameGallerySection(${i},this.value)"
-              style="flex:1;padding:7px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--text);font-size:13px;">
-            <span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${(s.images||[]).length} photo${(s.images||[]).length!==1?'s':''}</span>
-            <button onclick="wcDeleteGallerySection(${i})" title="Delete section" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;">×</button>
-          </div>`).join('')
-      }
+  // Clamp active tab if sections were deleted
+  if (_galActiveTab >= sections.length) _galActiveTab = -1;
+
+  // Tab bar
+  const tabBar = `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+      <button onclick="wcGalSetTab(-1)" style="padding:8px 18px;border-radius:20px;border:2px solid ${_galActiveTab === -1 ? 'var(--primary)' : 'var(--card-border)'};background:${_galActiveTab === -1 ? 'var(--primary)' : 'var(--card-bg)'};color:${_galActiveTab === -1 ? 'white' : 'var(--text)'};cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;">
+        All (${gallery.length})
+      </button>
+      ${sections.map((s, i) => `
+        <div style="display:flex;align-items:center;border-radius:20px;border:2px solid ${_galActiveTab === i ? 'var(--primary)' : 'var(--card-border)'};overflow:hidden;background:${_galActiveTab === i ? 'var(--primary)' : 'var(--card-bg)'};">
+          <button onclick="wcGalSetTab(${i})" style="padding:8px 14px;background:transparent;color:${_galActiveTab === i ? 'white' : 'var(--text)'};border:none;cursor:pointer;font-size:13px;font-weight:600;">
+            ${esc(s.name)} (${(s.images||[]).length})
+          </button>
+          <button onclick="wcGalRenameTabPrompt(${i})" title="Rename tab" style="padding:8px 8px;background:transparent;color:${_galActiveTab === i ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)'};border:none;border-left:1px solid ${_galActiveTab === i ? 'rgba(255,255,255,0.25)' : 'var(--card-border)'};cursor:pointer;font-size:11px;">✏️</button>
+          <button onclick="wcDeleteGallerySection(${i})" title="Delete tab" style="padding:8px 8px;background:transparent;color:${_galActiveTab === i ? 'rgba(255,255,255,0.75)' : '#ef4444'};border:none;border-left:1px solid ${_galActiveTab === i ? 'rgba(255,255,255,0.25)' : 'var(--card-border)'};cursor:pointer;font-size:12px;">✕</button>
+        </div>`).join('')}
+      ${sections.length < 5
+        ? `<button onclick="wcAddGallerySection()" style="padding:8px 16px;border-radius:20px;border:2px dashed var(--card-border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:13px;">+ Add Tab</button>`
+        : `<span style="font-size:12px;color:var(--text-muted);padding:4px 8px;">Max 5 tabs</span>`}
     </div>`;
 
-  const gridHtml = gallery.length === 0
-    ? `<div style="background:var(--bg);border:2px dashed var(--card-border);border-radius:12px;padding:48px;text-align:center;color:var(--text-muted);">No gallery photos yet. Upload your first photo above.</div>`
+  // Get photos for current tab
+  let displayPhotos;
+  if (_galActiveTab === -1) {
+    displayPhotos = gallery.map((img, i) => ({ url: typeof img === 'string' ? img : img.url, globalIdx: i }));
+  } else {
+    const sec = sections[_galActiveTab];
+    const sectionImages = sec ? (sec.images || []) : [];
+    displayPhotos = sectionImages.map(url => {
+      const globalIdx = gallery.findIndex(img => (typeof img === 'string' ? img : img.url) === url);
+      return { url, globalIdx };
+    }).filter(p => p.globalIdx !== -1);
+  }
+
+  const activeSecName = _galActiveTab >= 0 && sections[_galActiveTab] ? sections[_galActiveTab].name : null;
+  const uploadLabel = activeSecName ? `+ Upload to "${activeSecName}"` : '+ Upload Photos';
+
+  const gridHtml = displayPhotos.length === 0
+    ? `<div style="background:var(--bg);border:2px dashed var(--card-border);border-radius:12px;padding:48px;text-align:center;color:var(--text-muted);">${activeSecName ? `No photos in "${activeSecName}" yet. Upload photos above to add them here.` : 'No gallery photos yet. Upload your first photo above.'}</div>`
     : `<div id="galGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
-        ${gallery.map((img, i) => {
-          const url = typeof img === 'string' ? img : img.url;
+        ${displayPhotos.map(({url, globalIdx}) => {
           const full = wcToUrl(url);
-          const isHomepage = i < HOMEPAGE_COUNT;
+          const isHomepage = _galActiveTab === -1 && globalIdx < HOMEPAGE_COUNT;
           const assignedIdx = sections.findIndex(s => (s.images||[]).includes(url));
-          const sectionSelector = sections.length > 0 ? `
-            <select onchange="wcGalAssignSection(${i},this.value)" onclick="event.stopPropagation()"
+          const sectionSelector = _galActiveTab === -1 && sections.length > 0 ? `
+            <select onchange="wcGalAssignSection(${globalIdx},this.value)" onclick="event.stopPropagation()"
               style="position:absolute;bottom:4px;left:4px;right:28px;font-size:10px;padding:2px 4px;border-radius:4px;background:rgba(0,0,0,0.7);color:white;border:none;cursor:pointer;max-width:calc(100% - 32px);">
-              <option value="-1">${assignedIdx >= 0 ? esc(sections[assignedIdx].name) : '+ Add to section'}</option>
+              <option value="-1">${assignedIdx >= 0 ? esc(sections[assignedIdx].name) : '+ Add to tab'}</option>
               ${sections.map((s,si) => si !== assignedIdx ? `<option value="${si}">${esc(s.name)}</option>` : '').join('')}
-              ${assignedIdx >= 0 ? `<option value="-1">✕ Remove from section</option>` : ''}
+              ${assignedIdx >= 0 ? `<option value="-1">✕ Remove from tab</option>` : ''}
             </select>` : '';
-          return `<div draggable="true" data-gal-index="${i}"
-            ondragstart="wcGalDragStart(event,${i})"
+          const borderColor = isHomepage ? 'var(--primary)' : (assignedIdx >= 0 ? '#8b5cf6' : 'var(--card-border)');
+          return `<div draggable="true" data-gal-index="${globalIdx}"
+            ondragstart="wcGalDragStart(event,${globalIdx})"
             ondragover="wcGalDragOver(event)"
-            ondrop="wcGalDrop(event,${i})"
+            ondrop="wcGalDrop(event,${globalIdx})"
             ondragend="wcGalDragEnd(event)"
-            ontouchstart="wcGalTouchStart(event,${i})"
+            ontouchstart="wcGalTouchStart(event,${globalIdx})"
             ontouchmove="wcGalTouchMove(event)"
-            ontouchend="wcGalTouchEnd(event,${i})"
-            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${isHomepage ? 'var(--primary)' : (assignedIdx >= 0 ? '#8b5cf6' : 'var(--card-border)')};cursor:grab;touch-action:none;">
+            ontouchend="wcGalTouchEnd(event,${globalIdx})"
+            style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid ${borderColor};cursor:grab;touch-action:none;">
             <img src="${esc(full)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='#f1f5f9'">
             ${isHomepage ? `<div style="position:absolute;top:4px;left:4px;background:var(--primary);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">HOME</div>` : ''}
-            ${!isHomepage && assignedIdx >= 0 ? `<div style="position:absolute;top:4px;left:4px;background:#8b5cf6;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(sections[assignedIdx].name)}</div>` : ''}
+            ${_galActiveTab === -1 && !isHomepage && assignedIdx >= 0 ? `<div style="position:absolute;top:4px;left:4px;background:#8b5cf6;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(sections[assignedIdx].name)}</div>` : ''}
+            ${_galActiveTab >= 0 ? `<div style="position:absolute;top:4px;left:4px;background:#8b5cf6;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">${esc(activeSecName)}</div>` : ''}
             <div style="position:absolute;top:4px;right:4px;display:flex;gap:3px;">
-              <div style="background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:2px 5px;border-radius:3px;">${i+1}</div>
-              <button onclick="wcGalleryRemove(${i})" title="Remove photo"
+              <div style="background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:2px 5px;border-radius:3px;">${globalIdx+1}</div>
+              <button onclick="wcGalleryRemove(${globalIdx})" title="Remove photo"
                 style="background:rgba(0,0,0,0.65);color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;line-height:1;padding:0;">✕</button>
             </div>
             ${sectionSelector}
           </div>`;
         }).join('')}
       </div>
-      ${sections.length > 0 ? `<p style="margin-top:10px;font-size:12px;color:var(--text-muted);">🔵 Blue border = on home page &nbsp;|&nbsp; 🟣 Purple border = assigned to a section</p>` : ''}`;
+      ${_galActiveTab === -1 && sections.length > 0 ? `<p style="margin-top:10px;font-size:12px;color:var(--text-muted);">🔵 Blue border = on home page &nbsp;|&nbsp; 🟣 Purple border = assigned to a tab</p>` : ''}`;
 
   return `<h2 class="wc-title">Gallery</h2>
-  <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px;">Upload photos for your website gallery. <strong>Drag to reorder</strong> — the first 12 (blue border) appear on your home page.</p>
-  ${sectionsPanel}
+  <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px;">Upload photos for your website gallery. <strong>Drag to reorder</strong> — the first 12 appear on your home page.</p>
+  ${tabBar}
   <div style="margin-bottom:20px;">
-    <button type="button" class="btn btn-primary" onclick="document.getElementById('gal-upload-file').click()">+ Upload Photos</button>
+    <button type="button" class="btn btn-primary" onclick="document.getElementById('gal-upload-file').click()">${uploadLabel}</button>
     <input type="file" id="gal-upload-file" accept="image/*" multiple style="display:none" onchange="wcGalleryAdd(this)">
     <span id="gal-upload-status" style="margin-left:12px;font-size:13px;color:var(--text-muted);"></span>
   </div>
   ${gridHtml}`;
 }
 
+function wcGalSetTab(idx) {
+  _galActiveTab = idx;
+  renderWCSection('gallery');
+}
+
+function wcGalRenameTabPrompt(i) {
+  const sections = _wc_data.gallery_sections || [];
+  if (!sections[i]) return;
+  const name = prompt('Rename tab:', sections[i].name);
+  if (name && name.trim()) wcRenameGallerySection(i, name.trim());
+}
+
 function wcAddGallerySection() {
   if (!_wc_data.gallery_sections) _wc_data.gallery_sections = [];
   if (_wc_data.gallery_sections.length >= 5) return;
-  _wc_data.gallery_sections.push({ id: 'sec_' + Date.now(), name: 'New Section', images: [] });
+  _wc_data.gallery_sections.push({ id: 'sec_' + Date.now(), name: 'New Tab', images: [] });
+  _galActiveTab = _wc_data.gallery_sections.length - 1;
   wcPush().then(() => renderWCSection('gallery'));
 }
 
 function wcDeleteGallerySection(i) {
   if (!_wc_data.gallery_sections) return;
+  const name = _wc_data.gallery_sections[i] ? _wc_data.gallery_sections[i].name : 'this tab';
+  if (!confirm(`Delete "${name}"? Photos will stay in All.`)) return;
   _wc_data.gallery_sections.splice(i, 1);
+  if (_galActiveTab >= _wc_data.gallery_sections.length) _galActiveTab = -1;
   wcPush().then(() => renderWCSection('gallery'));
 }
 
@@ -1020,19 +1113,29 @@ async function wcGalleryAdd(fileInput) {
   const status = document.getElementById('gal-upload-status');
   if (!_wc_data.gallery) _wc_data.gallery = [];
   let uploaded = 0, failed = 0;
+  const newUrls = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     if (btn) btn.textContent = `Uploading ${i+1} of ${files.length}…`;
     if (status) status.textContent = file.name;
     try {
       const url = await uploadToSupabase(file, 'gallery');
-      if (url) { _wc_data.gallery.push(url); uploaded++; }
+      if (url) { _wc_data.gallery.push(url); newUrls.push(url); uploaded++; }
       else failed++;
     } catch(e) { failed++; }
   }
+  // Auto-assign to active tab when uploading from a section tab
+  if (_galActiveTab >= 0 && newUrls.length) {
+    const sections = _wc_data.gallery_sections || [];
+    if (sections[_galActiveTab]) {
+      if (!sections[_galActiveTab].images) sections[_galActiveTab].images = [];
+      sections[_galActiveTab].images.push(...newUrls);
+    }
+  }
   await wcPush();
   renderWCSection('gallery');
-  if (btn) btn.textContent = '+ Upload Photos';
+  const activeSecName = _galActiveTab >= 0 && _wc_data.gallery_sections && _wc_data.gallery_sections[_galActiveTab] ? _wc_data.gallery_sections[_galActiveTab].name : null;
+  if (btn) btn.textContent = activeSecName ? `+ Upload to "${activeSecName}"` : '+ Upload Photos';
   if (status) status.textContent = '';
   toast(`${uploaded} photo${uploaded!==1?'s':''} added${failed>0?' ('+failed+' failed)':''} ✓`);
   fileInput.value = '';
