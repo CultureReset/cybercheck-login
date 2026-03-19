@@ -60,9 +60,13 @@ var _socialConnections = {
 
 var _manualKeyStatus = { saved: false, mode: '' };
 
+// ─── Google Business state ────────────────────────────────────────────────
+var _googleBusiness = { connected: false, account_email: '', account_name: '', account_id: '', locations: [] };
+
 function loadConnections() {
-  // Check URL for OAuth callback first (after Stripe redirect)
+  // Check URL for OAuth callback first (after Stripe / Google redirect)
   checkStripeCallback();
+  checkGoogleCallback();
 
   // Fetch Stripe status from API
   var token = getAuthToken();
@@ -110,7 +114,7 @@ function loadConnections() {
   } catch(e) {}
 
   renderPaymentConnections();
-  renderGoogleConnections();
+  loadGoogleBusinessStatus();   // fetches real status from API, then renders
   renderSocialConnections();
 }
 
@@ -386,45 +390,143 @@ function renderPaymentConnections() {
   container.innerHTML = html;
 }
 
+// ─── Check for Google OAuth callback result ───────────────────────────────
+function checkGoogleCallback() {
+  var hashParams = new URLSearchParams(window.location.hash.indexOf('?') !== -1 ? window.location.hash.split('?')[1] : '');
+  var urlParams  = new URLSearchParams(window.location.search);
+  var connected  = hashParams.get('google_connected') || urlParams.get('google_connected');
+  var gErr       = hashParams.get('google_error')     || urlParams.get('google_error');
+
+  if (connected === '1') {
+    toast('Google Business Profile connected!');
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
+    loadGoogleBusinessStatus();
+  } else if (gErr) {
+    toast('Google connection failed: ' + decodeURIComponent(gErr), 'error');
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
+  }
+}
+
+// ─── Load real Google Business status from API ────────────────────────────
+function loadGoogleBusinessStatus() {
+  var token = getAuthToken();
+  if (!token) { renderGoogleConnections(); return; }
+
+  fetch((window.CC_API_BASE || '') + '/api/dashboard/google-business/status', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    _googleBusiness.connected    = !!data.connected;
+    _googleBusiness.account_email = data.account_email || '';
+    _googleBusiness.account_name  = data.account_name  || '';
+    _googleBusiness.account_id    = data.account_id    || '';
+    _googleBusiness.locations     = data.accounts       || [];
+    renderGoogleConnections();
+  })
+  .catch(function() { renderGoogleConnections(); });
+}
+
 function renderGoogleConnections() {
   var container = document.getElementById('google-connections');
+  if (!container) return;
   var html = '';
-  ['google_analytics', 'google_business', 'google_maps'].forEach(function(key) { html += buildConnectionCard(key); });
+
+  // ── Google Business Profile (REAL OAuth) ────────────────────────────────
+  html += '<div class="oauth-card">';
+  html += '<div class="provider-icon" style="background:#4285f4;color:white;font-weight:700;font-size:14px;">GB</div>';
+  html += '<div class="provider-info">';
+  html += '<h4>Google Business Profile</h4>';
+
+  if (_googleBusiness.connected) {
+    html += '<p style="color:var(--success,#22c55e);">✓ Connected' +
+      (_googleBusiness.account_email ? ' as ' + escHtml(_googleBusiness.account_email) : '') + '</p>';
+    if (_googleBusiness.account_name) {
+      html += '<p style="font-size:12px;color:var(--text-muted);">Account: ' + escHtml(_googleBusiness.account_name) + '</p>';
+    }
+    html += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button class="btn btn-primary btn-sm" onclick="syncGoogleReviews()">↻ Sync Reviews</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="disconnectGoogleBusiness()">Disconnect</button>';
+    html += '</div>';
+  } else {
+    html += '<p>Connect your Google Business Profile to sync reviews and manage your listing.</p>';
+    html += '<div style="margin-top:8px;">';
+    html += '<button class="btn btn-primary btn-sm" onclick="startGoogleBusinessConnect()" style="display:inline-flex;align-items:center;gap:8px;">';
+    html += '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
+    html += 'Connect Google Business</button>';
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+
+  // ── Google Analytics (placeholder — coming soon) ──────────────────────
+  html += buildComingSoonCard('Google Analytics', 'GA', '#e37400', 'Track site visitors and conversion data');
+
+  // ── Google Maps (placeholder — coming soon) ───────────────────────────
+  html += buildComingSoonCard('Google Maps', 'GM', '#34a853', 'Show your location on a map embed');
+
   container.innerHTML = html;
 }
 
-function buildConnectionCard(key) {
-  var conn = _connections[key];
-  var statusBadge = conn.connected
-    ? '<span class="badge badge-success">Connected</span>'
-    : '<span class="badge badge-warning">Not connected</span>';
-  var btnLabel = conn.connected ? 'Disconnect' : 'Connect';
-  var btnClass = conn.connected ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm';
-
-  var html = '<div class="oauth-card">';
-  html += '<div class="provider-icon" style="background:' + conn.color + ';color:white;font-weight:700;font-size:14px;">' + conn.icon + '</div>';
+function buildComingSoonCard(label, icon, color, desc) {
+  var html = '<div class="oauth-card" style="opacity:.7;">';
+  html += '<div class="provider-icon" style="background:' + color + ';color:white;font-weight:700;font-size:14px;">' + icon + '</div>';
   html += '<div class="provider-info">';
-  html += '<h4>' + conn.label + '</h4>';
-  html += '<p>' + conn.desc + '</p>';
-  html += '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">' + statusBadge;
-  html += '<button class="' + btnClass + '" onclick="toggleConnection(\'' + key + '\')">' + btnLabel + '</button>';
-  html += '</div></div></div>';
+  html += '<h4>' + label + ' <span style="font-size:11px;background:var(--card-border);color:var(--text-muted);padding:2px 6px;border-radius:4px;vertical-align:middle;">Coming soon</span></h4>';
+  html += '<p>' + desc + '</p>';
+  html += '</div></div>';
   return html;
 }
 
-function toggleConnection(key) {
-  var conn = _connections[key];
-  if (!conn) return;
-  if (conn.connected) {
-    if (!confirm('Disconnect ' + conn.label + '?')) return;
-    conn.connected = false;
-    toast(conn.label + ' disconnected');
-  } else {
-    conn.connected = true;
-    toast(conn.label + ' connected successfully');
-  }
-  renderPaymentConnections();
-  renderGoogleConnections();
+function startGoogleBusinessConnect() {
+  var token = getAuthToken();
+  if (!token) { toast('Please log in first', 'error'); return; }
+
+  // Get site_id from current user session
+  var siteId = window.CC_SITE_ID || '';
+  var apiBase = window.CC_API_BASE || '';
+  var returnTo = encodeURIComponent(window.location.href);
+
+  var url = apiBase + '/api/google-business/auth'
+    + '?site_id=' + encodeURIComponent(siteId)
+    + '&jwt='     + encodeURIComponent(token)
+    + '&return_to=' + returnTo;
+
+  window.location.href = url;
+}
+
+function disconnectGoogleBusiness() {
+  if (!confirm('Disconnect Google Business Profile?')) return;
+  var token = getAuthToken();
+  if (!token) return;
+
+  fetch((window.CC_API_BASE || '') + '/api/dashboard/google-business/disconnect', {
+    method:  'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function() {
+    _googleBusiness = { connected: false, account_email: '', account_name: '', account_id: '', locations: [] };
+    renderGoogleConnections();
+    toast('Google Business disconnected');
+  })
+  .catch(function(err) { toast('Error disconnecting: ' + err.message, 'error'); });
+}
+
+function syncGoogleReviews() {
+  var token = getAuthToken();
+  if (!token) return;
+  toast('Syncing Google reviews…');
+
+  fetch((window.CC_API_BASE || '') + '/api/dashboard/google-business/sync-reviews', {
+    method:  'POST',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('Synced ' + data.imported + ' new review' + (data.imported !== 1 ? 's' : '') + ' from Google');
+  })
+  .catch(function(err) { toast('Sync failed: ' + err.message, 'error'); });
 }
 
 // ---- Social Media OAuth ----

@@ -940,6 +940,21 @@ function renderReviewSettings() {
   html += '<input type="text" value="' + escHtml(googleReviewUrl) + '" placeholder="https://g.page/your-business/review" style="width:100%;" onchange="updateReviewSetting(\'googleReviewUrl\',this.value)">';
   html += '</div>';
 
+  // Google Business Profile — sync reviews from connected account
+  html += '<div id="gbp-sync-banner" style="padding:16px;border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:12px;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">';
+  html += '<div>';
+  html += '<div style="font-size:14px;font-weight:600;color:var(--text);">Google Business Profile Reviews</div>';
+  html += '<div id="gbp-sync-desc" style="font-size:12px;color:var(--text-dim);margin-top:2px;">Connect Google Business to import your existing Google reviews.</div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+  html += '<button id="gbp-sync-btn" class="btn btn-primary btn-sm" onclick="syncGoogleReviewsFromReviewsTab()" style="display:none;">↻ Sync Google Reviews</button>';
+  html += '<a id="gbp-connect-link" href="#connections" class="btn btn-outline btn-sm">Connect Google →</a>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div id="gbp-sync-result" style="font-size:12px;color:var(--text-muted);margin-top:8px;display:none;"></div>';
+  html += '</div>';
+
   // Review SMS template preview
   html += '<div style="padding:14px 16px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);">';
   html += '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;">Review Request SMS Preview</div>';
@@ -953,6 +968,70 @@ function renderReviewSettings() {
   html += '</div>';
 
   container.innerHTML = html;
+
+  // Populate GBP sync banner based on real connection status
+  loadGbpSyncBannerStatus();
+}
+
+function loadGbpSyncBannerStatus() {
+  var token = typeof getAuthToken === 'function' ? getAuthToken() : null;
+  if (!token) return;
+
+  fetch((window.CC_API_BASE || '') + '/api/dashboard/google-business/status', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var desc    = document.getElementById('gbp-sync-desc');
+    var syncBtn = document.getElementById('gbp-sync-btn');
+    var connLink = document.getElementById('gbp-connect-link');
+    if (!desc) return;
+
+    if (data.connected) {
+      desc.textContent = '✓ Connected' + (data.account_email ? ' as ' + data.account_email : '') + '. Import your Google reviews into the platform.';
+      if (syncBtn)   { syncBtn.style.display = '';      }
+      if (connLink)  { connLink.style.display = 'none'; }
+    } else {
+      desc.textContent = 'Connect your Google Business Profile to import existing Google reviews.';
+      if (syncBtn)   { syncBtn.style.display = 'none'; }
+      if (connLink)  { connLink.style.display = '';    }
+    }
+  })
+  .catch(function() { /* banner stays in default state */ });
+}
+
+function syncGoogleReviewsFromReviewsTab() {
+  var token = typeof getAuthToken === 'function' ? getAuthToken() : null;
+  if (!token) return;
+
+  var btn    = document.getElementById('gbp-sync-btn');
+  var result = document.getElementById('gbp-sync-result');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  if (result) { result.style.display = 'none'; }
+
+  fetch((window.CC_API_BASE || '') + '/api/dashboard/google-business/sync-reviews', {
+    method:  'POST',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Sync Google Reviews'; }
+    if (result) {
+      result.textContent = data.error
+        ? 'Error: ' + data.error
+        : 'Imported ' + (data.imported || 0) + ' new review' + (data.imported !== 1 ? 's' : '') +
+          (data.skipped ? ' · ' + data.skipped + ' already synced' : '') + '.';
+      result.style.display = 'block';
+    }
+    // Reload review list to show newly imported reviews
+    if (!data.error && data.imported > 0 && typeof loadReviews === 'function') {
+      setTimeout(loadReviews, 800);
+    }
+  })
+  .catch(function(err) {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Sync Google Reviews'; }
+    if (result) { result.textContent = 'Sync failed: ' + err.message; result.style.display = 'block'; }
+  });
 }
 
 function updateReviewSetting(key, value) {
