@@ -278,7 +278,7 @@ function updateLivePreview() {
     } catch (e) {
       // CORS error - reload iframe instead
       const timestamp = new Date().getTime();
-      previewIframe.src = `https://circle-boats-main.vercel.app?t=${timestamp}`;
+      previewIframe.src = `https://beachsidecircleboats.com?t=${timestamp}`;
     }
   }
 

@@ -8,7 +8,7 @@ let _wc_data = null;
 let _wc_activeSection = 'business';
 
 const WC_BASE = 'https://cybercheck-api-database.vercel.app';
-const WC_SITE_BASE = 'https://circle-boats-main.vercel.app'; // customer website domain
+const WC_SITE_BASE = 'https://beachsidecircleboats.com'; // customer website domain
 
 // Sections that have dedicated DB columns (saved to site_content via dashboard API)
 const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks','qna'];

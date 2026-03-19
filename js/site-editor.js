@@ -10,7 +10,7 @@ var _editorCss = '';
 var _previewMode = 'desktop';
 var _siteEditorData = null;
 
-const SITE_EDITOR_PREVIEW_BASE = 'https://circle-boats-main.vercel.app';
+const SITE_EDITOR_PREVIEW_BASE = 'https://beachsidecircleboats.com';
 
 function toPreviewUrl(url) {
   if (!url) return '';

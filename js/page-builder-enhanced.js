@@ -649,7 +649,7 @@ function renderPreview() {
     return;
   }
 
-  preview.innerHTML = `<iframe id="cms-preview-iframe" style="width:100%;height:100%;border:none;border-radius:var(--radius);display:block;margin:0;padding:0;" src="https://circle-boats-main.vercel.app"></iframe>`;
+  preview.innerHTML = `<iframe id="cms-preview-iframe" style="width:100%;height:100%;border:none;border-radius:var(--radius);display:block;margin:0;padding:0;" src="https://beachsidecircleboats.com"></iframe>`;
   console.log('✅ Preview iframe created');
 }
 
@@ -659,7 +659,7 @@ function updatePreview() {
   if (iframe) {
     // Reload by changing src to avoid CORS issues
     const timestamp = new Date().getTime();
-    iframe.src = `https://circle-boats-main.vercel.app?t=${timestamp}`;
+    iframe.src = `https://beachsidecircleboats.com?t=${timestamp}`;
   }
 }
 
