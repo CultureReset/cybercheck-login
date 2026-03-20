@@ -1182,12 +1182,14 @@ async function wcGalleryAdd(fileInput) {
   fileInput.value = '';
 }
 
-function wcGalleryRemove(i) {
+async function wcGalleryRemove(i) {
   if (!_wc_data.gallery) return;
-  const urlToRemove = _wc_data.gallery[i];
-  // Remove from main gallery
+  if (!confirm('Remove this photo from your gallery?')) return;
+  const raw = _wc_data.gallery[i];
+  const urlToRemove = typeof raw === 'string' ? raw : (raw || {}).url;
+
+  // Remove from main gallery array and sections first (optimistic UI)
   _wc_data.gallery.splice(i, 1);
-  // Also remove from all sections if assigned
   if (_wc_data.gallery_sections && Array.isArray(_wc_data.gallery_sections)) {
     _wc_data.gallery_sections.forEach(function(section) {
       if (section.images && Array.isArray(section.images)) {
@@ -1195,7 +1197,24 @@ function wcGalleryRemove(i) {
       }
     });
   }
-  wcPush().then(() => renderWCSection('gallery'));
+
+  // MUST delete from Supabase media table — server rebuilds gallery from media table,
+  // so if the record stays there the photo comes right back after every page load.
+  if (urlToRemove && supabase) {
+    try {
+      await supabase.from('media').delete().eq('url', urlToRemove);
+      // Also delete the file from Supabase Storage
+      const pathMatch = urlToRemove.split('/storage/v1/object/public/media/');
+      if (pathMatch[1]) {
+        await supabase.storage.from('media').remove([decodeURIComponent(pathMatch[1])]);
+      }
+    } catch(e) {
+      console.warn('Media delete error:', e);
+    }
+  }
+
+  await wcPush();
+  renderWCSection('gallery');
 }
 
 function wcGalNextPage() {
