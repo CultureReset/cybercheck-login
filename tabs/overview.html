@@ -271,13 +271,13 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-title">AI Conversations</span>
-                    <span class="stat-icon">💬</span>
+                    <span class="stat-title">Total Bookings</span>
+                    <span class="stat-icon">📅</span>
                 </div>
                 <div class="stat-value" id="conversations-count">Loading...</div>
                 <div class="stat-change">
-                    <span>↗</span>
-                    <span id="conversations-change">+0% from last week</span>
+                    <span>→</span>
+                    <span id="conversations-change">all time</span>
                 </div>
             </div>
 
@@ -307,13 +307,13 @@
 
             <div class="stat-card warning">
                 <div class="stat-header">
-                    <span class="stat-title">Active Workflows</span>
-                    <span class="stat-icon">⚡</span>
+                    <span class="stat-title">Pending</span>
+                    <span class="stat-icon">🕐</span>
                 </div>
                 <div class="stat-value" id="workflows-count">Loading...</div>
                 <div class="stat-change">
                     <span>→</span>
-                    <span id="workflows-change">Running smoothly</span>
+                    <span id="workflows-change">need confirmation</span>
                 </div>
             </div>
         </div>
@@ -351,91 +351,97 @@
     </div>
 
     <script>
-        // Load dashboard data
         document.addEventListener('DOMContentLoaded', function() {
             loadDashboardStats();
-            loadActivityFeed();
         });
 
-        function loadDashboardStats() {
-            // Mock data - In production, this would call /api/dashboard/stats
-            const mockStats = {
-                conversations: { count: 342, change: 23 },
-                revenue: { count: 5234.50, change: 18 },
-                customers: { count: 127, change: 12 },
-                workflows: { count: 5, change: 0 }
-            };
-
-            // Update stats
-            document.getElementById('conversations-count').textContent = mockStats.conversations.count.toLocaleString();
-            document.getElementById('conversations-change').textContent = `+${mockStats.conversations.change}% from last week`;
-
-            document.getElementById('revenue-count').textContent = `$${mockStats.revenue.count.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            document.getElementById('revenue-change').textContent = `+${mockStats.revenue.change}% from last month`;
-
-            document.getElementById('customers-count').textContent = mockStats.customers.count.toLocaleString();
-            document.getElementById('customers-change').textContent = `+${mockStats.customers.change} this week`;
-
-            document.getElementById('workflows-count').textContent = mockStats.workflows.count;
+        function localToday() {
+            var d = new Date();
+            return d.getFullYear() + '-' +
+                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                String(d.getDate()).padStart(2, '0');
         }
 
-        function loadActivityFeed() {
-            // Mock activity data - In production, this would call /api/activity/recent
-            const mockActivities = [
-                {
-                    icon: '📅',
-                    title: 'New Booking Received',
-                    description: 'Sarah Johnson booked "Deep Sea Fishing" for March 15',
-                    time: '5 minutes ago'
-                },
-                {
-                    icon: '⭐',
-                    title: '5-Star Review',
-                    description: 'Mike Davis left a review: "Amazing experience!"',
-                    time: '23 minutes ago'
-                },
-                {
-                    icon: '💬',
-                    title: 'SMS Campaign Sent',
-                    description: 'Weekend Special campaign delivered to 127 customers',
-                    time: '1 hour ago'
-                },
-                {
-                    icon: '🔗',
-                    title: 'Instagram Connected',
-                    description: 'Successfully connected Instagram account',
-                    time: '3 hours ago'
-                },
-                {
-                    icon: '🤖',
-                    title: 'AI Training Updated',
-                    description: 'Added 5 new Q&A pairs to AI knowledge base',
-                    time: '5 hours ago'
-                }
-            ];
+        function timeAgo(dateStr) {
+            if (!dateStr) return '';
+            var diff = Date.now() - new Date(dateStr).getTime();
+            var mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return mins + ' minute' + (mins !== 1 ? 's' : '') + ' ago';
+            var hrs = Math.floor(mins / 60);
+            if (hrs < 24) return hrs + ' hour' + (hrs !== 1 ? 's' : '') + ' ago';
+            var days = Math.floor(hrs / 24);
+            return days + ' day' + (days !== 1 ? 's' : '') + ' ago';
+        }
 
-            const feedContainer = document.getElementById('activity-feed');
-
-            if (mockActivities.length === 0) {
-                feedContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <p>No recent activity</p>
-                    </div>
-                `;
+        async function loadDashboardStats() {
+            var CC = window.parent && window.parent.CC;
+            if (!CC) {
+                document.getElementById('revenue-count').textContent = '—';
+                document.getElementById('customers-count').textContent = '—';
+                document.getElementById('conversations-count').textContent = '—';
+                document.getElementById('workflows-count').textContent = '—';
                 return;
             }
 
-            feedContainer.innerHTML = mockActivities.map(activity => `
-                <div class="activity-item">
-                    <div class="activity-icon">${activity.icon}</div>
-                    <div class="activity-content">
-                        <div class="activity-title">${activity.title}</div>
-                        <div class="activity-description">${activity.description}</div>
-                        <div class="activity-time">${activity.time}</div>
-                    </div>
-                </div>
-            `).join('');
+            var today = localToday();
+            var thisMonth = today.slice(0, 7);
+
+            var bookings = await CC.dashboard.getBookings().catch(function() { return []; });
+            var customers = await CC.dashboard.getCustomers().catch(function() { return []; });
+
+            var monthRevenue = bookings
+                .filter(function(b) { return b.status !== 'cancelled' && (b.booking_date || '').slice(0, 7) === thisMonth; })
+                .reduce(function(sum, b) { return sum + (parseFloat(b.total) || 0); }, 0);
+
+            var todayCount = bookings.filter(function(b) { return b.booking_date === today && b.status !== 'cancelled'; }).length;
+            var pendingCount = bookings.filter(function(b) { return b.status === 'pending'; }).length;
+            var confirmedCount = bookings.filter(function(b) { return b.status === 'confirmed'; }).length;
+
+            document.getElementById('revenue-count').textContent = '$' + monthRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('revenue-change').textContent = todayCount + ' booking' + (todayCount !== 1 ? 's' : '') + ' today';
+
+            document.getElementById('customers-count').textContent = customers.length.toLocaleString();
+            document.getElementById('customers-change').textContent = pendingCount + ' pending · ' + confirmedCount + ' confirmed';
+
+            document.getElementById('conversations-count').textContent = bookings.length.toLocaleString();
+            document.getElementById('conversations-change').textContent = 'total bookings all time';
+
+            document.getElementById('workflows-count').textContent = pendingCount;
+            document.getElementById('workflows-change').textContent = pendingCount > 0 ? 'need confirmation' : 'all caught up';
+
+            // Activity feed — recent bookings
+            var feedContainer = document.getElementById('activity-feed');
+            var recent = bookings
+                .slice()
+                .sort(function(a, b) { return new Date(b.created_at || b.booking_date) - new Date(a.created_at || a.booking_date); })
+                .slice(0, 8);
+
+            if (!recent.length) {
+                feedContainer.innerHTML = '<div style="text-align:center;padding:32px;color:#999;"><div style="font-size:32px;margin-bottom:8px;">📭</div><p>No bookings yet</p></div>';
+                return;
+            }
+
+            var statusIcon = { pending: '🕐', confirmed: '✅', completed: '🏁', cancelled: '❌' };
+            var statusLabel = { pending: 'Pending confirmation', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' };
+
+            feedContainer.innerHTML = recent.map(function(b) {
+                var icon = statusIcon[b.status] || '📅';
+                var name = b.customer_name || b.customerName || 'Customer';
+                var date = b.booking_date || '';
+                var status = statusLabel[b.status] || b.status || '';
+                var boat = b.fleet_type || b.boat || '';
+                var desc = name + (boat ? ' — ' + boat : '') + (date ? ' on ' + date : '');
+                var ago = timeAgo(b.created_at || b.booking_date);
+                return '<div class="activity-item">' +
+                    '<div class="activity-icon">' + icon + '</div>' +
+                    '<div class="activity-content">' +
+                        '<div class="activity-title">' + status + '</div>' +
+                        '<div class="activity-description">' + desc + '</div>' +
+                        '<div class="activity-time">' + ago + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
         }
 
         function quickAction(action) {

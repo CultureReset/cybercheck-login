@@ -1203,7 +1203,9 @@
       (async function() {
         var bookings = await CC.dashboard.getBookings().catch(function() { return []; });
         var customers = await CC.dashboard.getCustomers().catch(function() { return []; });
-        var today = new Date().toISOString().split('T')[0];
+        // Use local date (not UTC) so "today" matches the user's timezone
+        var _now = new Date();
+        var today = _now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0');
         var thisMonth = today.slice(0, 7); // 'YYYY-MM'
 
         var monthRevenue = bookings
