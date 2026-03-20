@@ -1035,7 +1035,8 @@ function renderGallery() {
     <input type="file" id="gal-upload-file" accept="image/*" multiple style="display:none" onchange="wcGalleryAdd(this)">
     <span id="gal-upload-status" style="margin-left:12px;font-size:13px;color:var(--text-muted);"></span>
   </div>
-  ${gridHtml}`;
+  ${gridHtml}
+  ${saveBtn('wcGalManualSave')}`;
 }
 
 function wcGalRenameTabPrompt(i) {
@@ -1197,6 +1198,8 @@ function wcGalPrevPage() {
   _galPageOffset = Math.max(0, _galPageOffset - _galPageSize);
   renderWCSection('gallery');
 }
+
+function wcGalManualSave() { wcPush(); }
 
 // Override wcGalSetTab to reset pagination when switching tabs
 function wcGalSetTab(idx) {
