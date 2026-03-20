@@ -64,6 +64,7 @@ const WC_SECTIONS = [
   { id: 'gallery',        label: '🖼️ Gallery' },
   { id: 'reviews',        label: '💬 Reviews' },
   { id: 'qna',            label: '❓ Q&A / FAQ' },
+  { id: 'cta',            label: '🎯 CTA Banner' },
   { id: 'contact',        label: '📞 Contact' },
   { id: 'footer',         label: '📋 Footer' }
 ];
@@ -158,7 +159,7 @@ function renderWCSection(id) {
     steps: renderSteps, features: renderFeatures, locations: renderLocations,
     links_page: renderLinksPage,
     gallery: renderGallery,
-    reviews: renderReviews, qna: renderQnA, contact: renderContact, footer: renderFooter
+    reviews: renderReviews, qna: renderQnA, cta: renderCta, contact: renderContact, footer: renderFooter
   };
   panel.innerHTML = (map[id] || (() => '<p>Section not found</p>'))();
   // Trigger live previews that need DOM to be ready
@@ -322,6 +323,8 @@ function imgPickerHtml(inputId, currentUrl, label='Image', context='default') {
             onclick="document.getElementById('${inputId}-file').click()">Upload Image</button>
           <input type="file" id="${inputId}-file" accept="image/*" style="display:none"
             data-context="${context}" onchange="wcUploadImg('${inputId}', this)">
+          <button type="button" class="btn btn-outline btn-sm"
+            onclick="wcOpenGalleryPicker('${inputId}')" style="color:var(--primary);">📂 Pick from Gallery</button>
           <input type="text" id="${inputId}" value="${esc(currentUrl)}"
             placeholder="or paste URL / path"
             style="font-size:12px;padding:4px 8px;"
@@ -887,10 +890,11 @@ function renderFeatures() {
         <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">Photo (optional)</label>
         <div style="display:flex;align-items:center;gap:12px;">
           ${imgUrl ? `<img src="${esc(imgUrl)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border);" onerror="this.style.display='none'" id="ft-img-preview-${i}">` : `<div id="ft-img-preview-${i}" style="width:72px;height:72px;border-radius:8px;border:2px dashed var(--card-border);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:22px;">📷</div>`}
-          <div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
             <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ft-img-file-${i}').click()">Upload Photo</button>
             <input type="file" id="ft-img-file-${i}" accept="image/*" style="display:none" onchange="wcFeatureImageUpload(this,${i})">
-            ${f.image ? `<button type="button" class="btn btn-outline btn-sm" onclick="wcFeatureImageRemove(${i})" style="color:var(--danger);margin-left:6px;">Remove</button>` : ''}
+            <button type="button" class="btn btn-outline btn-sm" onclick="wcOpenGalleryPickerForFeature(${i})" style="color:var(--primary);">📂 Pick from Gallery</button>
+            ${f.image ? `<button type="button" class="btn btn-outline btn-sm" onclick="wcFeatureImageRemove(${i})" style="color:var(--danger);">Remove</button>` : ''}
           </div>
         </div>
       </div>
@@ -933,6 +937,78 @@ function wcFeatureImageRemove(index) {
   if (_wc_data.features && _wc_data.features[index]) {
     _wc_data.features[index].image = '';
     wcPush().then(() => renderWCSection('features'));
+  }
+}
+
+// ─── Gallery Picker Modal ──────────────────────────────────────────────────────
+
+var _wcGalleryPickTarget = null;
+
+function wcOpenGalleryPicker(inputId) {
+  _wcGalleryPickTarget = { type: 'input', id: inputId };
+  wcShowGalleryPickerModal();
+}
+
+function wcOpenGalleryPickerForFeature(index) {
+  _wcGalleryPickTarget = { type: 'feature', index: index };
+  wcShowGalleryPickerModal();
+}
+
+function wcShowGalleryPickerModal() {
+  var existing = document.getElementById('wc-gallery-picker-modal');
+  if (existing) existing.remove();
+
+  var photos = ((_wc_data && _wc_data.gallery) || []).map(function(r) {
+    return typeof r === 'string' ? r : ((r || {}).url || '');
+  }).filter(Boolean);
+
+  var gridHtml = photos.length
+    ? photos.map(function(url) {
+        var safe = url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        return '<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color .15s;" ' +
+          'onmouseover="this.style.borderColor=\'var(--primary)\'" onmouseout="this.style.borderColor=\'transparent\'" ' +
+          'onclick="wcGalleryPickerSelect(\'' + safe + '\')">' +
+          '<img src="' + safe + '" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;" loading="lazy" onerror="this.parentElement.style.display=\'none\'">' +
+          '</div>';
+      }).join('')
+    : '<p style="color:var(--text-muted);text-align:center;padding:32px;grid-column:1/-1;">No gallery photos yet — upload some in the Gallery section first.</p>';
+
+  var modal = document.createElement('div');
+  modal.id = 'wc-gallery-picker-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML =
+    '<div style="background:var(--card-bg,#1a1a2e);border-radius:14px;width:100%;max-width:720px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--card-border);">' +
+        '<h3 style="margin:0;font-size:16px;">📂 Pick from Gallery</h3>' +
+        '<button onclick="document.getElementById(\'wc-gallery-picker-modal\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted);line-height:1;padding:0;">&times;</button>' +
+      '</div>' +
+      '<div style="overflow-y:auto;padding:16px;">' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">' +
+          gridHtml +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function wcGalleryPickerSelect(url) {
+  var target = _wcGalleryPickTarget;
+  var modal = document.getElementById('wc-gallery-picker-modal');
+  if (modal) modal.remove();
+  _wcGalleryPickTarget = null;
+  if (!target || !url) return;
+
+  if (target.type === 'input') {
+    var input = document.getElementById(target.id);
+    if (input) { input.value = url; wcRefreshPreview(target.id); }
+    toast('Photo selected ✓');
+  } else if (target.type === 'feature') {
+    if (!_wc_data.features) _wc_data.features = [];
+    if (!_wc_data.features[target.index]) _wc_data.features[target.index] = {};
+    _wc_data.features[target.index].image = url;
+    wcPush().then(function() { renderWCSection('features'); });
+    toast('Photo selected ✓');
   }
 }
 
@@ -1409,6 +1485,27 @@ function saveQnA() {
     answer: val('qa-a-'+i)
   }));
   wcSave('qna', items);
+}
+
+// ─── CTA Banner ───────────────────────────────────────────────────────────────
+
+function renderCta() {
+  const d = _wc_data.cta || {};
+  return `<h2 class="wc-title">CTA Banner</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">The call-to-action strip that appears below the Q&amp;A section.</p>
+  ${fi('Heading','cta-title', d.title, 'text', 'Ready to Get on the Water?')}
+  ${fi('Subtitle','cta-sub', d.subtitle, 'text', 'Book your circle boat today and experience the Gulf Coast like never before.')}
+  ${fi('Button Text','cta-btn', d.btnText, 'text', 'Book Your Boat')}
+  ${fi('Button URL','cta-url', d.btnUrl, 'text', 'booking.html')}
+  ${saveBtn('saveCta')}`;
+}
+function saveCta() {
+  wcSave('cta', {
+    title:   val('cta-title'),
+    subtitle: val('cta-sub'),
+    btnText: val('cta-btn'),
+    btnUrl:  val('cta-url')
+  });
 }
 
 // ─── Contact ──────────────────────────────────────────────────────────────────
