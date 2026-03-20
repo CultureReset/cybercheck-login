@@ -1,7 +1,7 @@
 // ============================================
 // Website Content Editor
 // Every section editable → saves to /api/site-data → website updates instantly
-// Images upload to /api/upload-image → stored in circle-boats-website/images/uploads/
+// Images upload via uploadToSupabase() → stored in Supabase Storage, permanent CDN URLs
 // ============================================
 
 let _wc_data = null;
@@ -1308,11 +1308,11 @@ async function wcGalleryAdd(fileInput) {
 
 async function wcGalleryRemove(i) {
   if (!_wc_data.gallery) return;
-  if (!confirm('Remove this photo from your gallery?')) return;
+  if (!confirm('Remove this photo from your gallery?\n\nThe photo will stay on any website sections (dock, about, etc.) where it\'s already used.')) return;
   const raw = _wc_data.gallery[i];
   const urlToRemove = typeof raw === 'string' ? raw : (raw || {}).url;
 
-  // Remove from main gallery array and sections first (optimistic UI)
+  // Remove from main gallery array and gallery tabs only
   _wc_data.gallery.splice(i, 1);
   if (_wc_data.gallery_sections && Array.isArray(_wc_data.gallery_sections)) {
     _wc_data.gallery_sections.forEach(function(section) {
@@ -1322,18 +1322,14 @@ async function wcGalleryRemove(i) {
     });
   }
 
-  // MUST delete from Supabase media table — server rebuilds gallery from media table,
-  // so if the record stays there the photo comes right back after every page load.
+  // Delete from media table so server doesn't re-add it to gallery on next load.
+  // NOTE: We intentionally do NOT delete the file from Supabase Storage so any
+  // section (dock, about, fleet, etc.) that uses this URL continues to load.
   if (urlToRemove && supabase) {
     try {
       await supabase.from('media').delete().eq('url', urlToRemove);
-      // Also delete the file from Supabase Storage
-      const pathMatch = urlToRemove.split('/storage/v1/object/public/media/');
-      if (pathMatch[1]) {
-        await supabase.storage.from('media').remove([decodeURIComponent(pathMatch[1])]);
-      }
     } catch(e) {
-      console.warn('Media delete error:', e);
+      console.warn('Media table delete error:', e);
     }
   }
 
