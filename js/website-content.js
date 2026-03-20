@@ -310,7 +310,7 @@ function wcDelBtn(section, index, label='Delete') {
 function imgPickerHtml(inputId, currentUrl, label='Image', context='default') {
   const fullUrl = wcToUrl(currentUrl);
   const preview = fullUrl
-    ? `<img src="${esc(fullUrl)}" style="height:80px;width:120px;object-fit:cover;border-radius:6px;border:1px solid var(--card-border);" onerror="this.parentElement.innerHTML='<div style=\\'height:80px;width:120px;border-radius:6px;border:2px dashed var(--card-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;\\'>No image</div>'">`
+    ? `<img src="${esc(fullUrl)}" style="max-width:200px;max-height:160px;width:auto;height:auto;object-fit:contain;border-radius:6px;border:1px solid var(--card-border);display:block;" onerror="this.parentElement.innerHTML='<div style=\\'height:80px;width:120px;border-radius:6px;border:2px dashed var(--card-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;\\'>No image</div>'">`
     : `<div style="height:80px;width:120px;border-radius:6px;border:2px dashed var(--card-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">No image</div>`;
   return `
     <div class="form-group">
@@ -356,7 +356,7 @@ function wcRefreshPreview(inputId) {
   if (!input || !previewEl) return;
   const full = wcToUrl(input.value.trim());
   if (full) {
-    previewEl.innerHTML = `<img src="${full}" style="height:80px;width:120px;object-fit:cover;border-radius:6px;border:1px solid var(--card-border);" onerror="this.style.display='none'">`;
+    previewEl.innerHTML = `<img src="${full}" style="max-width:200px;max-height:160px;width:auto;height:auto;object-fit:contain;border-radius:6px;border:1px solid var(--card-border);display:block;" onerror="this.style.display='none'">`;
   } else {
     previewEl.innerHTML = `<div style="height:80px;width:120px;border-radius:6px;border:2px dashed var(--card-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">No image</div>`;
   }
