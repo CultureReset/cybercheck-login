@@ -931,6 +931,8 @@ function wcFeatureImageRemove(index) {
 
 var _galDragSrc = null;
 var _galActiveTab = -1; // -1 = All, 0+ = section index
+var _galPageOffset = 0;  // pagination: how many photos to skip
+const _galPageSize = 12; // show 12 at a time
 
 function renderGallery() {
   const gallery = _wc_data.gallery || [];
@@ -975,10 +977,16 @@ function renderGallery() {
   const activeSecName = _galActiveTab >= 0 && sections[_galActiveTab] ? sections[_galActiveTab].name : null;
   const uploadLabel = activeSecName ? `+ Upload to "${activeSecName}"` : '+ Upload Photos';
 
+  // Pagination: show _galPageSize at a time
+  const pageEnd = Math.min(_galPageOffset + _galPageSize, displayPhotos.length);
+  const currentPagePhotos = displayPhotos.slice(_galPageOffset, pageEnd);
+  const hasMore = pageEnd < displayPhotos.length;
+  const hasPrev = _galPageOffset > 0;
+
   const gridHtml = displayPhotos.length === 0
     ? `<div style="background:var(--bg);border:2px dashed var(--card-border);border-radius:12px;padding:48px;text-align:center;color:var(--text-muted);">${activeSecName ? `No photos in "${activeSecName}" yet. Upload photos above to add them here.` : 'No gallery photos yet. Upload your first photo above.'}</div>`
     : `<div id="galGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
-        ${displayPhotos.map(({url, globalIdx}) => {
+        ${currentPagePhotos.map(({url, globalIdx}) => {
           const full = wcToUrl(url);
           const isHomepage = _galActiveTab === -1 && globalIdx < HOMEPAGE_COUNT;
           const assignedIdx = sections.findIndex(s => (s.images||[]).includes(url));
@@ -1012,6 +1020,11 @@ function renderGallery() {
           </div>`;
         }).join('')}
       </div>
+      ${displayPhotos.length > _galPageSize ? `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px;padding:16px;background:var(--bg);border-radius:8px;">
+        <button class="btn btn-outline btn-sm" onclick="wcGalPrevPage()" ${!hasPrev ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>← Previous</button>
+        <span style="font-size:13px;color:var(--text-muted);">Showing ${_galPageOffset + 1}–${pageEnd} of ${displayPhotos.length}</span>
+        <button class="btn btn-outline btn-sm" onclick="wcGalNextPage()" ${!hasMore ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>Next →</button>
+      </div>` : ''}
       ${_galActiveTab === -1 && sections.length > 0 ? `<p style="margin-top:10px;font-size:12px;color:var(--text-muted);">🔵 Blue border = on home page &nbsp;|&nbsp; 🟣 Purple border = assigned to a tab</p>` : ''}`;
 
   return `<h2 class="wc-title">Gallery</h2>
@@ -1023,11 +1036,6 @@ function renderGallery() {
     <span id="gal-upload-status" style="margin-left:12px;font-size:13px;color:var(--text-muted);"></span>
   </div>
   ${gridHtml}`;
-}
-
-function wcGalSetTab(idx) {
-  _galActiveTab = idx;
-  renderWCSection('gallery');
 }
 
 function wcGalRenameTabPrompt(i) {
@@ -1166,8 +1174,35 @@ async function wcGalleryAdd(fileInput) {
 
 function wcGalleryRemove(i) {
   if (!_wc_data.gallery) return;
+  const urlToRemove = _wc_data.gallery[i];
+  // Remove from main gallery
   _wc_data.gallery.splice(i, 1);
+  // Also remove from all sections if assigned
+  if (_wc_data.gallery_sections && Array.isArray(_wc_data.gallery_sections)) {
+    _wc_data.gallery_sections.forEach(function(section) {
+      if (section.images && Array.isArray(section.images)) {
+        section.images = section.images.filter(function(url) { return url !== urlToRemove; });
+      }
+    });
+  }
   wcPush().then(() => renderWCSection('gallery'));
+}
+
+function wcGalNextPage() {
+  _galPageOffset += _galPageSize;
+  renderWCSection('gallery');
+}
+
+function wcGalPrevPage() {
+  _galPageOffset = Math.max(0, _galPageOffset - _galPageSize);
+  renderWCSection('gallery');
+}
+
+// Override wcGalSetTab to reset pagination when switching tabs
+function wcGalSetTab(idx) {
+  _galActiveTab = idx;
+  _galPageOffset = 0;
+  renderWCSection('gallery');
 }
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────

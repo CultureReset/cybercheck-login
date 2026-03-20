@@ -10,12 +10,17 @@ var _folderResizeConfig = {
   gallery:  null,                              // skip — upload original
   media:    null,                              // skip — upload original
   hero:     { maxW: 2400, maxH: 2400, q: 0.95 },
-  step:     { maxW: 2000, maxH: 2000, q: 0.92 },
-  location: { maxW: 2000, maxH: 2000, q: 0.92 },
-  feature:  { maxW: 1200, maxH: 1200, q: 0.92 },
-  logo:     { maxW: 400,  maxH: 400,  q: 0.92 }
+  boat:     { maxW: 2400, maxH: 2400, q: 0.95 },
+  dock:     { maxW: 2400, maxH: 2400, q: 0.95 },
+  addon:    { maxW: 2400, maxH: 2400, q: 0.95 },
+  steps:    { maxW: 2400, maxH: 2400, q: 0.95 },
+  step:     { maxW: 2400, maxH: 2400, q: 0.95 },
+  feature:  { maxW: 2000, maxH: 2000, q: 0.95 },
+  location: { maxW: 2400, maxH: 2400, q: 0.95 },
+  about:    { maxW: 2400, maxH: 2400, q: 0.95 },
+  logo:     { maxW: 400,  maxH: 400,  q: 0.95 }
 };
-var _defaultResizeConfig = { maxW: 2000, maxH: 2000, q: 0.92 };
+var _defaultResizeConfig = { maxW: 2400, maxH: 2400, q: 0.95 };
 
 function resizeImageFile(file, folder) {
   // Skip non-images or GIFs (preserve animation)
