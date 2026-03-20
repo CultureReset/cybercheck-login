@@ -390,6 +390,39 @@ function renderPaymentConnections() {
   container.innerHTML = html;
 }
 
+function buildConnectionCard(key) {
+  var conn = _connections[key];
+  var statusBadge = conn.connected
+    ? '<span class="badge badge-success">Connected</span>'
+    : '<span class="badge badge-warning">Not connected</span>';
+  var btnLabel = conn.connected ? 'Disconnect' : 'Connect';
+  var btnClass = conn.connected ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm';
+  var html = '<div class="oauth-card">';
+  html += '<div class="provider-icon" style="background:' + conn.color + ';color:white;font-weight:700;font-size:14px;">' + conn.icon + '</div>';
+  html += '<div class="provider-info">';
+  html += '<h4>' + conn.label + '</h4>';
+  html += '<p>' + conn.desc + '</p>';
+  html += '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">' + statusBadge;
+  html += '<button class="' + btnClass + '" onclick="toggleConnection(\'' + key + '\')">' + btnLabel + '</button>';
+  html += '</div></div></div>';
+  return html;
+}
+
+function toggleConnection(key) {
+  var conn = _connections[key];
+  if (!conn) return;
+  if (conn.connected) {
+    if (!confirm('Disconnect ' + conn.label + '?')) return;
+    conn.connected = false;
+    toast(conn.label + ' disconnected');
+  } else {
+    conn.connected = true;
+    toast(conn.label + ' connected successfully');
+  }
+  renderPaymentConnections();
+  renderGoogleConnections();
+}
+
 // ─── Check for Google OAuth callback result ───────────────────────────────
 function checkGoogleCallback() {
   var hashParams = new URLSearchParams(window.location.hash.indexOf('?') !== -1 ? window.location.hash.split('?')[1] : '');
