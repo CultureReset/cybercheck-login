@@ -1148,14 +1148,23 @@ function wcGalTouchEnd(e, i) {
   _galTouchSrcEl = null;
 }
 
-function wcGalleryIsDuplicate(file) {
-  const gallery = _wc_data.gallery || [];
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
-  return gallery.some(function(url) {
-    const urlStr = (typeof url === 'string' ? url : (url || {}).url || '').toLowerCase();
-    // Match {timestamp}-{safeName} pattern in the URL path
-    return urlStr.includes('-' + safeName);
-  });
+// SHA-256 of file bytes — exact same file = same hash, regardless of filename
+async function wcFileHash(file) {
+  try {
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e) { return null; }
+}
+
+// SHA-256 of image at a URL (for checking existing gallery images)
+async function wcUrlHash(url) {
+  try {
+    const resp = await fetch(url);
+    const buf = await resp.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e) { return null; }
 }
 
 async function wcGalleryAdd(fileInput) {
@@ -1164,13 +1173,17 @@ async function wcGalleryAdd(fileInput) {
   const btn = fileInput.previousElementSibling;
   const status = document.getElementById('gal-upload-status');
   if (!_wc_data.gallery) _wc_data.gallery = [];
+  if (!_wc_data.gallery_hashes) _wc_data.gallery_hashes = {};
   let uploaded = 0, failed = 0, skipped = 0;
   const newUrls = [];
+  const storedHashes = Object.values(_wc_data.gallery_hashes).filter(Boolean);
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    // Skip duplicate filenames already in the gallery
-    if (wcGalleryIsDuplicate(file)) {
-      if (status) status.textContent = `"${file.name}" already uploaded — skipped`;
+    if (status) status.textContent = `Checking ${file.name}…`;
+    // Compute hash of the file bytes and compare to stored hashes
+    const fileHash = await wcFileHash(file);
+    if (fileHash && storedHashes.includes(fileHash)) {
+      if (status) status.textContent = `"${file.name}" already in gallery — skipped`;
       skipped++;
       continue;
     }
@@ -1178,8 +1191,12 @@ async function wcGalleryAdd(fileInput) {
     if (status) status.textContent = file.name;
     try {
       const url = await uploadToSupabase(file, 'gallery');
-      if (url) { _wc_data.gallery.push(url); newUrls.push(url); uploaded++; }
-      else failed++;
+      if (url) {
+        _wc_data.gallery.push(url);
+        if (fileHash) { _wc_data.gallery_hashes[url] = fileHash; storedHashes.push(fileHash); }
+        newUrls.push(url);
+        uploaded++;
+      } else failed++;
     } catch(e) { failed++; }
   }
   // Auto-assign to active tab when uploading from a section tab
@@ -1251,33 +1268,54 @@ function wcGalManualSave() { wcPush(); }
 
 async function wcGalRemoveDuplicates() {
   if (!_wc_data.gallery || !_wc_data.gallery.length) return;
-  const before = _wc_data.gallery.length;
+  const status = document.getElementById('gal-upload-status');
+  if (status) status.textContent = 'Scanning for duplicates…';
 
-  // Deduplicate by URL (keep first occurrence)
-  const seen = new Set();
+  const gallery = _wc_data.gallery;
+  if (!_wc_data.gallery_hashes) _wc_data.gallery_hashes = {};
+
+  // Step 1: build content hash for every gallery URL (fetch + SHA-256)
+  // Use stored hash if available, otherwise compute it now
+  const urlHashes = {}; // url → hash
+  for (let i = 0; i < gallery.length; i++) {
+    const url = typeof gallery[i] === 'string' ? gallery[i] : (gallery[i] || {}).url || '';
+    if (!url) continue;
+    if (status) status.textContent = `Scanning ${i+1} of ${gallery.length}…`;
+    let h = _wc_data.gallery_hashes[url] || null;
+    if (!h) h = await wcUrlHash(url);
+    if (h) { urlHashes[url] = h; _wc_data.gallery_hashes[url] = h; }
+    else urlHashes[url] = url; // fallback: use URL itself as identity
+  }
+
+  // Step 2: walk gallery keeping first occurrence of each hash
+  const seenHashes = new Set();
+  const seenUrls = new Set();
   const dupeUrls = [];
-  _wc_data.gallery = _wc_data.gallery.filter(function(item) {
+  _wc_data.gallery = gallery.filter(function(item) {
     const url = typeof item === 'string' ? item : (item || {}).url || '';
-    if (seen.has(url)) { dupeUrls.push(url); return false; }
-    seen.add(url);
+    const h = urlHashes[url] || url;
+    if (seenHashes.has(h) || seenUrls.has(url)) { dupeUrls.push(url); return false; }
+    seenHashes.add(h);
+    seenUrls.add(url);
     return true;
   });
 
-  // Clean sections too
+  // Step 3: clean sections
   if (_wc_data.gallery_sections) {
     _wc_data.gallery_sections.forEach(function(sec) {
       if (sec.images) {
-        const seenSec = new Set();
+        const s = new Set();
         sec.images = sec.images.filter(function(u) {
-          if (seenSec.has(u)) return false;
-          seenSec.add(u);
+          const h = urlHashes[u] || u;
+          if (s.has(h)) return false;
+          s.add(h);
           return true;
         });
       }
     });
   }
 
-  // Delete duplicate media records from Supabase so server doesn't re-add them
+  // Step 4: delete duplicate media records from Supabase
   if (dupeUrls.length && supabase) {
     for (const url of dupeUrls) {
       try {
@@ -1288,7 +1326,8 @@ async function wcGalRemoveDuplicates() {
     }
   }
 
-  const removed = before - _wc_data.gallery.length;
+  if (status) status.textContent = '';
+  const removed = dupeUrls.length;
   if (removed === 0) { toast('No duplicates found ✓'); return; }
   await wcPush();
   renderWCSection('gallery');
