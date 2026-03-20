@@ -1177,10 +1177,21 @@ async function wcGalleryAdd(fileInput) {
   let uploaded = 0, failed = 0, skipped = 0;
   const newUrls = [];
   const storedHashes = Object.values(_wc_data.gallery_hashes).filter(Boolean);
+  // Build set of existing base filenames for fast lookup
+  const existingNames = new Set((_wc_data.gallery || []).map(function(u) {
+    return wcGalBaseName(typeof u === 'string' ? u : (u || {}).url || '');
+  }));
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+    // Primary check: filename match (no CORS needed, works for all existing photos)
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
+    if (existingNames.has(safeName)) {
+      if (status) status.textContent = `"${file.name}" already in gallery — skipped`;
+      skipped++;
+      continue;
+    }
+    // Secondary check: SHA-256 hash (catches renamed duplicates)
     if (status) status.textContent = `Checking ${file.name}…`;
-    // Compute hash of the file bytes and compare to stored hashes
     const fileHash = await wcFileHash(file);
     if (fileHash && storedHashes.includes(fileHash)) {
       if (status) status.textContent = `"${file.name}" already in gallery — skipped`;
@@ -1266,57 +1277,50 @@ function wcGalPrevPage() {
 
 function wcGalManualSave() { wcPush(); }
 
+// Extract the base filename from a Supabase storage URL (strips the timestamp prefix)
+// Path format: {siteId}/gallery/{13-digit-timestamp}-{originalName}
+function wcGalBaseName(url) {
+  const filename = (url || '').split('/').pop().split('?')[0];
+  return filename.replace(/^\d{13}-/, '').toLowerCase();
+}
+
 async function wcGalRemoveDuplicates() {
   if (!_wc_data.gallery || !_wc_data.gallery.length) return;
   const status = document.getElementById('gal-upload-status');
   if (status) status.textContent = 'Scanning for duplicates…';
 
   const gallery = _wc_data.gallery;
-  if (!_wc_data.gallery_hashes) _wc_data.gallery_hashes = {};
 
-  // Step 1: build content hash for every gallery URL (fetch + SHA-256)
-  // Use stored hash if available, otherwise compute it now
-  const urlHashes = {}; // url → hash
-  for (let i = 0; i < gallery.length; i++) {
-    const url = typeof gallery[i] === 'string' ? gallery[i] : (gallery[i] || {}).url || '';
-    if (!url) continue;
-    if (status) status.textContent = `Scanning ${i+1} of ${gallery.length}…`;
-    let h = _wc_data.gallery_hashes[url] || null;
-    if (!h) h = await wcUrlHash(url);
-    if (h) { urlHashes[url] = h; _wc_data.gallery_hashes[url] = h; }
-    else urlHashes[url] = url; // fallback: use URL itself as identity
-  }
-
-  // Step 2: walk gallery keeping first occurrence of each hash
-  const seenHashes = new Set();
+  // Deduplicate by base filename (strips timestamp → same photo uploaded N times = same name)
+  // Also deduplicates exact URL matches as a secondary check
+  const seenNames = new Set();
   const seenUrls = new Set();
   const dupeUrls = [];
+
   _wc_data.gallery = gallery.filter(function(item) {
     const url = typeof item === 'string' ? item : (item || {}).url || '';
-    const h = urlHashes[url] || url;
-    if (seenHashes.has(h) || seenUrls.has(url)) { dupeUrls.push(url); return false; }
-    seenHashes.add(h);
+    if (!url) return false;
+    const name = wcGalBaseName(url);
+    if (seenUrls.has(url) || seenNames.has(name)) {
+      dupeUrls.push(url);
+      return false;
+    }
     seenUrls.add(url);
+    seenNames.add(name);
     return true;
   });
 
-  // Step 3: clean sections
+  // Clean sections — remove any URLs that were dupes
+  const dupeSet = new Set(dupeUrls);
   if (_wc_data.gallery_sections) {
     _wc_data.gallery_sections.forEach(function(sec) {
-      if (sec.images) {
-        const s = new Set();
-        sec.images = sec.images.filter(function(u) {
-          const h = urlHashes[u] || u;
-          if (s.has(h)) return false;
-          s.add(h);
-          return true;
-        });
-      }
+      if (sec.images) sec.images = sec.images.filter(function(u) { return !dupeSet.has(u); });
     });
   }
 
-  // Step 4: delete duplicate media records from Supabase
+  // Delete dupe media records from Supabase so server can't re-add them
   if (dupeUrls.length && supabase) {
+    if (status) status.textContent = `Removing ${dupeUrls.length} duplicate${dupeUrls.length!==1?'s':''}…`;
     for (const url of dupeUrls) {
       try {
         await supabase.from('media').delete().eq('url', url);
