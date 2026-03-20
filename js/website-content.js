@@ -863,7 +863,14 @@ function saveSteps() {
 
 function renderFeatures() {
   const feats = _wc_data.features || [];
+  const sec = _wc_data.features_section || {};
   return `<h2 class="wc-title">Why Circle Boats</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">This section is hidden on the website until at least one feature is added.</p>
+  <div class="wc-card" style="margin-bottom:20px;">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-muted);">Section Header</h3>
+    ${fi('Section Title','ft-sec-title',sec.title,'text','A New Way to Experience the Gulf')}
+    ${fi('Section Subtitle','ft-sec-sub',sec.subtitle,'text','Portable inflatable boats that combine fun, safety, and sustainability.')}
+  </div>
   ${wcAddBar('features', 'Feature')}
   ${feats.map((f,i) => {
     const imgUrl = wcToUrl(f.image);
@@ -893,12 +900,14 @@ function renderFeatures() {
   ${saveBtn('saveFeatures')}`;
 }
 function saveFeatures() {
+  _wc_data.features_section = { title: val('ft-sec-title'), subtitle: val('ft-sec-sub') };
   wcSave('features', (_wc_data.features||[]).map((f,i)=>({
     icon: val('ft-icon-'+i),
     title: val('ft-title-'+i),
     description: val('ft-desc-'+i),
     image: f.image || ''
   })));
+  wcPush();
 }
 async function wcFeatureImageUpload(fileInput, index) {
   const file = fileInput.files[0];
