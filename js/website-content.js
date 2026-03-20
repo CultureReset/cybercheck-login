@@ -1039,10 +1039,11 @@ function renderGallery() {
   return `<h2 class="wc-title">Gallery</h2>
   <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px;">Upload photos for your website gallery. <strong>Drag to reorder</strong> — the first 12 appear on your home page.</p>
   ${tabBar}
-  <div style="margin-bottom:20px;">
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <button type="button" class="btn btn-primary" onclick="document.getElementById('gal-upload-file').click()">${uploadLabel}</button>
     <input type="file" id="gal-upload-file" accept="image/*" multiple style="display:none" onchange="wcGalleryAdd(this)">
-    <span id="gal-upload-status" style="margin-left:12px;font-size:13px;color:var(--text-muted);"></span>
+    <button type="button" class="btn btn-outline btn-sm" onclick="wcGalRemoveDuplicates()" title="Remove duplicate photos from gallery">🧹 Remove Duplicates</button>
+    <span id="gal-upload-status" style="margin-left:4px;font-size:13px;color:var(--text-muted);"></span>
   </div>
   ${gridHtml}
   ${saveBtn('wcGalManualSave')}`;
@@ -1147,16 +1148,32 @@ function wcGalTouchEnd(e, i) {
   _galTouchSrcEl = null;
 }
 
+function wcGalleryIsDuplicate(file) {
+  const gallery = _wc_data.gallery || [];
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
+  return gallery.some(function(url) {
+    const urlStr = (typeof url === 'string' ? url : (url || {}).url || '').toLowerCase();
+    // Match {timestamp}-{safeName} pattern in the URL path
+    return urlStr.includes('-' + safeName);
+  });
+}
+
 async function wcGalleryAdd(fileInput) {
   const files = Array.from(fileInput.files);
   if (!files.length) return;
   const btn = fileInput.previousElementSibling;
   const status = document.getElementById('gal-upload-status');
   if (!_wc_data.gallery) _wc_data.gallery = [];
-  let uploaded = 0, failed = 0;
+  let uploaded = 0, failed = 0, skipped = 0;
   const newUrls = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+    // Skip duplicate filenames already in the gallery
+    if (wcGalleryIsDuplicate(file)) {
+      if (status) status.textContent = `"${file.name}" already uploaded — skipped`;
+      skipped++;
+      continue;
+    }
     if (btn) btn.textContent = `Uploading ${i+1} of ${files.length}…`;
     if (status) status.textContent = file.name;
     try {
@@ -1178,7 +1195,10 @@ async function wcGalleryAdd(fileInput) {
   const activeSecName = _galActiveTab >= 0 && _wc_data.gallery_sections && _wc_data.gallery_sections[_galActiveTab] ? _wc_data.gallery_sections[_galActiveTab].name : null;
   if (btn) btn.textContent = activeSecName ? `+ Upload to "${activeSecName}"` : '+ Upload Photos';
   if (status) status.textContent = '';
-  toast(`${uploaded} photo${uploaded!==1?'s':''} added${failed>0?' ('+failed+' failed)':''} ✓`);
+  const msg = uploaded > 0 ? `${uploaded} photo${uploaded!==1?'s':''} added ✓` : '';
+  const skipMsg = skipped > 0 ? `${skipped} duplicate${skipped!==1?'s':''} skipped` : '';
+  const failMsg = failed > 0 ? `${failed} failed` : '';
+  toast([msg, skipMsg, failMsg].filter(Boolean).join(' · ') || 'No new photos added');
   fileInput.value = '';
 }
 
@@ -1228,6 +1248,52 @@ function wcGalPrevPage() {
 }
 
 function wcGalManualSave() { wcPush(); }
+
+async function wcGalRemoveDuplicates() {
+  if (!_wc_data.gallery || !_wc_data.gallery.length) return;
+  const before = _wc_data.gallery.length;
+
+  // Deduplicate by URL (keep first occurrence)
+  const seen = new Set();
+  const dupeUrls = [];
+  _wc_data.gallery = _wc_data.gallery.filter(function(item) {
+    const url = typeof item === 'string' ? item : (item || {}).url || '';
+    if (seen.has(url)) { dupeUrls.push(url); return false; }
+    seen.add(url);
+    return true;
+  });
+
+  // Clean sections too
+  if (_wc_data.gallery_sections) {
+    _wc_data.gallery_sections.forEach(function(sec) {
+      if (sec.images) {
+        const seenSec = new Set();
+        sec.images = sec.images.filter(function(u) {
+          if (seenSec.has(u)) return false;
+          seenSec.add(u);
+          return true;
+        });
+      }
+    });
+  }
+
+  // Delete duplicate media records from Supabase so server doesn't re-add them
+  if (dupeUrls.length && supabase) {
+    for (const url of dupeUrls) {
+      try {
+        await supabase.from('media').delete().eq('url', url);
+        const pathMatch = url.split('/storage/v1/object/public/media/');
+        if (pathMatch[1]) await supabase.storage.from('media').remove([decodeURIComponent(pathMatch[1])]);
+      } catch(e) {}
+    }
+  }
+
+  const removed = before - _wc_data.gallery.length;
+  if (removed === 0) { toast('No duplicates found ✓'); return; }
+  await wcPush();
+  renderWCSection('gallery');
+  toast(`Removed ${removed} duplicate photo${removed !== 1 ? 's' : ''} ✓`);
+}
 
 // Override wcGalSetTab to reset pagination when switching tabs
 function wcGalSetTab(idx) {
