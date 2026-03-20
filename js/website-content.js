@@ -107,6 +107,29 @@ async function loadWebsiteContent() {
       }
     }
   } catch(e) { /* use blob data */ }
+
+  // Merge image_url from rental_addons table into blob addons (source of truth for images)
+  try {
+    const token = wcGetAuthToken();
+    if (token) {
+      const aoRes = await fetch(WC_BASE + '/api/dashboard/addons', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (aoRes.ok) {
+        const aoRows = await aoRes.json();
+        if (Array.isArray(aoRows) && aoRows.length) {
+          const byName = {};
+          aoRows.forEach(function(r) { if (r.name) byName[r.name.trim().toLowerCase()] = r.image_url || ''; });
+          if (!Array.isArray(_wc_data.addons)) _wc_data.addons = [];
+          _wc_data.addons = _wc_data.addons.map(function(a) {
+            const key = (a.name || '').trim().toLowerCase();
+            return Object.assign({}, a, { image: a.image || byName[key] || '' });
+          });
+        }
+      }
+    }
+  } catch(e) { /* keep blob images as-is */ }
+
   renderWCNav();
   renderWCSection(_wc_activeSection);
 }
