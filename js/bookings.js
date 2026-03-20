@@ -406,17 +406,70 @@ async function completeBooking(id) {
 async function cancelBooking(id) {
   var b = _bookings.find(function(x) { return x.id === id; });
   if (!b) return;
-  if (!confirm('Cancel booking ' + id + ' for ' + b.customerName + '?\nA cancellation SMS will be sent.')) return;
-  b.status = 'cancelled';
-  if (b.paymentStatus === 'paid' || b.paymentStatus === 'deposit_paid') {
-    b.paymentStatus = 'refunded';
+
+  var hasPaid = b.paymentStatus === 'paid' || b.paymentStatus === 'deposit_paid';
+  var hasPaymentId = !!(b.stripePaymentId);
+  var confirmMsg = 'Cancel booking ' + id + ' for ' + b.customerName + '?';
+  if (hasPaid && hasPaymentId) {
+    confirmMsg += '\n\nA Stripe refund will be processed automatically.';
+  } else if (hasPaid && !hasPaymentId) {
+    confirmMsg += '\n\nNote: No Stripe payment ID found — you may need to issue the refund manually in your Stripe dashboard.';
+  } else {
+    confirmMsg += '\nA cancellation SMS will be sent.';
   }
-  saveBookings();
+  if (!confirm(confirmMsg)) return;
+
+  var refundAmount = null;
+  if (hasPaid && hasPaymentId) {
+    var amtStr = prompt(
+      'Refund amount for ' + b.customerName + '?\n' +
+      'Total paid: $' + Number(b.total).toFixed(2) + '\n\n' +
+      'Enter amount to refund (e.g. ' + Number(b.total).toFixed(2) + '), or leave blank for full refund:',
+      Number(b.total).toFixed(2)
+    );
+    if (amtStr === null) return; // user cancelled prompt
+    var parsed = parseFloat(amtStr);
+    refundAmount = (!isNaN(parsed) && parsed > 0 && parsed < b.total) ? Math.round(parsed * 100) : null; // null = full refund
+  }
+
   var apiId = b._apiId || id;
+
+  // Issue Stripe refund if payment exists
+  if (hasPaid && hasPaymentId) {
+    try {
+      var token = CC.getToken ? CC.getToken() : null;
+      var body = { payment_intent_id: b.stripePaymentId, booking_id: apiId };
+      if (refundAmount) body.amount = refundAmount;
+      var res = await fetch((window.CC_API_BASE || '') + '/api/stripe/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body)
+      });
+      var result = await res.json();
+      if (!res.ok) {
+        toast('Stripe refund failed: ' + (result.error || result.message || 'Unknown error'), 'error');
+        return; // don't cancel booking if refund failed
+      }
+    } catch(e) {
+      toast('Refund request failed: ' + e.message, 'error');
+      return;
+    }
+  }
+
+  // Update booking in DB after refund confirmed (or if no payment to refund)
+  b.status = 'cancelled';
+  b.paymentStatus = hasPaid ? 'refunded' : b.paymentStatus;
+  saveBookings();
   await CC.dashboard.updateBooking(apiId, { status: 'cancelled', payment_status: b.paymentStatus });
   renderBookingsStats();
   renderBookingsTable();
-  toast('Booking cancelled. Refund initiated.');
+
+  if (hasPaid && hasPaymentId) {
+    var refLabel = refundAmount ? '$' + (refundAmount / 100).toFixed(2) : 'full $' + Number(b.total).toFixed(2);
+    toast('Booking cancelled. Stripe refund of ' + refLabel + ' initiated!', 'success');
+  } else {
+    toast('Booking cancelled.' + (hasPaid ? ' Issue refund manually in Stripe dashboard.' : ''));
+  }
 }
 
 function sendReviewRequest(id) {
