@@ -1009,6 +1009,7 @@ function wcGalleryPickerSelect(url) {
     if (!_wc_data.features) _wc_data.features = [];
     if (!_wc_data.features[target.index]) _wc_data.features[target.index] = {};
     _wc_data.features[target.index].image = url;
+    wcSaveSection('features', _wc_data.features);
     wcPush().then(function() { renderWCSection('features'); });
     toast('Photo selected ✓');
   }
