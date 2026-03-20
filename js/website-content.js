@@ -905,12 +905,14 @@ function renderFeatures() {
 }
 function saveFeatures() {
   _wc_data.features_section = { title: val('ft-sec-title'), subtitle: val('ft-sec-sub') };
-  wcSave('features', (_wc_data.features||[]).map((f,i)=>({
+  const featuresArray = (_wc_data.features||[]).map((f,i)=>({
     icon: val('ft-icon-'+i),
     title: val('ft-title-'+i),
     description: val('ft-desc-'+i),
     image: f.image || ''
-  })));
+  }));
+  wcSave('features', featuresArray);
+  wcSaveSection('features', featuresArray);
   wcPush();
 }
 async function wcFeatureImageUpload(fileInput, index) {
