@@ -191,6 +191,7 @@ async function finishSaveInventory(id, name, desc, halfAM, halfPM, allDay, depos
   var fleetData = {
     name: name,
     description: desc,
+    available: true,
     specs: { halfDayAM: halfAM, halfDayPM: halfPM, allDay: allDay, deposit: deposit, qty: qty, specsText: specs },
     image_url: (photos && photos.length > 0) ? photos[0] : null
   };
