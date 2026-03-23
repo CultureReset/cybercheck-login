@@ -161,6 +161,12 @@ function renderPhoneNumbers() {
   } else {
     html += '<div style="margin-top:8px;font-size:12px;color:var(--text-dim);">Enter your cell number above to receive booking alerts via SMS</div>';
   }
+  html += '<div style="margin-top:12px;padding:12px 14px;background:rgba(0,173,168,0.06);border:1px solid rgba(0,173,168,0.18);border-radius:var(--radius);">';
+  html += '<p style="font-size:11px;color:var(--text-muted);margin:0;line-height:1.6;">';
+  html += '<strong>SMS Consent:</strong> By saving your phone number above, you agree to receive booking alert text messages from this platform. ';
+  html += 'Message frequency varies. Message &amp; data rates may apply. Reply <strong>STOP</strong> to unsubscribe or <strong>HELP</strong> for help. ';
+  html += 'View <a href="https://cybercheck-login.vercel.app/privacy.html" target="_blank" style="color:var(--primary);">Privacy Policy</a> and <a href="https://cybercheck-login.vercel.app/terms.html" target="_blank" style="color:var(--primary);">Terms &amp; Conditions</a>.';
+  html += '</p></div>';
   html += '</div>';
 
   // ── Platform-assigned lines (read-only, admin assigns) ────────────────────
