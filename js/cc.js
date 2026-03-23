@@ -862,56 +862,86 @@ const CC = (function() {
     getAnalytics: async function() {
       var siteId = await ensureSiteId(); if (!siteId) return null;
 
-      // Get today's stats
       var today = new Date().toISOString().split('T')[0];
-      var { data: todayViews } = await supabase
-        .from('page_views')
-        .select('*')
-        .eq('site_id', siteId)
-        .gte('created_at', today + ' 00:00:00');
-
-      var { data: todayConversions } = await supabase
-        .from('conversions')
-        .select('*')
-        .eq('site_id', siteId)
-        .gte('created_at', today + ' 00:00:00');
-
-      var todayRevenue = (todayConversions || []).reduce(function(sum, c) { return sum + (parseFloat(c.revenue) || 0); }, 0);
-
-      // Get week/month stats from traffic_sources
       var weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       var monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      var { data: weekSources } = await supabase
-        .from('traffic_sources')
-        .select('*')
-        .eq('site_id', siteId)
-        .gte('date', weekAgo);
+      // Fetch all data in parallel
+      var [todayViewsRes, todayConvRes, monthViewsRes, funnelRes, monthConvRes] = await Promise.all([
+        supabase.from('page_views').select('session_id, ip_address').eq('site_id', siteId).gte('created_at', today + 'T00:00:00'),
+        supabase.from('conversions').select('revenue').eq('site_id', siteId).gte('created_at', today + 'T00:00:00'),
+        supabase.from('page_views').select('utm_source, utm_medium, session_id, device_type, created_at').eq('site_id', siteId).gte('created_at', monthAgo + 'T00:00:00'),
+        supabase.from('booking_funnel').select('step_name, booking_ref').eq('site_id', siteId).gte('created_at', monthAgo + 'T00:00:00'),
+        supabase.from('conversions').select('revenue, created_at').eq('site_id', siteId).gte('created_at', monthAgo + 'T00:00:00')
+      ]);
 
-      var { data: monthSources } = await supabase
-        .from('traffic_sources')
-        .select('*')
-        .eq('site_id', siteId)
-        .gte('date', monthAgo);
+      var todayViews = todayViewsRes.data || [];
+      var todayConversions = todayConvRes.data || [];
+      var monthViews = monthViewsRes.data || [];
+      var funnelRows = funnelRes.data || [];
+      var monthConversions = monthConvRes.data || [];
+
+      // Today stats
+      var todayRevenue = todayConversions.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
+      var todaySessions = new Set(todayViews.map(function(v) { return v.session_id || v.ip_address; })).size;
+
+      // Week stats
+      var weekViews = monthViews.filter(function(v) { return v.created_at >= weekAgo; });
+      var weekSessions = new Set(weekViews.map(function(v) { return v.session_id; })).size;
+      var weekRev = monthConversions.filter(function(c) { return c.created_at >= weekAgo + 'T00:00:00'; })
+        .reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
+
+      // Month stats
+      var monthSessions = new Set(monthViews.map(function(v) { return v.session_id; })).size;
+      var monthRev = monthConversions.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
+
+      // Booking funnel — count unique booking_refs per step
+      var funnelSets = {};
+      funnelRows.forEach(function(r) {
+        if (!funnelSets[r.step_name]) funnelSets[r.step_name] = new Set();
+        if (r.booking_ref) funnelSets[r.step_name].add(r.booking_ref);
+      });
+      var bookingFunnel = {
+        opened:    (funnelSets['opened']          || new Set()).size,
+        step2:     (funnelSets['step2_boat_time'] || new Set()).size,
+        step3:     (funnelSets['step3_extras']    || new Set()).size,
+        step4:     (funnelSets['step4_checkout']  || new Set()).size,
+        completed: (funnelSets['completed']        || new Set()).size,
+        abandoned: (funnelSets['abandoned']        || new Set()).size
+      };
+
+      // UTM source breakdown
+      var utmMap = {};
+      monthViews.forEach(function(v) {
+        var src = v.utm_source || 'direct';
+        var med = v.utm_medium || 'none';
+        var key = src + '|' + med;
+        if (!utmMap[key]) utmMap[key] = { source: src, medium: med, sessions: new Set() };
+        if (v.session_id) utmMap[key].sessions.add(v.session_id);
+      });
+      var utmSources = Object.values(utmMap).map(function(u) {
+        return { source: u.source, medium: u.medium, visitors: u.sessions.size };
+      }).sort(function(a, b) { return b.visitors - a.visitors; }).slice(0, 10);
+
+      // Device breakdown
+      var deviceMap = {};
+      monthViews.forEach(function(v) {
+        var d = v.device_type || 'unknown';
+        deviceMap[d] = (deviceMap[d] || 0) + 1;
+      });
+      var deviceBreakdown = Object.entries(deviceMap).map(function(kv) {
+        return { device: kv[0], count: kv[1] };
+      }).sort(function(a, b) { return b.count - a.count; });
 
       return {
-        today: {
-          visitors: new Set((todayViews || []).map(function(v) { return v.ip_address; })).size,
-          pageviews: (todayViews || []).length,
-          conversions: (todayConversions || []).length,
-          revenue: todayRevenue
-        },
-        week: {
-          visitors: (weekSources || []).reduce(function(s, t) { return s + t.visitors; }, 0),
-          revenue: (weekSources || []).reduce(function(s, t) { return s + parseFloat(t.revenue || 0); }, 0)
-        },
-        month: {
-          visitors: (monthSources || []).reduce(function(s, t) { return s + t.visitors; }, 0),
-          revenue: (monthSources || []).reduce(function(s, t) { return s + parseFloat(t.revenue || 0); }, 0)
-        },
+        today: { visitors: todaySessions, pageviews: todayViews.length, conversions: todayConversions.length, revenue: todayRevenue },
+        week:  { visitors: weekSessions, revenue: weekRev },
+        month: { visitors: monthSessions, revenue: monthRev },
         topPages: [],
-        trafficSources: weekSources || [],
-        conversionFunnel: { views: 0, clicks: 0, bookings: 0 },
+        trafficSources: utmSources,
+        conversionFunnel: { views: monthSessions, clicks: bookingFunnel.opened, bookings: bookingFunnel.completed },
+        bookingFunnel: bookingFunnel,
+        deviceBreakdown: deviceBreakdown,
         revenueChart: []
       };
     },
@@ -954,6 +984,18 @@ const CC = (function() {
     updateRobotsTxt: async function(robotsTxt) {
       var siteId = await ensureSiteId(); if (!siteId) return null;
       await supabase.from('robots_config').upsert({ site_id: siteId, robots_txt: robotsTxt, updated_at: new Date().toISOString() });
+      return { success: true };
+    },
+
+    getTrackingSettings: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var { data } = await supabase.from('site_content').select('ga4_id, facebook_pixel_id').eq('site_id', siteId).single();
+      return data || {};
+    },
+
+    updateTrackingSettings: async function(settings) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('site_content').update({ ga4_id: settings.ga4_id || null, facebook_pixel_id: settings.facebook_pixel_id || null, updated_at: new Date().toISOString() }).eq('site_id', siteId);
       return { success: true };
     },
 

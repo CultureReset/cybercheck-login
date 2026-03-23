@@ -7,7 +7,6 @@ var _sitemapConfig = {};
 var _robotsConfig = '';
 
 async function loadSEO() {
-  // Load SEO data from API
   var apiData = await CC.dashboard.getSEO();
   if (apiData) {
     _seoPages = apiData.pages || [];
@@ -18,6 +17,31 @@ async function loadSEO() {
   renderSEOPages();
   renderSitemapConfig();
   renderRobotsConfig();
+  loadTrackingSettings();
+}
+
+async function loadTrackingSettings() {
+  var data = await CC.dashboard.getTrackingSettings();
+  if (data) {
+    var ga4 = document.getElementById('tracking-ga4-id');
+    var pixel = document.getElementById('tracking-pixel-id');
+    if (ga4) ga4.value = data.ga4_id || '';
+    if (pixel) pixel.value = data.facebook_pixel_id || '';
+  }
+}
+
+async function saveTrackingSettings() {
+  var ga4Id = (document.getElementById('tracking-ga4-id')?.value || '').trim();
+  var pixelId = (document.getElementById('tracking-pixel-id')?.value || '').trim();
+  var status = document.getElementById('tracking-save-status');
+
+  await CC.dashboard.updateTrackingSettings({ ga4_id: ga4Id, facebook_pixel_id: pixelId });
+
+  if (status) {
+    status.innerHTML = '<span style="color:var(--success);">✓ Tracking IDs saved — will load on your next site visit</span>';
+    setTimeout(function() { if (status) status.innerHTML = ''; }, 4000);
+  }
+  toast('Tracking IDs saved');
 }
 
 function renderSEOPages() {

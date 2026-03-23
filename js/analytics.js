@@ -13,7 +13,6 @@ var _analyticsData = {
 };
 
 async function loadAnalytics() {
-  // Load analytics data from API
   var apiData = await CC.dashboard.getAnalytics();
   if (apiData) {
     _analyticsData.todayStats = apiData.today || _analyticsData.todayStats;
@@ -22,6 +21,8 @@ async function loadAnalytics() {
     _analyticsData.topPages = apiData.topPages || [];
     _analyticsData.trafficSources = apiData.trafficSources || [];
     _analyticsData.conversionFunnel = apiData.conversionFunnel || _analyticsData.conversionFunnel;
+    _analyticsData.bookingFunnel = apiData.bookingFunnel || null;
+    _analyticsData.deviceBreakdown = apiData.deviceBreakdown || [];
     _analyticsData.revenueChart = apiData.revenueChart || [];
   }
 
@@ -29,6 +30,8 @@ async function loadAnalytics() {
   renderTopPages();
   renderTrafficSources();
   renderConversionFunnel();
+  renderBookingFunnelSteps();
+  renderDeviceBreakdown();
   renderRevenueChart();
 }
 
@@ -184,6 +187,78 @@ function formatShortDate(dateStr) {
   if (!dateStr) return '';
   var d = new Date(dateStr);
   return (d.getMonth() + 1) + '/' + d.getDate();
+}
+
+function renderBookingFunnelSteps() {
+  var container = document.getElementById('booking-funnel-steps');
+  if (!container) return;
+
+  var f = _analyticsData.bookingFunnel;
+  if (!f || f.opened === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">No booking funnel data yet</p>';
+    return;
+  }
+
+  var steps = [
+    { label: 'Booking Opened',     count: f.opened,    color: '#00ada8' },
+    { label: 'Boat & Time',        count: f.step2,     color: '#3b82f6' },
+    { label: 'Extras / Add-ons',   count: f.step3,     color: '#8b5cf6' },
+    { label: 'Checkout Reached',   count: f.step4,     color: '#f59e0b' },
+    { label: 'Booking Completed',  count: f.completed, color: '#22c55e' }
+  ];
+
+  var html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+  steps.forEach(function(s, i) {
+    var pct = f.opened > 0 ? Math.round((s.count / f.opened) * 100) : 0;
+    var dropPct = i > 0 && steps[i-1].count > 0 ? Math.round(((steps[i-1].count - s.count) / steps[i-1].count) * 100) : null;
+    html += '<div>';
+    html += '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">';
+    html += '<span style="font-size:13px;font-weight:600;">' + s.label + '</span>';
+    html += '<span style="font-size:13px;">' + s.count + ' <span style="color:var(--text-muted);font-size:11px;">(' + pct + '%)</span>';
+    if (dropPct !== null && dropPct > 0) html += ' <span style="color:#ef4444;font-size:11px;">−' + dropPct + '% dropped</span>';
+    html += '</span></div>';
+    html += '<div style="height:28px;background:var(--bg);border-radius:6px;overflow:hidden;">';
+    html += '<div style="height:100%;width:' + Math.max(pct, 2) + '%;background:' + s.color + ';border-radius:6px;display:flex;align-items:center;padding-left:8px;"></div>';
+    html += '</div></div>';
+  });
+
+  if (f.abandoned > 0) {
+    html += '<div style="margin-top:8px;padding:10px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:var(--radius);font-size:13px;">';
+    html += '<strong style="color:#ef4444;">' + f.abandoned + ' abandoned</strong> — opened booking but did not complete';
+    html += '</div>';
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderDeviceBreakdown() {
+  var container = document.getElementById('device-breakdown-chart');
+  if (!container) return;
+
+  var devices = _analyticsData.deviceBreakdown || [];
+  if (devices.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">No device data yet</p>';
+    return;
+  }
+
+  var total = devices.reduce(function(s, d) { return s + d.count; }, 0);
+  var colors = { mobile: '#00ada8', desktop: '#3b82f6', tablet: '#8b5cf6', unknown: '#94a3b8' };
+  var icons  = { mobile: '📱', desktop: '💻', tablet: '📟', unknown: '❓' };
+
+  var html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+  devices.forEach(function(d) {
+    var pct = total > 0 ? Math.round((d.count / total) * 100) : 0;
+    var color = colors[d.device] || '#94a3b8';
+    html += '<div style="display:flex;align-items:center;gap:12px;">';
+    html += '<span style="font-size:18px;width:24px;">' + (icons[d.device] || '❓') + '</span>';
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;font-weight:600;text-transform:capitalize;">' + d.device + '</span><span style="font-size:13px;">' + d.count + ' <span style="color:var(--text-muted);">(' + pct + '%)</span></span></div>';
+    html += '<div style="height:8px;background:var(--bg);border-radius:4px;"><div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:4px;"></div></div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function exportAnalytics() {

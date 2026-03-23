@@ -753,6 +753,30 @@
             <div class="card-header"><h3>Conversion Funnel</h3></div>
             <div id="conversion-funnel"></div>
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="card">
+              <div class="card-header"><h3>Booking Funnel Steps</h3><span style="font-size:12px;color:var(--text-muted);">Last 30 days</span></div>
+              <div id="booking-funnel-steps"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Devices</h3><span style="font-size:12px;color:var(--text-muted);">Last 30 days</span></div>
+              <div id="device-breakdown-chart"></div>
+            </div>
+          </div>
+          <div class="card" id="fb-ads-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;background:#1877f2;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;">f</div>
+                <div><h3 style="margin:0;">Facebook Ads Campaigns</h3><div style="font-size:12px;color:var(--text-muted);">Connect your Meta Business account to see spend, clicks & ROAS</div></div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="navigateTo('connections')">Connect Facebook Ads</button>
+            </div>
+            <div id="fb-ads-data" style="padding:24px;text-align:center;color:var(--text-muted);">
+              <div style="font-size:40px;margin-bottom:12px;">📊</div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Not connected yet</div>
+              <div style="font-size:13px;">Once connected, your campaign impressions, clicks, spend, and ROAS will appear here.</div>
+            </div>
+          </div>
         </div>
 
         <!-- SEO MANAGER -->
@@ -809,6 +833,24 @@
             <div class="card-header"><h3>Schema.org Structured Data</h3></div>
             <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Add LocalBusiness schema to help search engines understand your business.</p>
             <button class="btn btn-outline" onclick="previewSchema()">Preview Schema JSON-LD</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Analytics & Pixel Tracking</h3></div>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Enter your tracking IDs to activate Google Analytics and Facebook retargeting on your site.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Google Analytics 4 Measurement ID</label>
+                <input type="text" id="tracking-ga4-id" placeholder="G-XXXXXXXXXX">
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Found in Google Analytics → Admin → Data Streams</div>
+              </div>
+              <div class="form-group">
+                <label>Facebook Pixel ID</label>
+                <input type="text" id="tracking-pixel-id" placeholder="1234567890123456">
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Found in Meta Business Suite → Events Manager</div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveTrackingSettings()">Save Tracking IDs</button>
+            <div id="tracking-save-status" style="margin-top:10px;font-size:13px;"></div>
           </div>
         </div>
 
