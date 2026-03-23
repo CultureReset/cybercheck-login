@@ -213,7 +213,8 @@ function renderCustomerList() {
     html += '<div><div style="font-weight:600;font-size:14px;">' + escHtml(c.name) + '</div>';
     html += '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(c.email || c.phone) + '</div></div>';
     html += '</div></td>';
-    html += '<td>' + statusBadge + '</td>';
+    var waiverBadge = c.waiver_signed ? '<span class="badge badge-success" style="margin-left:6px;">✓ Waiver</span>' : '<span class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;margin-left:6px;">No Waiver</span>';
+    html += '<td>' + statusBadge + waiverBadge + '</td>';
     html += '<td style="font-weight:600;">' + c.totalBookings + '</td>';
     html += '<td style="font-weight:600;">$' + (c.totalSpent || 0).toLocaleString() + '</td>';
     html += '<td style="font-size:13px;color:var(--text-muted);">' + (c.lastBooking || '—') + '</td>';
