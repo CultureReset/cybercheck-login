@@ -101,16 +101,41 @@ function renderSubdomainSection() {
   if (_domainData.customDomain) {
     html += '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--card-border);">';
     html += '<div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Your real domain</div>';
-    html += '<div style="display:flex;align-items:center;gap:10px;">';
-    html += '<div style="font-size:20px;font-weight:700;color:var(--text);font-family:\'SF Mono\',\'Fira Code\',monospace;">' + escHtml(_domainData.customDomain) + '</div>';
+    html += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">';
+    html += '<div style="font-size:20px;font-weight:700;color:var(--text);font-family:\'SF Mono\',\'Fira Code\',monospace;flex:1;">' + escHtml(_domainData.customDomain) + '</div>';
     html += _domainData.customDomainVerified
       ? '<span class="badge badge-success">Active</span>'
       : '<span class="badge badge-warning">Pending DNS</span>';
     html += '</div>';
+    html += '<div style="margin-top:12px;display:flex;align-items:center;gap:10px;">';
+    html += '<input type="text" id="real-domain-input" value="' + escHtml(_domainData.customDomain) + '" placeholder="www.yourdomain.com" style="flex:1;">';
+    html += '<button class="btn btn-primary btn-sm" onclick="saveRealDomain()" style="margin-bottom:0;">Save</button>';
+    html += '</div>';
+    html += '<p style="font-size:12px;color:var(--text-dim);margin-top:8px;">Enter your domain exactly as it should appear (e.g. www.beachsidecircleboats.com)</p>';
+    html += '</div>';
+  } else {
+    html += '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--card-border);">';
+    html += '<div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Your real domain</div>';
+    html += '<div style="margin-top:8px;display:flex;align-items:center;gap:10px;">';
+    html += '<input type="text" id="real-domain-input" value="" placeholder="www.yourdomain.com" style="flex:1;">';
+    html += '<button class="btn btn-primary btn-sm" onclick="saveRealDomain()" style="margin-bottom:0;">Save</button>';
+    html += '</div>';
+    html += '<p style="font-size:12px;color:var(--text-dim);margin-top:8px;">Enter your custom domain to display it here and on your profile.</p>';
     html += '</div>';
   }
 
   container.innerHTML = html;
+}
+
+async function saveRealDomain() {
+  var input = document.getElementById('real-domain-input');
+  var val = (input ? input.value : '').trim();
+  if (!val) { toast('Enter a domain first', 'error'); return; }
+  _domainData.customDomain = val;
+  _domainData.customDomainVerified = false;
+  await CC.dashboard.updateDomain({ domain: val });
+  renderSubdomainSection();
+  toast('Real domain saved');
 }
 
 function saveSubdomain() {
