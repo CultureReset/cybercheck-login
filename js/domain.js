@@ -98,6 +98,18 @@ function renderSubdomainSection() {
 
   html += '<p style="font-size:12px;color:var(--text-dim);margin-top:10px;">This is always free and active. Letters, numbers, and hyphens only.</p>';
 
+  if (_domainData.customDomain) {
+    html += '<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--card-border);">';
+    html += '<div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Your real domain</div>';
+    html += '<div style="display:flex;align-items:center;gap:10px;">';
+    html += '<div style="font-size:20px;font-weight:700;color:var(--text);font-family:\'SF Mono\',\'Fira Code\',monospace;">' + escHtml(_domainData.customDomain) + '</div>';
+    html += _domainData.customDomainVerified
+      ? '<span class="badge badge-success">Active</span>'
+      : '<span class="badge badge-warning">Pending DNS</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
   container.innerHTML = html;
 }
 
