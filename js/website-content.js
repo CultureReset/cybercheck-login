@@ -160,7 +160,7 @@ function renderWCSection(id) {
     steps: renderSteps, features: renderFeatures, locations: renderLocations,
     links_page: renderLinksPage,
     gallery: renderGallery,
-    reviews: renderReviews, qna: renderQnA, cta: renderCta, contact: renderContact, footer: renderFooter
+    reviews: renderReviews, qna: renderQnA, promotions: renderPromotions, cta: renderCta, contact: renderContact, footer: renderFooter
   };
   panel.innerHTML = (map[id] || (() => '<p>Section not found</p>'))();
   // Trigger live previews that need DOM to be ready
