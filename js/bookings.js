@@ -399,6 +399,9 @@ function renderBookingsTable() {
     if (b.status === 'completed' && !b.reviewRequested) {
       html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();sendReviewRequest(\'' + b.id + '\')" style="color:#a855f7;">Send Review</button>';
     }
+    if (b.status !== 'cancelled') {
+      html += ' <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();resendConfirmation(\'' + b.id + '\')" style="color:#0ea5e9;border-color:#0ea5e9;" title="Resend SMS + Email confirmation to customer">&#128232; Resend</button>';
+    }
     html += '</td>';
     html += '</tr>';
   });
@@ -667,19 +670,28 @@ function viewBookingDetail(id) {
   if (b.status !== 'cancelled' && b.status !== 'completed') {
     html += '<button class="btn btn-outline" onclick="cancelBooking(\'' + b.id + '\');closeModal(\'modal-booking\');loadBookings();" style="color:var(--danger);border-color:var(--danger);">Cancel Booking</button>';
   }
-  html += '<button class="btn btn-outline" onclick="resendBookingSms(\'' + b.id + '\')">Resend SMS</button>';
+  html += '<button class="btn btn-outline" onclick="resendConfirmation(\'' + b.id + '\')">&#128232; Resend</button>';
   html += '</div>';
 
   body.innerHTML = html;
   openModal('modal-booking');
 }
 
-function resendBookingSms(id) {
-  var b = _bookings.find(function(x) { return x.id === id; });
-  if (!b) return;
-  b.smsDelivered = true;
-  saveBookings();
-  toast('SMS resent to ' + b.customerPhone);
+async function resendConfirmation(id) {
+  var apiId = id.startsWith('b-') ? id.slice(2) : id;
+  if (!confirm('Resend SMS + Email confirmation to customer?')) return;
+  try {
+    var resp = await fetch(CC.apiBase + '/public/resend-confirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-site-id': CC.getSiteId() },
+      body: JSON.stringify({ booking_id: apiId })
+    });
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed');
+    toast('Confirmation resent to customer!', 'success');
+  } catch(e) {
+    toast(e.message || 'Resend failed', 'error');
+  }
 }
 
 if (typeof escHtml === 'undefined') {
