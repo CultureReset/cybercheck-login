@@ -112,6 +112,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
           <span>Social Media</span>
         </div>
+        <div class="nav-item" data-page="faq">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>FAQ</span>
+        </div>
 
         <!-- Settings & Billing -->
         <div class="nav-section-label">Settings</div>
@@ -188,6 +192,11 @@
               <button class="btn btn-outline" onclick="navigateTo('waivers')">Waivers</button>
               <button class="btn btn-success" onclick="navigateTo('publish')">Publish Site</button>
             </div>
+          </div>
+          <div class="card" id="setup-checklist-card" style="display:none;">
+            <div class="card-header"><h3>Setup Checklist</h3><span id="setup-checklist-pct" style="font-size:13px;color:var(--text-dim);"></span></div>
+            <div style="background:var(--card-border);border-radius:4px;height:6px;margin-bottom:16px;"><div id="setup-progress-bar" style="height:6px;border-radius:4px;background:var(--primary);width:0%;transition:width 0.4s;"></div></div>
+            <div id="setup-checklist-items"></div>
           </div>
           <div class="card">
             <div class="card-header"><h3>Rental Time Slots</h3></div>
@@ -426,6 +435,7 @@
             </div>
             <div id="bookings-filters" style="margin-bottom:16px;"></div>
             <div id="bookings-table"></div>
+            <div id="declined-bookings-section" style="display:none;padding:0 24px 24px;"></div>
           </div>
         </div>
 
@@ -855,6 +865,18 @@
         </div>
 
         <!-- SOCIAL MEDIA -->
+        <!-- FAQ MANAGER -->
+        <div class="page-section" id="page-faq">
+          <div class="card">
+            <div class="card-header">
+              <h3>FAQ Manager</h3>
+              <button class="btn btn-primary btn-sm" onclick="openFAQModal()">+ Add Question</button>
+            </div>
+            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">These appear in the FAQ section on your public booking site. Drag to reorder.</p>
+            <div id="faq-list"><p style="color:var(--text-dim);">Loading...</p></div>
+          </div>
+        </div>
+
         <div class="page-section" id="page-social">
           <div class="card">
             <div class="card-header"><h3>Connected Accounts</h3></div>
@@ -1119,6 +1141,17 @@
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-post-stats')">Close</button></div>
   </div></div>
 
+  <!-- FAQ Modal -->
+  <div class="modal-overlay" id="modal-faq"><div class="modal" style="max-width:560px;">
+    <div class="modal-header"><h3 id="modal-faq-title">Add Question</h3><button class="modal-close" onclick="closeModal('modal-faq')">&times;</button></div>
+    <div class="form-group"><label>Question</label><input type="text" id="faq-question" placeholder="e.g. Do you offer group rates?"></div>
+    <div class="form-group"><label>Answer</label><textarea id="faq-answer" rows="4" placeholder="Your answer here..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-faq')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFAQ()">Save FAQ</button>
+    </div>
+  </div></div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -1174,8 +1207,56 @@
   <script src="js/media-accessories.js?v=1"></script>
   <script src="js/publish.js?v=4"></script>
   <script src="js/website-content.js?v=3"></script>
+  <script src="js/faq.js?v=1"></script>
   <script>
     var _business = null;
+
+    function loadSetupChecklist() {
+      var card = document.getElementById('setup-checklist-card');
+      var itemsEl = document.getElementById('setup-checklist-items');
+      var barEl = document.getElementById('setup-progress-bar');
+      var pctEl = document.getElementById('setup-checklist-pct');
+      if (!card || !itemsEl) return;
+
+      CC.dashboard.getOnboarding().then(function(data) {
+        if (!data) return;
+        // Hide checklist once fully complete
+        if (data.completed_at) { card.style.display = 'none'; return; }
+
+        var steps = [
+          { key: 'step1_done', label: 'Choose your business type', page: null },
+          { key: 'step2_done', label: 'Fill in your business profile', page: 'profile' },
+          { key: 'step3_done', label: 'Add your fleet / services', page: 'inventory' },
+          { key: 'step4_done', label: 'Connect Stripe payments', page: 'connections' },
+          { key: 'step5_done', label: 'Configure your site modules', page: 'site-editor' },
+          { key: 'step6_done', label: 'Publish your booking site', page: 'publish' }
+        ];
+
+        var done = steps.filter(function(s) { return data[s.key]; }).length;
+        var pct = Math.round((done / steps.length) * 100);
+
+        if (pct === 100) { card.style.display = 'none'; return; }
+
+        card.style.display = '';
+        if (barEl) barEl.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = done + ' / ' + steps.length + ' complete';
+
+        itemsEl.innerHTML = steps.map(function(s) {
+          var checked = !!data[s.key];
+          var icon = checked
+            ? '<span style="color:var(--success,#10b981);font-size:16px;">&#10003;</span>'
+            : '<span style="color:var(--text-dim);font-size:16px;">&#9675;</span>';
+          var label = checked
+            ? '<span style="text-decoration:line-through;color:var(--text-dim);">' + s.label + '</span>'
+            : (s.page
+                ? '<a href="#" onclick="navigateTo(\'' + s.page + '\');return false;" style="color:var(--primary);text-decoration:none;">' + s.label + '</a>'
+                : '<span>' + s.label + '</span>');
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--card-border);">' + icon + label + '</div>';
+        }).join('');
+      }).catch(function() {
+        card.style.display = 'none';
+      });
+    }
 
     function viewLiveSite() {
       window.open('../beachside-site/index.html', '_blank');
@@ -1240,6 +1321,8 @@
       loadAnalytics();
       loadSEO();
       loadSocial();
+      loadFAQ();
+      loadSetupChecklist();
 
       // Update overview stats with real data
       (async function() {

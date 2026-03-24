@@ -161,6 +161,66 @@ async function loadBookings() {
 
   // Start polling for new bookings
   startBookingPolling();
+
+  // Load declined bookings separately
+  loadDeclinedBookings();
+}
+
+async function loadDeclinedBookings() {
+  try {
+    const token = CC.auth?.getToken ? CC.auth.getToken() : (localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token'));
+    const res = await fetch('https://cybercheck-api-database.vercel.app/api/dashboard/declined-bookings', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    renderDeclinedBookings(data || []);
+  } catch(e) {
+    renderDeclinedBookings([]);
+  }
+}
+
+function renderDeclinedBookings(declined) {
+  var container = document.getElementById('declined-bookings-section');
+  if (!container) return;
+
+  if (declined.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = '';
+  container.innerHTML = `
+    <div style="margin-top:32px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <h3 style="font-size:16px;font-weight:700;color:var(--text);">Declined Payments</h3>
+        <span style="background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:20px;font-size:12px;font-weight:600;padding:2px 10px;">${declined.length}</span>
+        <span style="font-size:12px;color:var(--text-muted);">— good for retargeting ads</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--card-border);color:var(--text-muted);text-align:left;">
+              <th style="padding:8px 12px;font-weight:600;">Customer</th>
+              <th style="padding:8px 12px;font-weight:600;">Phone</th>
+              <th style="padding:8px 12px;font-weight:600;">Email</th>
+              <th style="padding:8px 12px;font-weight:600;">Date</th>
+              <th style="padding:8px 12px;font-weight:600;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${declined.map(function(b) {
+              return `<tr style="border-bottom:1px solid var(--card-border);">
+                <td style="padding:10px 12px;font-weight:600;">${b.customer_name || '—'}</td>
+                <td style="padding:10px 12px;">${b.customer_phone || '—'}</td>
+                <td style="padding:10px 12px;">${b.customer_email || '—'}</td>
+                <td style="padding:10px 12px;">${b.booking_date || '—'}</td>
+                <td style="padding:10px 12px;color:#ef4444;font-weight:600;">$${(b.total || 0).toFixed(2)} <span style="font-size:11px;background:#fef2f2;color:#ef4444;border-radius:4px;padding:2px 6px;">declined</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
 }
 
 function saveBookings() {
