@@ -83,7 +83,13 @@ function mapApiBookings(apiData) {
         return [];
       }()),
       guests: b.party_size || 1,
-      addons: (b.addons || []).map(function(a) { return typeof a === 'string' ? a : (a.name || JSON.stringify(a)); }),
+      addons: (function() {
+        var raw = b.addons;
+        if (!raw) return [];
+        if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch(e) { return [raw]; } }
+        if (!Array.isArray(raw)) return [];
+        return raw.map(function(a) { return typeof a === 'string' ? a : (a.name || ''); }).filter(Boolean);
+      }()),
       subtotal: b.subtotal || 0,
       platformFee: (b.total || 0) - (b.subtotal || 0),
       total: b.total || 0,
