@@ -75,7 +75,13 @@ function mapApiBookings(apiData) {
       customerPhone: b.customer_phone || '',
       date: b.booking_date || '',
       timeSlot: (b.rental_time_slots && b.rental_time_slots.name) || b.booking_time || '',
-      boats: Array.isArray(b.boats) && b.boats.length > 0 ? b.boats : (b.fleet_type_id ? [{ type: (b.fleet_types && b.fleet_types.name) || 'Boat', qty: b.qty || 1 }] : []),
+      boats: (function() {
+        if (Array.isArray(b.boats) && b.boats.length > 0) {
+          return b.boats.map(function(bt) { return { type: bt.type || bt.name || 'Boat', qty: bt.qty || 1 }; });
+        }
+        if (b.fleet_type_id) return [{ type: (b.fleet_types && b.fleet_types.name) || 'Boat', qty: b.qty || 1 }];
+        return [];
+      }()),
       guests: b.party_size || 1,
       addons: (b.addons || []).map(function(a) { return typeof a === 'string' ? a : (a.name || JSON.stringify(a)); }),
       subtotal: b.subtotal || 0,
