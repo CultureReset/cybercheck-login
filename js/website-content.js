@@ -11,7 +11,7 @@ const WC_BASE = 'https://cybercheck-api-database.vercel.app';
 const WC_SITE_BASE = 'https://beachsidecircleboats.com'; // customer website domain
 
 // Sections that have dedicated DB columns (saved to site_content via dashboard API)
-const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks','qna'];
+const WC_DB_SECTIONS = ['whats_included','steps','features','footer','links_page','locations','group_rate','docks','qna','promotions'];
 
 function wcGetAuthToken() {
   // Try Supabase session token
@@ -64,6 +64,7 @@ const WC_SECTIONS = [
   { id: 'gallery',        label: '🖼️ Gallery' },
   { id: 'reviews',        label: '💬 Reviews' },
   { id: 'qna',            label: '❓ Q&A / FAQ' },
+  { id: 'promotions',     label: '🏷️ Promotions' },
   { id: 'cta',            label: '🎯 CTA Banner' },
   { id: 'contact',        label: '📞 Contact' },
   { id: 'footer',         label: '📋 Footer' }
@@ -1484,6 +1485,71 @@ function saveQnA() {
     answer: val('qa-a-'+i)
   }));
   wcSave('qna', items);
+}
+
+// ─── Promotions ───────────────────────────────────────────────────────────────
+
+function renderPromotions() {
+  const d = _wc_data.promotions || {};
+  const items = d.items || [];
+  return `<h2 class="wc-title">Promotions</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Promotional banners shown on the website and booking flow (e.g. "Rent 4+ boats = FREE dock!").</p>
+
+  <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Active Promotions</div>
+      <button class="btn btn-outline btn-sm" onclick="promoAddItem()">+ Add Promo</button>
+    </div>
+    <div id="promo-items-list">
+      ${items.length === 0
+        ? `<div style="text-align:center;padding:24px;color:var(--text-dim);border:2px dashed var(--card-border);border-radius:8px;font-size:13px;">No promotions yet — click "+ Add Promo"</div>`
+        : items.map((p, i) => promoItemCard(p, i)).join('')}
+    </div>
+  </div>
+  ${saveBtn('savePromotions')}`;
+}
+
+function promoItemCard(p, i) {
+  return `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Promo ${i+1}</span>
+      <button class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;" onclick="promoRemoveItem(${i})">Remove</button>
+    </div>
+    ${fi('Headline','promo-title-'+i, p.title, 'text', 'Rent 4+ boats and get a FREE dock for the day!')}
+    ${fi('Subtext','promo-sub-'+i, p.subtitle, 'text', 'Any dock type. Automatically applied at checkout.')}
+    ${fi('Min Boats (threshold — 0 = always show)','promo-threshold-'+i, p.threshold ?? '', 'number', '0')}
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:8px;">
+      <input type="checkbox" id="promo-enabled-${i}" ${p.enabled !== false ? 'checked' : ''}>
+      <span>Enabled (show on site)</span>
+    </label>
+  </div>`;
+}
+
+function promoAddItem() {
+  const d = _wc_data.promotions || {};
+  const items = d.items || [];
+  items.push({ title: '', subtitle: '', threshold: 0, enabled: true });
+  _wc_data.promotions = { ...d, items };
+  wcRenderSection('promotions');
+}
+
+function promoRemoveItem(i) {
+  const d = _wc_data.promotions || {};
+  const items = d.items || [];
+  items.splice(i, 1);
+  _wc_data.promotions = { ...d, items };
+  wcRenderSection('promotions');
+}
+
+function savePromotions() {
+  const d = _wc_data.promotions || {};
+  const items = (d.items || []).map((_, i) => ({
+    title:     val('promo-title-' + i),
+    subtitle:  val('promo-sub-' + i),
+    threshold: parseInt(document.getElementById('promo-threshold-' + i)?.value || '0') || 0,
+    enabled:   document.getElementById('promo-enabled-' + i)?.checked !== false
+  }));
+  wcSave('promotions', { items });
 }
 
 // ─── CTA Banner ───────────────────────────────────────────────────────────────
