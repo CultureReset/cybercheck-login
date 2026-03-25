@@ -254,8 +254,11 @@ function renderStripeSection() {
     html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove Key</button>';
     html += '</div>';
   } else {
-    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">We\'ll email you a secure link. Click it to enter your Stripe Restricted Key on an isolated page. Your key is encrypted before storing — never exposed.</p>';
-    html += '<button class="btn btn-primary" onclick="sendStripeKeyLink()" id="send-key-link-btn" style="padding:12px 24px;">📧 Send Setup Email</button>';
+    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Enter any email to send a secure setup link.</p>';
+    html += '<div style="display:flex;gap:10px;align-items:center;">';
+    html += '<input id="stripe-setup-email" type="email" placeholder="Enter email address" style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;">';
+    html += '<button class="btn btn-primary" onclick="sendStripeKeyLink()" id="send-key-link-btn" style="white-space:nowrap;">📧 Send Link</button>';
+    html += '</div>';
   }
   html += '</div>';
 
@@ -266,13 +269,17 @@ function sendStripeKeyLink() {
   var token = getAuthToken();
   if (!token) { toast('Please log in first', 'error'); return; }
 
+  var emailInput = document.getElementById('stripe-setup-email');
+  var email = emailInput ? emailInput.value.trim() : '';
+  if (!email) { toast('Please enter an email address', 'error'); return; }
+
   var btn = document.getElementById('send-key-link-btn');
   if (btn) { btn.textContent = '📧 Sending...'; btn.disabled = true; }
 
   fetch((window.CC_API_BASE || '') + '/api/stripe/send-key-link', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({})
+    body: JSON.stringify({ email: email })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
