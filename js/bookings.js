@@ -681,11 +681,10 @@ async function resendConfirmation(id) {
   var apiId = id.startsWith('b-') ? id.slice(2) : id;
   if (!confirm('Resend SMS + Email confirmation to customer?')) return;
   try {
-    var subdomain = (CC.session && CC.session.business && CC.session.business.subdomain) || USER_CONFIG.business_id || '';
     var resp = await fetch('https://cybercheck-api-database.vercel.app/api/public/resend-confirmation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ booking_id: apiId, subdomain: subdomain })
+      body: JSON.stringify({ booking_id: apiId })
     });
     var data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Failed');
