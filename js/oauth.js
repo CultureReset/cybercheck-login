@@ -253,6 +253,11 @@ function renderStripeSection() {
     html += '<span style="font-size:13px;color:var(--text);">Stripe key saved and encrypted &nbsp;·&nbsp; <strong>' + escHtml(_manualKeyStatus.mode) + '</strong></span>';
     html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove Key</button>';
     html += '</div>';
+    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Update key:</p>';
+    html += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
+    html += '<input id="stripe-direct-key" type="password" placeholder="sk_live_... or sk_test_..." style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+    html += '<button class="btn btn-primary" onclick="saveStripeKeyDirect()" id="save-key-direct-btn" style="white-space:nowrap;">Update Key</button>';
+    html += '</div>';
   } else {
     html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Paste the business Stripe key directly or send a secure setup link.</p>';
     html += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
