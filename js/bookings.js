@@ -683,7 +683,7 @@ async function resendConfirmation(id) {
   try {
     var resp = await fetch(CC.apiBase + '/public/resend-confirmation', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-site-id': CC.getSiteId() },
+      headers: { 'Content-Type': 'application/json', 'x-site-id': getSiteId() },
       body: JSON.stringify({ booking_id: apiId })
     });
     var data = await resp.json();
