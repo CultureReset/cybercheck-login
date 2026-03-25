@@ -332,6 +332,7 @@
     </div>
 
     <script>
+        var API_BASE = 'https://cybercheck-api-database.vercel.app';
         let currentToken = null;
         let currentSiteId = null;
 
@@ -345,7 +346,7 @@
             }
 
             try {
-                const response = await fetch(`/api/stripe/key-link/${encodeURIComponent(currentToken)}`);
+                const response = await fetch(`${API_BASE}/api/stripe/key-link/${encodeURIComponent(currentToken)}`);
                 const result = await response.json();
 
                 if (!result.valid) {
@@ -407,7 +408,7 @@
             showMessage('Saving your key...');
 
             try {
-                const response = await fetch('/api/stripe/submit-key-via-link', {
+                const response = await fetch(`${API_BASE}/api/stripe/submit-key-via-link`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
