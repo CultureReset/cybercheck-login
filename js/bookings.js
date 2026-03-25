@@ -681,7 +681,7 @@ async function resendConfirmation(id) {
   var apiId = id.startsWith('b-') ? id.slice(2) : id;
   if (!confirm('Resend SMS + Email confirmation to customer?')) return;
   try {
-    var token = CC.getToken ? CC.getToken() : (localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token'));
+    var token = CC.auth?.getToken ? CC.auth.getToken() : (localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token'));
     var resp = await fetch('https://cybercheck-api-database.vercel.app/api/dashboard/resend-confirmation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
