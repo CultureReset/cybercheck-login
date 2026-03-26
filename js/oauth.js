@@ -60,6 +60,9 @@ var _socialConnections = {
 
 var _manualKeyStatus = { saved: false, mode: '' };
 
+var _squareStatus = { connected: false, mode: 'production', appId: null, locationId: null, connectedAt: null };
+var _activeProcessor = 'stripe';
+
 // ─── Google Business state ────────────────────────────────────────────────
 var _googleBusiness = { connected: false, account_email: '', account_name: '', account_id: '', locations: [] };
 
@@ -114,6 +117,28 @@ function loadConnections() {
       });
     }
   } catch(e) {}
+
+  // Fetch Square status from API
+  if (token) {
+    fetch((window.CC_API_BASE || '') + '/api/square/status', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      _squareStatus.connected = !!data.connected;
+      _squareStatus.mode = data.mode || 'production';
+      _squareStatus.appId = data.appId || null;
+      _squareStatus.locationId = data.locationId || null;
+      _squareStatus.connectedAt = data.connectedAt || null;
+      _activeProcessor = data.activeProcessor || _activeProcessor;
+      renderSquareSection();
+      renderActiveProcessorSection();
+    })
+    .catch(function() { renderSquareSection(); renderActiveProcessorSection(); });
+  } else {
+    renderSquareSection();
+    renderActiveProcessorSection();
+  }
 
   renderPaymentConnections();
   loadGoogleBusinessStatus();   // fetches real status from API, then renders
@@ -429,12 +454,174 @@ function disconnectStripe() {
   });
 }
 
+// ---- Square Payments ----
+
+function renderSquareSection() {
+  var container = document.getElementById('square-settings');
+  if (!container) return;
+
+  var html = '';
+
+  // Header
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">';
+  html += '<div style="width:48px;height:48px;border-radius:var(--radius);background:#006aff;display:flex;align-items:center;justify-content:center;">';
+  html += '<span style="color:#fff;font-weight:800;font-size:18px;">Sq</span>';
+  html += '</div>';
+  html += '<div style="flex:1;">';
+  html += '<h4 style="margin:0;font-size:16px;">Square Payments</h4>';
+  html += '<p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Add your Square credentials to accept payments</p>';
+  html += '</div>';
+  if (_squareStatus.connected) {
+    html += '<span class="badge badge-success">Connected</span>';
+  } else {
+    html += '<span class="badge badge-warning">Not connected</span>';
+  }
+  html += '</div>';
+
+  if (_squareStatus.connected) {
+    html += '<div style="padding:12px 16px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;">';
+    html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    html += '<div><strong style="color:var(--text);font-size:13px;">Square connected</strong>';
+    if (_squareStatus.appId) html += '<br><span style="font-size:11px;color:var(--text-muted);">App ID: ' + escHtml(_squareStatus.appId) + '</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // Mode toggle
+  var isSandbox = _squareStatus.mode === 'sandbox';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);">';
+  html += '<span style="font-size:13px;color:var(--text);font-weight:600;">Mode:</span>';
+  html += '<button onclick="setSquareMode(\'sandbox\')" class="btn btn-sm" style="' + (isSandbox ? 'background:#f59e0b;color:#fff;' : 'background:var(--card-border);color:var(--text-muted);') + '">Sandbox</button>';
+  html += '<button onclick="setSquareMode(\'production\')" class="btn btn-sm" style="' + (!isSandbox ? 'background:#22c55e;color:#fff;' : 'background:var(--card-border);color:var(--text-muted);') + '">Production</button>';
+  html += '<span style="font-size:12px;color:var(--text-muted);">' + (isSandbox ? 'Test cards only' : 'Real payments') + '</span>';
+  html += '</div>';
+
+  // Credential inputs
+  html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">';
+  html += '<input id="sq-access-token" type="password" placeholder="Access Token (EAAAl...)" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+  html += '<input id="sq-app-id" type="text" placeholder="Application ID (sq0idp-...)" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+  html += '<input id="sq-location-id" type="text" placeholder="Location ID" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:10px;">';
+  html += '<button class="btn btn-primary" id="save-sq-btn" onclick="saveSquareCredentials()">Save Credentials</button>';
+  if (_squareStatus.connected) {
+    html += '<button class="btn btn-danger btn-sm" onclick="disconnectSquare()">Disconnect</button>';
+  }
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function saveSquareCredentials() {
+  var token = getAuthToken();
+  if (!token) { toast('Please log in first', 'error'); return; }
+
+  var accessToken = (document.getElementById('sq-access-token') || {}).value.trim();
+  var appId = (document.getElementById('sq-app-id') || {}).value.trim();
+  var locationId = (document.getElementById('sq-location-id') || {}).value.trim();
+
+  if (!accessToken) { toast('Access Token is required', 'error'); return; }
+  if (!appId) { toast('Application ID is required', 'error'); return; }
+  if (!locationId) { toast('Location ID is required', 'error'); return; }
+
+  var btn = document.getElementById('save-sq-btn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+
+  fetch((window.CC_API_BASE || '') + '/api/square/save-credentials', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ access_token: accessToken, app_id: appId, location_id: locationId, mode: _squareStatus.mode })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) {
+      toast('Error: ' + data.error, 'error');
+      if (btn) { btn.textContent = 'Save Credentials'; btn.disabled = false; }
+      return;
+    }
+    toast('Square credentials saved successfully!');
+    _squareStatus.connected = true;
+    _squareStatus.appId = appId;
+    _squareStatus.locationId = locationId;
+    renderSquareSection();
+  })
+  .catch(function(err) {
+    toast('Error: ' + err.message, 'error');
+    if (btn) { btn.textContent = 'Save Credentials'; btn.disabled = false; }
+  });
+}
+
+function disconnectSquare() {
+  if (!confirm('Disconnect Square? Payments will stop working until you reconnect.')) return;
+  var token = getAuthToken();
+  fetch((window.CC_API_BASE || '') + '/api/square/disconnect', {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function() {
+    _squareStatus.connected = false;
+    _squareStatus.appId = null;
+    _squareStatus.locationId = null;
+    toast('Square disconnected');
+    renderSquareSection();
+    renderActiveProcessorSection();
+  })
+  .catch(function() { toast('Error disconnecting Square', 'error'); });
+}
+
+function setSquareMode(mode) {
+  _squareStatus.mode = mode;
+  renderSquareSection();
+}
+
+function renderActiveProcessorSection() {
+  var container = document.getElementById('active-processor-section');
+  if (!container) return;
+
+  var html = '<h4 style="margin:0 0 8px;font-size:15px;font-weight:600;color:var(--text);">Active Payment Processor</h4>';
+  html += '<p style="margin:0 0 16px;font-size:13px;color:var(--text-muted);">Choose which processor handles checkout payments for your site.</p>';
+  html += '<div style="display:flex;gap:12px;">';
+  html += '<button onclick="setActiveProcessor(\'stripe\')" class="btn btn-sm" style="' + (_activeProcessor === 'stripe' ? 'background:#635bff;color:#fff;' : 'background:var(--card-border);color:var(--text-muted);') + 'padding:10px 20px;">Stripe</button>';
+  html += '<button onclick="setActiveProcessor(\'square\')" class="btn btn-sm" style="' + (_activeProcessor === 'square' ? 'background:#006aff;color:#fff;' : 'background:var(--card-border);color:var(--text-muted);') + 'padding:10px 20px;">Square</button>';
+  html += '</div>';
+  if (_activeProcessor) {
+    html += '<p style="margin:12px 0 0;font-size:12px;color:var(--text-muted);">Active: <strong>' + escHtml(_activeProcessor.charAt(0).toUpperCase() + _activeProcessor.slice(1)) + '</strong> — checkout will use this processor.</p>';
+  }
+
+  container.innerHTML = html;
+}
+
+function setActiveProcessor(proc) {
+  var token = getAuthToken();
+  if (!token) { toast('Please log in first', 'error'); return; }
+
+  fetch((window.CC_API_BASE || '') + '/api/square/set-processor', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ processor: proc })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { toast('Error: ' + data.error, 'error'); return; }
+    _activeProcessor = proc;
+    toast('Active processor set to ' + proc);
+    renderActiveProcessorSection();
+  })
+  .catch(function(err) { toast('Error: ' + err.message, 'error'); });
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ---- Other providers (OAuth-based) ----
 
 function renderPaymentConnections() {
   var container = document.getElementById('payment-connections');
+  if (!container) return;
   var html = '';
-  ['square', 'paypal'].forEach(function(key) { html += buildConnectionCard(key); });
+  ['paypal'].forEach(function(key) { html += buildConnectionCard(key); });
   container.innerHTML = html;
 }
 

@@ -293,7 +293,9 @@
             btn.textContent = 'Log In';
             return;
           }
-          window.location.href = 'index.html';
+          var role = loginResult.user && loginResult.user.role;
+          if (role) { try { localStorage.setItem('cc_user_role', role); } catch(e) {} }
+          window.location.href = (role === 'admin') ? 'admin.html' : 'index.html';
         }
       } catch (err) {
         showError(err.message || 'Something went wrong');

@@ -16,10 +16,19 @@
     </div>
   </div>
 
-  <!-- Other Payment Processors -->
+  <!-- Square Payments -->
   <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;">
-    <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 16px;">Other Payment Processors</h3>
-    <div id="payment-connections">
+    <div id="square-settings">
+      <div style="display:flex;align-items:center;gap:12px;padding:20px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;border:3px solid var(--primary);border-top-color:transparent;animation:spin 0.8s linear infinite;"></div>
+        <span style="color:var(--text-muted);font-size:14px;">Loading Square status…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Processor Selector -->
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);padding:28px;margin-bottom:20px;">
+    <div id="active-processor-section">
       <div style="color:var(--text-muted);font-size:13px;">Loading…</div>
     </div>
   </div>

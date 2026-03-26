@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CyberCheck</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script>
+    // Auth guard — must be admin role
+    (function() {
+      var token = null;
+      try {
+        var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+        if (sbKey) {
+          var sb = JSON.parse(localStorage.getItem(sbKey));
+          if (sb && sb.access_token) token = sb.access_token;
+        }
+        if (!token) token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+      } catch(e) {}
+
+      if (!token) { window.location.replace('login.html'); return; }
+
+      // Decode JWT role (no signature check — just UI guard, API enforces real auth)
+      try {
+        var payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role !== 'admin') { window.location.replace('login.html'); return; }
+      } catch(e) {
+        // If decode fails, check localStorage fallback set during login
+        var storedRole = localStorage.getItem('cc_user_role');
+        if (storedRole !== 'admin') { window.location.replace('login.html'); return; }
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>CyberCheck</h2>
+        <div class="biz-type">Platform Admin</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Platform</div>
+        <div class="nav-item active" data-page="overview" onclick="showPage('overview')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Overview</span>
+        </div>
+        <div class="nav-item" data-page="businesses" onclick="showPage('businesses')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span>Businesses</span>
+        </div>
+        <div class="nav-item" data-page="gcr" onclick="showPage('gcr')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Gulf Coast Radar</span>
+        </div>
+        <div class="nav-item" data-page="users" onclick="showPage('users')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span>Users</span>
+        </div>
+        <div class="nav-item" data-page="settings" onclick="showPage('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span>Settings</span>
+        </div>
+      </nav>
+
+      <div style="padding:16px 20px;border-top:1px solid var(--card-border);margin-top:auto;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" id="admin-email">info@cybercheckinc.com</div>
+        <button onclick="adminLogout()" class="btn btn-outline btn-sm" style="width:100%;">Log Out</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+
+      <!-- Overview Page -->
+      <div id="page-overview" class="page-content">
+        <div class="page-header">
+          <h1>Admin Overview</h1>
+        </div>
+        <div id="admin-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px;">
+          <div class="card" style="padding:24px;text-align:center;">
+            <div style="font-size:32px;font-weight:700;color:var(--primary);" id="stat-businesses">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Businesses</div>
+          </div>
+          <div class="card" style="padding:24px;text-align:center;">
+            <div style="font-size:32px;font-weight:700;color:#22c55e;" id="stat-users">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Users</div>
+          </div>
+          <div class="card" style="padding:24px;text-align:center;">
+            <div style="font-size:32px;font-weight:700;color:#f59e0b;" id="stat-bookings">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Bookings</div>
+          </div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <h3 style="margin:0 0 16px;">Recent Businesses</h3>
+          <div id="recent-businesses"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Businesses Page -->
+      <div id="page-businesses" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Businesses</h1>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="businesses-list"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Gulf Coast Radar Page -->
+      <div id="page-gcr" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Gulf Coast Radar</h1>
+        </div>
+        <div class="card" style="padding:24px;">
+          <p style="color:var(--text-muted);font-size:14px;">GCR admin content goes here.</p>
+        </div>
+      </div>
+
+      <!-- Users Page -->
+      <div id="page-users" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Users</h1>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="users-list"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div id="page-settings" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Settings</h1>
+        </div>
+        <div class="card" style="padding:24px;">
+          <p style="color:var(--text-muted);font-size:14px;">Platform settings go here.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    var API_BASE = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+
+    function getAuthToken() {
+      try {
+        var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+        if (sbKey) {
+          var sb = JSON.parse(localStorage.getItem(sbKey));
+          if (sb && sb.access_token) return sb.access_token;
+        }
+      } catch(e) {}
+      return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || null;
+    }
+
+    function adminLogout() {
+      try { localStorage.removeItem('cc_token'); localStorage.removeItem('cc_user_role'); sessionStorage.removeItem('cc_token'); } catch(e) {}
+      window.location.href = 'login.html';
+    }
+
+    function showPage(page) {
+      document.querySelectorAll('.page-content').forEach(function(el) { el.style.display = 'none'; });
+      document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+      var pageEl = document.getElementById('page-' + page);
+      if (pageEl) pageEl.style.display = '';
+      var navEl = document.querySelector('.nav-item[data-page="' + page + '"]');
+      if (navEl) navEl.classList.add('active');
+    }
+
+    // Load overview stats
+    async function loadOverview() {
+      var token = getAuthToken();
+      if (!token) return;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) return;
+        var data = await res.json();
+        var businesses = data.businesses || data || [];
+        document.getElementById('stat-businesses').textContent = businesses.length;
+
+        var html = '<table style="width:100%;border-collapse:collapse;">';
+        html += '<thead><tr style="border-bottom:1px solid var(--card-border);">';
+        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Business</th>';
+        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Type</th>';
+        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Status</th>';
+        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Subdomain</th>';
+        html += '</tr></thead><tbody>';
+        businesses.slice(0, 10).forEach(function(b) {
+          html += '<tr style="border-bottom:1px solid var(--card-border);">';
+          html += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + (b.name || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + (b.type || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;">' + (b.status || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + (b.subdomain || '—') + '</td>';
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById('recent-businesses').innerHTML = html;
+        document.getElementById('businesses-list').innerHTML = html;
+      } catch(e) {
+        document.getElementById('recent-businesses').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Could not load data.</div>';
+      }
+    }
+
+    loadOverview();
+  </script>
+</body>
+</html>
