@@ -303,7 +303,12 @@
               sessionStorage.removeItem('cc_token');
             } catch(e) {}
           }
-          window.location.href = (role === 'admin') ? 'admin.html' : 'index.html';
+          if (role === 'admin') {
+            window.location.href = 'admin.html';
+          } else {
+            var subdomain = loginResult.business && loginResult.business.subdomain;
+            window.location.href = subdomain ? 'index.html?biz=' + subdomain + '#overview' : 'index.html';
+          }
         }
       } catch (err) {
         showError(err.message || 'Something went wrong');

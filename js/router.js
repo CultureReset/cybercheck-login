@@ -15,17 +15,19 @@ function initRouter() {
 
   // Handle back/forward
   window.addEventListener('hashchange', () => {
-    const page = window.location.hash.slice(1) || 'overview';
+    const page = window.location.hash.slice(1).split('?')[0] || 'overview';
     showPage(page);
   });
 
   // Load initial page from hash
-  const initial = window.location.hash.slice(1) || 'overview';
+  const initial = window.location.hash.slice(1).split('?')[0] || 'overview';
   navigateTo(initial);
 }
 
 function navigateTo(page) {
-  window.location.hash = page;
+  // Preserve ?biz= query param in the URL
+  var search = window.location.search;
+  window.history.pushState(null, '', window.location.pathname + search + '#' + page);
   showPage(page);
 }
 
