@@ -134,9 +134,32 @@
         <div class="page-header">
           <h1>Settings</h1>
         </div>
-        <div class="card" style="padding:24px;">
-          <p style="color:var(--text-muted);font-size:14px;">Platform settings go here.</p>
+
+        <!-- Square Platform Credentials -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+            <div style="width:48px;height:48px;border-radius:8px;background:#006aff;display:flex;align-items:center;justify-content:center;">
+              <span style="color:#fff;font-weight:800;font-size:18px;">Sq</span>
+            </div>
+            <div style="flex:1;">
+              <h4 style="margin:0;font-size:16px;">Square Platform Credentials</h4>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Your Square developer app credentials — enables clients to connect Square via OAuth</p>
+            </div>
+            <span id="sq-platform-badge" class="badge badge-warning">Not configured</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+            <input id="sq-platform-app-id" type="text" placeholder="Application ID (sq0idp-...)" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="sq-platform-secret" type="password" placeholder="Client Secret" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">
+              <span style="font-size:13px;color:var(--text);font-weight:600;">Mode:</span>
+              <button onclick="setSqPlatformMode('sandbox')" id="sq-sandbox-btn" class="btn btn-sm" style="background:#f59e0b;color:#fff;">Sandbox</button>
+              <button onclick="setSqPlatformMode('production')" id="sq-prod-btn" class="btn btn-sm" style="background:var(--card-border);color:var(--text-muted);">Production</button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="save-sq-platform-btn" onclick="saveSqPlatformCredentials()">Save Square Credentials</button>
         </div>
+
       </div>
 
     </main>
@@ -207,6 +230,38 @@
     }
 
     loadOverview();
+
+    var _sqPlatformMode = 'sandbox';
+
+    function setSqPlatformMode(mode) {
+      _sqPlatformMode = mode;
+      document.getElementById('sq-sandbox-btn').style.cssText = 'background:' + (mode === 'sandbox' ? '#f59e0b;color:#fff;' : 'var(--card-border);color:var(--text-muted);');
+      document.getElementById('sq-prod-btn').style.cssText = 'background:' + (mode === 'production' ? '#22c55e;color:#fff;' : 'var(--card-border);color:var(--text-muted);');
+    }
+
+    function saveSqPlatformCredentials() {
+      var token = getAuthToken();
+      if (!token) return;
+      var appId = document.getElementById('sq-platform-app-id').value.trim();
+      var secret = document.getElementById('sq-platform-secret').value.trim();
+      if (!appId || !secret) { alert('App ID and Client Secret are required'); return; }
+      var btn = document.getElementById('save-sq-platform-btn');
+      btn.textContent = 'Saving...'; btn.disabled = true;
+      fetch(API_BASE + '/api/admin/save-api-key', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'square', appId: appId, secret: secret, mode: _sqPlatformMode })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { alert('Error: ' + data.error); btn.textContent = 'Save Square Credentials'; btn.disabled = false; return; }
+        document.getElementById('sq-platform-badge').textContent = 'Configured';
+        document.getElementById('sq-platform-badge').className = 'badge badge-success';
+        document.getElementById('sq-platform-secret').value = '';
+        btn.textContent = 'Saved!'; setTimeout(function() { btn.textContent = 'Save Square Credentials'; btn.disabled = false; }, 2000);
+      })
+      .catch(function(e) { alert('Error: ' + e.message); btn.textContent = 'Save Square Credentials'; btn.disabled = false; });
+    }
   </script>
 </body>
 </html>
