@@ -160,8 +160,8 @@ function renderStripeSection() {
   html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/></svg>';
   html += '</div>';
   html += '<div style="flex:1;">';
-  html += '<h4 style="margin:0;font-size:16px;">Stripe Connect</h4>';
-  html += '<p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Accept payments directly to your Stripe account</p>';
+  html += '<h4 style="margin:0;font-size:16px;">Stripe Payments</h4>';
+  html += '<p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Add your Stripe key to accept payments</p>';
   html += '</div>';
   if (isConnected) {
     html += '<span class="badge badge-success">Connected</span>';
@@ -170,8 +170,8 @@ function renderStripeSection() {
   }
   html += '</div>';
 
-  if (isConnected) {
-    // ---- CONNECTED STATE ----
+  if (false && isConnected) {
+    // ---- CONNECTED STATE (OAuth — hidden while Connect account is suspended) ----
     html += '<div style="padding:16px 20px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);margin-bottom:20px;">';
     html += '<div style="display:flex;align-items:center;gap:12px;">';
     html += '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
@@ -212,32 +212,6 @@ function renderStripeSection() {
     html += '<button class="btn btn-danger btn-sm" onclick="disconnectStripe()">Disconnect</button>';
     html += '</div>';
 
-  } else {
-    // ---- NOT CONNECTED STATE ----
-    html += '<div style="text-align:center;padding:32px 20px;background:var(--bg);border:2px dashed var(--card-border);border-radius:var(--radius-lg);margin-bottom:20px;">';
-    html += '<div style="font-size:48px;margin-bottom:16px;">💳</div>';
-    html += '<h3 style="font-size:18px;margin-bottom:8px;color:var(--text);">Connect Your Stripe Account</h3>';
-    html += '<p style="font-size:14px;color:var(--text-muted);max-width:400px;margin:0 auto 24px;">Click the button below to connect your Stripe account. You\'ll be taken to Stripe\'s secure site to log in or create an account. No API keys needed — we never see your credentials.</p>';
-    html += '<button class="btn btn-primary" onclick="startStripeConnect()" style="padding:14px 32px;font-size:16px;">Connect with Stripe</button>';
-    html += '</div>';
-
-    // How it works
-    html += '<div style="padding:16px 20px;background:rgba(0,173,168,0.08);border:1px solid rgba(0,173,168,0.2);border-radius:var(--radius);margin-bottom:16px;">';
-    html += '<strong style="color:var(--text);font-size:14px;">How it works:</strong>';
-    html += '<ol style="margin:10px 0 0;padding-left:20px;color:var(--text-muted);font-size:13px;line-height:1.8;">';
-    html += '<li>Click <strong>"Connect with Stripe"</strong> above</li>';
-    html += '<li>You\'re taken to <strong>Stripe.com</strong> — log in or create a free account</li>';
-    html += '<li>Authorize CyberCheck to send payments to your account</li>';
-    html += '<li>You\'re redirected back here — that\'s it, you\'re done!</li>';
-    html += '</ol>';
-    html += '</div>';
-
-    html += '<div style="padding:12px 16px;background:rgba(0,173,168,0.05);border:1px solid rgba(0,173,168,0.15);border-radius:var(--radius);">';
-    html += '<div style="display:flex;align-items:flex-start;gap:10px;">';
-    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00ada8" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-    html += '<span style="font-size:12px;color:var(--text-dim);">We never see or store your Stripe password or API keys. We only receive a secure account ID that lets us route payments to you.</span>';
-    html += '</div>';
-    html += '</div>';
   }
 
   // ---- MANUAL KEY SECTION (via secure email link) ----
