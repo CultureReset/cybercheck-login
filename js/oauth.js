@@ -67,6 +67,7 @@ function loadConnections() {
   // Check URL for OAuth callback first (after Stripe / Google redirect)
   checkStripeCallback();
   checkGoogleCallback();
+  checkSquareCallback();
 
   // Fetch Stripe status from API
   var token = getAuthToken();
@@ -142,6 +143,22 @@ function checkStripeCallback() {
 
   if (stripeError) {
     toast('Stripe connection failed: ' + decodeURIComponent(stripeError), 'error');
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
+  }
+}
+
+function checkSquareCallback() {
+  var hash = window.location.hash;
+  var hashParams = new URLSearchParams(hash.indexOf('?') !== -1 ? hash.split('?')[1] : '');
+  var connected = hashParams.get('square_connected');
+  var squareError = hashParams.get('square_error');
+
+  if (connected === 'true') {
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
+    toast('Square connected successfully! You can now accept payments.');
+  }
+  if (squareError) {
+    toast('Square connection failed: ' + decodeURIComponent(squareError), 'error');
     window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
   }
 }
