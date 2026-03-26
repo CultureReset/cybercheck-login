@@ -253,40 +253,48 @@ function renderStripeSection() {
     html += '<span style="font-size:13px;color:var(--text);">Stripe key saved and encrypted &nbsp;·&nbsp; <strong>' + escHtml(_manualKeyStatus.mode) + '</strong></span>';
     html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove Key</button>';
     html += '</div>';
-    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Update key:</p>';
-    html += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
-    html += '<input id="stripe-direct-key" type="password" placeholder="sk_live_... or sk_test_..." style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
-    html += '<button class="btn btn-primary" onclick="saveStripeKeyDirect()" id="save-key-direct-btn" style="white-space:nowrap;">Update Key</button>';
-    html += '</div>';
+    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Update keys:</p>';
   } else {
-    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Paste the business Stripe key directly or send a secure setup link.</p>';
+    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Add Stripe keys or send a secure setup link.</p>';
+  }
+    html += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+    html += '<input id="stripe-live-key" type="password" placeholder="sk_live_..." style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+    html += '<button class="btn btn-primary" onclick="saveStripeKeyDirect(\'live\')" id="save-live-key-btn" style="white-space:nowrap;">Save Live</button>';
+    html += '</div>';
     html += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
-    html += '<input id="stripe-direct-key" type="password" placeholder="sk_live_... or sk_test_..." style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
-    html += '<button class="btn btn-primary" onclick="saveStripeKeyDirect()" id="save-key-direct-btn" style="white-space:nowrap;">Save Key</button>';
+    html += '<input id="stripe-test-key" type="password" placeholder="sk_test_..." style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
+    html += '<button class="btn btn-secondary" onclick="saveStripeKeyDirect(\'test\')" id="save-test-key-btn" style="white-space:nowrap;">Save Test</button>';
     html += '</div>';
     html += '<div style="display:flex;gap:10px;align-items:center;">';
     html += '<input id="stripe-setup-email" type="email" placeholder="Or enter email to send secure link" style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;">';
     html += '<button class="btn btn-secondary" onclick="sendStripeKeyLink()" id="send-key-link-btn" style="white-space:nowrap;">Send Link</button>';
     html += '</div>';
-  }
   html += '</div>';
 
   container.innerHTML = html;
 }
 
-function saveStripeKeyDirect() {
+function saveStripeKeyDirect(mode) {
   var token = getAuthToken();
   if (!token) { toast('Please log in first', 'error'); return; }
 
-  var keyInput = document.getElementById('stripe-direct-key');
+  var inputId = mode === 'test' ? 'stripe-test-key' : 'stripe-live-key';
+  var btnId = mode === 'test' ? 'save-test-key-btn' : 'save-live-key-btn';
+  var keyInput = document.getElementById(inputId);
   var secretKey = keyInput ? keyInput.value.trim() : '';
   if (!secretKey) { toast('Please enter a Stripe key', 'error'); return; }
+
+  var expectedPrefix = mode === 'test' ? 'sk_test_' : 'sk_live_';
+  if (!secretKey.startsWith(expectedPrefix)) {
+    toast('Key must start with ' + expectedPrefix, 'error');
+    return;
+  }
   if (!/^sk_(test|live)_.{20,}$/.test(secretKey)) {
-    toast('Invalid key format — must start with sk_test_ or sk_live_', 'error');
+    toast('Invalid key format', 'error');
     return;
   }
 
-  var btn = document.getElementById('save-key-direct-btn');
+  var btn = document.getElementById(btnId);
   if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
 
   fetch((window.CC_API_BASE || '') + '/api/stripe/save-key', {
@@ -298,16 +306,16 @@ function saveStripeKeyDirect() {
   .then(function(data) {
     if (data.error) {
       toast('Error: ' + data.error, 'error');
-      if (btn) { btn.textContent = 'Save Key'; btn.disabled = false; }
+      if (btn) { btn.textContent = mode === 'test' ? 'Save Test' : 'Save Live'; btn.disabled = false; }
       return;
     }
-    toast('Stripe key saved and encrypted.');
+    toast((mode === 'live' ? 'Live' : 'Test') + ' key saved and encrypted.');
     if (keyInput) keyInput.value = '';
     renderStripeSection();
   })
   .catch(function(err) {
     toast('Error: ' + err.message, 'error');
-    if (btn) { btn.textContent = 'Save Key'; btn.disabled = false; }
+    if (btn) { btn.textContent = mode === 'test' ? 'Save Test' : 'Save Live'; btn.disabled = false; }
   });
 }
 
