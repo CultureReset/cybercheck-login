@@ -31,6 +31,12 @@
 
 var STRIPE_CONNECT_STORAGE = 'beachside_stripe_connect';
 
+// Capture OAuth callback params immediately — before the router strips them from the hash
+var _initialHash = window.location.hash;
+var _initialHashParams = new URLSearchParams(
+  _initialHash.indexOf('?') !== -1 ? _initialHash.split('?')[1] : ''
+);
+
 // Your platform's Stripe Connect client ID (set this in production)
 var PLATFORM_CLIENT_ID = window.CC_STRIPE_CLIENT_ID || 'ca_DEMO_your_platform_client_id';
 var PLATFORM_FEE_PERCENT = 1; // Your cut: 1% of every transaction
@@ -124,14 +130,11 @@ function loadConnections() {
 function checkStripeCallback() {
   // Check URL params for Stripe OAuth callback result
   var params = new URLSearchParams(window.location.search);
-  var hash = window.location.hash;
 
-  // Also check hash params (Stripe may redirect to /dashboard/#connections?stripe_connected=true)
-  var hashParams = new URLSearchParams(hash.indexOf('?') !== -1 ? hash.split('?')[1] : '');
-
-  var connected = params.get('stripe_connected') || hashParams.get('stripe_connected');
-  var accountId = params.get('account_id') || hashParams.get('account_id');
-  var stripeError = params.get('stripe_error') || hashParams.get('stripe_error');
+  // Use _initialHashParams — captured before the router strips them
+  var connected = params.get('stripe_connected') || _initialHashParams.get('stripe_connected');
+  var accountId = params.get('account_id') || _initialHashParams.get('account_id');
+  var stripeError = params.get('stripe_error') || _initialHashParams.get('stripe_error');
 
   if (connected === 'true') {
     _stripeConnect.accountId = accountId || '';
@@ -148,10 +151,8 @@ function checkStripeCallback() {
 }
 
 function checkSquareCallback() {
-  var hash = window.location.hash;
-  var hashParams = new URLSearchParams(hash.indexOf('?') !== -1 ? hash.split('?')[1] : '');
-  var connected = hashParams.get('square_connected');
-  var squareError = hashParams.get('square_error');
+  var connected = _initialHashParams.get('square_connected');
+  var squareError = _initialHashParams.get('square_error');
 
   if (connected === 'true') {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
@@ -508,10 +509,9 @@ function startSquareConnect() {
 
 // ─── Check for Google OAuth callback result ───────────────────────────────
 function checkGoogleCallback() {
-  var hashParams = new URLSearchParams(window.location.hash.indexOf('?') !== -1 ? window.location.hash.split('?')[1] : '');
   var urlParams  = new URLSearchParams(window.location.search);
-  var connected  = hashParams.get('google_connected') || urlParams.get('google_connected');
-  var gErr       = hashParams.get('google_error')     || urlParams.get('google_error');
+  var connected  = _initialHashParams.get('google_connected') || urlParams.get('google_connected');
+  var gErr       = _initialHashParams.get('google_error')     || urlParams.get('google_error');
 
   if (connected === '1') {
     toast('Google Business Profile connected!');
