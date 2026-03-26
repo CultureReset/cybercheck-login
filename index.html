@@ -1262,9 +1262,9 @@
       window.open('../beachside-site/index.html', '_blank');
     }
 
-    function logout() {
+    async function logout() {
       if (confirm('Log out?')) {
-        if (supabase) supabase.auth.signOut().catch(function(){});
+        try { if (supabase) await supabase.auth.signOut(); } catch(e) {}
         if (typeof CC !== 'undefined' && CC.clearToken) CC.clearToken();
         if (typeof clearSupabaseCache === 'function') clearSupabaseCache();
         window.location.href = 'login.html';
