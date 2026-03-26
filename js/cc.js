@@ -53,6 +53,14 @@ const CC = (function() {
         if (!error && data && data.session) {
           clearSupabaseCache();
           await getSupabaseBusiness();
+          // Fetch role from API so admin redirect works
+          try {
+            var roleRes = await fetch(API_BASE + '/api/auth/verify', {
+              headers: { 'Authorization': 'Bearer ' + data.session.access_token }
+            });
+            var roleData = await roleRes.json();
+            if (roleData && roleData.user && roleData.user.role) data.user.role = roleData.user.role;
+          } catch(e) {}
           return { token: data.session.access_token, user: data.user };
         }
       } catch (e) { /* fall through to Express fallback */ }
@@ -1034,6 +1042,59 @@ const CC = (function() {
     disconnectSocialAccount: async function(platform) {
       var siteId = await ensureSiteId(); if (!siteId) return null;
       await supabase.from('social_media_accounts').update({ is_connected: false, access_token: null, updated_at: new Date().toISOString() }).eq('site_id', siteId).eq('platform', platform);
+      return { success: true };
+    },
+
+    // --- FAQ ---
+    getFAQs: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return [];
+      var { data } = await supabase.from('faqs').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
+      return data || [];
+    },
+
+    createFAQ: async function(faq) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var { data: last } = await supabase.from('faqs').select('sort_order').eq('site_id', siteId).order('sort_order', { ascending: false }).limit(1).single();
+      var nextSort = ((last && last.sort_order) || 0) + 1;
+      var { data } = await supabase.from('faqs').insert(Object.assign({ site_id: siteId, sort_order: nextSort }, faq)).select().single();
+      return data;
+    },
+
+    updateFAQ: async function(id, updates) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('faqs').update(updates).eq('id', id).eq('site_id', siteId);
+      return { success: true };
+    },
+
+    deleteFAQ: async function(id) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('faqs').delete().eq('id', id).eq('site_id', siteId);
+      return { success: true };
+    },
+
+    // --- Modules (site page layout) ---
+    getModules: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var { data } = await supabase.from('site_content').select('modules').eq('site_id', siteId).single();
+      return data ? data.modules : null;
+    },
+
+    updateModules: async function(modules) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('site_content').upsert({ site_id: siteId, modules: modules, updated_at: new Date().toISOString() });
+      return { success: true };
+    },
+
+    // --- Onboarding progress ---
+    getOnboarding: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var { data } = await supabase.from('onboarding_progress').select('*').eq('site_id', siteId).single();
+      return data || { step1_done: false, step2_done: false, step3_done: false, step4_done: false, step5_done: false, step6_done: false };
+    },
+
+    updateOnboarding: async function(updates) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('onboarding_progress').upsert(Object.assign({ site_id: siteId }, updates));
       return { success: true };
     }
   };
