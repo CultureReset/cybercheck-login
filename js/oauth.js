@@ -80,6 +80,8 @@ function loadConnections() {
       _stripeConnect.accountId = data.accountId || '';
       _manualKeyStatus.saved = !!data.manualKey;
       _manualKeyStatus.mode  = data.manualKey ? (data.accountName || 'saved') : '';
+      _manualKeyStatus.testKey = !!data.testKey;
+      _manualKeyStatus.stripeMode = data.stripeMode || 'live';
       try { localStorage.setItem(STRIPE_CONNECT_STORAGE, JSON.stringify(_stripeConnect)); } catch(e) {}
       renderStripeSection();
     })
@@ -250,13 +252,23 @@ function renderStripeSection() {
   if (_manualKeyStatus.saved) {
     html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);margin-bottom:12px;">';
     html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-    html += '<span style="font-size:13px;color:var(--text);">Stripe key saved and encrypted &nbsp;·&nbsp; <strong>' + escHtml(_manualKeyStatus.mode) + '</strong></span>';
-    html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove Key</button>';
+    html += '<span style="font-size:13px;color:var(--text);">Live key saved &nbsp;·&nbsp;';
+    if (_manualKeyStatus.testKey) html += ' Test key saved';
+    html += '</span>';
+    html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove</button>';
     html += '</div>';
     html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Update keys:</p>';
   } else {
     html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Add Stripe keys or send a secure setup link.</p>';
   }
+  // Mode toggle
+  var isLiveMode = _manualKeyStatus.stripeMode !== 'test';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);">';
+  html += '<span style="font-size:13px;color:var(--text);font-weight:600;">Payment Mode:</span>';
+  html += '<button onclick="setStripeMode(\'test\')" class="btn btn-sm" style="' + (!isLiveMode ? 'background:#f59e0b;color:#fff;' : 'background:var(--card-border);color:var(--text-muted);') + '">Test</button>';
+  html += '<button onclick="setStripeMode(\'live\')" class="btn btn-sm" style="' + (isLiveMode ? 'background:#22c55e;color:#fff;' : 'background:var(--card-border);color:var(--text-muted);') + '">Live</button>';
+  html += '<span style="font-size:12px;color:var(--text-muted);">' + (isLiveMode ? 'Real payments' : 'Test cards only') + '</span>';
+  html += '</div>';
     html += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
     html += '<input id="stripe-live-key" type="password" placeholder="sk_live_..." style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">';
     html += '<button class="btn btn-primary" onclick="saveStripeKeyDirect(\'live\')" id="save-live-key-btn" style="white-space:nowrap;">Save Live</button>';
@@ -317,6 +329,24 @@ function saveStripeKeyDirect(mode) {
     toast('Error: ' + err.message, 'error');
     if (btn) { btn.textContent = mode === 'test' ? 'Save Test' : 'Save Live'; btn.disabled = false; }
   });
+}
+
+function setStripeMode(mode) {
+  var token = getAuthToken();
+  if (!token) return;
+  fetch((window.CC_API_BASE || '') + '/api/stripe/set-mode', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode: mode })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { toast('Error: ' + data.error, 'error'); return; }
+    toast('Switched to ' + mode + ' mode.');
+    _manualKeyStatus.stripeMode = mode;
+    renderStripeSection();
+  })
+  .catch(function(err) { toast('Error: ' + err.message, 'error'); });
 }
 
 function sendStripeKeyLink() {
