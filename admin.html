@@ -250,7 +250,7 @@
       fetch(API_BASE + '/api/admin/save-api-key', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'square', appId: appId, secret: secret, mode: _sqPlatformMode })
+        body: JSON.stringify({ provider: 'square', appId: appId, secret: secret, mode: _sqPlatformMode })
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {

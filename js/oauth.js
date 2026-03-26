@@ -457,6 +457,10 @@ function buildConnectionCard(key) {
 }
 
 function toggleConnection(key) {
+  if (key === 'square') {
+    startSquareConnect();
+    return;
+  }
   var conn = _connections[key];
   if (!conn) return;
   if (conn.connected) {
@@ -469,6 +473,20 @@ function toggleConnection(key) {
   }
   renderPaymentConnections();
   renderGoogleConnections();
+}
+
+function startSquareConnect() {
+  var token = getAuthToken();
+  if (!token) { toast('Please log in first', 'error'); return; }
+  fetch((window.CC_API_BASE || '') + '/api/square/connect-url', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { toast('Square not available: ' + data.error, 'error'); return; }
+    window.location.href = data.url;
+  })
+  .catch(function(err) { toast('Error: ' + err.message, 'error'); });
 }
 
 // ─── Check for Google OAuth callback result ───────────────────────────────
