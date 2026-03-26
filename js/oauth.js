@@ -249,18 +249,13 @@ function renderStripeSection() {
   }
   html += '</div>';
 
-  if (_manualKeyStatus.saved) {
-    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);margin-bottom:12px;">';
-    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-    html += '<span style="font-size:13px;color:var(--text);">Live key saved &nbsp;·&nbsp;';
-    if (_manualKeyStatus.testKey) html += ' Test key saved';
-    html += '</span>';
-    html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove</button>';
-    html += '</div>';
-    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Update keys:</p>';
-  } else {
-    html += '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Add Stripe keys or send a secure setup link.</p>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
+  if (_manualKeyStatus.saved) html += '<span style="font-size:12px;color:#22c55e;">✓ Live key saved</span>&nbsp;';
+  if (_manualKeyStatus.testKey) html += '<span style="font-size:12px;color:#f59e0b;">✓ Test key saved</span>';
+  if (_manualKeyStatus.saved || _manualKeyStatus.testKey) {
+    html += '<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteStripeKey()">Remove All</button>';
   }
+  html += '</div>';
   // Mode toggle
   var isLiveMode = _manualKeyStatus.stripeMode !== 'test';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);">';
