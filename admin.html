@@ -15,7 +15,7 @@
           var sb = JSON.parse(localStorage.getItem(sbKey));
           if (sb && sb.access_token) token = sb.access_token;
         }
-        if (!token) token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+        if (!token) token = localStorage.getItem('cc_admin_token');
       } catch(e) {}
 
       if (!token) { window.location.replace('login.html'); return; }

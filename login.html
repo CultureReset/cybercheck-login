@@ -294,7 +294,15 @@
             return;
           }
           var role = loginResult.user && loginResult.user.role;
-          if (role) { try { localStorage.setItem('cc_user_role', role); } catch(e) {} }
+          if (role === 'admin' && loginResult.token) {
+            try {
+              localStorage.setItem('cc_admin_token', loginResult.token);
+              localStorage.setItem('cc_user_role', 'admin');
+              // Clear client token so admin session doesn't bleed into client dashboard
+              localStorage.removeItem('cc_token');
+              sessionStorage.removeItem('cc_token');
+            } catch(e) {}
+          }
           window.location.href = (role === 'admin') ? 'admin.html' : 'index.html';
         }
       } catch (err) {

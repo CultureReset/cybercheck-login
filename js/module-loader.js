@@ -7,7 +7,7 @@ const BUSINESS_TYPE_MODULES = {
   // Core modules (always shown)
   core: [
     'overview', 'profile', 'media', 'pages', 'customers', 'coupons',
-    'analytics', 'seo', 'social', 'reviews', 'messaging',
+    'analytics', 'seo', 'social', 'faq', 'reviews', 'messaging',
     'billing', 'theme', 'connections', 'domain', 'publish'
   ],
 
