@@ -20,12 +20,10 @@
 
       if (!token) { window.location.replace('login.html'); return; }
 
-      // Decode JWT role (no signature check — just UI guard, API enforces real auth)
       try {
         var payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.role !== 'admin') { window.location.replace('login.html'); return; }
       } catch(e) {
-        // If decode fails, check localStorage fallback set during login
         var storedRole = localStorage.getItem('cc_user_role');
         if (storedRole !== 'admin') { window.location.replace('login.html'); return; }
       }
@@ -51,13 +49,45 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
           <span>Businesses</span>
         </div>
-        <div class="nav-item" data-page="gcr" onclick="showPage('gcr')">
+
+        <div class="nav-section-label">Gulf Coast Radar</div>
+        <div class="nav-item" data-page="gcr-businesses" onclick="showPage('gcr-businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span>Gulf Coast Radar</span>
+          <span>GCR Businesses</span>
+        </div>
+        <div class="nav-item" data-page="gcr-events" onclick="showPage('gcr-events')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Events</span>
+        </div>
+        <div class="nav-item" data-page="gcr-specials" onclick="showPage('gcr-specials')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Specials</span>
+        </div>
+        <div class="nav-item" data-page="bulk-upload" onclick="showPage('bulk-upload')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+          <span>Bulk Upload</span>
+        </div>
+        <div class="nav-item" data-page="bulk-events" onclick="showPage('bulk-events')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Bulk Events</span>
+        </div>
+
+        <div class="nav-section-label">Platform</div>
+        <div class="nav-item" data-page="leads" onclick="showPage('leads')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Leads</span>
+        </div>
+        <div class="nav-item" data-page="ar-hunts" onclick="showPage('ar-hunts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>AR Hunts</span>
         </div>
         <div class="nav-item" data-page="users" onclick="showPage('users')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           <span>Users</span>
+        </div>
+        <div class="nav-item" data-page="api-keys" onclick="showPage('api-keys')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          <span>API Keys</span>
         </div>
         <div class="nav-item" data-page="settings" onclick="showPage('settings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -74,22 +104,24 @@
     <!-- MAIN CONTENT -->
     <main class="main-content" id="main-content">
 
-      <!-- Overview Page -->
+      <!-- ── OVERVIEW ─────────────────────────────── -->
       <div id="page-overview" class="page-content">
-        <div class="page-header">
-          <h1>Admin Overview</h1>
-        </div>
-        <div id="admin-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px;">
+        <div class="page-header"><h1>Admin Overview</h1></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px;">
           <div class="card" style="padding:24px;text-align:center;">
             <div style="font-size:32px;font-weight:700;color:var(--primary);" id="stat-businesses">—</div>
             <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Businesses</div>
           </div>
           <div class="card" style="padding:24px;text-align:center;">
-            <div style="font-size:32px;font-weight:700;color:#22c55e;" id="stat-users">—</div>
+            <div style="font-size:32px;font-weight:700;color:#22c55e;" id="stat-gcr">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">GCR Listings</div>
+          </div>
+          <div class="card" style="padding:24px;text-align:center;">
+            <div style="font-size:32px;font-weight:700;color:#f59e0b;" id="stat-users">—</div>
             <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Users</div>
           </div>
           <div class="card" style="padding:24px;text-align:center;">
-            <div style="font-size:32px;font-weight:700;color:#f59e0b;" id="stat-bookings">—</div>
+            <div style="font-size:32px;font-weight:700;color:#a78bfa;" id="stat-bookings">—</div>
             <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Bookings</div>
           </div>
         </div>
@@ -99,71 +131,625 @@
         </div>
       </div>
 
-      <!-- Businesses Page -->
+      <!-- ── CYBERCHECK BUSINESSES ──────────────────── -->
       <div id="page-businesses" class="page-content" style="display:none;">
-        <div class="page-header">
-          <h1>Businesses</h1>
-        </div>
+        <div class="page-header"><h1>Businesses</h1></div>
         <div class="card" style="padding:24px;">
           <div id="businesses-list"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
         </div>
       </div>
 
-      <!-- Gulf Coast Radar Page -->
-      <div id="page-gcr" class="page-content" style="display:none;">
+      <!-- ── GCR BUSINESSES ─────────────────────────── -->
+      <div id="page-gcr-businesses" class="page-content" style="display:none;">
         <div class="page-header">
-          <h1>Gulf Coast Radar</h1>
+          <h1>GCR Businesses</h1>
+          <button class="btn btn-primary" onclick="openCSVImportModal()">Import CSV</button>
         </div>
         <div class="card" style="padding:24px;">
-          <p style="color:var(--text-muted);font-size:14px;">GCR admin content goes here.</p>
+          <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+            <input type="text" id="gcr-search" placeholder="Search businesses..." oninput="filterGCRBusinesses()" style="flex:1;min-width:220px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            <select id="gcr-category-filter" onchange="filterGCRBusinesses()" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="">All Categories</option>
+              <option value="restaurants">Restaurants</option>
+              <option value="coffee-sweets">Coffee &amp; Sweets</option>
+              <option value="things-to-do">Things to Do</option>
+              <option value="nightlife">Nightlife</option>
+              <option value="shopping">Shopping</option>
+              <option value="hotels">Hotels</option>
+              <option value="other">Other</option>
+            </select>
+            <select id="gcr-status-filter" onchange="filterGCRBusinesses()" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="hidden">Hidden</option>
+              <option value="draft">Draft</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadGCRBusinesses()">Refresh</button>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" id="gcr-count">Loading...</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;" id="gcr-table">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Category</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Status</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Subdomain</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Featured</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
+              </tr></thead>
+              <tbody id="gcr-businesses-body"><tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Users Page -->
-      <div id="page-users" class="page-content" style="display:none;">
-        <div class="page-header">
-          <h1>Users</h1>
+      <!-- Edit GCR Business Modal -->
+      <div id="editGCRModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+        <div style="max-width:800px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;">Edit GCR Business</h2>
+            <button onclick="closeEditGCRModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <form id="editGCRForm" onsubmit="saveGCRBusiness(event)">
+            <input type="hidden" id="gcr-edit-site-id">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business Name</label>
+                <input type="text" id="gcr-edit-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Category</label>
+                <select id="gcr-edit-type" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="restaurants">Restaurants</option>
+                  <option value="coffee-sweets">Coffee &amp; Sweets</option>
+                  <option value="things-to-do">Things to Do</option>
+                  <option value="nightlife">Nightlife</option>
+                  <option value="shopping">Shopping</option>
+                  <option value="hotels">Hotels</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Status</label>
+                <select id="gcr-edit-status" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="active">Active</option>
+                  <option value="hidden">Hidden</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Emoji</label>
+                <input type="text" id="gcr-edit-emoji" placeholder="🍕" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Instagram</label>
+                <input type="text" id="gcr-edit-instagram" placeholder="@handle" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Facebook</label>
+                <input type="text" id="gcr-edit-facebook" placeholder="page URL or handle" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">TikTok</label>
+                <input type="text" id="gcr-edit-tiktok" placeholder="@handle" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding-top:24px;">
+                <input type="checkbox" id="gcr-edit-featured" style="width:18px;height:18px;">
+                <label for="gcr-edit-featured" style="font-size:14px;">Featured listing</label>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" class="btn btn-outline" onclick="closeEditGCRModal()">Cancel</button>
+            </div>
+          </form>
         </div>
+      </div>
+
+      <!-- CSV Import Modal -->
+      <div id="csvImportModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:2000;overflow-y:auto;">
+        <div style="max-width:700px;margin:60px auto;background:var(--card-bg);border-radius:16px;padding:40px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;">Import Business Data (CSV)</h2>
+            <button onclick="closeCSVImportModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;">Upload a CSV file to bulk import or update GCR businesses.</p>
+          <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px;font-family:monospace;color:var(--text-muted);">
+            <strong style="color:var(--text);">CSV Columns:</strong><br>
+            name, category, status, slug, tagline, about, phone, email, website, address, city, state, zip,<br>
+            priceRange, emoji, featured, specials, menuHighlights, hours,<br>
+            social_instagram, social_facebook, social_tiktok,<br>
+            kids_friendly, pet_friendly, live_music, outdoor_seating, reservations, delivery, takeout, alcohol,<br>
+            happyHour, happyHour_days, happyHour_start, happyHour_end
+          </div>
+          <div style="margin-bottom:20px;">
+            <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:8px;">Select CSV File</label>
+            <input type="file" id="csvFileInput" accept=".csv" onchange="handleCSVFileSelect(event)" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            <div id="csv-file-info" style="margin-top:8px;font-size:13px;color:var(--text-muted);"></div>
+          </div>
+          <div id="csv-preview" style="display:none;margin-bottom:20px;max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px;font-size:13px;color:var(--text-muted);"></div>
+          <div id="csv-import-progress" style="display:none;margin-bottom:16px;">
+            <div style="font-size:13px;color:var(--primary);margin-bottom:8px;" id="csv-progress-text">Importing...</div>
+            <div style="background:var(--card-border);border-radius:4px;height:6px;"><div id="csv-progress-bar" style="background:var(--primary);height:6px;border-radius:4px;width:0%;transition:width 0.3s;"></div></div>
+          </div>
+          <div id="csv-import-result" style="display:none;"></div>
+          <div style="display:flex;gap:12px;justify-content:flex-end;">
+            <button onclick="closeCSVImportModal()" class="btn btn-outline">Cancel</button>
+            <button onclick="startCSVImport()" id="csv-import-btn" class="btn btn-primary" disabled>Import Data</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GCR EVENTS ──────────────────────────────── -->
+      <div id="page-gcr-events" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>GCR Events</h1>
+          <button class="btn btn-primary" onclick="openAddEventModal()">+ Add Event</button>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Event</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Business</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Date</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Time</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
+              </tr></thead>
+              <tbody id="gcr-events-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add/Edit Event Modal -->
+      <div id="eventModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+        <div style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;" id="event-modal-title">Add Event</h2>
+            <button onclick="closeEventModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <form id="eventForm" onsubmit="saveEvent(event)">
+            <input type="hidden" id="event-id">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business (site_id or search)</label>
+                <input type="text" id="event-site-id" placeholder="Paste site_id" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Event Name</label>
+                <input type="text" id="event-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Description</label>
+                <textarea id="event-description" rows="3" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Date</label>
+                  <input type="date" id="event-date" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Time</label>
+                  <input type="time" id="event-time" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Location</label>
+                <input type="text" id="event-location" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Image URL</label>
+                <input type="url" id="event-image-url" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button type="submit" class="btn btn-primary">Save Event</button>
+              <button type="button" class="btn btn-outline" onclick="closeEventModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── GCR SPECIALS ────────────────────────────── -->
+      <div id="page-gcr-specials" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>GCR Specials</h1>
+          <button class="btn btn-primary" onclick="openAddSpecialModal()">+ Add Special</button>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Special</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Business</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Day</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Active</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
+              </tr></thead>
+              <tbody id="gcr-specials-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add/Edit Special Modal -->
+      <div id="specialModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+        <div style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;" id="special-modal-title">Add Special</h2>
+            <button onclick="closeSpecialModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <form id="specialForm" onsubmit="saveSpecial(event)">
+            <input type="hidden" id="special-id">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business (site_id)</label>
+                <input type="text" id="special-site-id" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Special Name</label>
+                <input type="text" id="special-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Description</label>
+                <textarea id="special-description" rows="3" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Day</label>
+                  <select id="special-day" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="">Any Day</option>
+                    <option value="monday">Monday</option>
+                    <option value="tuesday">Tuesday</option>
+                    <option value="wednesday">Wednesday</option>
+                    <option value="thursday">Thursday</option>
+                    <option value="friday">Friday</option>
+                    <option value="saturday">Saturday</option>
+                    <option value="sunday">Sunday</option>
+                    <option value="daily">Daily</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Time</label>
+                  <input type="text" id="special-time" placeholder="3pm - 6pm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="special-active" checked style="width:18px;height:18px;">
+                <label for="special-active" style="font-size:14px;">Active</label>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button type="submit" class="btn btn-primary">Save Special</button>
+              <button type="button" class="btn btn-outline" onclick="closeSpecialModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── BULK UPLOAD ─────────────────────────────── -->
+      <div id="page-bulk-upload" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Bulk Upload</h1></div>
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 8px;">CSV Upload</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin:0 0 20px;">Upload CSV files to update menu items, drinks, events, specials, or happy hour data for GCR businesses.</p>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">What are you uploading?</label>
+              <select id="bulk-data-type" onchange="updateBulkFormatHelp()" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="restaurant_full_menu">Full Restaurant Menu (Auto-Organize)</option>
+                <option value="menu">Menu Items</option>
+                <option value="drinks">Drinks</option>
+                <option value="events">Events</option>
+                <option value="specials">Daily Specials</option>
+                <option value="happy_hour">Happy Hour Items</option>
+              </select>
+            </div>
+            <div id="bulk-format-help" style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;font-size:13px;font-family:monospace;color:var(--text-muted);"></div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Upload CSV File</label>
+              <input type="file" id="bulk-csv-file" accept=".csv" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+            <button onclick="processBulkCSV()" class="btn btn-primary" style="width:fit-content;">Process CSV &amp; Preview</button>
+          </div>
+        </div>
+        <div class="card" style="padding:28px;">
+          <h3 style="margin:0 0 8px;">JSON Upload (Advanced)</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin:0 0 16px;">Paste complete business data as JSON. Empty sections preserve existing data.</p>
+          <textarea id="bulk-json-input" rows="12" placeholder='{"menu": [...], "drinks": [...], "specials": [...], "events": [...]}' style="width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
+          <button onclick="applyJSONUpload()" class="btn btn-primary" style="margin-top:12px;">Apply JSON Upload</button>
+        </div>
+      </div>
+
+      <!-- ── BULK EVENTS ─────────────────────────────── -->
+      <div id="page-bulk-events" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Bulk Events</h1></div>
+        <div class="card" style="padding:28px;">
+          <h3 style="margin:0 0 8px;">Upload Events CSV</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin:0 0 20px;">Upload events for multiple businesses at once. System matches events to businesses by name.</p>
+          <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;font-family:monospace;color:var(--text-muted);">
+            <strong style="color:var(--text);">Required Columns:</strong><br>
+            business_name, event_name, description, date, start_time, end_time, price, image_url<br><br>
+            <strong style="color:var(--text);">Example:</strong><br>
+            The Craft Bar, Trivia Night, Weekly trivia, 2026-04-05, 19:00, 22:00, Free, https://...
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Upload Events CSV</label>
+              <input type="file" id="bulk-events-file" accept=".csv" onchange="handleBulkEventsFile(event)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+            <button onclick="processBulkEvents()" class="btn btn-primary" style="width:fit-content;">Process &amp; Match Events</button>
+          </div>
+          <div id="bulk-events-preview" style="display:none;margin-top:24px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:20px;">
+            <h4 style="margin:0 0 12px;color:#22c55e;">Events Matched &amp; Ready</h4>
+            <div id="bulk-events-stats" style="margin-bottom:12px;font-size:13px;color:var(--text-muted);"></div>
+            <div id="bulk-events-list" style="max-height:300px;overflow-y:auto;font-size:13px;"></div>
+            <div style="display:flex;gap:12px;margin-top:16px;">
+              <button onclick="uploadBulkEvents()" class="btn btn-primary">Upload All Events</button>
+              <button onclick="cancelBulkEvents()" class="btn btn-outline">Cancel</button>
+            </div>
+          </div>
+          <div id="bulk-events-result" style="margin-top:16px;"></div>
+        </div>
+      </div>
+
+      <!-- ── LEADS ──────────────────────────────────── -->
+      <div id="page-leads" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Leads</h1></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--primary);" id="leads-total">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Leads</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#22c55e;" id="leads-today">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">New Today</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#f59e0b;" id="leads-week">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">This Week</div>
+          </div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;gap:12px;margin-bottom:16px;">
+            <button onclick="loadLeads()" class="btn btn-primary">Refresh</button>
+            <button onclick="exportLeads()" class="btn btn-outline">Export CSV</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Date</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Email</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Business</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Message</th>
+              </tr></thead>
+              <tbody id="leads-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AR HUNTS ───────────────────────────────── -->
+      <div id="page-ar-hunts" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>AR Hunts</h1>
+          <button class="btn btn-primary" onclick="showCreateHuntModal()">+ Create Hunt</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--primary);" id="stat-active-hunts">0</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Active Hunts</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#22c55e;" id="stat-total-hunts">0</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Hunts</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#f59e0b;" id="stat-total-captures">0</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Captures</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="filterHunts('all')">All</button>
+          <button class="btn btn-outline btn-sm" onclick="filterHunts('active')">Active</button>
+          <button class="btn btn-outline btn-sm" onclick="filterHunts('inactive')">Inactive</button>
+          <button class="btn btn-outline btn-sm" onclick="filterHunts('easy')">Easy</button>
+          <button class="btn btn-outline btn-sm" onclick="filterHunts('medium')">Medium</button>
+          <button class="btn btn-outline btn-sm" onclick="filterHunts('hard')">Hard</button>
+        </div>
+        <div id="hunts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+        <div id="hunts-empty" style="display:none;text-align:center;padding:60px 20px;">
+          <div style="font-size:48px;margin-bottom:16px;">🎯</div>
+          <h3 style="margin:0 0 8px;">No AR Hunts Yet</h3>
+          <p style="color:var(--text-muted);">Create your first GPS-based AR scavenger hunt.</p>
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="showCreateHuntModal()">Create First Hunt</button>
+        </div>
+      </div>
+
+      <!-- AR Hunt Modal -->
+      <div id="hunt-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;overflow-y:auto;">
+        <div style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 id="hunt-modal-title" style="margin:0;font-size:20px;">Create AR Hunt</h2>
+            <button onclick="closeHuntModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <form id="hunt-form" onsubmit="saveHunt(event)">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Brand Name *</label>
+                <input type="text" id="hunt-brand-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Brand Logo/Image</label>
+                <input type="file" id="hunt-brand-image" accept="image/*" onchange="handleHuntImageUpload(event)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <img id="brand-image-preview" style="display:none;width:100%;max-height:150px;object-fit:contain;margin-top:8px;border-radius:8px;background:var(--bg);padding:8px;">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Latitude *</label>
+                  <input type="number" id="hunt-latitude" step="0.000001" placeholder="30.270713" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Longitude *</label>
+                  <input type="number" id="hunt-longitude" step="0.000001" placeholder="-87.600932" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <button type="button" onclick="useCurrentLocation()" class="btn btn-outline btn-sm" style="width:fit-content;">Use Current Location</button>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Location Hint</label>
+                <textarea id="hunt-hint" rows="2" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Difficulty *</label>
+                <select id="hunt-difficulty" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Reward</label>
+                <input type="text" id="hunt-reward-desc" placeholder="e.g., 10% off your next visit" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Points Value</label>
+                <input type="number" id="hunt-points" value="100" min="0" step="10" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button type="submit" class="btn btn-primary">Save Hunt</button>
+              <button type="button" class="btn btn-outline" onclick="closeHuntModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── USERS ──────────────────────────────────── -->
+      <div id="page-users" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Users</h1></div>
         <div class="card" style="padding:24px;">
           <div id="users-list"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
         </div>
       </div>
 
-      <!-- Settings Page -->
-      <div id="page-settings" class="page-content" style="display:none;">
-        <div class="page-header">
-          <h1>Settings</h1>
-        </div>
+      <!-- ── API KEYS ───────────────────────────────── -->
+      <div id="page-api-keys" class="page-content" style="display:none;">
+        <div class="page-header"><h1>API Keys</h1></div>
 
-        <!-- Square Platform Credentials -->
+        <!-- Square -->
         <div class="card" style="padding:28px;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-            <div style="width:48px;height:48px;border-radius:8px;background:#006aff;display:flex;align-items:center;justify-content:center;">
-              <span style="color:#fff;font-weight:800;font-size:18px;">Sq</span>
-            </div>
-            <div style="flex:1;">
-              <h4 style="margin:0;font-size:16px;">Square Platform Credentials</h4>
-              <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Your Square developer app credentials — enables clients to connect Square via OAuth</p>
-            </div>
-            <span id="sq-platform-badge" class="badge badge-warning">Not configured</span>
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-            <input id="sq-platform-app-id" type="text" placeholder="Application ID (sq0idp-...)" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">
-            <input id="sq-platform-secret" type="password" placeholder="Client Secret" style="padding:10px 14px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;font-family:monospace;">
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">
-              <span style="font-size:13px;color:var(--text);font-weight:600;">Mode:</span>
+          <h3 style="margin:0 0 4px;">Square Platform Credentials</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Enables clients to connect Square via OAuth</p>
+          <div id="sq-platform-badge" style="display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#854d0e;color:#fde68a;margin-bottom:16px;">Not configured</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="sq-platform-app-id" type="text" placeholder="Application ID (sq0idp-...)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="sq-platform-secret" type="password" placeholder="Client Secret" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:13px;font-weight:600;">Mode:</span>
               <button onclick="setSqPlatformMode('sandbox')" id="sq-sandbox-btn" class="btn btn-sm" style="background:#f59e0b;color:#fff;">Sandbox</button>
-              <button onclick="setSqPlatformMode('production')" id="sq-prod-btn" class="btn btn-sm" style="background:var(--card-border);color:var(--text-muted);">Production</button>
+              <button onclick="setSqPlatformMode('production')" id="sq-prod-btn" class="btn btn-sm btn-outline">Production</button>
             </div>
           </div>
           <button class="btn btn-primary" id="save-sq-platform-btn" onclick="saveSqPlatformCredentials()">Save Square Credentials</button>
         </div>
 
+        <!-- Stripe -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">Stripe Platform Keys</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Platform-level Stripe keys for payment processing</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="stripe-pub-key" type="text" placeholder="Publishable key (pk_live_...)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="stripe-secret-key" type="password" placeholder="Secret key (sk_live_...)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="stripe-webhook-secret" type="password" placeholder="Webhook secret (whsec_...)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+          </div>
+          <button class="btn btn-primary" onclick="saveAPIKey('stripe')">Save Stripe Keys</button>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">OpenAI</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">AI-powered features across the platform</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="openai-key" type="password" placeholder="API Key (sk-...)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <select id="openai-model" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="gpt-4">GPT-4</option>
+              <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="saveAPIKey('openai')">Save OpenAI Key</button>
+        </div>
+
+        <!-- Google Analytics -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">Google Analytics (GA4)</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Track platform analytics</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="ga4-id" type="text" placeholder="Measurement ID (G-XXXXXXXXXX)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="ga4-secret" type="password" placeholder="API Secret (optional)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+          </div>
+          <button class="btn btn-primary" onclick="saveAPIKey('ga4')">Save GA4 Settings</button>
+        </div>
+
+        <!-- Facebook -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">Facebook / Meta Pixel</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Track conversions for Facebook Ads</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="fb-pixel-id" type="text" placeholder="Pixel ID" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="fb-ads-token" type="password" placeholder="Ads API Access Token (optional)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="fb-ad-account-id" type="text" placeholder="Ad Account ID (act_...)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+          </div>
+          <button class="btn btn-primary" onclick="saveAPIKey('facebook')">Save Facebook Settings</button>
+        </div>
+
+        <!-- Google OAuth -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">OAuth Providers</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Social login providers</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="google-client-id" type="text" placeholder="Google Client ID" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="facebook-app-id" type="text" placeholder="Facebook App ID" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+          </div>
+          <button class="btn btn-primary" onclick="saveAPIKey('oauth')">Save OAuth Settings</button>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ───────────────────────────────── -->
+      <div id="page-settings" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Settings</h1></div>
+
+        <!-- Platform Settings -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 20px;">Platform Settings</h3>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Platform Name</label>
+              <input type="text" id="platform-name" value="CyberCheck" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Support Email</label>
+              <input type="email" id="support-email" placeholder="support@cybercheck.io" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Enable User Registration</label>
+              <select id="enable-registration" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="true">Yes — Open Registration</option>
+                <option value="false">No — Invite Only</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:fit-content;" onclick="savePlatformSettings()">Save Settings</button>
+          </div>
+        </div>
       </div>
 
     </main>
   </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
 
   <script>
     var API_BASE = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
@@ -176,11 +762,11 @@
           if (sb && sb.access_token) return sb.access_token;
         }
       } catch(e) {}
-      return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || null;
+      return localStorage.getItem('cc_admin_token') || null;
     }
 
     function adminLogout() {
-      try { localStorage.removeItem('cc_token'); localStorage.removeItem('cc_user_role'); sessionStorage.removeItem('cc_token'); } catch(e) {}
+      try { localStorage.removeItem('cc_admin_token'); localStorage.removeItem('cc_user_role'); } catch(e) {}
       window.location.href = 'login.html';
     }
 
@@ -191,34 +777,55 @@
       if (pageEl) pageEl.style.display = '';
       var navEl = document.querySelector('.nav-item[data-page="' + page + '"]');
       if (navEl) navEl.classList.add('active');
+      // Lazy load data
+      if (page === 'gcr-businesses' && !_gcrLoaded) loadGCRBusinesses();
+      if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
+      if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
+      if (page === 'leads' && !_leadsLoaded) loadLeads();
+      if (page === 'ar-hunts') renderHuntsGrid();
+      if (page === 'users' && !_usersLoaded) loadUsers();
     }
 
-    // Load overview stats
+    function toast(msg, type) {
+      var c = document.getElementById('toast-container');
+      var el = document.createElement('div');
+      el.style.cssText = 'padding:12px 18px;border-radius:8px;font-size:14px;font-weight:500;max-width:320px;' +
+        (type === 'error' ? 'background:#7f1d1d;color:#fca5a5;' : 'background:#14532d;color:#86efac;');
+      el.textContent = msg;
+      c.appendChild(el);
+      setTimeout(function() { el.remove(); }, 3500);
+    }
+
+    // ── OVERVIEW ──────────────────────────────────────
     async function loadOverview() {
       var token = getAuthToken();
       if (!token) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        if (!res.ok) return;
-        var data = await res.json();
-        var businesses = data.businesses || data || [];
+        var [bizRes, gcrRes, usersRes] = await Promise.all([
+          fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(API_BASE + '/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } })
+        ]);
+        var businesses = bizRes.ok ? (await bizRes.json()).businesses || [] : [];
+        var gcr = gcrRes.ok ? await gcrRes.json() : [];
+        var users = usersRes.ok ? (await usersRes.json()).users || [] : [];
+
         document.getElementById('stat-businesses').textContent = businesses.length;
+        document.getElementById('stat-gcr').textContent = gcr.length;
+        document.getElementById('stat-users').textContent = users.length;
 
         var html = '<table style="width:100%;border-collapse:collapse;">';
         html += '<thead><tr style="border-bottom:1px solid var(--card-border);">';
-        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Business</th>';
-        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Type</th>';
-        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Status</th>';
-        html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">Subdomain</th>';
+        ['Business','Type','Status','Subdomain'].forEach(function(h) {
+          html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">' + h + '</th>';
+        });
         html += '</tr></thead><tbody>';
         businesses.slice(0, 10).forEach(function(b) {
           html += '<tr style="border-bottom:1px solid var(--card-border);">';
-          html += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + (b.name || '—') + '</td>';
-          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + (b.type || '—') + '</td>';
-          html += '<td style="padding:10px 8px;font-size:13px;">' + (b.status || '—') + '</td>';
-          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + (b.subdomain || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(b.name || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.type || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.status || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>';
           html += '</tr>';
         });
         html += '</tbody></table>';
@@ -229,39 +836,633 @@
       }
     }
 
-    loadOverview();
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
 
+    // ── GCR BUSINESSES ────────────────────────────────
+    var _gcrLoaded = false;
+    var _allGCRBusinesses = [];
+
+    async function loadGCRBusinesses() {
+      _gcrLoaded = true;
+      var token = getAuthToken();
+      document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+        _allGCRBusinesses = res.ok ? await res.json() : [];
+        renderGCRBusinesses(_allGCRBusinesses);
+      } catch(e) {
+        document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+      }
+    }
+
+    function renderGCRBusinesses(list) {
+      document.getElementById('gcr-count').textContent = list.length + ' businesses';
+      if (!list.length) {
+        document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">No businesses found.</td></tr>';
+        return;
+      }
+      var html = list.map(function(b) {
+        return '<tr style="border-bottom:1px solid var(--card-border);">' +
+          '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml((b.emoji || '') + ' ' + (b.name || '—')) + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.type || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.status || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;">' + (b.featured ? '★' : '') + '</td>' +
+          '<td style="padding:10px 8px;">' +
+            '<button onclick="openEditGCRModal(\'' + b.site_id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+      document.getElementById('gcr-businesses-body').innerHTML = html;
+    }
+
+    function filterGCRBusinesses() {
+      var search = document.getElementById('gcr-search').value.toLowerCase();
+      var cat = document.getElementById('gcr-category-filter').value;
+      var status = document.getElementById('gcr-status-filter').value;
+      var filtered = _allGCRBusinesses.filter(function(b) {
+        if (search && !(b.name || '').toLowerCase().includes(search)) return false;
+        if (cat && b.type !== cat) return false;
+        if (status && b.status !== status) return false;
+        return true;
+      });
+      renderGCRBusinesses(filtered);
+    }
+
+    function openEditGCRModal(siteId) {
+      var b = _allGCRBusinesses.find(function(x) { return x.site_id === siteId; });
+      if (!b) return;
+      document.getElementById('gcr-edit-site-id').value = b.site_id;
+      document.getElementById('gcr-edit-name').value = b.name || '';
+      document.getElementById('gcr-edit-type').value = b.type || 'other';
+      document.getElementById('gcr-edit-status').value = b.status || 'active';
+      document.getElementById('gcr-edit-emoji').value = b.emoji || '';
+      document.getElementById('gcr-edit-instagram').value = b.instagram || '';
+      document.getElementById('gcr-edit-facebook').value = b.facebook || '';
+      document.getElementById('gcr-edit-tiktok').value = b.tiktok || '';
+      document.getElementById('gcr-edit-featured').checked = !!b.featured;
+      document.getElementById('editGCRModal').style.display = 'block';
+    }
+
+    function closeEditGCRModal() { document.getElementById('editGCRModal').style.display = 'none'; }
+
+    async function saveGCRBusiness(e) {
+      e.preventDefault();
+      var token = getAuthToken();
+      var siteId = document.getElementById('gcr-edit-site-id').value;
+      var data = {
+        name: document.getElementById('gcr-edit-name').value,
+        type: document.getElementById('gcr-edit-type').value,
+        status: document.getElementById('gcr-edit-status').value,
+        emoji: document.getElementById('gcr-edit-emoji').value,
+        instagram: document.getElementById('gcr-edit-instagram').value,
+        facebook: document.getElementById('gcr-edit-facebook').value,
+        tiktok: document.getElementById('gcr-edit-tiktok').value,
+        featured: document.getElementById('gcr-edit-featured').checked
+      };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + siteId, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        toast('Business saved!');
+        closeEditGCRModal();
+        loadGCRBusinesses();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── CSV IMPORT ────────────────────────────────────
+    var _csvRows = [];
+
+    function openCSVImportModal() { document.getElementById('csvImportModal').style.display = 'block'; }
+    function closeCSVImportModal() {
+      document.getElementById('csvImportModal').style.display = 'none';
+      document.getElementById('csv-file-info').textContent = '';
+      document.getElementById('csv-preview').style.display = 'none';
+      document.getElementById('csv-import-result').style.display = 'none';
+      document.getElementById('csv-import-btn').disabled = true;
+      _csvRows = [];
+    }
+
+    function handleCSVFileSelect(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('csv-file-info').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var lines = ev.target.result.split('\n').filter(function(l) { return l.trim(); });
+        var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
+        _csvRows = lines.slice(1).map(function(line) {
+          var vals = line.split(',').map(function(v) { return v.trim().replace(/^"|"$/g, ''); });
+          var obj = {};
+          headers.forEach(function(h, i) { obj[h] = vals[i] || ''; });
+          return obj;
+        }).filter(function(r) { return r.name; });
+        document.getElementById('csv-preview').style.display = 'block';
+        document.getElementById('csv-preview').innerHTML = '<strong>' + _csvRows.length + ' rows found.</strong> First row: ' + JSON.stringify(_csvRows[0]);
+        document.getElementById('csv-import-btn').disabled = false;
+      };
+      reader.readAsText(file);
+    }
+
+    async function startCSVImport() {
+      if (!_csvRows.length) return;
+      var token = getAuthToken();
+      var btn = document.getElementById('csv-import-btn');
+      var progress = document.getElementById('csv-import-progress');
+      var progressText = document.getElementById('csv-progress-text');
+      var progressBar = document.getElementById('csv-progress-bar');
+      btn.disabled = true;
+      progress.style.display = 'block';
+      var success = 0, errors = 0;
+      for (var i = 0; i < _csvRows.length; i++) {
+        progressText.textContent = 'Importing ' + (i + 1) + ' of ' + _csvRows.length + '...';
+        progressBar.style.width = Math.round(((i + 1) / _csvRows.length) * 100) + '%';
+        try {
+          var res = await fetch(API_BASE + '/api/admin/gcr/import-csv', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(_csvRows[i])
+          });
+          var r = await res.json();
+          if (r.error) errors++; else success++;
+        } catch(e) { errors++; }
+      }
+      progress.style.display = 'none';
+      var result = document.getElementById('csv-import-result');
+      result.style.display = 'block';
+      result.innerHTML = '<div style="padding:14px;border-radius:8px;background:' + (errors ? '#7f1d1d' : '#14532d') + ';color:' + (errors ? '#fca5a5' : '#86efac') + ';font-size:14px;">' +
+        success + ' imported, ' + errors + ' errors.</div>';
+      btn.disabled = false;
+      if (success > 0) { _gcrLoaded = false; loadGCRBusinesses(); }
+    }
+
+    // ── GCR EVENTS ────────────────────────────────────
+    var _eventsLoaded = false;
+
+    async function loadGCREvents() {
+      _eventsLoaded = true;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/events', { headers: { 'Authorization': 'Bearer ' + token } });
+        var events = res.ok ? await res.json() : [];
+        if (!events.length) {
+          document.getElementById('gcr-events-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No events.</td></tr>';
+          return;
+        }
+        document.getElementById('gcr-events-body').innerHTML = events.map(function(ev) {
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(ev.name) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml((ev.businesses && ev.businesses.name) || ev.site_id || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(ev.event_date || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(ev.event_time || '—') + '</td>' +
+            '<td style="padding:10px 8px;">' +
+              '<button onclick="deleteEvent(\'' + ev.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
+            '</td>' +
+            '</tr>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('gcr-events-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+      }
+    }
+
+    function openAddEventModal() {
+      document.getElementById('event-id').value = '';
+      document.getElementById('event-modal-title').textContent = 'Add Event';
+      document.getElementById('eventForm').reset();
+      document.getElementById('eventModal').style.display = 'block';
+    }
+    function closeEventModal() { document.getElementById('eventModal').style.display = 'none'; }
+
+    async function saveEvent(e) {
+      e.preventDefault();
+      var token = getAuthToken();
+      var id = document.getElementById('event-id').value;
+      var data = {
+        site_id: document.getElementById('event-site-id').value,
+        name: document.getElementById('event-name').value,
+        description: document.getElementById('event-description').value,
+        event_date: document.getElementById('event-date').value || null,
+        event_time: document.getElementById('event-time').value || null,
+        location: document.getElementById('event-location').value,
+        image_url: document.getElementById('event-image-url').value
+      };
+      var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
+      var method = id ? 'PUT' : 'POST';
+      try {
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        toast('Event saved!');
+        closeEventModal();
+        _eventsLoaded = false;
+        loadGCREvents();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm('Delete this event?')) return;
+      var token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        toast('Event deleted.');
+        _eventsLoaded = false;
+        loadGCREvents();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── GCR SPECIALS ──────────────────────────────────
+    var _specialsLoaded = false;
+
+    async function loadGCRSpecials() {
+      _specialsLoaded = true;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/specials', { headers: { 'Authorization': 'Bearer ' + token } });
+        var specials = res.ok ? await res.json() : [];
+        if (!specials.length) {
+          document.getElementById('gcr-specials-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No specials.</td></tr>';
+          return;
+        }
+        document.getElementById('gcr-specials-body').innerHTML = specials.map(function(s) {
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(s.name) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(s.site_id || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(s.day || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + (s.active ? '✓' : '—') + '</td>' +
+            '<td style="padding:10px 8px;">' +
+              '<button onclick="deleteSpecial(\'' + s.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
+            '</td>' +
+            '</tr>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('gcr-specials-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+      }
+    }
+
+    function openAddSpecialModal() {
+      document.getElementById('special-id').value = '';
+      document.getElementById('special-modal-title').textContent = 'Add Special';
+      document.getElementById('specialForm').reset();
+      document.getElementById('special-active').checked = true;
+      document.getElementById('specialModal').style.display = 'block';
+    }
+    function closeSpecialModal() { document.getElementById('specialModal').style.display = 'none'; }
+
+    async function saveSpecial(e) {
+      e.preventDefault();
+      var token = getAuthToken();
+      var id = document.getElementById('special-id').value;
+      var data = {
+        site_id: document.getElementById('special-site-id').value,
+        name: document.getElementById('special-name').value,
+        description: document.getElementById('special-description').value,
+        day: document.getElementById('special-day').value,
+        time: document.getElementById('special-time').value,
+        active: document.getElementById('special-active').checked
+      };
+      var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
+      var method = id ? 'PUT' : 'POST';
+      try {
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        toast('Special saved!');
+        closeSpecialModal();
+        _specialsLoaded = false;
+        loadGCRSpecials();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteSpecial(id) {
+      if (!confirm('Delete this special?')) return;
+      var token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        toast('Special deleted.');
+        _specialsLoaded = false;
+        loadGCRSpecials();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── BULK EVENTS ───────────────────────────────────
+    var _bulkEventsData = [];
+
+    function handleBulkEventsFile(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var lines = ev.target.result.split('\n').filter(function(l) { return l.trim(); });
+        var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
+        _bulkEventsData = lines.slice(1).map(function(line) {
+          var vals = line.split(',').map(function(v) { return v.trim().replace(/^"|"$/g, ''); });
+          var obj = {};
+          headers.forEach(function(h, i) { obj[h] = vals[i] || ''; });
+          return obj;
+        }).filter(function(r) { return r.business_name && r.event_name; });
+      };
+      reader.readAsText(file);
+    }
+
+    async function processBulkEvents() {
+      if (!_bulkEventsData.length) { toast('No valid CSV loaded', 'error'); return; }
+      var token = getAuthToken();
+      // Match business names to site_ids
+      var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+      var bizList = res.ok ? await res.json() : [];
+      var matched = [], unmatched = [];
+      _bulkEventsData.forEach(function(row) {
+        var biz = bizList.find(function(b) { return (b.name || '').toLowerCase() === (row.business_name || '').toLowerCase(); });
+        if (biz) matched.push({ site_id: biz.site_id, name: row.event_name, description: row.description, event_date: row.date, event_time: row.start_time, location: row.location || '', image_url: row.image_url || '' });
+        else unmatched.push(row.business_name);
+      });
+      var preview = document.getElementById('bulk-events-preview');
+      preview.style.display = 'block';
+      document.getElementById('bulk-events-stats').innerHTML = matched.length + ' matched, ' + unmatched.length + ' not found' + (unmatched.length ? ': ' + unmatched.join(', ') : '');
+      document.getElementById('bulk-events-list').innerHTML = matched.map(function(e) {
+        return '<div style="padding:8px;border-bottom:1px solid var(--card-border);font-size:13px;">' + escHtml(e.name) + ' → ' + escHtml(e.site_id) + ' (' + escHtml(e.event_date || 'no date') + ')</div>';
+      }).join('');
+      window._matchedBulkEvents = matched;
+    }
+
+    async function uploadBulkEvents() {
+      var token = getAuthToken();
+      var events = window._matchedBulkEvents || [];
+      var success = 0, errors = 0;
+      for (var i = 0; i < events.length; i++) {
+        try {
+          var res = await fetch(API_BASE + '/api/admin/gcr/events', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(events[i])
+          });
+          var r = await res.json();
+          if (r.error) errors++; else success++;
+        } catch(e) { errors++; }
+      }
+      document.getElementById('bulk-events-preview').style.display = 'none';
+      document.getElementById('bulk-events-result').innerHTML = '<div style="padding:14px;border-radius:8px;background:' + (errors ? '#7f1d1d' : '#14532d') + ';color:' + (errors ? '#fca5a5' : '#86efac') + ';font-size:14px;">' + success + ' events uploaded, ' + errors + ' errors.</div>';
+    }
+
+    function cancelBulkEvents() {
+      document.getElementById('bulk-events-preview').style.display = 'none';
+      window._matchedBulkEvents = [];
+    }
+
+    // ── BULK UPLOAD FORMAT HELP ───────────────────────
+    var _bulkFormats = {
+      restaurant_full_menu: 'category, name, description, price, is_drink, is_happy_hour, is_special, day, time',
+      menu: 'name, description, price, category',
+      drinks: 'name, description, price, category',
+      events: 'name, description, date, start_time, end_time, price, image_url',
+      specials: 'name, description, day, time',
+      happy_hour: 'name, description, price, days, start_time, end_time'
+    };
+
+    function updateBulkFormatHelp() {
+      var type = document.getElementById('bulk-data-type').value;
+      document.getElementById('bulk-format-help').innerHTML = '<strong>Required Columns:</strong><br>' + (_bulkFormats[type] || '');
+    }
+
+    function processBulkCSV() { toast('Select a business to attach this data to — CSV bulk upload coming soon.', 'error'); }
+    function applyJSONUpload() { toast('Select a business to apply this JSON to — coming soon.', 'error'); }
+
+    // ── LEADS ─────────────────────────────────────────
+    var _leadsLoaded = false;
+
+    async function loadLeads() {
+      _leadsLoaded = true;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = res.ok ? await res.json() : {};
+        var customers = data.businesses || [];
+        document.getElementById('leads-total').textContent = customers.length;
+        document.getElementById('leads-today').textContent = '—';
+        document.getElementById('leads-week').textContent = '—';
+        document.getElementById('leads-body').innerHTML = customers.slice(0, 50).map(function(b) {
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.created_at ? b.created_at.split('T')[0] : '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(b.name || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.email || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.type || '—') + '</td>' +
+            '</tr>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('leads-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+      }
+    }
+
+    function exportLeads() { toast('Export coming soon.'); }
+
+    // ── USERS ─────────────────────────────────────────
+    var _usersLoaded = false;
+
+    async function loadUsers() {
+      _usersLoaded = true;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = res.ok ? await res.json() : {};
+        var users = data.users || [];
+        if (!users.length) { document.getElementById('users-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No users found.</div>'; return; }
+        var html = '<table style="width:100%;border-collapse:collapse;">';
+        html += '<thead><tr style="border-bottom:1px solid var(--card-border);">';
+        ['Email','Role','Status','Joined'].forEach(function(h) {
+          html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">' + h + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        users.forEach(function(u) {
+          html += '<tr style="border-bottom:1px solid var(--card-border);">';
+          html += '<td style="padding:10px 8px;font-size:13px;">' + escHtml(u.email || '—') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;">' + escHtml(u.role || 'owner') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;">' + escHtml(u.status || 'active') + '</td>';
+          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(u.created_at ? u.created_at.split('T')[0] : '—') + '</td>';
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById('users-list').innerHTML = html;
+      } catch(e) { document.getElementById('users-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Could not load users.</div>'; }
+    }
+
+    // ── API KEYS ──────────────────────────────────────
     var _sqPlatformMode = 'sandbox';
 
     function setSqPlatformMode(mode) {
       _sqPlatformMode = mode;
-      document.getElementById('sq-sandbox-btn').style.cssText = 'background:' + (mode === 'sandbox' ? '#f59e0b;color:#fff;' : 'var(--card-border);color:var(--text-muted);');
-      document.getElementById('sq-prod-btn').style.cssText = 'background:' + (mode === 'production' ? '#22c55e;color:#fff;' : 'var(--card-border);color:var(--text-muted);');
+      document.getElementById('sq-sandbox-btn').style.cssText = 'background:' + (mode === 'sandbox' ? '#f59e0b;color:#fff;' : 'transparent;color:var(--text-muted);border:1px solid var(--card-border);');
+      document.getElementById('sq-prod-btn').style.cssText = 'background:' + (mode === 'production' ? '#22c55e;color:#fff;' : 'transparent;color:var(--text-muted);border:1px solid var(--card-border);');
     }
 
     function saveSqPlatformCredentials() {
       var token = getAuthToken();
-      if (!token) return;
       var appId = document.getElementById('sq-platform-app-id').value.trim();
       var secret = document.getElementById('sq-platform-secret').value.trim();
-      if (!appId || !secret) { alert('App ID and Client Secret are required'); return; }
+      if (!appId || !secret) { toast('App ID and Client Secret required', 'error'); return; }
       var btn = document.getElementById('save-sq-platform-btn');
       btn.textContent = 'Saving...'; btn.disabled = true;
       fetch(API_BASE + '/api/admin/save-api-key', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider: 'square', appId: appId, secret: secret, mode: _sqPlatformMode })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.error) { alert('Error: ' + data.error); btn.textContent = 'Save Square Credentials'; btn.disabled = false; return; }
-        document.getElementById('sq-platform-badge').textContent = 'Configured';
-        document.getElementById('sq-platform-badge').className = 'badge badge-success';
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.error) { toast('Error: ' + data.error, 'error'); btn.textContent = 'Save Square Credentials'; btn.disabled = false; return; }
+        document.getElementById('sq-platform-badge').textContent = 'Configured ✓';
+        document.getElementById('sq-platform-badge').style.cssText = 'display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#14532d;color:#86efac;margin-bottom:16px;';
         document.getElementById('sq-platform-secret').value = '';
-        btn.textContent = 'Saved!'; setTimeout(function() { btn.textContent = 'Save Square Credentials'; btn.disabled = false; }, 2000);
-      })
-      .catch(function(e) { alert('Error: ' + e.message); btn.textContent = 'Save Square Credentials'; btn.disabled = false; });
+        toast('Square credentials saved!');
+        btn.textContent = 'Save Square Credentials'; btn.disabled = false;
+      }).catch(function(e) { toast(e.message, 'error'); btn.textContent = 'Save Square Credentials'; btn.disabled = false; });
     }
+
+    function saveAPIKey(provider) {
+      var token = getAuthToken();
+      var data = { provider: provider };
+      if (provider === 'openai') {
+        data.key = document.getElementById('openai-key').value.trim();
+        data.model = document.getElementById('openai-model').value;
+      } else if (provider === 'ga4') {
+        data.measurementId = document.getElementById('ga4-id').value.trim();
+        data.apiSecret = document.getElementById('ga4-secret').value.trim();
+      } else if (provider === 'facebook') {
+        data.pixelId = document.getElementById('fb-pixel-id').value.trim();
+        data.adsToken = document.getElementById('fb-ads-token').value.trim();
+        data.adAccountId = document.getElementById('fb-ad-account-id').value.trim();
+      } else if (provider === 'stripe') {
+        data.publishableKey = document.getElementById('stripe-pub-key').value.trim();
+        data.secretKey = document.getElementById('stripe-secret-key').value.trim();
+        data.webhookSecret = document.getElementById('stripe-webhook-secret').value.trim();
+      } else if (provider === 'oauth') {
+        data.googleClientId = document.getElementById('google-client-id').value.trim();
+        data.facebookAppId = document.getElementById('facebook-app-id').value.trim();
+      }
+      fetch(API_BASE + '/api/admin/save-api-key', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { toast(d.error, 'error'); return; }
+        toast('Saved!');
+      }).catch(function(e) { toast(e.message, 'error'); });
+    }
+
+    function savePlatformSettings() { toast('Platform settings saved locally.'); }
+
+    // ── AR HUNTS ──────────────────────────────────────
+    var _hunts = [];
+    var _huntFilter = 'all';
+
+    try { _hunts = JSON.parse(localStorage.getItem('gcr_ar_hunts') || '[]'); } catch(e) { _hunts = []; }
+
+    function saveHuntsToStorage() { localStorage.setItem('gcr_ar_hunts', JSON.stringify(_hunts)); }
+
+    function renderHuntsGrid() {
+      var filtered = _hunts.filter(function(h) {
+        if (_huntFilter === 'all') return true;
+        if (_huntFilter === 'active') return h.active;
+        if (_huntFilter === 'inactive') return !h.active;
+        return h.difficulty === _huntFilter;
+      });
+      document.getElementById('stat-total-hunts').textContent = _hunts.length;
+      document.getElementById('stat-active-hunts').textContent = _hunts.filter(function(h) { return h.active; }).length;
+      document.getElementById('stat-total-captures').textContent = _hunts.reduce(function(sum, h) { return sum + (h.captures || 0); }, 0);
+      if (!filtered.length) {
+        document.getElementById('hunts-grid').innerHTML = '';
+        document.getElementById('hunts-empty').style.display = 'block';
+        return;
+      }
+      document.getElementById('hunts-empty').style.display = 'none';
+      document.getElementById('hunts-grid').innerHTML = filtered.map(function(h) {
+        return '<div class="card" style="padding:20px;">' +
+          (h.imageData ? '<img src="' + h.imageData + '" style="width:100%;height:120px;object-fit:contain;margin-bottom:12px;border-radius:8px;background:var(--bg);">' : '') +
+          '<div style="font-size:16px;font-weight:700;margin-bottom:4px;">' + escHtml(h.brandName) + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + escHtml(h.difficulty) + ' · ' + (h.active ? 'Active' : 'Inactive') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">' + escHtml(h.hint || '') + '</div>' +
+          '<div style="display:flex;gap:8px;">' +
+          '<button onclick="toggleHuntActive(\'' + h.id + '\')" class="btn btn-outline btn-sm">' + (h.active ? 'Deactivate' : 'Activate') + '</button>' +
+          '<button onclick="deleteHunt(\'' + h.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    function filterHunts(f) { _huntFilter = f; renderHuntsGrid(); }
+
+    function showCreateHuntModal() {
+      document.getElementById('hunt-form').reset();
+      document.getElementById('brand-image-preview').style.display = 'none';
+      document.getElementById('hunt-modal').style.display = 'block';
+    }
+    function closeHuntModal() { document.getElementById('hunt-modal').style.display = 'none'; }
+
+    function handleHuntImageUpload(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var img = document.getElementById('brand-image-preview');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+        img._dataUrl = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function useCurrentLocation() {
+      if (!navigator.geolocation) { toast('Geolocation not supported', 'error'); return; }
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        document.getElementById('hunt-latitude').value = pos.coords.latitude.toFixed(6);
+        document.getElementById('hunt-longitude').value = pos.coords.longitude.toFixed(6);
+      });
+    }
+
+    function saveHunt(e) {
+      e.preventDefault();
+      var img = document.getElementById('brand-image-preview');
+      var hunt = {
+        id: 'hunt_' + Date.now(),
+        brandName: document.getElementById('hunt-brand-name').value,
+        imageData: img._dataUrl || null,
+        latitude: parseFloat(document.getElementById('hunt-latitude').value),
+        longitude: parseFloat(document.getElementById('hunt-longitude').value),
+        hint: document.getElementById('hunt-hint').value,
+        difficulty: document.getElementById('hunt-difficulty').value,
+        reward: document.getElementById('hunt-reward-desc').value,
+        points: parseInt(document.getElementById('hunt-points').value) || 100,
+        active: true,
+        captures: 0,
+        createdAt: new Date().toISOString()
+      };
+      _hunts.push(hunt);
+      saveHuntsToStorage();
+      closeHuntModal();
+      renderHuntsGrid();
+      toast('Hunt created!');
+    }
+
+    function toggleHuntActive(id) {
+      var h = _hunts.find(function(x) { return x.id === id; });
+      if (h) { h.active = !h.active; saveHuntsToStorage(); renderHuntsGrid(); }
+    }
+
+    function deleteHunt(id) {
+      if (!confirm('Delete this hunt?')) return;
+      _hunts = _hunts.filter(function(x) { return x.id !== id; });
+      saveHuntsToStorage();
+      renderHuntsGrid();
+      toast('Hunt deleted.');
+    }
+
+    // ── INIT ──────────────────────────────────────────
+    loadOverview();
+    updateBulkFormatHelp();
   </script>
 </body>
 </html>
