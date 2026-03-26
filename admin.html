@@ -183,66 +183,202 @@
         </div>
       </div>
 
-      <!-- Edit GCR Business Modal -->
-      <div id="editGCRModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
-        <div style="max-width:800px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-            <h2 style="margin:0;font-size:20px;">Edit GCR Business</h2>
-            <button onclick="closeEditGCRModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+      <!-- Full Business Editor Modal -->
+      <div id="bizEditorModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2000;overflow-y:auto;">
+        <div style="max-width:960px;margin:24px auto;background:var(--card-bg);border-radius:16px;border:1px solid var(--card-border);">
+
+          <!-- Header -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:24px 28px;border-bottom:1px solid var(--card-border);">
+            <div>
+              <h2 style="margin:0;font-size:20px;" id="biz-editor-title">Edit Business</h2>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="biz-editor-subtitle"></div>
+            </div>
+            <button onclick="closeBizEditor()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
           </div>
-          <form id="editGCRForm" onsubmit="saveGCRBusiness(event)">
-            <input type="hidden" id="gcr-edit-site-id">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business Name</label>
-                <input type="text" id="gcr-edit-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+
+          <!-- Tabs -->
+          <div style="display:flex;gap:0;border-bottom:1px solid var(--card-border);overflow-x:auto;">
+            <button onclick="switchBizTab('basic')" id="biztab-basic" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">Info</button>
+            <button onclick="switchBizTab('location')" id="biztab-location" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Location</button>
+            <button onclick="switchBizTab('hours')" id="biztab-hours" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Hours &amp; Amenities</button>
+            <button onclick="switchBizTab('menu')" id="biztab-menu" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Menu</button>
+            <button onclick="switchBizTab('drinks')" id="biztab-drinks" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Drinks</button>
+            <button onclick="switchBizTab('happyhour')" id="biztab-happyhour" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Happy Hour</button>
+            <button onclick="switchBizTab('specials')" id="biztab-specials" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Specials</button>
+            <button onclick="switchBizTab('events')" id="biztab-events" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Events</button>
+            <button onclick="switchBizTab('photos')" id="biztab-photos" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Photos</button>
+          </div>
+
+          <div style="padding:28px;" id="biz-editor-body">
+
+            <!-- INFO TAB -->
+            <div id="biztab-basic-content">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Business Name</label>
+                  <input id="be-name" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Category</label>
+                  <select id="be-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="restaurants">Restaurants</option><option value="coffee-sweets">Coffee &amp; Sweets</option>
+                    <option value="things-to-do">Things to Do</option><option value="nightlife">Nightlife</option>
+                    <option value="shopping">Shopping</option><option value="hotels">Hotels</option><option value="other">Other</option>
+                  </select></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Status</label>
+                  <select id="be-status" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="active">Active</option><option value="hidden">Hidden</option><option value="draft">Draft</option>
+                  </select></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Emoji</label>
+                  <input id="be-emoji" type="text" placeholder="🍕" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Tagline</label>
+                  <input id="be-tagline" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Price Range</label>
+                  <select id="be-pricerange" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="">—</option><option value="$">$ (Under $15)</option><option value="$$">$$ ($15–$30)</option>
+                    <option value="$$$">$$$ ($30–$60)</option><option value="$$$$">$$$$ ($60+)</option>
+                  </select></div>
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Description / About</label>
+                  <textarea id="be-description" rows="3" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Instagram</label>
+                  <input id="be-instagram" type="text" placeholder="@handle" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Facebook</label>
+                  <input id="be-facebook" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">TikTok</label>
+                  <input id="be-tiktok" type="text" placeholder="@handle" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="display:flex;align-items:center;gap:8px;padding-top:20px;">
+                  <input type="checkbox" id="be-featured" style="width:18px;height:18px;">
+                  <label for="be-featured" style="font-size:14px;">Featured listing</label>
+                  <input type="checkbox" id="be-gcr-listed" style="width:18px;height:18px;margin-left:16px;">
+                  <label for="be-gcr-listed" style="font-size:14px;">GCR listed</label>
+                </div>
               </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Category</label>
-                <select id="gcr-edit-type" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-                  <option value="restaurants">Restaurants</option>
-                  <option value="coffee-sweets">Coffee &amp; Sweets</option>
-                  <option value="things-to-do">Things to Do</option>
-                  <option value="nightlife">Nightlife</option>
-                  <option value="shopping">Shopping</option>
-                  <option value="hotels">Hotels</option>
-                  <option value="other">Other</option>
-                </select>
+              <div style="margin-top:20px;"><button onclick="saveBizBasic()" class="btn btn-primary">Save Info</button></div>
+            </div>
+
+            <!-- LOCATION TAB -->
+            <div id="biztab-location-content" style="display:none;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Address</label>
+                  <input id="be-address" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">City</label>
+                  <input id="be-city" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">State</label>
+                  <input id="be-state" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Zip</label>
+                  <input id="be-zip" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Phone</label>
+                  <input id="be-phone" type="tel" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Email</label>
+                  <input id="be-email" type="email" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Website</label>
+                  <input id="be-website" type="url" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
               </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Status</label>
-                <select id="gcr-edit-status" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-                  <option value="active">Active</option>
-                  <option value="hidden">Hidden</option>
-                  <option value="draft">Draft</option>
-                </select>
+              <div style="margin-top:20px;"><button onclick="saveBizLocation()" class="btn btn-primary">Save Location</button></div>
+            </div>
+
+            <!-- HOURS TAB -->
+            <div id="biztab-hours-content" style="display:none;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Monday</label><input id="be-hours-mon" type="text" placeholder="10am - 9pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Tuesday</label><input id="be-hours-tue" type="text" placeholder="10am - 9pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Wednesday</label><input id="be-hours-wed" type="text" placeholder="10am - 9pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Thursday</label><input id="be-hours-thu" type="text" placeholder="10am - 9pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Friday</label><input id="be-hours-fri" type="text" placeholder="10am - 10pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Saturday</label><input id="be-hours-sat" type="text" placeholder="10am - 10pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Sunday</label><input id="be-hours-sun" type="text" placeholder="11am - 8pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Seasonal Notes</label><input id="be-seasonal" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
               </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Emoji</label>
-                <input type="text" id="gcr-edit-emoji" placeholder="🍕" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-kids"> Kids Friendly</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-pets"> Pet Friendly</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-live-music"> Live Music</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-outdoor"> Outdoor Seating</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-reservations"> Reservations</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-delivery"> Delivery</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-takeout"> Takeout</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-alcohol"> Alcohol</label>
               </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Instagram</label>
-                <input type="text" id="gcr-edit-instagram" placeholder="@handle" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <button onclick="saveBizHours()" class="btn btn-primary">Save Hours</button>
+            </div>
+
+            <!-- MENU TAB -->
+            <div id="biztab-menu-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <p style="margin:0;font-size:13px;color:var(--text-muted);">Add menu items by section. Each item saves immediately.</p>
+                <button onclick="addBizMenuItem('Menu')" class="btn btn-primary btn-sm">+ Add Item</button>
               </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Facebook</label>
-                <input type="text" id="gcr-edit-facebook" placeholder="page URL or handle" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">TikTok</label>
-                <input type="text" id="gcr-edit-tiktok" placeholder="@handle" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;padding-top:24px;">
-                <input type="checkbox" id="gcr-edit-featured" style="width:18px;height:18px;">
-                <label for="gcr-edit-featured" style="font-size:14px;">Featured listing</label>
+              <div id="be-menu-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+              <div style="margin-top:16px;">
+                <button onclick="saveBizMenu()" class="btn btn-primary">Save All Menu Items</button>
               </div>
             </div>
-            <div style="display:flex;gap:12px;margin-top:24px;">
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-              <button type="button" class="btn btn-outline" onclick="closeEditGCRModal()">Cancel</button>
+
+            <!-- DRINKS TAB -->
+            <div id="biztab-drinks-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <p style="margin:0;font-size:13px;color:var(--text-muted);">Add drink items. Use category for Beer, Wine, Cocktails, Non-Alcoholic etc.</p>
+                <button onclick="addBizMenuItem('Cocktails')" class="btn btn-primary btn-sm">+ Add Drink</button>
+              </div>
+              <div id="be-drinks-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+              <div style="margin-top:16px;">
+                <button onclick="saveBizDrinks()" class="btn btn-primary">Save All Drinks</button>
+              </div>
             </div>
-          </form>
+
+            <!-- HAPPY HOUR TAB -->
+            <div id="biztab-happyhour-content" style="display:none;">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;padding:16px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Days</label>
+                  <input id="be-hh-days" type="text" placeholder="Mon - Fri" style="width:100%;padding:9px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Start Time</label>
+                  <input id="be-hh-start" type="text" placeholder="3:00 PM" style="width:100%;padding:9px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">End Time</label>
+                  <input id="be-hh-end" type="text" placeholder="6:00 PM" style="width:100%;padding:9px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <p style="margin:0;font-size:13px;color:var(--text-muted);">Happy hour items (drinks &amp; food specials)</p>
+                <button onclick="addHHItem()" class="btn btn-primary btn-sm">+ Add Item</button>
+              </div>
+              <div id="be-hh-items" style="display:flex;flex-direction:column;gap:10px;"></div>
+              <div style="margin-top:16px;"><button onclick="saveBizHappyHour()" class="btn btn-primary">Save Happy Hour</button></div>
+            </div>
+
+            <!-- SPECIALS TAB -->
+            <div id="biztab-specials-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <p style="margin:0;font-size:13px;color:var(--text-muted);">Daily specials, sunset menus, themed nights etc.</p>
+                <button onclick="addBizSpecial()" class="btn btn-primary btn-sm">+ Add Special</button>
+              </div>
+              <div id="be-specials-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+              <div style="margin-top:16px;"><button onclick="saveBizSpecials()" class="btn btn-primary">Save Specials</button></div>
+            </div>
+
+            <!-- EVENTS TAB -->
+            <div id="biztab-events-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <p style="margin:0;font-size:13px;color:var(--text-muted);">Upcoming events for this business.</p>
+                <button onclick="addBizEvent()" class="btn btn-primary btn-sm">+ Add Event</button>
+              </div>
+              <div id="be-events-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+              <div style="margin-top:16px;"><button onclick="saveBizEvents()" class="btn btn-primary">Save Events</button></div>
+            </div>
+
+            <!-- PHOTOS TAB -->
+            <div id="biztab-photos-content" style="display:none;">
+              <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;">Upload Photos</label>
+                <input type="file" id="be-photo-upload" accept="image/*" multiple onchange="uploadBizPhotos()" style="padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <div id="be-upload-status" style="margin-top:8px;font-size:13px;color:var(--text-muted);"></div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Or paste image URL directly</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="url" id="be-photo-url" placeholder="https://..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <button onclick="addPhotoByUrl()" class="btn btn-primary">Add</button>
+                </div>
+              </div>
+              <div id="be-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:16px;"></div>
+            </div>
+
+          </div><!-- /biz-editor-body -->
         </div>
       </div>
 
@@ -872,7 +1008,7 @@
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;">' + (b.featured ? '★' : '') + '</td>' +
           '<td style="padding:10px 8px;">' +
-            '<button onclick="openEditGCRModal(\'' + b.site_id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+            '<button onclick="openBizEditor(\'' + b.site_id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
           '</td>' +
           '</tr>';
       }).join('');
@@ -1458,6 +1594,434 @@
       saveHuntsToStorage();
       renderHuntsGrid();
       toast('Hunt deleted.');
+    }
+
+    // ── FULL BUSINESS EDITOR ──────────────────────────
+    var _bizEditorSiteId = null;
+    var _bizEditorData = {};
+    var _bizMenuItems = [];
+    var _bizDrinkItems = [];
+    var _bizSpecials = [];
+    var _bizEvents = [];
+    var _bizHHItems = [];
+
+    var _inputStyle = 'width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;';
+
+    function switchBizTab(tab) {
+      ['basic','location','hours','menu','drinks','happyhour','specials','events','photos'].forEach(function(t) {
+        var btn = document.getElementById('biztab-' + t);
+        var content = document.getElementById('biztab-' + t + '-content');
+        if (t === tab) {
+          btn.style.cssText = 'padding:12px 20px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;';
+          if (content) content.style.display = '';
+        } else {
+          btn.style.cssText = 'padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;';
+          if (content) content.style.display = 'none';
+        }
+      });
+    }
+
+    async function openBizEditor(siteId) {
+      _bizEditorSiteId = siteId;
+      document.getElementById('bizEditorModal').style.display = 'block';
+      document.getElementById('biz-editor-title').textContent = 'Loading...';
+      switchBizTab('basic');
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
+        _bizEditorData = await res.json();
+        var biz = _bizEditorData.business || {};
+        var content = _bizEditorData.content || {};
+        document.getElementById('biz-editor-title').textContent = biz.name || 'Edit Business';
+        document.getElementById('biz-editor-subtitle').textContent = biz.subdomain || siteId;
+        // Fill basic
+        document.getElementById('be-name').value = biz.name || '';
+        document.getElementById('be-type').value = biz.type || 'other';
+        document.getElementById('be-status').value = biz.status || 'active';
+        document.getElementById('be-emoji').value = biz.emoji || '';
+        document.getElementById('be-tagline').value = content.tagline || '';
+        document.getElementById('be-pricerange').value = content.price_range || '';
+        document.getElementById('be-description').value = content.seo_description || '';
+        document.getElementById('be-instagram').value = biz.instagram || '';
+        document.getElementById('be-facebook').value = biz.facebook || '';
+        document.getElementById('be-tiktok').value = biz.tiktok || '';
+        document.getElementById('be-featured').checked = !!biz.featured;
+        document.getElementById('be-gcr-listed').checked = !!biz.gcr_listed;
+        // Fill location
+        document.getElementById('be-address').value = content.address || '';
+        document.getElementById('be-city').value = content.city || '';
+        document.getElementById('be-state').value = content.state || '';
+        document.getElementById('be-zip').value = content.zip || '';
+        document.getElementById('be-phone').value = content.contact_phone || '';
+        document.getElementById('be-email').value = content.contact_email || '';
+        document.getElementById('be-website').value = content.website_url || '';
+        // Fill hours
+        ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d) {
+          var el = document.getElementById('be-hours-' + d);
+          if (el) el.value = content['hours_' + d] || '';
+        });
+        document.getElementById('be-seasonal').value = content.seasonal_notes || '';
+        document.getElementById('be-kids').checked = !!content.kids_friendly;
+        document.getElementById('be-pets').checked = !!content.pet_friendly;
+        document.getElementById('be-live-music').checked = !!content.live_music;
+        document.getElementById('be-outdoor').checked = !!content.outdoor_seating;
+        document.getElementById('be-reservations').checked = !!content.reservations;
+        document.getElementById('be-delivery').checked = !!content.delivery;
+        document.getElementById('be-takeout').checked = !!content.takeout;
+        document.getElementById('be-alcohol').checked = !!content.alcohol;
+        // Happy hour
+        var hh = content.happy_hour || {};
+        document.getElementById('be-hh-days').value = hh.days || '';
+        document.getElementById('be-hh-start').value = hh.start || '';
+        document.getElementById('be-hh-end').value = hh.end || '';
+        _bizHHItems = hh.items || [];
+        renderHHItems();
+        // Menu — separate food vs drinks by category
+        var all = _bizEditorData.menu || [];
+        var drinkCats = ['Beer','Wine','Cocktails','Drinks','Non-Alcoholic','Spirits','Shots','Seltzers'];
+        _bizMenuItems = all.filter(function(i) { return !drinkCats.includes(i.category); });
+        _bizDrinkItems = all.filter(function(i) { return drinkCats.includes(i.category); });
+        renderMenuItems();
+        renderDrinkItems();
+        // Specials
+        _bizSpecials = (_bizEditorData.specials || []).map(function(s) { return { id: s.id, name: s.name, description: s.description || '', day: s.day_of_week || '', time: s.time_range || '', discount: s.discount_text || '' }; });
+        renderBizSpecials();
+        // Events
+        _bizEvents = (_bizEditorData.events || []).map(function(e) { return { id: e.id, name: e.name, description: e.description || '', date: e.event_date || '', time: e.event_time || '', location: e.location || '', image_url: e.image_url || '' }; });
+        renderBizEvents();
+        // Photos
+        renderBizPhotos(_bizEditorData.media || []);
+      } catch(e) {
+        toast('Failed to load business data: ' + e.message, 'error');
+        document.getElementById('biz-editor-title').textContent = 'Error loading';
+      }
+    }
+
+    function closeBizEditor() { document.getElementById('bizEditorModal').style.display = 'none'; }
+
+    // ── MENU ITEMS ───────────────────────────────────
+    function menuItemRow(item, index, isDrink) {
+      var dietaryTags = ['vegan','vegetarian','gluten-free','dairy-free','nut-free','keto','spicy','signature'];
+      var drinkCats = isDrink ? ['Beer','Wine','Cocktails','Spirits','Shots','Seltzers','Non-Alcoholic'] : ['Appetizers','Soups & Salads','Entrees','Seafood','Sandwiches','Burgers','Pizza','Pasta','Sides','Desserts','Kids Menu','Brunch','Lunch','Dinner','Breakfast','Specials','Highlights'];
+      var tags = item.tags || [];
+      var allergens = item.allergens || [];
+      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;" data-idx="' + index + '" data-type="' + (isDrink ? 'drink' : 'menu') + '">' +
+        '<div style="display:grid;grid-template-columns:2fr 1.5fr 1fr auto;gap:8px;align-items:start;">' +
+        '<div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Name</div>' +
+          '<input type="text" value="' + escHtml(item.name || '') + '" onchange="updateBizItem(' + index + ',\'name\',this.value,\'' + (isDrink?'drink':'menu') + '\')" style="' + _inputStyle + '">' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Category / Section</div>' +
+          '<select onchange="updateBizItem(' + index + ',\'category\',this.value,\'' + (isDrink?'drink':'menu') + '\')" style="' + _inputStyle + '">' +
+          drinkCats.map(function(c) { return '<option value="' + c + '"' + (item.category === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div>' +
+          '<input type="text" value="' + escHtml(item.price || '') + '" placeholder="12.99" onchange="updateBizItem(' + index + ',\'price\',this.value,\'' + (isDrink?'drink':'menu') + '\')" style="' + _inputStyle + '">' +
+        '</div>' +
+        '<button onclick="removeBizItem(' + index + ',\'' + (isDrink?'drink':'menu') + '\')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
+        '</div>' +
+        '<div style="margin-top:8px;">' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div>' +
+          '<input type="text" value="' + escHtml(item.description || '') + '" onchange="updateBizItem(' + index + ',\'description\',this.value,\'' + (isDrink?'drink':'menu') + '\')" style="' + _inputStyle + '">' +
+        '</div>' +
+        '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">' +
+          '<span style="font-size:11px;color:var(--text-muted);margin-right:4px;">Tags:</span>' +
+          dietaryTags.map(function(tag) {
+            return '<label style="display:flex;align-items:center;gap:4px;font-size:12px;">' +
+              '<input type="checkbox"' + (tags.includes(tag) ? ' checked' : '') + ' onchange="toggleItemTag(' + index + ',\'' + tag + '\',this.checked,\'' + (isDrink?'drink':'menu') + '\')">' + tag + '</label>';
+          }).join('') +
+        '</div>' +
+        '</div>';
+    }
+
+    function renderMenuItems() {
+      document.getElementById('be-menu-list').innerHTML = _bizMenuItems.map(function(item, i) { return menuItemRow(item, i, false); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No menu items yet.</div>';
+    }
+
+    function renderDrinkItems() {
+      document.getElementById('be-drinks-list').innerHTML = _bizDrinkItems.map(function(item, i) { return menuItemRow(item, i, true); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No drink items yet.</div>';
+    }
+
+    function addBizMenuItem(defaultCategory) {
+      _bizMenuItems.push({ name: '', description: '', price: '', category: defaultCategory || 'Menu', tags: [], allergens: [] });
+      renderMenuItems();
+    }
+
+    function updateBizItem(index, field, value, type) {
+      if (type === 'drink') _bizDrinkItems[index][field] = value;
+      else _bizMenuItems[index][field] = value;
+    }
+
+    function toggleItemTag(index, tag, checked, type) {
+      var arr = type === 'drink' ? _bizDrinkItems : _bizMenuItems;
+      if (!arr[index].tags) arr[index].tags = [];
+      if (checked && !arr[index].tags.includes(tag)) arr[index].tags.push(tag);
+      if (!checked) arr[index].tags = arr[index].tags.filter(function(t) { return t !== tag; });
+    }
+
+    function removeBizItem(index, type) {
+      if (type === 'drink') _bizDrinkItems.splice(index, 1), renderDrinkItems();
+      else _bizMenuItems.splice(index, 1), renderMenuItems();
+    }
+
+    async function saveBizMenu() {
+      var token = getAuthToken();
+      var allItems = _bizMenuItems.concat(_bizDrinkItems);
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ menu: allItems.filter(function(i) { return i.name; }) })
+        });
+        var r = await res.json();
+        if (r.errors && r.errors.length) { toast('Saved with warnings: ' + r.errors.join(', '), 'error'); return; }
+        toast('Menu saved!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    function saveBizDrinks() { saveBizMenu(); }
+
+    // ── HAPPY HOUR ───────────────────────────────────
+    function hhItemRow(item, index) {
+      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:start;" data-idx="' + index + '">' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Item Name</div><input type="text" value="' + escHtml(item.name||'') + '" onchange="_bizHHItems[' + index + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div><input type="text" value="' + escHtml(item.price||'') + '" placeholder="4.00" onchange="_bizHHItems[' + index + '].price=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(item.description||'') + '" onchange="_bizHHItems[' + index + '].description=this.value" style="' + _inputStyle + '"></div>' +
+        '<button onclick="_bizHHItems.splice(' + index + ',1);renderHHItems();" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
+        '</div>';
+    }
+
+    function renderHHItems() {
+      document.getElementById('be-hh-items').innerHTML = _bizHHItems.map(function(item, i) { return hhItemRow(item, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No happy hour items yet.</div>';
+    }
+
+    function addHHItem() { _bizHHItems.push({ name: '', description: '', price: '' }); renderHHItems(); }
+
+    async function saveBizHappyHour() {
+      var token = getAuthToken();
+      var hhData = {
+        days: document.getElementById('be-hh-days').value,
+        start: document.getElementById('be-hh-start').value,
+        end: document.getElementById('be-hh-end').value,
+        items: _bizHHItems.filter(function(i) { return i.name; })
+      };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ happyHour: hhData })
+        });
+        var r = await res.json();
+        if (r.errors && r.errors.length) { toast('Saved with warnings', 'error'); return; }
+        toast('Happy hour saved!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── SPECIALS ──────────────────────────────────────
+    function bizSpecialRow(s, i) {
+      var days = ['','monday','tuesday','wednesday','thursday','friday','saturday','sunday','daily'];
+      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;">' +
+        '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;">' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Name</div><input type="text" value="' + escHtml(s.name||'') + '" onchange="_bizSpecials[' + i + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Day</div><select onchange="_bizSpecials[' + i + '].day=this.value" style="' + _inputStyle + '">' + days.map(function(d) { return '<option value="' + d + '"' + (s.day===d?' selected':'') + '>' + (d||'Any') + '</option>'; }).join('') + '</select></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Time</div><input type="text" value="' + escHtml(s.time||'') + '" placeholder="3pm-6pm" onchange="_bizSpecials[' + i + '].time=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Discount</div><input type="text" value="' + escHtml(s.discount||'') + '" placeholder="$2 off" onchange="_bizSpecials[' + i + '].discount=this.value" style="' + _inputStyle + '"></div>' +
+        '<button onclick="_bizSpecials.splice(' + i + ',1);renderBizSpecials();" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
+        '</div>' +
+        '<div style="margin-top:8px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(s.description||'') + '" onchange="_bizSpecials[' + i + '].description=this.value" style="' + _inputStyle + '"></div>' +
+        '</div>';
+    }
+
+    function renderBizSpecials() {
+      document.getElementById('be-specials-list').innerHTML = _bizSpecials.map(function(s, i) { return bizSpecialRow(s, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No specials yet.</div>';
+    }
+
+    function addBizSpecial() { _bizSpecials.push({ name: '', description: '', day: '', time: '', discount: '' }); renderBizSpecials(); }
+
+    async function saveBizSpecials() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ specials: _bizSpecials.filter(function(s) { return s.name; }) })
+        });
+        toast('Specials saved!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── EVENTS ────────────────────────────────────────
+    function bizEventRow(ev, i) {
+      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;">' +
+        '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;">' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Event Name</div><input type="text" value="' + escHtml(ev.name||'') + '" onchange="_bizEvents[' + i + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Date</div><input type="date" value="' + escHtml(ev.date||'') + '" onchange="_bizEvents[' + i + '].date=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Time</div><input type="time" value="' + escHtml(ev.time||'') + '" onchange="_bizEvents[' + i + '].time=this.value" style="' + _inputStyle + '"></div>' +
+        '<button onclick="_bizEvents.splice(' + i + ',1);renderBizEvents();" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
+        '</div>' +
+        '<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(ev.description||'') + '" onchange="_bizEvents[' + i + '].description=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Image URL</div><input type="url" value="' + escHtml(ev.image_url||'') + '" onchange="_bizEvents[' + i + '].image_url=this.value" style="' + _inputStyle + '"></div>' +
+        '</div></div>';
+    }
+
+    function renderBizEvents() {
+      document.getElementById('be-events-list').innerHTML = _bizEvents.map(function(ev, i) { return bizEventRow(ev, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No events yet.</div>';
+    }
+
+    function addBizEvent() { _bizEvents.push({ name: '', description: '', date: '', time: '', location: '', image_url: '' }); renderBizEvents(); }
+
+    async function saveBizEvents() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: _bizEvents.filter(function(e) { return e.name; }) })
+        });
+        toast('Events saved!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── BASIC / LOCATION / HOURS SAVE ────────────────
+    async function saveBizBasic() {
+      var token = getAuthToken();
+      var data = {
+        basic: {
+          name: document.getElementById('be-name').value,
+          type: document.getElementById('be-type').value,
+          status: document.getElementById('be-status').value,
+          emoji: document.getElementById('be-emoji').value,
+          tagline: document.getElementById('be-tagline').value,
+          description: document.getElementById('be-description').value,
+          priceRange: document.getElementById('be-pricerange').value,
+          featured: document.getElementById('be-featured').checked,
+          gcr_listed: document.getElementById('be-gcr-listed').checked
+        },
+        social: {
+          instagram: document.getElementById('be-instagram').value,
+          facebook: document.getElementById('be-facebook').value,
+          tiktok: document.getElementById('be-tiktok').value
+        }
+      };
+      try {
+        await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        toast('Info saved!');
+        _gcrLoaded = false; loadGCRBusinesses();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function saveBizLocation() {
+      var token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: {
+            address: document.getElementById('be-address').value,
+            city: document.getElementById('be-city').value,
+            state: document.getElementById('be-state').value,
+            zip: document.getElementById('be-zip').value,
+            phone: document.getElementById('be-phone').value,
+            email: document.getElementById('be-email').value,
+            website: document.getElementById('be-website').value
+          }})
+        });
+        toast('Location saved!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function saveBizHours() {
+      var token = getAuthToken();
+      var hoursData = { hours_text: '' };
+      ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d) {
+        hoursData['hours_' + d] = document.getElementById('be-hours-' + d).value;
+      });
+      hoursData.seasonal_notes = document.getElementById('be-seasonal').value;
+      hoursData.kids_friendly = document.getElementById('be-kids').checked;
+      hoursData.pet_friendly = document.getElementById('be-pets').checked;
+      hoursData.live_music = document.getElementById('be-live-music').checked;
+      hoursData.outdoor_seating = document.getElementById('be-outdoor').checked;
+      hoursData.reservations = document.getElementById('be-reservations').checked;
+      hoursData.delivery = document.getElementById('be-delivery').checked;
+      hoursData.takeout = document.getElementById('be-takeout').checked;
+      hoursData.alcohol = document.getElementById('be-alcohol').checked;
+      try {
+        await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hours: hoursData })
+        });
+        toast('Hours saved!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── PHOTOS ────────────────────────────────────────
+    function renderBizPhotos(mediaList) {
+      document.getElementById('be-photos-grid').innerHTML = mediaList.map(function(m) {
+        return '<div style="position:relative;">' +
+          '<img src="' + escHtml(m.url) + '" style="width:100%;height:100px;object-fit:cover;border-radius:8px;">' +
+          '<button onclick="deletePhoto(\'' + m.id + '\',this)" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);border:none;color:#fff;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;">×</button>' +
+          '<div style="font-size:11px;color:var(--text-muted);padding:4px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(m.filename || m.folder || '') + '</div>' +
+          '</div>';
+      }).join('') || '<div style="color:var(--text-muted);font-size:13px);">No photos yet.</div>';
+    }
+
+    async function uploadBizPhotos() {
+      var files = document.getElementById('be-photo-upload').files;
+      if (!files.length) return;
+      var token = getAuthToken();
+      var status = document.getElementById('be-upload-status');
+      status.textContent = 'Uploading ' + files.length + ' photo(s)...';
+      var success = 0;
+      for (var i = 0; i < files.length; i++) {
+        var fd = new FormData();
+        fd.append('file', files[i]);
+        fd.append('site_id', _bizEditorSiteId);
+        fd.append('folder', 'gallery');
+        try {
+          var res = await fetch(API_BASE + '/api/admin/upload-photo', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: fd
+          });
+          var r = await res.json();
+          if (r.url) success++;
+        } catch(e) {}
+      }
+      status.textContent = success + ' of ' + files.length + ' uploaded.';
+      // Reload photos
+      var res2 = await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bizEditorSiteId, { headers: { 'Authorization': 'Bearer ' + token } });
+      var d = await res2.json();
+      renderBizPhotos(d.media || []);
+    }
+
+    async function addPhotoByUrl() {
+      var url = document.getElementById('be-photo-url').value.trim();
+      if (!url) return;
+      var token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/dashboard/gallery', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, filename: url.split('/').pop(), site_id: _bizEditorSiteId })
+        });
+        document.getElementById('be-photo-url').value = '';
+        toast('Photo added!');
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function deletePhoto(id, btn) {
+      var token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/dashboard/gallery/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        btn.closest('div').parentElement.remove();
+        toast('Photo deleted.');
+      } catch(e) { toast(e.message, 'error'); }
     }
 
     // ── INIT ──────────────────────────────────────────
