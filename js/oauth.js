@@ -107,6 +107,19 @@ function loadConnections() {
     renderStripeSection();
   }
 
+  // Fetch Square status from API
+  if (token) {
+    fetch((window.CC_API_BASE || '') + '/api/square/status', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      _connections.square.connected = !!data.connected;
+      renderPaymentConnections();
+    })
+    .catch(function() {});
+  }
+
   // Load saved social connections from localStorage
   try {
     var savedSocial = localStorage.getItem('beachside_social_connections');
@@ -476,7 +489,22 @@ function buildConnectionCard(key) {
 
 function toggleConnection(key) {
   if (key === 'square') {
-    startSquareConnect();
+    if (_connections.square.connected) {
+      if (!confirm('Disconnect Square?')) return;
+      var token = getAuthToken();
+      fetch((window.CC_API_BASE || '') + '/api/square/disconnect', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(function() {
+        _connections.square.connected = false;
+        renderPaymentConnections();
+        toast('Square disconnected');
+      })
+      .catch(function() { toast('Error disconnecting Square', 'error'); });
+    } else {
+      startSquareConnect();
+    }
     return;
   }
   var conn = _connections[key];
