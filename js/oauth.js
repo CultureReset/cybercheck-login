@@ -115,6 +115,7 @@ function loadConnections() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       _connections.square.connected = !!data.connected;
+      if (data.merchantName) _connections.square.label = data.merchantName;
       renderPaymentConnections();
     })
     .catch(function() {});
