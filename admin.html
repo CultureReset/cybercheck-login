@@ -791,6 +791,17 @@
           <button class="btn btn-primary" id="save-sq-platform-btn" onclick="saveSqPlatformCredentials()">Save Square Credentials</button>
         </div>
 
+        <!-- Square Location ID Fix -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">Fix Square Location ID</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 16px;">If a business connected Square but payments fail, manually set their Square Location ID here. Find it in Square Dashboard → Locations.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <input id="fix-sq-site-id" type="text" placeholder="Business Site ID (UUID)" style="flex:1;min-width:200px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <input id="fix-sq-location-id" type="text" placeholder="Square Location ID (e.g. L1234ABC)" style="flex:1;min-width:200px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
+            <button class="btn btn-primary" onclick="fixSquareLocation()">Set Location ID</button>
+          </div>
+        </div>
+
         <!-- Stripe -->
         <div class="card" style="padding:28px;margin-bottom:20px;">
           <h3 style="margin:0 0 4px;">Stripe Platform Keys</h3>
@@ -1436,6 +1447,22 @@
       _sqPlatformMode = mode;
       document.getElementById('sq-sandbox-btn').style.cssText = 'background:' + (mode === 'sandbox' ? '#f59e0b;color:#fff;' : 'transparent;color:var(--text-muted);border:1px solid var(--card-border);');
       document.getElementById('sq-prod-btn').style.cssText = 'background:' + (mode === 'production' ? '#22c55e;color:#fff;' : 'transparent;color:var(--text-muted);border:1px solid var(--card-border);');
+    }
+
+    function fixSquareLocation() {
+      var token = getAuthToken();
+      var siteId = document.getElementById('fix-sq-site-id').value.trim();
+      var locationId = document.getElementById('fix-sq-location-id').value.trim();
+      if (!siteId || !locationId) { toast('Enter both Site ID and Location ID', 'error'); return; }
+      fetch(API_BASE + '/api/admin/set-connection', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id: siteId, provider: 'square_location_id', value: locationId })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { toast('Error: ' + d.error, 'error'); return; }
+        toast('Square location ID saved!');
+        document.getElementById('fix-sq-location-id').value = '';
+      }).catch(function(e) { toast(e.message, 'error'); });
     }
 
     function saveSqPlatformCredentials() {
