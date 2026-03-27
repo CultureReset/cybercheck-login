@@ -169,7 +169,20 @@ function checkSquareCallback() {
 
   if (connected === 'true') {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
-    toast('Square connected successfully! You can now accept payments.');
+    toast('Square connected! Finalizing setup...');
+    // Auto-fetch location ID in case callback couldn't get it
+    var token = getAuthToken();
+    if (token) {
+      fetch((window.CC_API_BASE || '') + '/api/square/refresh-location', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.success) toast('Square connected successfully! You can now accept payments.');
+        else toast('Square connected. You may need to reconnect if payments fail.', 'error');
+      }).catch(function() {
+        toast('Square connected successfully! You can now accept payments.');
+      });
+    }
   }
   if (squareError) {
     toast('Square connection failed: ' + decodeURIComponent(squareError), 'error');
