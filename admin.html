@@ -207,6 +207,12 @@
             <button onclick="switchBizTab('specials')" id="biztab-specials" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Specials</button>
             <button onclick="switchBizTab('events')" id="biztab-events" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Events</button>
             <button onclick="switchBizTab('photos')" id="biztab-photos" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Photos</button>
+            <button onclick="switchBizTab('fleet')" id="biztab-fleet" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Fleet</button>
+            <button onclick="switchBizTab('addons')" id="biztab-addons" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Add-Ons</button>
+            <button onclick="switchBizTab('reviews')" id="biztab-reviews" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Reviews</button>
+            <button onclick="switchBizTab('schedule')" id="biztab-schedule" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Schedule</button>
+            <button onclick="switchBizTab('highlights')" id="biztab-highlights" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Highlights</button>
+            <button onclick="switchBizTab('restrictions')" id="biztab-restrictions" style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Guest Info</button>
           </div>
 
           <div style="padding:28px;" id="biz-editor-body">
@@ -343,8 +349,12 @@
 
             <!-- SPECIALS TAB -->
             <div id="biztab-specials-content" style="display:none;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <p style="margin:0;font-size:13px;color:var(--text-muted);">Daily specials, sunset menus, themed nights etc.</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div>
+                  <p style="margin:0;font-size:13px;font-weight:600;">Day-of-week food &amp; drink specials</p>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--text-muted);">e.g. Monday $1 Oysters · Tuesday $5 Tacos · Weekend Brunch deals</p>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--text-muted);">⚠️ Happy Hour (time-based drink deals) goes in the Happy Hour tab</p>
+                </div>
                 <button onclick="addBizSpecial()" class="btn btn-primary btn-sm">+ Add Special</button>
               </div>
               <div id="be-specials-list" style="display:flex;flex-direction:column;gap:10px;"></div>
@@ -376,6 +386,75 @@
                 </div>
               </div>
               <div id="be-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:16px;"></div>
+            </div>
+
+            <!-- FLEET TAB -->
+            <div id="biztab-fleet-content" style="display:none;">
+              <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:var(--text-muted);">Boat types, vehicles, or rental units</span>
+              </div>
+              <div id="be-fleet-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+
+            <!-- ADDONS TAB -->
+            <div id="biztab-addons-content" style="display:none;">
+              <div style="margin-bottom:12px;">
+                <span style="font-size:13px;color:var(--text-muted);">Rental add-ons, upgrades, and extras</span>
+              </div>
+              <div id="be-addons-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+
+            <!-- REVIEWS TAB -->
+            <div id="biztab-reviews-content" style="display:none;">
+              <div id="be-reviews-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+
+            <!-- SCHEDULE TAB -->
+            <div id="biztab-schedule-content" style="display:none;">
+              <div style="margin-bottom:12px;">
+                <span style="font-size:13px;color:var(--text-muted);">Departure times and ticket prices for tours, cruises, and activities</span>
+              </div>
+              <div id="be-schedule-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+              <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:16px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Add Departure Time</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <input type="text" id="new-sched-time" placeholder="10:30 AM" style="${_inputStyle}">
+                  <input type="text" id="new-sched-name" placeholder="Morning Cruise (optional)" style="${_inputStyle}">
+                </div>
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Tickets (one per line: Name | Price)</div>
+                  <textarea id="new-sched-tickets" rows="3" placeholder="Flyer | 98.99&#10;Observer | 43.99" style="${_inputStyle}resize:vertical;"></textarea>
+                </div>
+                <button onclick="addScheduleSlot()" class="btn btn-primary">Add Time Slot</button>
+              </div>
+              <div style="margin-top:16px;"><button onclick="saveBizSchedule()" class="btn btn-primary">Save Schedule</button></div>
+            </div>
+
+            <!-- HIGHLIGHTS TAB -->
+            <div id="biztab-highlights-content" style="display:none;">
+              <div style="margin-bottom:12px;">
+                <span style="font-size:13px;color:var(--text-muted);">Key selling points shown on the profile page</span>
+              </div>
+              <textarea id="be-highlights" rows="8" placeholder="One highlight per line&#10;Dolphin sightings guaranteed or next trip free&#10;USCG-licensed captain&#10;Life jackets provided" style="${_inputStyle}resize:vertical;min-height:160px;"></textarea>
+              <div style="margin-top:16px;display:flex;gap:10px;">
+                <button onclick="saveBizHighlights()" class="btn btn-primary">Save Highlights</button>
+              </div>
+              <div style="margin-top:24px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">What to Bring</div>
+                <textarea id="be-whattobring" rows="5" placeholder="One item per line&#10;Sunscreen&#10;Camera&#10;Cash for gratuity" style="${_inputStyle}resize:vertical;"></textarea>
+                <button onclick="saveBizWhatToBring()" class="btn btn-primary" style="margin-top:10px;">Save What to Bring</button>
+              </div>
+            </div>
+
+            <!-- GUEST INFO / RESTRICTIONS TAB -->
+            <div id="biztab-restrictions-content" style="display:none;">
+              <div style="margin-bottom:12px;">
+                <span style="font-size:13px;color:var(--text-muted);">Guest rules, weight limits, age limits, policies</span>
+              </div>
+              <textarea id="be-restrictions" rows="8" placeholder="One rule per line&#10;Weight limit: 250 lbs per person&#10;Must be 48 inches tall&#10;No food or drinks on board" style="${_inputStyle}resize:vertical;min-height:160px;"></textarea>
+              <div style="margin-top:16px;">
+                <button onclick="saveBizRestrictions()" class="btn btn-primary">Save Guest Info</button>
+              </div>
             </div>
 
           </div><!-- /biz-editor-body -->
@@ -1813,9 +1892,11 @@
 
     // ── HAPPY HOUR ───────────────────────────────────
     function hhItemRow(item, index) {
-      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:start;" data-idx="' + index + '">' +
+      var typeOpts = ['Drink Special','Food Special','Beer','Wine','Cocktail','Shot','Non-Alcoholic','Appetizer','Entree'];
+      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:start;" data-idx="' + index + '">' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Item Name</div><input type="text" value="' + escHtml(item.name||'') + '" onchange="_bizHHItems[' + index + '].name=this.value" style="' + _inputStyle + '"></div>' +
-        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div><input type="text" value="' + escHtml(item.price||'') + '" placeholder="4.00" onchange="_bizHHItems[' + index + '].price=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Type</div><select onchange="_bizHHItems[' + index + '].type=this.value" style="' + _inputStyle + '">' + typeOpts.map(function(t){ return '<option value="' + t + '"' + (item.type===t?' selected':'') + '>' + t + '</option>'; }).join('') + '</select></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div><input type="text" value="' + escHtml(item.price||'') + '" placeholder="$4.00" onchange="_bizHHItems[' + index + '].price=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(item.description||'') + '" onchange="_bizHHItems[' + index + '].description=this.value" style="' + _inputStyle + '"></div>' +
         '<button onclick="_bizHHItems.splice(' + index + ',1);renderHHItems();" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
         '</div>';
@@ -1855,10 +1936,11 @@
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Name</div><input type="text" value="' + escHtml(s.name||'') + '" onchange="_bizSpecials[' + i + '].name=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Day</div><select onchange="_bizSpecials[' + i + '].day=this.value" style="' + _inputStyle + '">' + days.map(function(d) { return '<option value="' + d + '"' + (s.day===d?' selected':'') + '>' + (d||'Any') + '</option>'; }).join('') + '</select></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Time</div><input type="text" value="' + escHtml(s.time||'') + '" placeholder="3pm-6pm" onchange="_bizSpecials[' + i + '].time=this.value" style="' + _inputStyle + '"></div>' +
-        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Discount</div><input type="text" value="' + escHtml(s.discount||'') + '" placeholder="$2 off" onchange="_bizSpecials[' + i + '].discount=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div><input type="text" value="' + escHtml(s.price||'') + '" placeholder="$1 each" onchange="_bizSpecials[' + i + '].price=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Discount Text</div><input type="text" value="' + escHtml(s.discount||'') + '" placeholder="50% off" onchange="_bizSpecials[' + i + '].discount=this.value" style="' + _inputStyle + '"></div>' +
         '<button onclick="_bizSpecials.splice(' + i + ',1);renderBizSpecials();" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
         '</div>' +
-        '<div style="margin-top:8px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(s.description||'') + '" onchange="_bizSpecials[' + i + '].description=this.value" style="' + _inputStyle + '"></div>' +
+        '<div style="margin-top:8px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(s.description||'') + '" placeholder="e.g. Fresh Gulf oysters on the half shell every Monday" onchange="_bizSpecials[' + i + '].description=this.value" style="' + _inputStyle + '"></div>' +
         '</div>';
     }
 
@@ -1866,7 +1948,7 @@
       document.getElementById('be-specials-list').innerHTML = _bizSpecials.map(function(s, i) { return bizSpecialRow(s, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No specials yet.</div>';
     }
 
-    function addBizSpecial() { _bizSpecials.push({ name: '', description: '', day: '', time: '', discount: '' }); renderBizSpecials(); }
+    function addBizSpecial() { _bizSpecials.push({ name: '', description: '', day: '', time: '', price: '', discount: '' }); renderBizSpecials(); }
 
     async function saveBizSpecials() {
       var token = getAuthToken();
@@ -1881,16 +1963,19 @@
     }
 
     // ── EVENTS ────────────────────────────────────────
+    var _evtCategories = ['Live Music','Trivia Night','Comedy Night','Karaoke','DJ Night','Holiday Event','Festival','Charity','Private Event','Tournament','Watch Party','Brunch Event','Kids Event','Other'];
     function bizEventRow(ev, i) {
       return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;">' +
-        '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;">' +
+        '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;">' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Event Name</div><input type="text" value="' + escHtml(ev.name||'') + '" onchange="_bizEvents[' + i + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Category</div><select onchange="_bizEvents[' + i + '].category=this.value" style="' + _inputStyle + '">' + _evtCategories.map(function(c){ return '<option value="' + c + '"' + (ev.category===c?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Date</div><input type="date" value="' + escHtml(ev.date||'') + '" onchange="_bizEvents[' + i + '].date=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Time</div><input type="time" value="' + escHtml(ev.time||'') + '" onchange="_bizEvents[' + i + '].time=this.value" style="' + _inputStyle + '"></div>' +
         '<button onclick="_bizEvents.splice(' + i + ',1);renderBizEvents();" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0;margin-top:16px;">×</button>' +
         '</div>' +
-        '<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+        '<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(ev.description||'') + '" onchange="_bizEvents[' + i + '].description=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Location / Venue</div><input type="text" value="' + escHtml(ev.location||'') + '" onchange="_bizEvents[' + i + '].location=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Image URL</div><input type="url" value="' + escHtml(ev.image_url||'') + '" onchange="_bizEvents[' + i + '].image_url=this.value" style="' + _inputStyle + '"></div>' +
         '</div></div>';
     }
