@@ -71,6 +71,18 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <span>Bulk Events</span>
         </div>
+        <div class="nav-item" data-page="ai-organize" onclick="showPage('ai-organize')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <span>AI Data Organizer</span>
+        </div>
+        <div class="nav-item" data-page="rag-index" onclick="showPage('rag-index')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          <span>AI Index / RAG</span>
+        </div>
+        <div class="nav-item" data-page="ai-settings" onclick="showPage('ai-settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 8v4l3 3"/></svg>
+          <span>AI Settings</span>
+        </div>
 
         <div class="nav-section-label">Platform</div>
         <div class="nav-item" data-page="leads" onclick="showPage('leads')">
@@ -971,7 +983,748 @@
         </div>
       </div>
 
+      <!-- ── AI DATA ORGANIZER ──────────────────────── -->
+      <div id="page-ai-organize" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>AI Data Organizer</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Paste any business info — website copy, menu text, PDFs — and AI structures it into database fields for you to review and approve.</div>
+        </div>
+
+        <!-- Step 1: Input -->
+        <div class="card" style="padding:24px;margin-bottom:20px;" id="ao-step1">
+          <h3 style="margin:0 0 16px;font-size:16px;">Step 1 — Paste Business Information</h3>
+          <div style="display:grid;grid-template-columns:1fr 200px;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Business Type (optional — helps AI)</label>
+              <select id="ao-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="">Auto-detect</option>
+                <option value="restaurants">Restaurant</option>
+                <option value="things-to-do">Things To Do (tours, rentals, activities)</option>
+                <option value="nightlife">Nightlife / Bar</option>
+                <option value="coffee-sweets">Coffee &amp; Sweets</option>
+                <option value="shopping">Shopping / Retail</option>
+                <option value="hotels">Hotel / Condo</option>
+                <option value="services">Services</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button class="btn btn-primary" style="width:100%;" onclick="runAIOrganize()">Organize with AI</button>
+            </div>
+          </div>
+          <!-- URL Scrape option -->
+          <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-end;">
+            <div style="flex:1;">
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Or — Scrape a URL directly</label>
+              <input id="ao-url" type="url" placeholder="https://www.businesswebsite.com or Google Maps URL..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+            <button class="btn btn-outline" style="white-space:nowrap;" onclick="scrapeURL()">Scrape URL</button>
+          </div>
+          <div id="ao-scrape-status" style="display:none;font-size:12px;color:var(--text-muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px;"></div>
+
+          <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Raw Business Content</label>
+          <textarea id="ao-raw" placeholder="Paste anything here: website copy, menu text, scraped HTML, Google Maps info, Facebook page content, PDF text...&#10;&#10;Example:&#10;Cobalt the Restaurant at The Wharf&#10;Upscale seafood restaurant with panoramic marina views&#10;(251) 923-5564 | 4673 Wharf Pkwy, Orange Beach AL&#10;Happy Hour: Mon-Fri 3-6pm — $2 off drinks, $5 appetizers&#10;...and so on" style="width:100%;height:260px;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
+          <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">Tip: more content = better results. Paste a whole page, or scrape a URL above.</div>
+        </div>
+
+        <!-- Processing state -->
+        <div id="ao-loading" style="display:none;text-align:center;padding:40px;">
+          <div style="font-size:32px;margin-bottom:12px;">🤖</div>
+          <div style="font-size:16px;font-weight:600;">AI is organizing your data...</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">This takes 5-15 seconds</div>
+        </div>
+
+        <!-- Step 2: Review output -->
+        <div id="ao-step2" style="display:none;">
+          <div class="card" style="padding:24px;margin-bottom:20px;border:1px solid var(--primary);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h3 style="margin:0;font-size:16px;">Step 2 — Review &amp; Edit Organized Data</h3>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="resetAIOrganize()">Start Over</button>
+                <button class="btn btn-primary" onclick="approveAIOrganize()">Save to Database</button>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Review each section below. Edit anything that looks wrong, then click Save to Database.</div>
+
+            <!-- Summary bar -->
+            <div id="ao-summary" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding:12px;background:var(--bg);border-radius:8px;"></div>
+
+            <!-- Tabbed preview -->
+            <div style="display:flex;gap:0;border-bottom:1px solid var(--card-border);overflow-x:auto;margin-bottom:20px;">
+              <button onclick="aoTab('core')"    id="ao-tab-core"    style="padding:10px 18px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Core Info</button>
+              <button onclick="aoTab('menu')"    id="ao-tab-menu"    style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">Menu</button>
+              <button onclick="aoTab('schedule')" id="ao-tab-schedule" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">Schedules &amp; Pricing</button>
+              <button onclick="aoTab('specials')" id="ao-tab-specials" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">Specials / Happy Hour</button>
+              <button onclick="aoTab('extras')"  id="ao-tab-extras"  style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">Highlights &amp; Fleet</button>
+              <button onclick="aoTab('raw')"     id="ao-tab-raw"     style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">Raw JSON</button>
+            </div>
+
+            <!-- Tab: Core Info -->
+            <div id="ao-panel-core">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" id="ao-core-fields"></div>
+            </div>
+            <!-- Tab: Menu -->
+            <div id="ao-panel-menu" style="display:none;">
+              <div id="ao-menu-preview"></div>
+            </div>
+            <!-- Tab: Schedules -->
+            <div id="ao-panel-schedule" style="display:none;">
+              <div id="ao-schedule-preview"></div>
+            </div>
+            <!-- Tab: Specials -->
+            <div id="ao-panel-specials" style="display:none;">
+              <div id="ao-specials-preview"></div>
+            </div>
+            <!-- Tab: Extras -->
+            <div id="ao-panel-extras" style="display:none;">
+              <div id="ao-extras-preview"></div>
+            </div>
+            <!-- Tab: Raw JSON -->
+            <div id="ao-panel-raw" style="display:none;">
+              <textarea id="ao-json-editor" style="width:100%;height:500px;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>
+              <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">You can edit the JSON directly. Changes here will be saved when you click Save to Database.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Save confirmation -->
+        <div id="ao-saved" style="display:none;" class="card" style="padding:24px;border:1px solid #22c55e;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:32px;">✅</div>
+            <div>
+              <div style="font-weight:600;font-size:16px;">Business saved to database!</div>
+              <div style="font-size:13px;color:var(--text-muted);margin-top:4px;" id="ao-saved-msg"></div>
+            </div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="viewSavedProfile()">View GCR Profile</button>
+            <button class="btn btn-outline btn-sm" onclick="resetAIOrganize()">Organize Another Business</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AI INDEX / RAG STATUS ──────────────────── -->
+      <div id="page-rag-index" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>AI Index (RAG)</h1>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" onclick="loadRAGStatus()">Refresh Status</button>
+            <button class="btn btn-primary" onclick="reindexAll()">Reindex All Businesses</button>
+          </div>
+        </div>
+
+        <!-- Status cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--primary);" id="rag-stat-indexed">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Businesses Indexed</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:var(--primary);" id="rag-stat-total">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Total GCR Businesses</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#22c55e;" id="rag-stat-chunks">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Total Embeddings</div>
+          </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#f59e0b;" id="rag-stat-missing">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Not Yet Indexed</div>
+          </div>
+        </div>
+
+        <!-- Index table -->
+        <div class="card" style="padding:24px;">
+          <h3 style="margin:0 0 16px;font-size:15px;">Indexed Businesses</h3>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:8px;font-size:12px;color:var(--text-muted);">Business</th>
+                <th style="text-align:left;padding:8px;font-size:12px;color:var(--text-muted);">Slug</th>
+                <th style="text-align:left;padding:8px;font-size:12px;color:var(--text-muted);">Chunks</th>
+                <th style="text-align:left;padding:8px;font-size:12px;color:var(--text-muted);">Last Indexed</th>
+                <th style="text-align:left;padding:8px;font-size:12px;color:var(--text-muted);">Action</th>
+              </tr></thead>
+              <tbody id="rag-table-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Test the AI -->
+        <div class="card" style="padding:24px;margin-top:20px;">
+          <h3 style="margin:0 0 16px;font-size:15px;">Test AI Q&amp;A</h3>
+          <div style="display:flex;gap:10px;margin-bottom:16px;">
+            <input id="rag-test-q" type="text" placeholder="Ask a question... (e.g. Which restaurants have happy hour?)" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            <button class="btn btn-primary" onclick="testRAGQuestion()">Ask</button>
+          </div>
+          <div id="rag-test-answer" style="display:none;padding:16px;background:var(--bg);border-radius:8px;font-size:14px;line-height:1.6;"></div>
+          <div id="rag-test-sources" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </div>
+
+      <!-- ── AI SETTINGS ─────────────────────────────── -->
+      <div id="page-ai-settings" class="page-content" style="display:none;">
+        <div class="page-header"><h1>AI Settings</h1></div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px;">
+          <h3 style="margin:0 0 20px;font-size:15px;">Chat / Completion Model</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Provider</label>
+              <select id="ai-chat-provider" onchange="updateModelSuggestion()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="openai">OpenAI (GPT)</option>
+                <option value="grok">Grok (xAI)</option>
+                <option value="groq">Groq (fast inference)</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Model</label>
+              <input id="ai-chat-model" type="text" placeholder="e.g. claude-sonnet-4-6" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">API Key</label>
+            <input id="ai-chat-key" type="password" placeholder="sk-... or similar" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Stored securely in your database. Leave blank to keep current key.</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px;">
+          <h3 style="margin:0 0 20px;font-size:15px;">Embedding Model (for RAG Search)</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Provider</label>
+              <select id="ai-embed-provider" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="openai">OpenAI (recommended)</option>
+                <option value="cohere">Cohere</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Model</label>
+              <input id="ai-embed-model" type="text" placeholder="text-embedding-3-small" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Embedding API Key</label>
+            <input id="ai-embed-key" type="password" placeholder="OpenAI API key for embeddings" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Usually the same as your OpenAI key. Required for AI search (RAG) to work.</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px;">
+          <h3 style="margin:0 0 16px;font-size:15px;">System Prompt</h3>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">This sets the AI's personality and context. Edit to customize for GCR.</div>
+          <textarea id="ai-system-prompt" style="width:100%;height:140px;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px;">
+          <h3 style="margin:0 0 16px;font-size:15px;">Feature Flags</h3>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="ai-rag-enabled" style="width:16px;height:16px;cursor:pointer;">
+              Enable RAG Search (<code>/api/gcr/ask</code>)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="ai-voice-enabled" style="width:16px;height:16px;cursor:pointer;">
+              Enable Voice Input on Concierge
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;">
+          <button class="btn btn-primary" onclick="saveAISettings()">Save AI Settings</button>
+          <button class="btn btn-outline" onclick="loadAISettings()">Reset</button>
+        </div>
+      </div>
+
+
+      <!-- GCR BUSINESS DASHBOARD -->
+      <div id="page-biz-dashboard" class="page-content" style="display:none;padding:0;">
+        <div style="display:flex;height:calc(100vh - 60px);overflow:hidden;">
+
+          <!-- LEFT SIDEBAR -->
+          <aside style="width:210px;flex-shrink:0;border-right:1px solid var(--card-border);overflow-y:auto;background:var(--card-bg);">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--card-border);">
+              <button onclick="closeBizDashboard()" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:0;margin-bottom:8px;">← Businesses</button>
+              <div id="bd-biz-name" style="font-weight:700;font-size:14px;color:var(--text);word-break:break-word;"></div>
+              <div id="bd-biz-type" style="font-size:11px;color:var(--text-muted);margin-top:2px;text-transform:capitalize;"></div>
+            </div>
+            <nav style="padding:8px 0;">
+              <div style="padding:4px 16px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Main</div>
+              <div class="bd-nav-item" data-panel="overview" onclick="switchBizPanel('overview')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Overview</div>
+              <div class="bd-nav-item active" data-panel="profile" onclick="switchBizPanel('profile')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Business Profile</div>
+              <div class="bd-nav-item" data-panel="media" onclick="switchBizPanel('media')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Media Library</div>
+              <div style="padding:4px 16px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Content</div>
+              <div class="bd-nav-item" data-panel="menu" onclick="switchBizPanel('menu')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Menu</div>
+              <div class="bd-nav-item" data-panel="happyhour" onclick="switchBizPanel('happyhour')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Happy Hour</div>
+              <div class="bd-nav-item" data-panel="specials" onclick="switchBizPanel('specials')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Specials</div>
+              <div class="bd-nav-item" data-panel="events" onclick="switchBizPanel('events')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Events</div>
+              <div class="bd-nav-item" data-panel="fleet" onclick="switchBizPanel('fleet')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Fleet / Inventory</div>
+              <div class="bd-nav-item" data-panel="addons" onclick="switchBizPanel('addons')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Add-ons</div>
+              <div class="bd-nav-item" data-panel="schedule" onclick="switchBizPanel('schedule')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Schedule & Pricing</div>
+              <div class="bd-nav-item" data-panel="highlights" onclick="switchBizPanel('highlights')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Highlights</div>
+              <div class="bd-nav-item" data-panel="guestinfo" onclick="switchBizPanel('guestinfo')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Guest Info</div>
+              <div class="bd-nav-item" data-panel="whatbring" onclick="switchBizPanel('whatbring')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">What to Bring</div>
+              <div class="bd-nav-item" data-panel="reviews" onclick="switchBizPanel('reviews')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Reviews</div>
+              <div class="bd-nav-item" data-panel="faq" onclick="switchBizPanel('faq')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">FAQ</div>
+              <div style="padding:4px 16px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Settings</div>
+              <div class="bd-nav-item" data-panel="seo" onclick="switchBizPanel('seo')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">SEO</div>
+              <div class="bd-nav-item" data-panel="social" onclick="switchBizPanel('social')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Social Links</div>
+              <div class="bd-nav-item" data-panel="gcrsettings" onclick="switchBizPanel('gcrsettings')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">GCR Settings</div>
+              <div style="padding:12px 16px;margin-top:8px;">
+                <a id="bd-view-live" href="#" target="_blank" style="display:block;text-align:center;padding:8px;background:var(--primary);color:white;border-radius:6px;font-size:12px;text-decoration:none;font-weight:600;">View Live Profile</a>
+              </div>
+            </nav>
+          </aside>
+
+          <!-- RIGHT CONTENT -->
+          <div style="flex:1;overflow-y:auto;" id="bd-content-area">
+
+            <!-- OVERVIEW -->
+            <div class="bd-panel" id="bd-panel-overview" style="display:none;padding:24px;">
+              <div class="stats-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+                <div class="stat-card"><div class="stat-label">Photos</div><div class="stat-value" id="bd-stat-photos">0</div></div>
+                <div class="stat-card"><div class="stat-label">Menu Items</div><div class="stat-value" id="bd-stat-menu">0</div></div>
+                <div class="stat-card"><div class="stat-label">Reviews</div><div class="stat-value" id="bd-stat-reviews">0</div></div>
+                <div class="stat-card"><div class="stat-label">Events</div><div class="stat-value" id="bd-stat-events">0</div></div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>Quick Actions</h3></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                  <button class="btn btn-primary" onclick="switchBizPanel('profile')">Edit Profile</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('media')">Upload Media</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('menu')">Menu</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('events')">Events</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('specials')">Specials</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('fleet')">Fleet</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('reviews')">Reviews</button>
+                  <button class="btn btn-outline" onclick="switchBizPanel('gcrsettings')">GCR Settings</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- BUSINESS PROFILE -->
+            <div class="bd-panel" id="bd-panel-profile" style="padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Business Information</h3></div>
+                <div class="form-row">
+                  <div class="form-group"><label>Business Name</label><input type="text" id="bd-prof-name"></div>
+                  <div class="form-group"><label>Phone</label><input type="tel" id="bd-prof-phone"></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label>Email</label><input type="email" id="bd-prof-email"></div>
+                  <div class="form-group"><label>Website</label><input type="url" id="bd-prof-website" placeholder="https://"></div>
+                </div>
+                <div class="form-group"><label>About / Description</label><textarea id="bd-prof-description" rows="4"></textarea></div>
+                <div class="form-group"><label>Tagline</label><input type="text" id="bd-prof-tagline" placeholder="Short one-liner"></div>
+                <div class="form-row">
+                  <div class="form-group"><label>Price Range</label>
+                    <select id="bd-prof-pricerange">
+                      <option value="">Select...</option>
+                      <option value="$">$ — Budget</option>
+                      <option value="$$">$$ — Moderate</option>
+                      <option value="$$$">$$$ — Upscale</option>
+                      <option value="$$$$">$$$$ — Fine Dining</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label>Emoji</label><input type="text" id="bd-prof-emoji" placeholder="🍽️" maxlength="4"></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>Address</h3></div>
+                <div class="form-group"><label>Street Address</label><input type="text" id="bd-prof-address"></div>
+                <div class="form-row">
+                  <div class="form-group"><label>City</label><input type="text" id="bd-prof-city"></div>
+                  <div class="form-group"><label>State</label><input type="text" id="bd-prof-state" maxlength="2"></div>
+                  <div class="form-group"><label>ZIP</label><input type="text" id="bd-prof-zip"></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>Business Hours</h3></div>
+                <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:center;">
+                  <span style="font-size:13px;color:var(--text-muted);">Monday</span><input type="text" id="bd-hours-mon" placeholder="9:00 AM – 9:00 PM or Closed">
+                  <span style="font-size:13px;color:var(--text-muted);">Tuesday</span><input type="text" id="bd-hours-tue" placeholder="9:00 AM – 9:00 PM or Closed">
+                  <span style="font-size:13px;color:var(--text-muted);">Wednesday</span><input type="text" id="bd-hours-wed" placeholder="9:00 AM – 9:00 PM or Closed">
+                  <span style="font-size:13px;color:var(--text-muted);">Thursday</span><input type="text" id="bd-hours-thu" placeholder="9:00 AM – 9:00 PM or Closed">
+                  <span style="font-size:13px;color:var(--text-muted);">Friday</span><input type="text" id="bd-hours-fri" placeholder="9:00 AM – 9:00 PM or Closed">
+                  <span style="font-size:13px;color:var(--text-muted);">Saturday</span><input type="text" id="bd-hours-sat" placeholder="9:00 AM – 9:00 PM or Closed">
+                  <span style="font-size:13px;color:var(--text-muted);">Sunday</span><input type="text" id="bd-hours-sun" placeholder="9:00 AM – 9:00 PM or Closed">
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>Features</h3></div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-kids"> Kids Friendly</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-pets"> Pet Friendly</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-music"> Live Music</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-waterfront"> Waterfront</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-outdoor"> Outdoor Seating</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-alcohol"> Alcohol</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-delivery"> Delivery</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-takeout"> Takeout</label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-flag-reservations"> Reservations</label>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary" onclick="saveBizDashProfile()">Save Profile</button>
+                <button class="btn btn-outline" id="bd-view-site-btn" onclick="window.open(document.getElementById('bd-view-live').href,'_blank')">View Live Site</button>
+              </div>
+            </div>
+
+            <!-- MEDIA LIBRARY -->
+            <div class="bd-panel" id="bd-panel-media" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Media Library</h3>
+                  <button class="btn btn-primary btn-sm" onclick="document.getElementById('bd-media-upload-input').click()">Upload Files</button>
+                </div>
+                <input type="file" id="bd-media-upload-input" multiple accept="image/*,video/*" style="display:none" onchange="uploadBizMediaFiles(this.files)">
+                <div style="border:2px dashed var(--card-border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;margin-bottom:16px;" onclick="document.getElementById('bd-media-upload-input').click()">
+                  <div style="font-size:32px;margin-bottom:8px;">📁</div>
+                  <p style="color:var(--text-muted);margin:0;">Drag & drop or click to upload</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>Add by URL</h3></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <input type="text" id="bd-photo-url" placeholder="https://example.com/photo.jpg" style="flex:1;min-width:200px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                  <select id="bd-photo-section" style="padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                    <option value="gallery">Gallery</option>
+                    <option value="menu">Menu Item</option>
+                    <option value="event">Event</option>
+                    <option value="fleet">Fleet</option>
+                  </select>
+                  <input type="text" id="bd-photo-caption" placeholder="Caption (optional)" style="width:160px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                  <button class="btn btn-primary" onclick="addBizPhotoByUrl()">Add Photo</button>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>All Photos</h3></div>
+                <div id="bd-media-grid"></div>
+              </div>
+            </div>
+
+            <!-- MENU -->
+            <div class="bd-panel" id="bd-panel-menu" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Food Menu</h3><button class="btn btn-primary btn-sm" onclick="openBizMenuItemModal('food')">+ Add Item</button></div>
+                <div id="bd-menu-list"></div>
+              </div>
+              <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>Drinks / Bar Menu</h3><button class="btn btn-primary btn-sm" onclick="openBizMenuItemModal('drink')">+ Add Drink</button></div>
+                <div id="bd-drinks-list"></div>
+              </div>
+            </div>
+
+            <!-- HAPPY HOUR -->
+            <div class="bd-panel" id="bd-panel-happyhour" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Happy Hour</h3></div>
+                <div class="form-row">
+                  <div class="form-group"><label>Days</label><input type="text" id="bd-hh-days" placeholder="Mon–Fri"></div>
+                  <div class="form-group"><label>Start Time</label><input type="time" id="bd-hh-start"></div>
+                  <div class="form-group"><label>End Time</label><input type="time" id="bd-hh-end"></div>
+                </div>
+                <div class="card-header" style="margin-top:8px;"><h4>Deals</h4><button class="btn btn-outline btn-sm" onclick="addBizHHDeal()">+ Add Deal</button></div>
+                <div id="bd-hh-items"></div>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="saveBizDashHappyHour()">Save Happy Hour</button>
+              </div>
+            </div>
+
+            <!-- SPECIALS -->
+            <div class="bd-panel" id="bd-panel-specials" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Daily Specials</h3><button class="btn btn-primary btn-sm" onclick="openBizSpecialModal()">+ Add Special</button></div>
+                <div id="bd-specials-list"></div>
+              </div>
+            </div>
+
+            <!-- EVENTS -->
+            <div class="bd-panel" id="bd-panel-events" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Events</h3><button class="btn btn-primary btn-sm" onclick="openBizEventModal()">+ Add Event</button></div>
+                <div id="bd-events-list"></div>
+              </div>
+            </div>
+
+            <!-- FLEET -->
+            <div class="bd-panel" id="bd-panel-fleet" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Fleet / Inventory</h3><button class="btn btn-primary btn-sm" onclick="openBizFleetModal()">+ Add Item</button></div>
+                <div id="bd-fleet-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:8px;"></div>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="saveBizFleet()">Save Fleet</button>
+              </div>
+            </div>
+
+            <!-- ADD-ONS -->
+            <div class="bd-panel" id="bd-panel-addons" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Add-ons</h3><button class="btn btn-primary btn-sm" onclick="openBizAddonModal()">+ Add Item</button></div>
+                <div id="bd-addons-list"></div>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="saveBizAddons()">Save Add-ons</button>
+              </div>
+            </div>
+
+            <!-- SCHEDULE & PRICING -->
+            <div class="bd-panel" id="bd-panel-schedule" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Schedule & Pricing</h3><button class="btn btn-primary btn-sm" onclick="openBizScheduleModal()">+ Add Slot</button></div>
+                <div id="bd-schedule-list"></div>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="saveBizSchedule()">Save Schedule</button>
+              </div>
+            </div>
+
+            <!-- HIGHLIGHTS -->
+            <div class="bd-panel" id="bd-panel-highlights" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>What's Included / Highlights</h3></div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">One item per line</p>
+                <textarea id="bd-highlights" rows="10" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;"></textarea>
+                <button class="btn btn-primary" style="margin-top:12px;" onclick="saveBizHighlights()">Save Highlights</button>
+              </div>
+            </div>
+
+            <!-- GUEST INFO -->
+            <div class="bd-panel" id="bd-panel-guestinfo" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Guest Info / Restrictions</h3></div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">One item per line</p>
+                <textarea id="bd-restrictions" rows="10" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;"></textarea>
+                <button class="btn btn-primary" style="margin-top:12px;" onclick="saveBizRestrictions()">Save Guest Info</button>
+              </div>
+            </div>
+
+            <!-- WHAT TO BRING -->
+            <div class="bd-panel" id="bd-panel-whatbring" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>What to Bring</h3></div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">One item per line</p>
+                <textarea id="bd-whatbring" rows="8" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;"></textarea>
+                <button class="btn btn-primary" style="margin-top:12px;" onclick="saveBizWhatToBring()">Save</button>
+              </div>
+            </div>
+
+            <!-- REVIEWS -->
+            <div class="bd-panel" id="bd-panel-reviews" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Customer Reviews</h3></div>
+                <div id="bd-reviews-list"></div>
+              </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="bd-panel" id="bd-panel-faq" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>FAQ</h3><button class="btn btn-primary btn-sm" onclick="openBizFAQModal()">+ Add Question</button></div>
+                <div id="bd-faq-list"></div>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="saveBizFAQ()">Save FAQ</button>
+              </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="bd-panel" id="bd-panel-seo" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>SEO Settings</h3></div>
+                <div class="form-group"><label>Page Title (60 chars)</label><input type="text" id="bd-seo-title" maxlength="60" placeholder="Business Name | Gulf Coast Radar"></div>
+                <div class="form-group"><label>Meta Description (160 chars)</label><textarea id="bd-seo-desc" rows="3" maxlength="160"></textarea></div>
+                <div class="form-group"><label>Keywords</label><input type="text" id="bd-seo-keywords" placeholder="restaurant, orange beach, seafood"></div>
+                <button class="btn btn-primary" onclick="saveBizDashSEO()">Save SEO</button>
+              </div>
+            </div>
+
+            <!-- SOCIAL -->
+            <div class="bd-panel" id="bd-panel-social" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>Social Links</h3></div>
+                <div class="form-row">
+                  <div class="form-group"><label>Facebook</label><input type="url" id="bd-social-facebook" placeholder="https://facebook.com/..."></div>
+                  <div class="form-group"><label>Instagram</label><input type="url" id="bd-social-instagram" placeholder="https://instagram.com/..."></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label>TikTok</label><input type="url" id="bd-social-tiktok" placeholder="https://tiktok.com/@..."></div>
+                  <div class="form-group"><label>Google Maps URL</label><input type="url" id="bd-social-google" placeholder="https://maps.google.com/..."></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label>Twitter / X</label><input type="url" id="bd-social-twitter" placeholder="https://x.com/..."></div>
+                  <div class="form-group"><label>Yelp</label><input type="url" id="bd-social-yelp" placeholder="https://yelp.com/biz/..."></div>
+                </div>
+                <button class="btn btn-primary" onclick="saveBizDashProfile()">Save Social Links</button>
+              </div>
+            </div>
+
+            <!-- GCR SETTINGS -->
+            <div class="bd-panel" id="bd-panel-gcrsettings" style="display:none;padding:24px;">
+              <div class="card">
+                <div class="card-header"><h3>GCR Directory Settings</h3></div>
+                <div class="form-row">
+                  <div class="form-group"><label>Category / Type</label>
+                    <select id="bd-gcr-type">
+                      <option value="restaurants">Restaurants</option>
+                      <option value="things-to-do">Things To Do</option>
+                      <option value="nightlife">Nightlife</option>
+                      <option value="coffee-sweets">Coffee & Sweets</option>
+                      <option value="shopping">Shopping</option>
+                      <option value="hotels">Hotels</option>
+                      <option value="services">Services</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label>Subdomain / Slug</label><input type="text" id="bd-gcr-slug" placeholder="cobalt-the-restaurant"></div>
+                </div>
+                <div style="display:flex;gap:24px;margin:16px 0;flex-wrap:wrap;">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-gcr-listed"> Listed on GCR</label>
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-gcr-featured"> Featured</label>
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-gcr-waterfront"> Waterfront</label>
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-gcr-livemusic"> Live Music</label>
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-gcr-kidsfriendly"> Kids Friendly</label>
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;"><input type="checkbox" id="bd-gcr-petfriendly"> Pet Friendly</label>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                  <button class="btn btn-primary" onclick="saveBizDashGCRSettings()">Save GCR Settings</button>
+                  <a id="bd-gcr-profile-link" href="#" target="_blank" class="btn btn-outline">View Live Profile</a>
+                  <button class="btn btn-outline" onclick="reindexThisBusiness()">Re-index for AI Search</button>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end bd-content-area -->
+        </div>
+      </div>
+      <!-- END GCR BUSINESS DASHBOARD -->
+
     </main>
+  </div>
+
+  <!-- BIZ DASHBOARD MODALS -->
+
+  <!-- Fleet Item Modal -->
+  <div id="modal-biz-fleet" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;" id="bd-fleet-modal-title">Add Fleet Item</h3><button onclick="document.getElementById('modal-biz-fleet').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-group"><label>Name</label><input type="text" id="bd-fleet-form-name" placeholder="Single Seater Boat"></div>
+      <div class="form-group"><label>Description</label><textarea id="bd-fleet-form-desc" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Capacity</label><input type="number" id="bd-fleet-form-capacity" min="1" placeholder="4"></div>
+        <div class="form-group"><label>Price / Hour ($)</label><input type="number" id="bd-fleet-form-price" min="0" step="0.01" placeholder="75"></div>
+      </div>
+      <div class="form-group"><label>Photo URL</label><input type="url" id="bd-fleet-form-photo" placeholder="https://..."></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-fleet').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizFleetItem()">Save</button>
+      </div>
+      <input type="hidden" id="bd-fleet-form-id">
+    </div>
+  </div>
+
+  <!-- Addon Modal -->
+  <div id="modal-biz-addon" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:420px;max-width:95vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Add-on Item</h3><button onclick="document.getElementById('modal-biz-addon').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-group"><label>Name</label><input type="text" id="bd-addon-form-name" placeholder="Cooler Pack"></div>
+      <div class="form-group"><label>Description</label><textarea id="bd-addon-form-desc" rows="2"></textarea></div>
+      <div class="form-group"><label>Price ($)</label><input type="number" id="bd-addon-form-price" min="0" step="0.01"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-addon').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizAddonItem()">Save</button>
+      </div>
+      <input type="hidden" id="bd-addon-form-id">
+    </div>
+  </div>
+
+  <!-- Special Modal -->
+  <div id="modal-biz-special" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:480px;max-width:95vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Daily Special</h3><button onclick="document.getElementById('modal-biz-special').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-group"><label>Name</label><input type="text" id="bd-special-form-name" placeholder="Taco Tuesday"></div>
+      <div class="form-group"><label>Description</label><textarea id="bd-special-form-desc" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Day</label><input type="text" id="bd-special-form-day" placeholder="Tuesday or Mon-Fri"></div>
+        <div class="form-group"><label>Discount / Price</label><input type="text" id="bd-special-form-discount" placeholder="$2 tacos"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Time</label><input type="time" id="bd-special-form-start"></div>
+        <div class="form-group"><label>End Time</label><input type="time" id="bd-special-form-end"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-special').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizSpecialItem()">Save</button>
+      </div>
+      <input type="hidden" id="bd-special-form-id">
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div id="modal-biz-event" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:480px;max-width:95vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Event</h3><button onclick="document.getElementById('modal-biz-event').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-group"><label>Title</label><input type="text" id="bd-event-form-title" placeholder="Live Music Night"></div>
+      <div class="form-group"><label>Description</label><textarea id="bd-event-form-desc" rows="3"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date</label><input type="date" id="bd-event-form-date"></div>
+        <div class="form-group"><label>Time</label><input type="time" id="bd-event-form-time"></div>
+      </div>
+      <div class="form-group"><label>Photo URL (optional)</label><input type="url" id="bd-event-form-photo" placeholder="https://..."></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-event').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizEventItem()">Save</button>
+      </div>
+      <input type="hidden" id="bd-event-form-id">
+    </div>
+  </div>
+
+  <!-- Schedule Slot Modal -->
+  <div id="modal-biz-schedule" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Schedule Slot</h3><button onclick="document.getElementById('modal-biz-schedule').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>Slot Name</label><input type="text" id="bd-sched-form-name" placeholder="Morning Cruise"></div>
+        <div class="form-group"><label>Departure Time</label><input type="text" id="bd-sched-form-time" placeholder="9:00 AM"></div>
+      </div>
+      <div style="margin-bottom:8px;font-size:13px;font-weight:600;">Ticket Tiers</div>
+      <div id="bd-sched-tiers"></div>
+      <button class="btn btn-outline btn-sm" onclick="addScheduleTier()" style="margin-top:6px;">+ Add Tier</button>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-schedule').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizScheduleSlot()">Save</button>
+      </div>
+      <input type="hidden" id="bd-sched-form-id">
+    </div>
+  </div>
+
+  <!-- Menu Item Modal -->
+  <div id="modal-biz-menuitem" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:480px;max-width:95vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;" id="bd-menuitem-modal-title">Add Menu Item</h3><button onclick="document.getElementById('modal-biz-menuitem').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>Name</label><input type="text" id="bd-menuitem-form-name" placeholder="Shrimp Po'Boy"></div>
+        <div class="form-group"><label>Price ($)</label><input type="text" id="bd-menuitem-form-price" placeholder="14.99"></div>
+      </div>
+      <div class="form-group"><label>Category</label><input type="text" id="bd-menuitem-form-category" placeholder="Sandwiches"></div>
+      <div class="form-group"><label>Description</label><textarea id="bd-menuitem-form-desc" rows="2"></textarea></div>
+      <div class="form-group"><label>Photo URL (optional)</label><input type="url" id="bd-menuitem-form-photo" placeholder="https://..."></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-menuitem').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizMenuItemFromModal()">Save</button>
+      </div>
+      <input type="hidden" id="bd-menuitem-form-id">
+      <input type="hidden" id="bd-menuitem-form-type" value="food">
+    </div>
+  </div>
+
+  <!-- FAQ Modal -->
+  <div id="modal-biz-faq" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:480px;max-width:95vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">FAQ Item</h3><button onclick="document.getElementById('modal-biz-faq').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-group"><label>Question</label><input type="text" id="bd-faq-form-q" placeholder="What is your cancellation policy?"></div>
+      <div class="form-group"><label>Answer</label><textarea id="bd-faq-form-a" rows="4"></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-biz-faq').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBizFAQItem()">Save</button>
+      </div>
+      <input type="hidden" id="bd-faq-form-id">
+    </div>
   </div>
 
   <!-- Toast container -->
@@ -1010,6 +1763,8 @@
       if (page === 'leads' && !_leadsLoaded) loadLeads();
       if (page === 'ar-hunts') renderHuntsGrid();
       if (page === 'users' && !_usersLoaded) loadUsers();
+      if (page === 'rag-index') loadRAGStatus();
+      if (page === 'ai-settings') loadAISettings();
     }
 
     function toast(msg, type) {
@@ -2134,6 +2889,337 @@
         btn.closest('div').parentElement.remove();
         toast('Photo deleted.');
       } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── AI SETTINGS ───────────────────────────────────
+
+    async function loadAISettings() {
+      var token = getAuthToken(); if (!token) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-settings', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!r.ok) throw new Error(await r.text());
+        var d = await r.json();
+        document.getElementById('ai-chat-provider').value   = d.chat_provider  || 'anthropic';
+        document.getElementById('ai-chat-model').value      = d.chat_model     || 'claude-sonnet-4-6';
+        document.getElementById('ai-chat-key').placeholder  = d.chat_api_key   || 'Enter API key...';
+        document.getElementById('ai-embed-provider').value  = d.embed_provider || 'openai';
+        document.getElementById('ai-embed-model').value     = d.embed_model    || 'text-embedding-3-small';
+        document.getElementById('ai-embed-key').placeholder = d.embed_api_key  || 'Enter embedding API key...';
+        document.getElementById('ai-system-prompt').value   = d.system_prompt  || '';
+        document.getElementById('ai-rag-enabled').checked   = d.rag_enabled !== false;
+        document.getElementById('ai-voice-enabled').checked = !!d.voice_enabled;
+      } catch(e) { toast('Could not load AI settings: ' + e.message, 'error'); }
+    }
+
+    function updateModelSuggestion() {
+      var p = document.getElementById('ai-chat-provider').value;
+      var defaults = { anthropic: 'claude-sonnet-4-6', openai: 'gpt-4o', grok: 'grok-3-mini', groq: 'llama-3.3-70b-versatile' };
+      var m = document.getElementById('ai-chat-model');
+      if (!m.value || Object.values(defaults).includes(m.value)) m.value = defaults[p] || '';
+    }
+
+    async function saveAISettings() {
+      var token = getAuthToken(); if (!token) return;
+      var body = {
+        chat_provider:  document.getElementById('ai-chat-provider').value,
+        chat_model:     document.getElementById('ai-chat-model').value,
+        embed_provider: document.getElementById('ai-embed-provider').value,
+        embed_model:    document.getElementById('ai-embed-model').value,
+        system_prompt:  document.getElementById('ai-system-prompt').value,
+        rag_enabled:    document.getElementById('ai-rag-enabled').checked,
+        voice_enabled:  document.getElementById('ai-voice-enabled').checked,
+      };
+      var chatKey  = document.getElementById('ai-chat-key').value.trim();
+      var embedKey = document.getElementById('ai-embed-key').value.trim();
+      if (chatKey)  body.chat_api_key  = chatKey;
+      if (embedKey) body.embed_api_key = embedKey;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+        if (!r.ok) throw new Error(await r.text());
+        toast('AI settings saved!');
+        document.getElementById('ai-chat-key').value  = '';
+        document.getElementById('ai-embed-key').value = '';
+        loadAISettings();
+      } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+    }
+
+    // ── RAG INDEX ────────────────────────────────────
+
+    async function loadRAGStatus() {
+      var token = getAuthToken(); if (!token) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/rag-status', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!r.ok) throw new Error(await r.text());
+        var d = await r.json();
+        document.getElementById('rag-stat-indexed').textContent = d.indexed_businesses;
+        document.getElementById('rag-stat-total').textContent   = d.total_gcr_businesses;
+        document.getElementById('rag-stat-chunks').textContent  = d.total_chunks;
+        document.getElementById('rag-stat-missing').textContent = Math.max(0, d.total_gcr_businesses - d.indexed_businesses);
+        var tbody = document.getElementById('rag-table-body');
+        if (!d.businesses || !d.businesses.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No businesses indexed yet. Click "Reindex All Businesses" to start.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = d.businesses.map(function(b) {
+          var ago = new Date(b.last_indexed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:10px 8px;font-size:14px;">' + b.name + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + b.slug + '</td>' +
+            '<td style="padding:10px 8px;"><span style="background:var(--bg);padding:2px 8px;border-radius:12px;font-size:12px;">' + b.chunks + ' chunks</span></td>' +
+            '<td style="padding:10px 8px;font-size:12px;color:var(--text-muted);">' + ago + '</td>' +
+            '<td style="padding:10px 8px;"><button class="btn btn-outline btn-sm" onclick="reindexOne(\'' + b.slug + '\')">Reindex</button></td>' +
+            '</tr>';
+        }).join('');
+      } catch(e) { toast('Could not load RAG status: ' + e.message, 'error'); }
+    }
+
+    async function reindexOne(slug) {
+      var token = getAuthToken(); if (!token) return;
+      toast('Reindexing ' + slug + '...');
+      try {
+        var r = await fetch(API_BASE + '/api/gcr/reindex/' + slug, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({}) });
+        if (!r.ok) throw new Error(await r.text());
+        var d = await r.json();
+        toast(slug + ' reindexed: ' + d.chunks_indexed + ' chunks');
+        loadRAGStatus();
+      } catch(e) { toast('Reindex failed: ' + e.message, 'error'); }
+    }
+
+    async function reindexAll() {
+      if (!confirm('This will reindex ALL GCR businesses. It may take several minutes and use embedding API credits. Continue?')) return;
+      toast('Starting full reindex — check the AI Index page for progress...');
+      // We don't have a "reindex all" endpoint — we trigger each one
+      var token = getAuthToken(); if (!token) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/rag-status', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await r.json();
+        for (var i = 0; i < d.businesses.length; i++) {
+          await reindexOne(d.businesses[i].slug);
+          await new Promise(res => setTimeout(res, 300));
+        }
+        toast('Full reindex complete!');
+        loadRAGStatus();
+      } catch(e) { toast('Reindex error: ' + e.message, 'error'); }
+    }
+
+    async function testRAGQuestion() {
+      var q = document.getElementById('rag-test-q').value.trim();
+      if (!q) return;
+      var ansDiv = document.getElementById('rag-test-answer');
+      var srcDiv = document.getElementById('rag-test-sources');
+      ansDiv.style.display = '';
+      ansDiv.textContent = 'Thinking...';
+      srcDiv.innerHTML = '';
+      try {
+        var r = await fetch(API_BASE + '/api/gcr/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }) });
+        if (!r.ok) throw new Error(await r.text());
+        var d = await r.json();
+        ansDiv.textContent = d.answer;
+        if (d.sources && d.sources.length) {
+          srcDiv.innerHTML = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Sources:</div>' +
+            d.sources.map(function(s) {
+              return '<a href="https://gcr-rosy.vercel.app/business.html?id=' + s.slug + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--bg);border-radius:12px;font-size:12px;color:var(--text);text-decoration:none;">' + s.name + ' (' + Math.round(s.relevance * 100) + '%)</a>';
+            }).join('');
+        }
+      } catch(e) { ansDiv.textContent = 'Error: ' + e.message; }
+    }
+
+    // ── AI DATA ORGANIZER ─────────────────────────────
+
+    var _aoResult = null;
+    var _aoSavedSlug = null;
+
+    async function scrapeURL() {
+      var url = document.getElementById('ao-url').value.trim();
+      if (!url) { toast('Enter a URL first', 'error'); return; }
+      var statusEl = document.getElementById('ao-scrape-status');
+      statusEl.style.display = '';
+      statusEl.style.color   = 'var(--text-muted)';
+      statusEl.textContent   = 'Fetching page content from: ' + url + '...';
+      var token = getAuthToken(); if (!token) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/scrape-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ url })
+        });
+        if (!r.ok) throw new Error(await r.text());
+        var d = await r.json();
+        document.getElementById('ao-raw').value = d.text || '';
+        statusEl.style.color = '#22c55e';
+        statusEl.textContent = 'Page scraped! ' + (d.text || '').length + ' characters extracted. You can edit below, then click Organize with AI.';
+      } catch(e) {
+        statusEl.style.color = '#ef4444';
+        statusEl.textContent = 'Scrape failed: ' + e.message + '. Try pasting the page content manually instead.';
+      }
+    }
+
+    async function runAIOrganize() {
+      var raw  = document.getElementById('ao-raw').value.trim();
+      var type = document.getElementById('ao-type').value;
+      if (!raw) { toast('Paste some business content first', 'error'); return; }
+      document.getElementById('ao-step1').style.display   = 'none';
+      document.getElementById('ao-loading').style.display = '';
+      document.getElementById('ao-step2').style.display   = 'none';
+      document.getElementById('ao-saved').style.display   = 'none';
+      var token = getAuthToken(); if (!token) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-organize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ raw_text: raw, business_type: type || undefined })
+        });
+        if (!r.ok) { var e = await r.json(); throw new Error(e.error || 'AI organize failed'); }
+        var d = await r.json();
+        _aoResult = d.structured;
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-step2').style.display   = '';
+        renderAOPreview(_aoResult);
+      } catch(e) {
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-step1').style.display   = '';
+        toast('AI error: ' + e.message, 'error');
+      }
+    }
+
+    function renderAOPreview(d) {
+      // Summary badges
+      var sum = document.getElementById('ao-summary');
+      var badges = [
+        d.name && { label: d.name, color: 'var(--primary)' },
+        d.type && { label: d.type, color: '#6366f1' },
+        d.phone && { label: '📞 ' + d.phone },
+        (d.menu_items && d.menu_items.length) && { label: d.menu_items.length + ' menu items', color: '#22c55e' },
+        (d.specials && d.specials.length) && { label: d.specials.length + ' specials', color: '#f59e0b' },
+        (d.events && d.events.length) && { label: d.events.length + ' events', color: '#a78bfa' },
+        (d.fleet && d.fleet.length) && { label: d.fleet.length + ' fleet', color: '#06b6d4' },
+        d.happy_hour && { label: 'Happy Hour ✓', color: '#f59e0b' },
+        (d.highlights && d.highlights.length) && { label: d.highlights.length + ' highlights' },
+      ].filter(Boolean);
+      sum.innerHTML = badges.map(function(b) {
+        return '<span style="padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;background:' + (b.color || 'var(--card-border)') + ';color:#fff;">' + b.label + '</span>';
+      }).join('');
+
+      // Core info fields
+      var coreFields = [
+        { id: 'ao-f-name',        label: 'Business Name',  val: d.name || '' },
+        { id: 'ao-f-type',        label: 'Category',       val: d.type || '' },
+        { id: 'ao-f-subdomain',   label: 'Slug (subdomain)', val: d.subdomain || (d.name || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') },
+        { id: 'ao-f-tagline',     label: 'Tagline',        val: d.tagline || '' },
+        { id: 'ao-f-phone',       label: 'Phone',          val: d.phone || '' },
+        { id: 'ao-f-address',     label: 'Address',        val: d.address || '' },
+        { id: 'ao-f-city',        label: 'City',           val: d.city || '' },
+        { id: 'ao-f-state',       label: 'State',          val: d.state || '' },
+        { id: 'ao-f-website',     label: 'Website',        val: d.website || '' },
+        { id: 'ao-f-price-range', label: 'Price Range',    val: d.price_range || '' },
+      ];
+      var coreHtml = coreFields.map(function(f) {
+        return '<div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">' + f.label + '</label>' +
+          '<input id="' + f.id + '" value="' + (f.val || '').replace(/"/g,'&quot;') + '" onchange="syncAOField(\'' + f.id + '\')" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>';
+      }).join('');
+      document.getElementById('ao-core-fields').innerHTML = coreHtml;
+      // Merge description as full-width
+      var descDiv = document.createElement('div'); descDiv.style.gridColumn = '1 / -1';
+      descDiv.innerHTML = '<label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</label>' +
+        '<textarea id="ao-f-description" rows="4" onchange="syncAOField(\'ao-f-description\')" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;resize:vertical;">' + (d.description || '') + '</textarea>';
+      document.getElementById('ao-core-fields').appendChild(descDiv);
+
+      // Menu tab
+      var menu = d.menu_items || [];
+      document.getElementById('ao-menu-preview').innerHTML = menu.length
+        ? menu.map(function(item) {
+            return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--card-border);">' +
+              '<div><strong style="font-size:14px;">' + (item.name||'') + '</strong>' +
+              '<div style="font-size:12px;color:var(--text-muted);">' + (item.category||'') + (item.description?' — '+item.description:'') + '</div></div>' +
+              '<div style="font-size:14px;font-weight:600;color:var(--primary);white-space:nowrap;margin-left:12px;">' + (item.price ? '$'+item.price : '') + '</div></div>';
+          }).join('')
+        : '<div style="color:var(--text-muted);padding:20px;">No menu items found</div>';
+
+      // Schedule tab
+      var schedules = d.schedules || [];
+      document.getElementById('ao-schedule-preview').innerHTML = schedules.length
+        ? schedules.map(function(s) {
+            var tickets = (s.tickets||[]).map(function(t) { return '<div style="font-size:13px;">' + t.name + ': <strong>' + t.price + '</strong></div>'; }).join('');
+            return '<div style="padding:12px;background:var(--bg);border-radius:8px;margin-bottom:10px;"><div style="font-weight:600;">' + s.name + '</div><div style="font-size:12px;color:var(--text-muted);">' + (s.time||'') + '</div>' + tickets + '</div>';
+          }).join('')
+        : '<div style="color:var(--text-muted);padding:20px;">No schedule/pricing found</div>';
+
+      // Specials tab
+      var specials = d.specials || [];
+      var hh = d.happy_hour;
+      var specialsHtml = '';
+      if (hh) specialsHtml += '<div style="padding:12px;background:var(--bg);border-radius:8px;margin-bottom:10px;border-left:3px solid #f59e0b;"><div style="font-weight:600;color:#f59e0b;">Happy Hour</div><div style="font-size:13px;">' + (typeof hh === 'string' ? hh : JSON.stringify(hh)) + '</div></div>';
+      specialsHtml += specials.map(function(s) {
+        return '<div style="padding:12px;background:var(--bg);border-radius:8px;margin-bottom:10px;"><div style="font-weight:600;">' + s.name + '</div><div style="font-size:12px;color:var(--text-muted);">' + (s.description||'') + '</div></div>';
+      }).join('') || (!hh ? '<div style="color:var(--text-muted);padding:20px;">No specials or happy hour found</div>' : '');
+      document.getElementById('ao-specials-preview').innerHTML = specialsHtml;
+
+      // Extras tab (highlights + fleet)
+      var hlHtml = (d.highlights||[]).map(function(h) { return '<div style="padding:8px 0;border-bottom:1px solid var(--card-border);">✓ ' + h + '</div>'; }).join('');
+      var fleetHtml = (d.fleet||[]).map(function(f) { return '<div style="padding:10px;background:var(--bg);border-radius:8px;margin-bottom:8px;"><div style="font-weight:600;">' + f.name + '</div><div style="font-size:12px;color:var(--text-muted);">' + (f.description||'') + (f.capacity?' | Capacity: '+f.capacity:'') + (f.price_per_hour?' | $'+f.price_per_hour+'/hr':'') + '</div></div>'; }).join('');
+      document.getElementById('ao-extras-preview').innerHTML =
+        (d.highlights && d.highlights.length ? '<div style="font-size:12px;color:var(--text-muted);font-weight:600;margin-bottom:8px;">HIGHLIGHTS</div>' + hlHtml + '<br>' : '') +
+        (d.fleet && d.fleet.length ? '<div style="font-size:12px;color:var(--text-muted);font-weight:600;margin-bottom:8px;">FLEET</div>' + fleetHtml : '') ||
+        '<div style="color:var(--text-muted);padding:20px;">No highlights or fleet data found</div>';
+
+      // Raw JSON tab
+      document.getElementById('ao-json-editor').value = JSON.stringify(d, null, 2);
+    }
+
+    function syncAOField(fieldId) {
+      // Keep _aoResult in sync when user edits a field
+      var val = document.getElementById(fieldId) && document.getElementById(fieldId).value;
+      var fieldMap = { 'ao-f-name': 'name', 'ao-f-type': 'type', 'ao-f-subdomain': 'subdomain', 'ao-f-tagline': 'tagline', 'ao-f-phone': 'phone', 'ao-f-address': 'address', 'ao-f-city': 'city', 'ao-f-state': 'state', 'ao-f-website': 'website', 'ao-f-price-range': 'price_range', 'ao-f-description': 'description' };
+      if (fieldMap[fieldId] && _aoResult) _aoResult[fieldMap[fieldId]] = val;
+    }
+
+    function aoTab(tab) {
+      ['core','menu','schedule','specials','extras','raw'].forEach(function(t) {
+        document.getElementById('ao-tab-' + t).style.borderBottomColor = t === tab ? 'var(--primary)' : 'transparent';
+        document.getElementById('ao-tab-' + t).style.color = t === tab ? 'var(--text)' : 'var(--text-muted)';
+        document.getElementById('ao-tab-' + t).style.fontWeight = t === tab ? '600' : 'normal';
+        var panel = document.getElementById('ao-panel-' + t);
+        if (panel) panel.style.display = t === tab ? '' : 'none';
+      });
+    }
+
+    async function approveAIOrganize() {
+      // Read back any edits from the raw JSON editor (if user was on that tab)
+      var rawJson = document.getElementById('ao-json-editor').value.trim();
+      try { _aoResult = JSON.parse(rawJson); } catch(e) { /* use existing _aoResult if JSON is malformed */ }
+      // Sync editable fields
+      ['ao-f-name','ao-f-type','ao-f-subdomain','ao-f-tagline','ao-f-phone','ao-f-address','ao-f-city','ao-f-state','ao-f-website','ao-f-price-range','ao-f-description'].forEach(syncAOField);
+
+      var token = getAuthToken(); if (!token) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-save-business', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ business: _aoResult })
+        });
+        if (!r.ok) { var e = await r.json(); throw new Error(e.error || 'Save failed'); }
+        var d = await r.json();
+        _aoSavedSlug = _aoResult.subdomain || _aoResult.name;
+        document.getElementById('ao-step2').style.display = 'none';
+        document.getElementById('ao-saved').style.display = '';
+        document.getElementById('ao-saved-msg').textContent = d.message || (_aoResult.name + ' saved to Supabase. You can now view it on GCR.');
+        toast(_aoResult.name + ' saved!');
+      } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+    }
+
+    function viewSavedProfile() {
+      if (_aoSavedSlug) window.open('https://gcr-rosy.vercel.app/business.html?id=' + _aoSavedSlug, '_blank');
+    }
+
+    function resetAIOrganize() {
+      _aoResult = null; _aoSavedSlug = null;
+      document.getElementById('ao-step1').style.display   = '';
+      document.getElementById('ao-loading').style.display = 'none';
+      document.getElementById('ao-step2').style.display   = 'none';
+      document.getElementById('ao-saved').style.display   = 'none';
+      document.getElementById('ao-raw').value             = '';
+      document.getElementById('ao-url').value             = '';
+      document.getElementById('ao-scrape-status').style.display = 'none';
     }
 
     // ── INIT ──────────────────────────────────────────

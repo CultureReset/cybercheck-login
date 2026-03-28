@@ -34,7 +34,7 @@ var _profileData = {
 
 async function loadProfile() {
   try {
-  // Try local API first (Circle Boats)
+  // Try local API
   try {
     const localRes = await fetch('/api/site-data');
     if (localRes.ok) {
