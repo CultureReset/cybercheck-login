@@ -3222,6 +3222,490 @@
       document.getElementById('ao-scrape-status').style.display = 'none';
     }
 
+    // ── GCR BIZ DASHBOARD ─────────────────────────────
+    var _bdSiteId, _bdSlug, _bdData, _bdFleetItems = [], _bdAddonItems = [], _bdScheduleSlots = [], _bdFaqItems = [], _bdMenuItems2 = [], _bdDrinkItems2 = [], _bdSpecials2 = [], _bdEvents2 = [], _bdHHDeals = [];
+
+    async function openGCRBizDashboard(siteId) {
+      _bdSiteId = siteId;
+      showPage('biz-dashboard');
+      document.getElementById('bd-biz-name').textContent = 'Loading…';
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
+        _bdData = await res.json();
+        var b = _bdData.business || {}, c = _bdData.content || {};
+        _bdSlug = b.subdomain || siteId;
+        document.getElementById('bd-biz-name').textContent = b.name || 'Business';
+        var setV = function(id, v) { var el = document.getElementById(id); if (el) el.value = v || ''; };
+        var setC = function(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; };
+        setV('bd-prof-name', b.name); setV('bd-prof-type', b.type); setV('bd-prof-status', b.status); setV('bd-prof-emoji', b.emoji); setV('bd-prof-tagline', b.tagline); setV('bd-prof-pricerange', b.price_range); setV('bd-prof-description', c.about_text); setV('bd-prof-address', c.address); setV('bd-prof-city', c.city); setV('bd-prof-state', c.state); setV('bd-prof-zip', c.zip); setV('bd-prof-phone', c.phone); setV('bd-prof-email', c.email); setV('bd-prof-website', c.website); setV('bd-prof-instagram', b.instagram); setV('bd-prof-facebook', b.facebook); setV('bd-prof-tiktok', b.tiktok);
+        setC('bd-flag-kids', b.kids_friendly); setC('bd-flag-pets', b.pet_friendly); setC('bd-flag-livemusic', b.live_music); setC('bd-flag-outdoor', b.outdoor_seating); setC('bd-flag-reservations', b.reservations); setC('bd-flag-delivery', b.delivery); setC('bd-flag-takeout', b.takeout); setC('bd-flag-alcohol', b.alcohol); setC('bd-flag-waterfront', b.waterfront);
+        var hours = c.hours || {};
+        ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d) { setV('bd-hours-' + d, hours[d] || ''); });
+        setC('bd-gcr-listed', b.gcr_listed); setC('bd-gcr-featured', b.featured); setV('bd-gcr-type', b.type);
+        setV('bd-seo-title', c.seo_title); setV('bd-seo-desc', c.seo_description); setV('bd-seo-keywords', c.seo_keywords);
+        setV('bd-social-instagram', b.instagram); setV('bd-social-facebook', b.facebook); setV('bd-social-tiktok', b.tiktok);
+        var hh = c.happy_hour || {};
+        setV('bd-hh-days', Array.isArray(hh.days) ? hh.days.join(', ') : hh.days); setV('bd-hh-start', hh.start); setV('bd-hh-end', hh.end);
+        _bdHHDeals = Array.isArray(hh.deals) ? hh.deals : [];
+        setV('bd-highlights-text', Array.isArray(c.highlights) ? c.highlights.join('\n') : (c.highlights||''));
+        setV('bd-restrictions-text', Array.isArray(c.restrictions) ? c.restrictions.join('\n') : (c.restrictions||''));
+        setV('bd-whatbring-text', Array.isArray(c.what_to_bring) ? c.what_to_bring.join('\n') : (c.what_to_bring||''));
+        _bdMenuItems2 = (_bdData.menu||[]).filter(function(i){ return i.item_type !== 'drink'; });
+        _bdDrinkItems2 = (_bdData.menu||[]).filter(function(i){ return i.item_type === 'drink'; });
+        _bdSpecials2 = _bdData.specials || [];
+        _bdEvents2 = _bdData.events || [];
+        _bdFleetItems = _bdData.fleet || [];
+        _bdAddonItems = _bdData.addons || [];
+        _bdScheduleSlots = c.schedules || [];
+        _bdFaqItems = c.faq || [];
+        renderBizHHDeals(); renderBizDashMenu(); renderBizDashDrinks(); renderBizDashSpecials(); renderBizDashEvents(); renderBizFleet(); renderBizAddons(); renderBizDashReviews(); renderBizSchedule(); renderBizFAQs(); renderBizMedia();
+        switchBizPanel('overview');
+        var ov = document.getElementById('bd-overview-content');
+        if (ov) ov.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;"><div class="stat-card"><div class="stat-number">' + (_bdData.media||[]).length + '</div><div class="stat-label">Photos</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.reviews||[]).length + '</div><div class="stat-label">Reviews</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.menu||[]).length + '</div><div class="stat-label">Menu Items</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.events||[]).length + '</div><div class="stat-label">Events</div></div></div><p style="color:var(--text-muted);font-size:13px;">Business: <strong>' + escHtml(b.name||'') + '</strong> &middot; Type: ' + escHtml(b.type||'') + ' &middot; Status: ' + escHtml(b.status||'') + '</p>';
+      } catch(err) { toast('Failed to load business: ' + err.message, 'error'); }
+    }
+
+    function closeBizDashboard() { showPage('gcr-businesses'); }
+
+    function switchBizPanel(panel) {
+      document.querySelectorAll('.bd-panel').forEach(function(p){ p.style.display = 'none'; });
+      document.querySelectorAll('.bd-nav-item').forEach(function(n){ n.classList.remove('active'); });
+      var el = document.getElementById('bd-panel-' + panel);
+      if (el) el.style.display = 'block';
+      var nav = document.querySelector('.bd-nav-item[data-panel="' + panel + '"]');
+      if (nav) nav.classList.add('active');
+    }
+
+    async function saveBizDashProfile() {
+      var token = getAuthToken();
+      var hours = {};
+      ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d){ hours[d] = (document.getElementById('bd-hours-' + d)||{}).value || ''; });
+      var b = { name: document.getElementById('bd-prof-name').value, type: document.getElementById('bd-prof-type').value, status: document.getElementById('bd-prof-status').value, emoji: document.getElementById('bd-prof-emoji').value, tagline: document.getElementById('bd-prof-tagline').value, price_range: document.getElementById('bd-prof-pricerange').value, instagram: document.getElementById('bd-prof-instagram').value, facebook: document.getElementById('bd-prof-facebook').value, tiktok: document.getElementById('bd-prof-tiktok').value, kids_friendly: document.getElementById('bd-flag-kids').checked, pet_friendly: document.getElementById('bd-flag-pets').checked, live_music: document.getElementById('bd-flag-livemusic').checked, outdoor_seating: document.getElementById('bd-flag-outdoor').checked, reservations: document.getElementById('bd-flag-reservations').checked, delivery: document.getElementById('bd-flag-delivery').checked, takeout: document.getElementById('bd-flag-takeout').checked, alcohol: document.getElementById('bd-flag-alcohol').checked, waterfront: document.getElementById('bd-flag-waterfront').checked };
+      var c = { about_text: document.getElementById('bd-prof-description').value, address: document.getElementById('bd-prof-address').value, city: document.getElementById('bd-prof-city').value, state: document.getElementById('bd-prof-state').value, zip: document.getElementById('bd-prof-zip').value, phone: document.getElementById('bd-prof-phone').value, email: document.getElementById('bd-prof-email').value, website: document.getElementById('bd-prof-website').value, hours: hours };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b, content: c }) });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast('Profile saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Menu ──
+    function renderBizDashMenu() {
+      var el = document.getElementById('bd-menu-list'); if (!el) return;
+      el.innerHTML = _bdMenuItems2.length ? _bdMenuItems2.map(function(item, i) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(item.name||'') + '</strong> <span style="color:var(--text-muted);font-size:12px;">' + escHtml(item.category||'') + '</span>' + (item.price ? ' — $' + item.price : '') + '</div><button class="btn btn-sm" onclick="openBizMenuItemModal(' + i + ',\'food\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizMenuItem(\'' + item.id + '\',\'food\')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No food items yet.</div>';
+    }
+    function renderBizDashDrinks() {
+      var el = document.getElementById('bd-drinks-list'); if (!el) return;
+      el.innerHTML = _bdDrinkItems2.length ? _bdDrinkItems2.map(function(item, i) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(item.name||'') + '</strong> <span style="color:var(--text-muted);font-size:12px;">' + escHtml(item.category||'') + '</span>' + (item.price ? ' — $' + item.price : '') + '</div><button class="btn btn-sm" onclick="openBizMenuItemModal(' + i + ',\'drink\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizMenuItem(\'' + item.id + '\',\'drink\')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No drink items yet.</div>';
+    }
+    function openBizMenuItemModal(idx, type) {
+      var list = type === 'drink' ? _bdDrinkItems2 : _bdMenuItems2;
+      var item = idx >= 0 ? list[idx] : {};
+      document.getElementById('bd-menuitem-form-name').value = item.name || '';
+      document.getElementById('bd-menuitem-form-price').value = item.price || '';
+      document.getElementById('bd-menuitem-form-category').value = item.category || '';
+      document.getElementById('bd-menuitem-form-desc').value = item.description || '';
+      document.getElementById('bd-menuitem-form-photo').value = item.image_url || '';
+      document.getElementById('bd-menuitem-form-id').value = item.id || '';
+      document.getElementById('bd-menuitem-form-type').value = type;
+      document.getElementById('modal-biz-menuitem').style.display = 'flex';
+    }
+    async function saveBizMenuItemFromModal() {
+      var token = getAuthToken();
+      var payload = { name: document.getElementById('bd-menuitem-form-name').value, price: document.getElementById('bd-menuitem-form-price').value, category: document.getElementById('bd-menuitem-form-category').value, description: document.getElementById('bd-menuitem-form-desc').value, image_url: document.getElementById('bd-menuitem-form-photo').value, item_type: document.getElementById('bd-menuitem-form-type').value, available: true };
+      var id = document.getElementById('bd-menuitem-form-id').value;
+      if (id) payload.id = id;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/menu', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Save failed');
+        document.getElementById('modal-biz-menuitem').style.display = 'none';
+        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        _bdMenuItems2 = (d.menu||[]).filter(function(i){ return i.item_type !== 'drink'; });
+        _bdDrinkItems2 = (d.menu||[]).filter(function(i){ return i.item_type === 'drink'; });
+        renderBizDashMenu(); renderBizDashDrinks(); toast('Saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+    async function deleteBizMenuItem(id, type) {
+      if (!confirm('Delete this item?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/menu/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (type === 'drink') { _bdDrinkItems2 = _bdDrinkItems2.filter(function(i){ return i.id !== id; }); renderBizDashDrinks(); }
+      else { _bdMenuItems2 = _bdMenuItems2.filter(function(i){ return i.id !== id; }); renderBizDashMenu(); }
+      toast('Deleted', 'success');
+    }
+
+    // ── Happy Hour ──
+    function renderBizHHDeals() {
+      var el = document.getElementById('bd-hh-deals'); if (!el) return;
+      el.innerHTML = _bdHHDeals.length ? _bdHHDeals.map(function(d, i) {
+        return '<div style="display:flex;gap:8px;margin-bottom:8px;"><input type="text" placeholder="Item name" value="' + escHtml(d.name||'') + '" onchange="_bdHHDeals[' + i + '].name=this.value" style="flex:1;' + _inputStyle + '"><input type="text" placeholder="Price/desc" value="' + escHtml(d.price||'') + '" onchange="_bdHHDeals[' + i + '].price=this.value" style="width:120px;' + _inputStyle + '"><button class="btn btn-sm btn-danger" onclick="_bdHHDeals.splice(' + i + ',1);renderBizHHDeals()">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No deals yet.</div>';
+    }
+    function addBizHHDeal() { _bdHHDeals.push({ name: '', price: '' }); renderBizHHDeals(); }
+    async function saveBizDashHappyHour() {
+      var token = getAuthToken();
+      var hh = { days: document.getElementById('bd-hh-days').value, start: document.getElementById('bd-hh-start').value, end: document.getElementById('bd-hh-end').value, deals: _bdHHDeals };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: { happy_hour: hh } }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Happy hour saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Specials ──
+    function renderBizDashSpecials() {
+      var el = document.getElementById('bd-specials-list'); if (!el) return;
+      el.innerHTML = _bdSpecials2.length ? _bdSpecials2.map(function(s) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(s.name||'') + '</strong>' + (s.discount_text ? ' — ' + escHtml(s.discount_text) : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(s.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizSpecialModal(\'' + (s.id||'') + '\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizSpecialItem(\'' + (s.id||'') + '\')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No specials yet.</div>';
+    }
+    function openBizSpecialModal(id) {
+      var s = _bdSpecials2.find(function(x){ return x.id === id; }) || {};
+      document.getElementById('bd-special-form-name').value = s.name || '';
+      document.getElementById('bd-special-form-desc').value = s.description || '';
+      document.getElementById('bd-special-form-day').value = Array.isArray(s.days) ? s.days.join(', ') : (s.days||'');
+      document.getElementById('bd-special-form-discount').value = s.discount_text || '';
+      document.getElementById('bd-special-form-start').value = s.start_time || '';
+      document.getElementById('bd-special-form-end').value = s.end_time || '';
+      document.getElementById('bd-special-form-id').value = s.id || '';
+      document.getElementById('modal-biz-special').style.display = 'flex';
+    }
+    async function saveBizSpecialItem() {
+      var token = getAuthToken();
+      var payload = { name: document.getElementById('bd-special-form-name').value, description: document.getElementById('bd-special-form-desc').value, days: document.getElementById('bd-special-form-day').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean), discount_text: document.getElementById('bd-special-form-discount').value, start_time: document.getElementById('bd-special-form-start').value, end_time: document.getElementById('bd-special-form-end').value, active: true };
+      var id = document.getElementById('bd-special-form-id').value; if (id) payload.id = id;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/specials', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Save failed');
+        document.getElementById('modal-biz-special').style.display = 'none';
+        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        _bdSpecials2 = d.specials || []; renderBizDashSpecials(); toast('Saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+    async function deleteBizSpecialItem(id) {
+      if (!confirm('Delete?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _bdSpecials2 = _bdSpecials2.filter(function(s){ return s.id !== id; }); renderBizDashSpecials(); toast('Deleted', 'success');
+    }
+
+    // ── Events ──
+    function renderBizDashEvents() {
+      var el = document.getElementById('bd-events-list'); if (!el) return;
+      el.innerHTML = _bdEvents2.length ? _bdEvents2.map(function(e) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(e.title||e.name||'') + '</strong>' + (e.event_date ? ' — ' + e.event_date : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(e.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizEventModal(\'' + (e.id||'') + '\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizEventItem(\'' + (e.id||'') + '\')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No events yet.</div>';
+    }
+    function openBizEventModal(id) {
+      var e = _bdEvents2.find(function(x){ return x.id === id; }) || {};
+      document.getElementById('bd-event-form-title').value = e.title || e.name || '';
+      document.getElementById('bd-event-form-desc').value = e.description || '';
+      document.getElementById('bd-event-form-date').value = e.event_date || '';
+      document.getElementById('bd-event-form-time').value = e.event_time || '';
+      document.getElementById('bd-event-form-photo').value = e.image_url || '';
+      document.getElementById('bd-event-form-id').value = e.id || '';
+      document.getElementById('modal-biz-event').style.display = 'flex';
+    }
+    async function saveBizEventItem() {
+      var token = getAuthToken();
+      var payload = { title: document.getElementById('bd-event-form-title').value, description: document.getElementById('bd-event-form-desc').value, event_date: document.getElementById('bd-event-form-date').value, event_time: document.getElementById('bd-event-form-time').value, image_url: document.getElementById('bd-event-form-photo').value, active: true };
+      var id = document.getElementById('bd-event-form-id').value; if (id) payload.id = id;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/events', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Save failed');
+        document.getElementById('modal-biz-event').style.display = 'none';
+        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        _bdEvents2 = d.events || []; renderBizDashEvents(); toast('Saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+    async function deleteBizEventItem(id) {
+      if (!confirm('Delete?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _bdEvents2 = _bdEvents2.filter(function(e){ return e.id !== id; }); renderBizDashEvents(); toast('Deleted', 'success');
+    }
+
+    // ── Fleet ──
+    function renderBizFleet() {
+      var el = document.getElementById('bd-fleet-list'); if (!el) return;
+      el.innerHTML = _bdFleetItems.length ? _bdFleetItems.map(function(f, i) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;">' + (f.image_url ? '<img src="' + escHtml(f.image_url) + '" style="width:60px;height:60px;object-fit:cover;border-radius:6px;">' : '') + '<div style="flex:1;"><strong>' + escHtml(f.name||'') + '</strong>' + (f.capacity ? ' · ' + f.capacity + ' guests' : '') + (f.price_per_hour ? ' · $' + f.price_per_hour + '/hr' : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(f.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizFleetModal(' + i + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizFleetItem(' + i + ')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No fleet items yet.</div>';
+    }
+    function openBizFleetModal(idx) {
+      var item = idx >= 0 ? _bdFleetItems[idx] : {};
+      document.getElementById('bd-fleet-form-name').value = item.name || '';
+      document.getElementById('bd-fleet-form-desc').value = item.description || '';
+      document.getElementById('bd-fleet-form-capacity').value = item.capacity || '';
+      document.getElementById('bd-fleet-form-price').value = item.price_per_hour || '';
+      document.getElementById('bd-fleet-form-photo').value = item.image_url || '';
+      document.getElementById('bd-fleet-form-id').value = idx >= 0 ? idx : -1;
+      document.getElementById('modal-biz-fleet').style.display = 'flex';
+    }
+    function saveBizFleetItem() {
+      var idx = parseInt(document.getElementById('bd-fleet-form-id').value);
+      var item = { name: document.getElementById('bd-fleet-form-name').value, description: document.getElementById('bd-fleet-form-desc').value, capacity: document.getElementById('bd-fleet-form-capacity').value, price_per_hour: document.getElementById('bd-fleet-form-price').value, image_url: document.getElementById('bd-fleet-form-photo').value, active: true };
+      if (idx >= 0) _bdFleetItems[idx] = item; else _bdFleetItems.push(item);
+      document.getElementById('modal-biz-fleet').style.display = 'none'; renderBizFleet();
+    }
+    function deleteBizFleetItem(idx) { if (!confirm('Delete?')) return; _bdFleetItems.splice(idx, 1); renderBizFleet(); }
+    async function saveBizFleet() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/fleet', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ items: _bdFleetItems }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Fleet saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Add-ons ──
+    function renderBizAddons() {
+      var el = document.getElementById('bd-addons-list'); if (!el) return;
+      el.innerHTML = _bdAddonItems.length ? _bdAddonItems.map(function(a, i) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(a.name||'') + '</strong>' + (a.price ? ' — $' + a.price : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(a.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizAddonModal(' + i + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizAddonItem(' + i + ')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No add-ons yet.</div>';
+    }
+    function openBizAddonModal(idx) {
+      var item = idx >= 0 ? _bdAddonItems[idx] : {};
+      document.getElementById('bd-addon-form-name').value = item.name || '';
+      document.getElementById('bd-addon-form-desc').value = item.description || '';
+      document.getElementById('bd-addon-form-price').value = item.price || '';
+      document.getElementById('bd-addon-form-id').value = idx >= 0 ? idx : -1;
+      document.getElementById('modal-biz-addon').style.display = 'flex';
+    }
+    function saveBizAddonItem() {
+      var idx = parseInt(document.getElementById('bd-addon-form-id').value);
+      var item = { name: document.getElementById('bd-addon-form-name').value, description: document.getElementById('bd-addon-form-desc').value, price: document.getElementById('bd-addon-form-price').value, active: true };
+      if (idx >= 0) _bdAddonItems[idx] = item; else _bdAddonItems.push(item);
+      document.getElementById('modal-biz-addon').style.display = 'none'; renderBizAddons();
+    }
+    function deleteBizAddonItem(idx) { if (!confirm('Delete?')) return; _bdAddonItems.splice(idx, 1); renderBizAddons(); }
+    async function saveBizAddons() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/addons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ items: _bdAddonItems }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Add-ons saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Reviews ──
+    function renderBizDashReviews() {
+      var el = document.getElementById('bd-reviews-list'); if (!el) return;
+      var reviews = (_bdData && _bdData.reviews) ? _bdData.reviews : [];
+      el.innerHTML = reviews.length ? reviews.map(function(r) {
+        var stars = '★'.repeat(Math.min(r.rating||5,5));
+        return '<div style="padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;"><span><strong>' + escHtml(r.customer_name||r.author||'Guest') + '</strong> <span style="color:gold;">' + stars + '</span>' + (!r.active ? ' <span style="background:#f59e0b;color:#000;font-size:10px;padding:2px 6px;border-radius:4px;">PENDING</span>' : '') + '</span><div style="display:flex;gap:8px;">' + (!r.active ? '<button class="btn btn-sm" style="background:#10b981;color:#fff;" onclick="approveBizReview(\'' + r.id + '\')">Approve</button>' : '') + '<button class="btn btn-sm btn-danger" onclick="deleteBizReview(\'' + r.id + '\')">Delete</button></div></div><p style="margin:8px 0 0;font-size:13px;color:var(--text-muted);">' + escHtml(r.text||r.body||'') + '</p></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No reviews yet.</div>';
+    }
+    async function approveBizReview(id) {
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/reviews/' + id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ active: true }) });
+      if (_bdData && _bdData.reviews) { var r = _bdData.reviews.find(function(x){ return x.id === id; }); if (r) r.active = true; }
+      renderBizDashReviews(); toast('Approved!', 'success');
+    }
+    async function deleteBizReview(id) {
+      if (!confirm('Delete review?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/reviews/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (_bdData && _bdData.reviews) _bdData.reviews = _bdData.reviews.filter(function(r){ return r.id !== id; });
+      renderBizDashReviews(); toast('Deleted', 'success');
+    }
+
+    // ── Schedule ──
+    function renderBizSchedule() {
+      var el = document.getElementById('bd-schedule-list'); if (!el) return;
+      el.innerHTML = _bdScheduleSlots.length ? _bdScheduleSlots.map(function(s, i) {
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(s.name||s.label||'Slot') + '</strong>' + (s.time ? ' · ' + s.time : '') + (s.tiers && s.tiers.length ? ' · ' + s.tiers.length + ' tiers' : '') + '</div><button class="btn btn-sm" onclick="openBizScheduleModal(' + i + ')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizScheduleSlot(' + i + ')">×</button></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No schedule slots yet.</div>';
+    }
+    function openBizScheduleModal(idx) {
+      var slot = idx >= 0 ? _bdScheduleSlots[idx] : {};
+      document.getElementById('bd-sched-form-name').value = slot.name || slot.label || '';
+      document.getElementById('bd-sched-form-time').value = slot.time || '';
+      document.getElementById('bd-sched-form-id').value = idx >= 0 ? idx : -1;
+      var tiersEl = document.getElementById('bd-sched-tiers'); tiersEl.innerHTML = '';
+      (slot.tiers || []).forEach(function(t, ti) {
+        tiersEl.innerHTML += '<div style="display:flex;gap:8px;margin-bottom:6px;"><input type="text" placeholder="Tier name" value="' + escHtml(t.name||'') + '" data-ti="' + ti + '" data-field="name" style="flex:1;' + _inputStyle + '"><input type="number" placeholder="Price" value="' + escHtml(t.price||'') + '" data-ti="' + ti + '" data-field="price" style="width:100px;' + _inputStyle + '"></div>';
+      });
+      document.getElementById('modal-biz-schedule').style.display = 'flex';
+    }
+    function addScheduleTier() {
+      var tiersEl = document.getElementById('bd-sched-tiers');
+      var ti = tiersEl.children.length;
+      tiersEl.innerHTML += '<div style="display:flex;gap:8px;margin-bottom:6px;"><input type="text" placeholder="Tier name" data-ti="' + ti + '" data-field="name" style="flex:1;' + _inputStyle + '"><input type="number" placeholder="Price" data-ti="' + ti + '" data-field="price" style="width:100px;' + _inputStyle + '"></div>';
+    }
+    function saveBizScheduleSlot() {
+      var idx = parseInt(document.getElementById('bd-sched-form-id').value);
+      var tiers = [];
+      document.querySelectorAll('#bd-sched-tiers [data-field="name"]').forEach(function(el) {
+        var ti = el.dataset.ti;
+        var priceEl = document.querySelector('#bd-sched-tiers [data-ti="' + ti + '"][data-field="price"]');
+        if (el.value) tiers.push({ name: el.value, price: priceEl ? priceEl.value : '' });
+      });
+      var slot = { name: document.getElementById('bd-sched-form-name').value, time: document.getElementById('bd-sched-form-time').value, tiers: tiers };
+      if (idx >= 0) _bdScheduleSlots[idx] = slot; else _bdScheduleSlots.push(slot);
+      document.getElementById('modal-biz-schedule').style.display = 'none'; renderBizSchedule();
+    }
+    function deleteBizScheduleSlot(idx) { if (!confirm('Delete?')) return; _bdScheduleSlots.splice(idx, 1); renderBizSchedule(); }
+    async function saveBizSchedule() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/schedule', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ schedules: _bdScheduleSlots }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Schedule saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Highlights / Guest Info / What to Bring ──
+    async function saveBizHighlights() {
+      var token = getAuthToken();
+      var arr = document.getElementById('bd-highlights-text').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/highlights', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ highlights: arr }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Highlights saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+    async function saveBizRestrictions() {
+      var token = getAuthToken();
+      var arr = document.getElementById('bd-restrictions-text').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/highlights', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ restrictions: arr }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Guest info saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+    async function saveBizWhatToBring() {
+      var token = getAuthToken();
+      var arr = document.getElementById('bd-whatbring-text').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/highlights', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ what_to_bring: arr }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('What to bring saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── FAQ ──
+    function renderBizFAQs() {
+      var el = document.getElementById('bd-faq-list'); if (!el) return;
+      el.innerHTML = _bdFaqItems.length ? _bdFaqItems.map(function(f, i) {
+        return '<div style="padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;"><strong>' + escHtml(f.q||'') + '</strong><div><button class="btn btn-sm" onclick="openBizFAQModal(' + i + ')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteBizFAQItem(' + i + ')">×</button></div></div><p style="margin:6px 0 0;font-size:13px;color:var(--text-muted);">' + escHtml(f.a||'') + '</p></div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No FAQ items yet.</div>';
+    }
+    function openBizFAQModal(idx) {
+      var item = idx >= 0 ? _bdFaqItems[idx] : {};
+      document.getElementById('bd-faq-form-q').value = item.q || '';
+      document.getElementById('bd-faq-form-a').value = item.a || '';
+      document.getElementById('bd-faq-form-id').value = idx >= 0 ? idx : -1;
+      document.getElementById('modal-biz-faq').style.display = 'flex';
+    }
+    function saveBizFAQItem() {
+      var idx = parseInt(document.getElementById('bd-faq-form-id').value);
+      var item = { q: document.getElementById('bd-faq-form-q').value, a: document.getElementById('bd-faq-form-a').value };
+      if (idx >= 0) _bdFaqItems[idx] = item; else _bdFaqItems.push(item);
+      document.getElementById('modal-biz-faq').style.display = 'none'; renderBizFAQs();
+    }
+    function deleteBizFAQItem(idx) { if (!confirm('Delete?')) return; _bdFaqItems.splice(idx, 1); renderBizFAQs(); }
+    async function saveBizFAQ() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: { faq: _bdFaqItems } }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('FAQ saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Media ──
+    function renderBizMedia() {
+      var el = document.getElementById('bd-media-grid'); if (!el) return;
+      var media = (_bdData && _bdData.media) ? _bdData.media : [];
+      el.innerHTML = media.length ? media.map(function(m) {
+        return '<div style="position:relative;border-radius:8px;overflow:hidden;"><img src="' + escHtml(m.url||'') + '" style="width:100%;height:140px;object-fit:cover;" onerror="this.style.display=\'none\'"><button onclick="deleteBizPhoto(\'' + m.id + '\')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;">×</button>' + (m.caption ? '<div style="font-size:11px;padding:4px;background:var(--card-bg);">' + escHtml(m.caption) + '</div>' : '') + '</div>';
+      }).join('') : '<div style="color:var(--text-muted);font-size:13px;grid-column:1/-1;">No photos yet.</div>';
+    }
+    async function addBizPhotoByUrl() {
+      var url = document.getElementById('bd-media-url').value.trim();
+      var caption = document.getElementById('bd-media-caption').value.trim();
+      if (!url) return toast('Enter a URL', 'error');
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url, caption: caption }) });
+        if (!res.ok) throw new Error('Failed');
+        document.getElementById('bd-media-url').value = ''; document.getElementById('bd-media-caption').value = '';
+        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        _bdData.media = d.media || []; renderBizMedia(); toast('Photo added!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+    async function deleteBizPhoto(id) {
+      if (!confirm('Delete photo?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (_bdData && _bdData.media) _bdData.media = _bdData.media.filter(function(m){ return m.id !== id; });
+      renderBizMedia(); toast('Deleted', 'success');
+    }
+    async function uploadBizMediaFiles() {
+      var input = document.getElementById('bd-media-file');
+      if (!input || !input.files || !input.files.length) return toast('Select files first', 'error');
+      var token = getAuthToken(); var uploaded = 0;
+      for (var f of Array.from(input.files)) {
+        try {
+          var dataUrl = await new Promise(function(resolve){ var r = new FileReader(); r.onload = function(e){ resolve(e.target.result); }; r.readAsDataURL(f); });
+          var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: dataUrl, caption: f.name }) });
+          if (res.ok) uploaded++;
+        } catch(e) { console.error(e); }
+      }
+      input.value = '';
+      var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+      _bdData.media = d.media || []; renderBizMedia(); toast(uploaded + ' photo(s) uploaded!', 'success');
+    }
+
+    // ── GCR Settings ──
+    async function saveBizDashGCRSettings() {
+      var token = getAuthToken();
+      var b = { gcr_listed: document.getElementById('bd-gcr-listed').checked, featured: document.getElementById('bd-gcr-featured').checked, type: document.getElementById('bd-gcr-type').value };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('GCR settings saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── SEO ──
+    async function saveBizDashSEO() {
+      var token = getAuthToken();
+      var c = { seo_title: document.getElementById('bd-seo-title').value, seo_description: document.getElementById('bd-seo-desc').value, seo_keywords: document.getElementById('bd-seo-keywords').value };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: c }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('SEO saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Social ──
+    async function saveBizDashSocial() {
+      var token = getAuthToken();
+      var b = { instagram: document.getElementById('bd-social-instagram').value, facebook: document.getElementById('bd-social-facebook').value, tiktok: document.getElementById('bd-social-tiktok').value };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Social links saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Re-index RAG ──
+    function reindexThisBusiness() {
+      toast('Run: node agents/build-rag-index.js ' + (_bdSlug||_bdSiteId) + ' in terminal', 'success');
+    }
+
+    // Override old modal openBizEditor with full dashboard
+    function openBizEditor(siteId) { openGCRBizDashboard(siteId); }
+
     // ── INIT ──────────────────────────────────────────
     loadOverview();
     updateBulkFormatHelp();
