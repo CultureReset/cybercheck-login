@@ -1165,6 +1165,12 @@
           <div style="font-size:13px;color:var(--text-muted);">Paste any business info — website copy, menu text, PDFs — and AI structures it into database fields for you to review and approve.</div>
         </div>
 
+        <!-- ALWAYS VISIBLE SAVE BUTTON -->
+        <div style="margin:0 0 20px 0;padding:16px;background:#0b7a75;border-radius:8px;display:none;position:sticky;top:0;z-index:999;" id="ao-top-save">
+          <div style="color:white;font-weight:bold;margin-bottom:12px;font-size:14px;">✨ AI organized your data! Ready to save?</div>
+          <button class="btn" style="width:100%;background:white;color:#0b7a75;font-weight:bold;padding:14px;font-size:16px;border:none;cursor:pointer;border-radius:6px;" onclick="saveAIToGCREntity()">💾 SAVE TO GCR DATABASE NOW</button>
+        </div>
+
         <!-- Step 1: Input -->
         <div class="card" style="padding:24px;margin-bottom:20px;" id="ao-step1">
           <h3 style="margin:0 0 16px;font-size:16px;">Step 1 — Paste Business Information</h3>
@@ -3282,18 +3288,21 @@
         var d = await r.json();
         _aoResult = d.structured;
         document.getElementById('ao-loading').style.display = 'none';
+
+        // Show top save button
+        var topSave = document.getElementById('ao-top-save');
+        if (topSave) {
+          topSave.style.display = 'block !important';
+          topSave.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         var step2 = document.getElementById('ao-step2');
         if (step2) {
           step2.style.display = 'block !important';
           step2.style.visibility = 'visible !important';
-          step2.style.position = 'relative';
-          step2.style.zIndex = '1000';
         }
         renderAOPreview(_aoResult);
-        // Scroll to the save button
-        var saveBtn = step2 ? step2.querySelector('button[onclick="saveAIToGCREntity()"]') : null;
-        if (saveBtn) setTimeout(() => saveBtn.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-        toast('✨ AI organized your data! Scroll up to see the SAVE button.', 'success');
+        toast('✨ AI Done! Click the SAVE button at the top.', 'success');
       } catch(e) {
         document.getElementById('ao-loading').style.display = 'none';
         document.getElementById('ao-step1').style.display   = '';
