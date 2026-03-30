@@ -3284,11 +3284,16 @@
         document.getElementById('ao-loading').style.display = 'none';
         var step2 = document.getElementById('ao-step2');
         if (step2) {
-          step2.style.display = 'block';
-          step2.style.visibility = 'visible';
+          step2.style.display = 'block !important';
+          step2.style.visibility = 'visible !important';
+          step2.style.position = 'relative';
+          step2.style.zIndex = '1000';
         }
         renderAOPreview(_aoResult);
-        toast('AI organized your data! Review and click Save.', 'success');
+        // Scroll to the save button
+        var saveBtn = step2 ? step2.querySelector('button[onclick="saveAIToGCREntity()"]') : null;
+        if (saveBtn) setTimeout(() => saveBtn.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        toast('✨ AI organized your data! Scroll up to see the SAVE button.', 'success');
       } catch(e) {
         document.getElementById('ao-loading').style.display = 'none';
         document.getElementById('ao-step1').style.display   = '';
