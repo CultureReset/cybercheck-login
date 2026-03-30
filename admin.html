@@ -55,6 +55,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span>GCR Businesses</span>
         </div>
+        <div class="nav-item" data-page="gcr-entity-editor" onclick="showPage('gcr-entity-editor')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>Entity Editor</span>
+        </div>
         <div class="nav-item" data-page="gcr-events" onclick="showPage('gcr-events')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Events</span>
@@ -192,6 +196,161 @@
               <tbody id="gcr-businesses-body"><tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- ── GCR ENTITY EDITOR ──────────────────────── -->
+      <div id="page-gcr-entity-editor" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>GCR Entity Editor</h1>
+          <button class="btn btn-primary" onclick="openNewEntityModal()">+ New Entity</button>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;gap:12px;margin-bottom:20px;">
+            <input type="text" id="ent-search" placeholder="Search entities..." oninput="filterEntities()" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            <button class="btn btn-outline" onclick="loadEntities()">Refresh</button>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" id="ent-count">Loading...</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Subtype</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">City</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Slug</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
+              </tr></thead>
+              <tbody id="ent-table-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- GCR Entity Editor Modal -->
+      <div id="entEditorModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2000;overflow-y:auto;">
+        <div style="max-width:900px;margin:24px auto;background:var(--card-bg);border-radius:16px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:24px 28px;border-bottom:1px solid var(--card-border);">
+            <div>
+              <h2 style="margin:0;font-size:20px;" id="ent-editor-title">Entity Editor</h2>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="ent-editor-slug"></div>
+            </div>
+            <button onclick="closeEntEditor()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+
+          <!-- Entity Editor Tabs -->
+          <div style="display:flex;gap:0;border-bottom:1px solid var(--card-border);overflow-x:auto;">
+            <button onclick="switchEntTab('info')"     id="enttab-info"     style="padding:12px 18px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">Info</button>
+            <button onclick="switchEntTab('tags')"     id="enttab-tags"     style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Tags</button>
+            <button onclick="switchEntTab('features')" id="enttab-features" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Features</button>
+            <button onclick="switchEntTab('sections')" id="enttab-sections" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Sections</button>
+          </div>
+
+          <div style="padding:28px;" id="ent-editor-body">
+
+            <!-- INFO TAB -->
+            <div id="enttab-info-content">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Name</label><input id="ent-name" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Slug</label><input id="ent-slug" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Subtitle / Tagline</label><input id="ent-subtitle" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Entity Subtype</label><input id="ent-subtype" type="text" placeholder="restaurant, parasailing, dolphin_cruise..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Icon (emoji)</label><input id="ent-icon" type="text" placeholder="🐬" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Phone</label><input id="ent-phone" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Rating</label><input id="ent-rating" type="number" step="0.1" min="0" max="5" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Review Count</label><input id="ent-review-count" type="number" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Hero Image URL</label><input id="ent-hero" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Website URL</label><input id="ent-website" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Directions URL</label><input id="ent-directions" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+              </div>
+              <div style="margin-top:20px;"><button onclick="saveEntInfo()" class="btn btn-primary">Save Info</button></div>
+            </div>
+
+            <!-- TAGS TAB -->
+            <div id="enttab-tags-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Tags are free-form — type anything. They power search and filtering on the GCR public site.</p>
+              <div style="display:flex;gap:8px;margin-bottom:20px;">
+                <input id="ent-tag-input" type="text" placeholder="Type a tag and press Add..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')addEntTag()">
+                <select id="ent-tag-category" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="">No category</option>
+                  <option value="amenity">Amenity</option>
+                  <option value="vibe">Vibe</option>
+                  <option value="cuisine">Cuisine</option>
+                  <option value="activity">Activity</option>
+                  <option value="search">Search</option>
+                </select>
+                <button onclick="addEntTag()" class="btn btn-primary">Add</button>
+              </div>
+              <div id="ent-tags-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+            </div>
+
+            <!-- FEATURES TAB -->
+            <div id="enttab-features-content" style="display:none;">
+              <div style="margin-bottom:24px;">
+                <h4 style="margin:0 0 12px;font-size:14px;">Feature Chips</h4>
+                <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Short labels shown as chips on the profile page (e.g. "Waterfront Views", "Daily Departures").</p>
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                  <input id="ent-feature-input" type="text" placeholder="Add feature..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')addEntFeature()">
+                  <button onclick="addEntFeature()" class="btn btn-primary">Add</button>
+                </div>
+                <div id="ent-features-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+              </div>
+              <div>
+                <h4 style="margin:0 0 12px;font-size:14px;">Perfect For</h4>
+                <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Who this business is ideal for (e.g. "Families with kids", "Date night").</p>
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                  <input id="ent-pf-input" type="text" placeholder="Add perfect for..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')addEntPF()">
+                  <button onclick="addEntPF()" class="btn btn-primary">Add</button>
+                </div>
+                <div id="ent-pf-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+              </div>
+            </div>
+
+            <!-- SECTIONS TAB -->
+            <div id="enttab-sections-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <p style="font-size:13px;color:var(--text-muted);margin:0;">Each section is a tab on the public profile page. Click a section to edit its content.</p>
+                <button onclick="openAddSectionModal()" class="btn btn-outline btn-sm">+ Add Section</button>
+              </div>
+              <div id="ent-sections-list"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Section Modal -->
+      <div id="addSectionModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg);border-radius:12px;padding:28px;width:400px;border:1px solid var(--card-border);">
+          <h3 style="margin:0 0 20px;">Add Section</h3>
+          <div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Section Key (internal)</label><input id="sec-new-key" type="text" placeholder="dinner, happy_hour, schedules..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+          <div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Section Label (shown on tab)</label><input id="sec-new-label" type="text" placeholder="Dinner Menu, Happy Hour..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+          <div style="margin-bottom:20px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Section Type</label>
+            <select id="sec-new-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="rich_text">rich_text — About/description text</option>
+              <option value="bullets">bullets — Highlight or info bullets</option>
+              <option value="grouped_items">grouped_items — Menu, tickets, drinks</option>
+              <option value="cards">cards — Packages, events, bookings</option>
+              <option value="gallery">gallery — Photo grid</option>
+              <option value="reviews">reviews — Customer reviews</option>
+              <option value="hours">hours — Hours of operation</option>
+              <option value="location">location — Address & map</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('addSectionModal').style.display='none'" class="btn btn-outline">Cancel</button>
+            <button onclick="saveNewSection()" class="btn btn-primary">Add Section</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Content Editor Modal -->
+      <div id="secContentModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:3000;overflow-y:auto;">
+        <div style="max-width:780px;margin:24px auto;background:var(--card-bg);border-radius:16px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--card-border);">
+            <h3 style="margin:0;" id="sec-content-title">Edit Section</h3>
+            <button onclick="document.getElementById('secContentModal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <div style="padding:24px;" id="sec-content-body"></div>
         </div>
       </div>
 
@@ -665,6 +824,8 @@
             <div>
               <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">What are you uploading?</label>
               <select id="bulk-data-type" onchange="updateBulkFormatHelp()" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="gcr_entities">✦ GCR Entities (New Schema)</option>
+                <option value="gcr_items">✦ GCR Section Items (New Schema)</option>
                 <option value="restaurant_full_menu">Full Restaurant Menu (Auto-Organize)</option>
                 <option value="menu">Menu Items</option>
                 <option value="drinks">Drinks</option>
@@ -695,11 +856,25 @@
         <div class="card" style="padding:28px;">
           <h3 style="margin:0 0 8px;">Upload Events CSV</h3>
           <p style="color:var(--text-muted);font-size:14px;margin:0 0 20px;">Upload events for multiple businesses at once. System matches events to businesses by name.</p>
-          <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;font-family:monospace;color:var(--text-muted);">
-            <strong style="color:var(--text);">Required Columns:</strong><br>
-            business_name, event_name, description, date, start_time, end_time, price, image_url<br><br>
+          <div style="display:flex;gap:10px;margin-bottom:16px;">
+            <button onclick="setBulkEventsMode('old')" id="bevt-mode-old" class="btn btn-outline btn-sm" style="border-color:var(--primary);color:var(--primary);">Old DB</button>
+            <button onclick="setBulkEventsMode('gcr')" id="bevt-mode-gcr" class="btn btn-primary btn-sm">✦ GCR Entities</button>
+          </div>
+          <div id="bevt-format-old" style="display:none;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;font-family:monospace;color:var(--text-muted);">
+            <strong style="color:var(--text);">Old DB Columns:</strong><br>
+            business_name, event_name, description, date, start_time, end_time, price, image_url
+          </div>
+          <div id="bevt-format-gcr" style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;font-family:monospace;color:var(--text-muted);">
+            <strong style="color:var(--text);">GCR Event Columns:</strong><br>
+            business_name, artist_name, date, start_time, end_time, description, price_text, image_url, link_url<br><br>
+            <strong style="color:var(--text);">Notes:</strong><br>
+            • business_name matches by name OR slug<br>
+            • end_time is optional — leave blank if no end time<br>
+            • date format: 2026-05-15 or May 15 or 05/15/2026<br>
+            • start_time / end_time: 8:00 PM or 20:00<br><br>
             <strong style="color:var(--text);">Example:</strong><br>
-            The Craft Bar, Trivia Night, Weekly trivia, 2026-04-05, 19:00, 22:00, Free, https://...
+            Cobalt The Restaurant, DJ Mike, 2026-05-15, 8:00 PM, 11:00 PM, Live DJ on the patio, Free, https://..., <br>
+            Tee Off at The Wharf, Trivia Night, 2026-05-20, 7:00 PM, , Weekly bar trivia, Free, ,
           </div>
           <div style="display:flex;flex-direction:column;gap:14px;">
             <div>
@@ -1041,7 +1216,8 @@
               <h3 style="margin:0;font-size:16px;">Step 2 — Review &amp; Edit Organized Data</h3>
               <div style="display:flex;gap:8px;">
                 <button class="btn btn-outline btn-sm" onclick="resetAIOrganize()">Start Over</button>
-                <button class="btn btn-primary" onclick="approveAIOrganize()">Save to Database</button>
+                <button class="btn btn-outline" onclick="approveAIOrganize()">Save to Old DB</button>
+                <button class="btn btn-primary" onclick="saveAIToGCREntity()">✦ Save to GCR Entities</button>
               </div>
             </div>
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Review each section below. Edit anything that looks wrong, then click Save to Database.</div>
@@ -1765,6 +1941,7 @@
       if (page === 'users' && !_usersLoaded) loadUsers();
       if (page === 'rag-index') loadRAGStatus();
       if (page === 'ai-settings') loadAISettings();
+      if (page === 'gcr-entity-editor' && !_entityPageLoaded) { _entityPageLoaded = true; loadEntities(); }
     }
 
     function toast(msg, type) {
@@ -1782,36 +1959,44 @@
       var token = getAuthToken();
       if (!token) return;
       try {
-        var [bizRes, gcrRes, usersRes] = await Promise.all([
+        var [statsRes, bizRes, gcrRes] = await Promise.all([
+          fetch(API_BASE + '/api/admin/stats', { headers: { 'Authorization': 'Bearer ' + token } }),
           fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + token } }),
-          fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } }),
-          fetch(API_BASE + '/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } })
+          fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } })
         ]);
-        var businesses = bizRes.ok ? (await bizRes.json()).businesses || [] : [];
+        var stats = statsRes.ok ? await statsRes.json() : {};
+        var businesses = bizRes.ok ? await bizRes.json() : [];
         var gcr = gcrRes.ok ? await gcrRes.json() : [];
-        var users = usersRes.ok ? (await usersRes.json()).users || [] : [];
+        if (!Array.isArray(businesses)) businesses = [];
+        if (!Array.isArray(gcr)) gcr = [];
 
-        document.getElementById('stat-businesses').textContent = businesses.length;
+        document.getElementById('stat-businesses').textContent = stats.total_businesses || businesses.length;
         document.getElementById('stat-gcr').textContent = gcr.length;
-        document.getElementById('stat-users').textContent = users.length;
+        document.getElementById('stat-users').textContent = stats.total_users || '—';
+        document.getElementById('stat-bookings').textContent = stats.total_bookings || '—';
 
-        var html = '<table style="width:100%;border-collapse:collapse;">';
-        html += '<thead><tr style="border-bottom:1px solid var(--card-border);">';
-        ['Business','Type','Status','Subdomain'].forEach(function(h) {
-          html += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">' + h + '</th>';
-        });
-        html += '</tr></thead><tbody>';
-        businesses.slice(0, 10).forEach(function(b) {
-          html += '<tr style="border-bottom:1px solid var(--card-border);">';
-          html += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(b.name || '—') + '</td>';
-          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.type || '—') + '</td>';
-          html += '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.status || '—') + '</td>';
-          html += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>';
-          html += '</tr>';
-        });
-        html += '</tbody></table>';
-        document.getElementById('recent-businesses').innerHTML = html;
-        document.getElementById('businesses-list').innerHTML = html;
+        var tableHTML = function(list) {
+          var h = '<table style="width:100%;border-collapse:collapse;">';
+          h += '<thead><tr style="border-bottom:1px solid var(--card-border);">';
+          ['Business','Type','Status','Subdomain',''].forEach(function(col) {
+            h += '<th style="text-align:left;padding:8px;font-size:13px;color:var(--text-muted);">' + col + '</th>';
+          });
+          h += '</tr></thead><tbody>';
+          list.forEach(function(b) {
+            h += '<tr style="border-bottom:1px solid var(--card-border);">';
+            h += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(b.name || '—') + '</td>';
+            h += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.type || '—') + '</td>';
+            h += '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.status || '—') + '</td>';
+            h += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>';
+            h += '<td style="padding:10px 8px;"><button onclick="openBizEditor(\'' + escHtml(b.site_id) + '\')" class="btn btn-outline btn-sm">Edit</button></td>';
+            h += '</tr>';
+          });
+          h += '</tbody></table>';
+          return h;
+        };
+
+        document.getElementById('recent-businesses').innerHTML = tableHTML(businesses.slice(0, 10));
+        document.getElementById('businesses-list').innerHTML = tableHTML(businesses);
       } catch(e) {
         document.getElementById('recent-businesses').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Could not load data.</div>';
       }
@@ -3705,6 +3890,1027 @@
 
     // Override old modal openBizEditor with full dashboard
     function openBizEditor(siteId) { openGCRBizDashboard(siteId); }
+
+    // ═══════════════════════════════════════════════════
+    // GCR ENTITY EDITOR
+    // Reads/writes to the NEW GCR Supabase project via
+    // /api/admin/gcr/entities endpoints
+    // ═══════════════════════════════════════════════════
+
+    var _allEntities = [];
+    var _currentEntityId = null;
+    var _currentEntityTags = [];
+    var _currentEntityFeatures = [];
+    var _currentEntityPF = [];
+    var _currentEntitySections = [];
+
+    // ── Load entity list ───────────────────────────────
+
+    async function loadEntities() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        _allEntities = data.entities || [];
+        renderEntities(_allEntities);
+      } catch(err) { toast('Failed to load entities: ' + err.message, 'error'); }
+    }
+
+    function renderEntities(list) {
+      document.getElementById('ent-count').textContent = list.length + ' entities';
+      var html = list.map(function(e) {
+        return '<tr style="border-bottom:1px solid var(--card-border);">' +
+          '<td style="padding:10px 8px;font-size:14px;">' + escHtml(e.icon||'') + ' ' + escHtml(e.name) + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.entity_subtype||'—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.city||'—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.slug) + '</td>' +
+          '<td style="padding:10px 8px;">' +
+            '<button onclick="openEntEditor(\'' + e.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+      document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
+    }
+
+    function filterEntities() {
+      var q = document.getElementById('ent-search').value.toLowerCase();
+      renderEntities(_allEntities.filter(function(e) {
+        return !q || (e.name||'').toLowerCase().includes(q) || (e.slug||'').toLowerCase().includes(q) || (e.entity_subtype||'').toLowerCase().includes(q);
+      }));
+    }
+
+    // ── Open entity editor ─────────────────────────────
+
+    async function openEntEditor(entityId) {
+      _currentEntityId = entityId;
+      document.getElementById('entEditorModal').style.display = 'block';
+      document.getElementById('ent-editor-title').textContent = 'Loading…';
+      switchEntTab('info');
+      var token = getAuthToken();
+      try {
+        var ent = _allEntities.find(function(e){ return e.id === entityId; });
+        if (!ent) { toast('Entity not found', 'error'); return; }
+        var res = await fetch(API_BASE + '/api/gcr/entity/' + ent.slug);
+        var data = await res.json();
+        var e = data.entity;
+        document.getElementById('ent-editor-title').textContent = e.name;
+        document.getElementById('ent-editor-slug').textContent = e.slug;
+        // Fill info
+        var sv = function(id, v) { var el = document.getElementById(id); if(el) el.value = v||''; };
+        sv('ent-name', e.name); sv('ent-slug', e.slug); sv('ent-subtitle', e.subtitle);
+        sv('ent-subtype', e.entity_subtype); sv('ent-icon', e.icon); sv('ent-phone', e.phone);
+        sv('ent-rating', e.rating); sv('ent-review-count', e.review_count);
+        sv('ent-hero', e.hero_image_url); sv('ent-website', e.website_url); sv('ent-directions', e.directions_url);
+        // Tags / Features / Sections
+        _currentEntityTags     = data.tags        || [];
+        _currentEntityFeatures = data.features    || [];
+        _currentEntityPF       = data.perfect_for || [];
+        _currentEntitySections = data.sections    || [];
+        renderEntTags(); renderEntFeatures(); renderEntPF(); renderEntSections();
+      } catch(err) { toast('Failed to load entity: ' + err.message, 'error'); }
+    }
+
+    function closeEntEditor() {
+      document.getElementById('entEditorModal').style.display = 'none';
+      _currentEntityId = null;
+    }
+
+    function switchEntTab(tab) {
+      ['info','tags','features','sections'].forEach(function(t) {
+        var btn = document.getElementById('enttab-' + t);
+        var con = document.getElementById('enttab-' + t + '-content');
+        if (!btn || !con) return;
+        if (t === tab) {
+          btn.style.borderBottomColor = 'var(--primary)'; btn.style.color = 'var(--text)'; btn.style.fontWeight = '600';
+          con.style.display = 'block';
+        } else {
+          btn.style.borderBottomColor = 'transparent'; btn.style.color = 'var(--text-muted)'; btn.style.fontWeight = 'normal';
+          con.style.display = 'none';
+        }
+      });
+    }
+
+    // ── Save entity info ──────────────────────────────
+
+    async function saveEntInfo() {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      var payload = {
+        name: document.getElementById('ent-name').value,
+        slug: document.getElementById('ent-slug').value,
+        subtitle: document.getElementById('ent-subtitle').value,
+        entity_subtype: document.getElementById('ent-subtype').value,
+        icon: document.getElementById('ent-icon').value,
+        phone: document.getElementById('ent-phone').value,
+        rating: parseFloat(document.getElementById('ent-rating').value) || null,
+        review_count: parseInt(document.getElementById('ent-review-count').value) || 0,
+        hero_image_url: document.getElementById('ent-hero').value,
+        website_url: document.getElementById('ent-website').value,
+        directions_url: document.getElementById('ent-directions').value,
+      };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        document.getElementById('ent-editor-title').textContent = payload.name;
+        toast('Entity saved!', 'success');
+        loadEntities();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── New entity ────────────────────────────────────
+
+    function openNewEntityModal() {
+      _currentEntityId = null;
+      document.getElementById('ent-editor-title').textContent = 'New Entity';
+      document.getElementById('ent-editor-slug').textContent = '';
+      ['ent-name','ent-slug','ent-subtitle','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.value = '';
+      });
+      _currentEntityTags = []; _currentEntityFeatures = []; _currentEntityPF = []; _currentEntitySections = [];
+      renderEntTags(); renderEntFeatures(); renderEntPF(); renderEntSections();
+      document.getElementById('entEditorModal').style.display = 'block';
+      switchEntTab('info');
+      // Override save to do a create instead
+      document.getElementById('ent-editor-body').querySelector('button.btn-primary').onclick = createNewEntity;
+    }
+
+    async function createNewEntity() {
+      var token = getAuthToken();
+      var entity = {
+        name: document.getElementById('ent-name').value,
+        slug: document.getElementById('ent-slug').value,
+        subtitle: document.getElementById('ent-subtitle').value,
+        entity_subtype: document.getElementById('ent-subtype').value,
+        icon: document.getElementById('ent-icon').value,
+        phone: document.getElementById('ent-phone').value,
+        hero_image_url: document.getElementById('ent-hero').value,
+        website_url: document.getElementById('ent-website').value,
+        directions_url: document.getElementById('ent-directions').value,
+      };
+      if (!entity.name || !entity.slug) { toast('Name and slug are required', 'error'); return; }
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        _currentEntityId = result.id;
+        document.getElementById('ent-editor-title').textContent = entity.name;
+        document.getElementById('ent-editor-slug').textContent = entity.slug;
+        document.getElementById('ent-editor-body').querySelector('button.btn-primary').onclick = saveEntInfo;
+        toast('Entity created!', 'success');
+        loadEntities();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Tags ──────────────────────────────────────────
+
+    function renderEntTags() {
+      var el = document.getElementById('ent-tags-list'); if (!el) return;
+      el.innerHTML = _currentEntityTags.map(function(t) {
+        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:var(--primary);color:#fff;border-radius:20px;font-size:13px;">' +
+          escHtml(t.tag) + (t.tag_category ? ' <span style="opacity:0.7;font-size:11px;">(' + escHtml(t.tag_category) + ')</span>' : '') +
+          ' <button onclick="removeEntTag(\'' + t.id + '\')" style="background:none;border:none;color:#fff;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button></span>';
+      }).join('') || '<span style="color:var(--text-muted);font-size:13px;">No tags yet.</span>';
+    }
+
+    async function addEntTag() {
+      if (!_currentEntityId) return;
+      var tag = document.getElementById('ent-tag-input').value.trim();
+      var cat = document.getElementById('ent-tag-category').value;
+      if (!tag) return;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        _currentEntityTags.push(result.tag);
+        document.getElementById('ent-tag-input').value = '';
+        renderEntTags();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function removeEntTag(tagId) {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _currentEntityTags = _currentEntityTags.filter(function(t){ return t.id !== tagId; });
+      renderEntTags();
+    }
+
+    // ── Features ──────────────────────────────────────
+
+    function renderEntFeatures() {
+      var el = document.getElementById('ent-features-list'); if (!el) return;
+      el.innerHTML = _currentEntityFeatures.map(function(f) {
+        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;font-size:13px;color:var(--text);">' +
+          escHtml(f.label) + ' <button onclick="removeEntFeature(\'' + f.id + '\')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;">×</button></span>';
+      }).join('') || '<span style="color:var(--text-muted);font-size:13px;">No features yet.</span>';
+    }
+
+    async function addEntFeature() {
+      if (!_currentEntityId) return;
+      var label = document.getElementById('ent-feature-input').value.trim();
+      if (!label) return;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        _currentEntityFeatures.push(result.feature);
+        document.getElementById('ent-feature-input').value = '';
+        renderEntFeatures();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function removeEntFeature(fid) {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _currentEntityFeatures = _currentEntityFeatures.filter(function(f){ return f.id !== fid; });
+      renderEntFeatures();
+    }
+
+    // ── Perfect For ───────────────────────────────────
+
+    function renderEntPF() {
+      var el = document.getElementById('ent-pf-list'); if (!el) return;
+      el.innerHTML = _currentEntityPF.map(function(p) {
+        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;font-size:13px;color:var(--text);">' +
+          escHtml(p.label) + ' <button onclick="removeEntPF(\'' + p.id + '\')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;">×</button></span>';
+      }).join('') || '<span style="color:var(--text-muted);font-size:13px;">No items yet.</span>';
+    }
+
+    async function addEntPF() {
+      if (!_currentEntityId) return;
+      var label = document.getElementById('ent-pf-input').value.trim();
+      if (!label) return;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        _currentEntityPF.push(result.item);
+        document.getElementById('ent-pf-input').value = '';
+        renderEntPF();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function removeEntPF(pid) {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _currentEntityPF = _currentEntityPF.filter(function(p){ return p.id !== pid; });
+      renderEntPF();
+    }
+
+    // ── Sections list ─────────────────────────────────
+
+    function renderEntSections() {
+      var el = document.getElementById('ent-sections-list'); if (!el) return;
+      if (!_currentEntitySections.length) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">No sections yet. Click "+ Add Section" to start.</p>';
+        return;
+      }
+      el.innerHTML = _currentEntitySections.map(function(s) {
+        var typeLabel = { rich_text:'About text', bullets:'Bullets', grouped_items:'Menu/Tickets/Drinks', cards:'Cards', gallery:'Photos', reviews:'Reviews', hours:'Hours', location:'Location' }[s.section_type] || s.section_type;
+        return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;">' +
+          '<div style="flex:1;">' +
+            '<strong style="font-size:14px;">' + escHtml(s.section_label) + '</strong>' +
+            ' <span style="font-size:12px;color:var(--text-muted);background:var(--bg);padding:2px 8px;border-radius:10px;">' + escHtml(s.section_type) + '</span>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">key: ' + escHtml(s.section_key) + ' · ' + typeLabel + '</div>' +
+          '</div>' +
+          '<button onclick="openSecContentEditor(\'' + s.id + '\',\'' + s.section_type + '\',\'' + escHtml(s.section_label) + '\')" class="btn btn-outline btn-sm">Edit Content</button>' +
+          '<button onclick="deleteEntSection(\'' + s.id + '\')" class="btn btn-sm btn-danger">×</button>' +
+          '</div>';
+      }).join('');
+    }
+
+    function openAddSectionModal() {
+      if (!_currentEntityId) { toast('Save the entity first', 'error'); return; }
+      document.getElementById('sec-new-key').value = '';
+      document.getElementById('sec-new-label').value = '';
+      document.getElementById('sec-new-type').value = 'rich_text';
+      document.getElementById('addSectionModal').style.display = 'flex';
+    }
+
+    async function saveNewSection() {
+      var token = getAuthToken();
+      var key = document.getElementById('sec-new-key').value.trim();
+      var label = document.getElementById('sec-new-label').value.trim();
+      var type = document.getElementById('sec-new-type').value;
+      if (!key || !label) { toast('Key and label are required', 'error'); return; }
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        _currentEntitySections.push(result.section);
+        document.getElementById('addSectionModal').style.display = 'none';
+        renderEntSections();
+        toast('Section added!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteEntSection(sectionId) {
+      if (!confirm('Delete this section and all its content?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _currentEntitySections = _currentEntitySections.filter(function(s){ return s.id !== sectionId; });
+      renderEntSections();
+      toast('Section deleted', 'success');
+    }
+
+    // ── Section content editor ────────────────────────
+
+    var _secEditId = null;
+    var _secEditType = null;
+    var _secEditGroups = [];
+
+    async function openSecContentEditor(sectionId, sectionType, sectionLabel) {
+      _secEditId = sectionId;
+      _secEditType = sectionType;
+      document.getElementById('sec-content-title').textContent = sectionLabel;
+      document.getElementById('secContentModal').style.display = 'block';
+      var token = getAuthToken();
+      var body = document.getElementById('sec-content-body');
+      body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+
+      try {
+        if (sectionType === 'rich_text') {
+          var res = await fetch(API_BASE + '/api/gcr/entity/___', { headers: {} });
+          // Fetch directly from section
+          var r = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/rich-text-get');
+          // Build inline editor
+          body.innerHTML = '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;">About / Description Text</label>' +
+            '<textarea id="sec-rt-text" rows="8" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>' +
+            '<button onclick="saveSecRichText()" class="btn btn-primary" style="margin-top:12px;">Save</button></div>';
+          // Load current text
+          var section = _currentEntitySections.find(function(s){ return s.id === sectionId; });
+          if (section && section.content) document.getElementById('sec-rt-text').value = section.content.body_text || '';
+
+        } else if (sectionType === 'bullets') {
+          var bulletsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/bullets', { headers: { 'Authorization': 'Bearer ' + token } });
+          var bd = await bulletsRes.json();
+          _secEditGroups = bd.bullets || [];
+          renderSecBullets();
+
+        } else if (sectionType === 'grouped_items') {
+          var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
+          var gd = await grpRes.json();
+          _secEditGroups = gd.groups || [];
+          renderSecGroups();
+
+        } else if (sectionType === 'location') {
+          var section = _currentEntitySections.find(function(s){ return s.id === sectionId; });
+          var loc = (section && section.location) || {};
+          body.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+            '<div style="grid-column:1/-1"><label style="font-size:12px;color:var(--text-muted);">Address</label><input id="loc-addr" value="' + escHtml(loc.address_line_1||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '<div><label style="font-size:12px;color:var(--text-muted);">City</label><input id="loc-city" value="' + escHtml(loc.city||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '<div><label style="font-size:12px;color:var(--text-muted);">State</label><input id="loc-state" value="' + escHtml(loc.state||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '<div><label style="font-size:12px;color:var(--text-muted);">Zip</label><input id="loc-zip" value="' + escHtml(loc.zip||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '<div><label style="font-size:12px;color:var(--text-muted);">Phone</label><input id="loc-phone" value="' + escHtml(loc.phone||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '<div style="grid-column:1/-1"><label style="font-size:12px;color:var(--text-muted);">Directions URL</label><input id="loc-dir" value="' + escHtml(loc.directions_url||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '<div style="grid-column:1/-1"><label style="font-size:12px;color:var(--text-muted);">Note</label><input id="loc-note" value="' + escHtml(loc.note_text||'') + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px;"></div>' +
+            '</div><button onclick="saveSecLocation()" class="btn btn-primary" style="margin-top:16px;">Save Location</button>';
+
+        } else if (sectionType === 'hours') {
+          var section = _currentEntitySections.find(function(s){ return s.id === sectionId; });
+          var hrs = (section && section.hours) || [];
+          var days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+          var hoursHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+          days.forEach(function(d) {
+            var h = hrs.find(function(x){ return x.day_of_week === d; }) || {};
+            hoursHtml += '<div><label style="font-size:12px;color:var(--text-muted);">' + d + '</label>' +
+              '<input id="hr-' + d.toLowerCase() + '" value="' + escHtml(h.open_time && h.close_time ? h.open_time + '–' + h.close_time : (h.is_closed ? 'Closed' : '')) + '" placeholder="10:00–22:00 or Closed" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;margin-top:4px;"></div>';
+          });
+          hoursHtml += '</div><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Format: 10:00–22:00 or "Closed"</p><button onclick="saveSecHours()" class="btn btn-primary" style="margin-top:8px;">Save Hours</button>';
+          body.innerHTML = hoursHtml;
+
+        } else if (sectionType === 'gallery') {
+          var photosRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { headers: { 'Authorization': 'Bearer ' + token } });
+          var pd = await photosRes.json();
+          renderSecPhotos(pd.photos || []);
+
+        } else {
+          body.innerHTML = '<p style="color:var(--text-muted);">Editor for "' + sectionType + '" coming soon.</p>';
+        }
+      } catch(err) { body.innerHTML = '<p style="color:red;">Error: ' + escHtml(err.message) + '</p>'; }
+    }
+
+    // Rich text save
+    async function saveSecRichText() {
+      var token = getAuthToken();
+      var text = document.getElementById('sec-rt-text').value;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: text }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Saved!', 'success');
+        // Update local cache
+        var sec = _currentEntitySections.find(function(s){ return s.id === _secEditId; });
+        if (sec) sec.content = { body_text: text };
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // Bullets
+    function renderSecBullets() {
+      var body = document.getElementById('sec-content-body');
+      var html = '<div id="sec-bullets-container">' +
+        _secEditGroups.map(function(b, i) {
+          return '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+            '<input type="text" value="' + escHtml(b.bullet_text) + '" onchange="_secEditGroups[' + i + '].bullet_text=this.value;_secEditGroups[' + i + '].dirty=true" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;">' +
+            '<button onclick="saveSecBullet(' + i + ')" class="btn btn-sm">Save</button>' +
+            '<button onclick="deleteSecBullet(\'' + b.id + '\',' + i + ')" class="btn btn-sm btn-danger">×</button>' +
+            '</div>';
+        }).join('') +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:12px;">' +
+          '<input id="sec-bullet-new" type="text" placeholder="New bullet..." style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;" onkeydown="if(event.key===\'Enter\')addSecBullet()">' +
+          '<button onclick="addSecBullet()" class="btn btn-primary">Add</button>' +
+        '</div>';
+      body.innerHTML = html;
+    }
+
+    async function addSecBullet() {
+      var token = getAuthToken();
+      var text = document.getElementById('sec-bullet-new').value.trim();
+      if (!text) return;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: text, sort_order: _secEditGroups.length }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        _secEditGroups.push(result.bullet);
+        renderSecBullets();
+        toast('Added!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function saveSecBullet(idx) {
+      var token = getAuthToken();
+      var b = _secEditGroups[idx];
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + b.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: b.bullet_text }) });
+      toast('Saved', 'success');
+    }
+
+    async function deleteSecBullet(id, idx) {
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _secEditGroups.splice(idx, 1);
+      renderSecBullets();
+    }
+
+    // Grouped items
+    function renderSecGroups() {
+      var body = document.getElementById('sec-content-body');
+      var html = '<div><button onclick="addSecGroup()" class="btn btn-outline btn-sm" style="margin-bottom:16px;">+ Add Group</button></div>';
+      html += _secEditGroups.map(function(g, gi) {
+        var itemsHtml = (g.items||[]).map(function(item, ii) {
+          return '<div style="display:grid;grid-template-columns:2fr 3fr 1fr auto auto;gap:6px;margin-bottom:6px;align-items:center;">' +
+            '<input type="text" value="' + escHtml(item.item_name||'') + '" placeholder="Name" onchange="_secEditGroups[' + gi + '].items[' + ii + '].item_name=this.value" style="padding:6px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">' +
+            '<input type="text" value="' + escHtml(item.item_description||'') + '" placeholder="Description" onchange="_secEditGroups[' + gi + '].items[' + ii + '].item_description=this.value" style="padding:6px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">' +
+            '<input type="text" value="' + escHtml(item.price_text||'') + '" placeholder="$0.00" onchange="_secEditGroups[' + gi + '].items[' + ii + '].price_text=this.value;_secEditGroups[' + gi + '].items[' + ii + '].price_numeric=parseFloat(this.value.replace(/[^0-9.]/g,\'\'))||null" style="padding:6px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">' +
+            '<button onclick="saveSecItem(' + gi + ',' + ii + ')" class="btn btn-sm">✓</button>' +
+            '<button onclick="deleteSecItem(\'' + item.id + '\',' + gi + ',' + ii + ')" class="btn btn-sm btn-danger">×</button>' +
+            '</div>';
+        }).join('');
+        return '<div style="border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:12px;">' +
+          '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">' +
+            '<input type="text" value="' + escHtml(g.title||'') + '" placeholder="Group title (e.g. 3:30 PM or Starters)" onchange="_secEditGroups[' + gi + '].title=this.value" style="flex:1;padding:7px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;font-weight:600;">' +
+            '<input type="text" value="' + escHtml(g.subtitle||'') + '" placeholder="Subtitle" onchange="_secEditGroups[' + gi + '].subtitle=this.value" style="flex:1;padding:7px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">' +
+            '<button onclick="saveSecGroup(' + gi + ')" class="btn btn-sm">Save</button>' +
+            '<button onclick="deleteSecGroup(\'' + g.id + '\',' + gi + ')" class="btn btn-sm btn-danger">×</button>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Name · Description · Price — click ✓ to save each row</div>' +
+          itemsHtml +
+          '<button onclick="addSecItem(\'' + g.id + '\',' + gi + ')" class="btn btn-sm btn-outline" style="margin-top:6px;">+ Add Item</button>' +
+          '</div>';
+      }).join('');
+      body.innerHTML = html;
+    }
+
+    async function addSecGroup() {
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'New Group', sort_order: _secEditGroups.length }) });
+      var result = await res.json();
+      if (result.error) { toast(result.error, 'error'); return; }
+      _secEditGroups.push({ ...result.group, items: [] });
+      renderSecGroups();
+    }
+
+    async function saveSecGroup(gi) {
+      var token = getAuthToken();
+      var g = _secEditGroups[gi];
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + g.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: g.title, subtitle: g.subtitle }) });
+      toast('Group saved', 'success');
+    }
+
+    async function deleteSecGroup(id, gi) {
+      if (!confirm('Delete this group and all its items?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _secEditGroups.splice(gi, 1);
+      renderSecGroups();
+    }
+
+    async function addSecItem(groupId, gi) {
+      var token = getAuthToken();
+      var payload = { group_id: groupId, item_name: 'New Item', item_type: 'menu_item', sort_order: (_secEditGroups[gi].items||[]).length };
+      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      var result = await res.json();
+      if (result.error) { toast(result.error, 'error'); return; }
+      if (!_secEditGroups[gi].items) _secEditGroups[gi].items = [];
+      _secEditGroups[gi].items.push(result.item);
+      renderSecGroups();
+    }
+
+    async function saveSecItem(gi, ii) {
+      var token = getAuthToken();
+      var item = _secEditGroups[gi].items[ii];
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items/' + item.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: item.item_name, item_description: item.item_description, price_text: item.price_text, price_numeric: item.price_numeric }) });
+      toast('Item saved', 'success');
+    }
+
+    async function deleteSecItem(id, gi, ii) {
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _secEditGroups[gi].items.splice(ii, 1);
+      renderSecGroups();
+    }
+
+    // Location save
+    async function saveSecLocation() {
+      var token = getAuthToken();
+      var payload = { address_line_1: document.getElementById('loc-addr').value, city: document.getElementById('loc-city').value, state: document.getElementById('loc-state').value, zip: document.getElementById('loc-zip').value, phone: document.getElementById('loc-phone').value, directions_url: document.getElementById('loc-dir').value, note_text: document.getElementById('loc-note').value };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Location saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // Hours save
+    async function saveSecHours() {
+      var token = getAuthToken();
+      var days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      var hours = days.map(function(d) {
+        var val = (document.getElementById('hr-' + d.toLowerCase())||{}).value || '';
+        var closed = val.toLowerCase() === 'closed' || !val;
+        var parts = val.split(/[–\-]/);
+        return { day_of_week: d, open_time: closed ? null : (parts[0]||'').trim()||null, close_time: closed ? null : (parts[1]||'').trim()||null, is_closed: closed };
+      });
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/hours', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hours }) });
+        if (!res.ok) throw new Error('Save failed');
+        toast('Hours saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // Photos
+    function renderSecPhotos(photos) {
+      var body = document.getElementById('sec-content-body');
+      var token = getAuthToken();
+      body.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
+        '<input id="sec-photo-url" type="text" placeholder="Image URL..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+        '<input id="sec-photo-caption" type="text" placeholder="Caption..." style="width:200px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+        '<button onclick="addSecPhoto()" class="btn btn-primary">Add</button>' +
+        '</div>' +
+        '<div id="sec-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">' +
+        photos.map(function(p) {
+          return '<div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--card-border);">' +
+            '<img src="' + escHtml(p.image_url) + '" style="width:100%;height:120px;object-fit:cover;" onerror="this.style.background=\'#333\'">' +
+            '<div style="padding:6px 8px;font-size:11px;color:var(--text-muted);">' + escHtml(p.caption||'') + '</div>' +
+            '<button onclick="deleteSecPhoto(\'' + p.id + '\',this.closest(\'div[style]\'))" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;">×</button>' +
+            '</div>';
+        }).join('') +
+        '</div>';
+    }
+
+    async function addSecPhoto() {
+      var token = getAuthToken();
+      var url = document.getElementById('sec-photo-url').value.trim();
+      var cap = document.getElementById('sec-photo-caption').value.trim();
+      if (!url) return;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url, caption: cap }) });
+        var result = await res.json();
+        if (result.error) { toast(result.error, 'error'); return; }
+        document.getElementById('sec-photo-url').value = '';
+        document.getElementById('sec-photo-caption').value = '';
+        var grid = document.getElementById('sec-photos-grid');
+        var div = document.createElement('div');
+        div.style = 'position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--card-border);';
+        div.innerHTML = '<img src="' + escHtml(url) + '" style="width:100%;height:120px;object-fit:cover;"><div style="padding:6px 8px;font-size:11px;color:var(--text-muted);">' + escHtml(cap) + '</div><button onclick="deleteSecPhoto(\'' + result.photo.id + '\',this.closest(\'div[style]\'))" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;">×</button>';
+        grid.appendChild(div);
+        toast('Photo added!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteSecPhoto(id, el) {
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (el) el.remove();
+      toast('Deleted', 'success');
+    }
+
+    var _entityPageLoaded = false;
+    var _bulkEventsMode = 'gcr';
+
+    function setBulkEventsMode(mode) {
+      _bulkEventsMode = mode;
+      document.getElementById('bevt-format-old').style.display = mode === 'old' ? '' : 'none';
+      document.getElementById('bevt-format-gcr').style.display = mode === 'gcr' ? '' : 'none';
+      document.getElementById('bevt-mode-old').className = 'btn btn-sm ' + (mode === 'old' ? 'btn-primary' : 'btn-outline');
+      document.getElementById('bevt-mode-gcr').className = 'btn btn-sm ' + (mode === 'gcr' ? 'btn-primary' : 'btn-outline');
+    }
+
+    // ── CSV Bulk Upload — GCR Entities ────────────────────────
+    function updateBulkFormatHelp() {
+      var type = document.getElementById('bulk-data-type').value;
+      var help = {
+        'gcr_entities': 'name, slug, entity_subtype, subtitle, phone, address_line_1, city, state, zip, website_url, directions_url, hero_image_url\nExample: Cobalt The Restaurant, cobalt-the-restaurant, restaurant, Fresh Gulf Seafood, (251) 923-5300, 28099 Perdido Beach Blvd, Orange Beach, Alabama, 36561, https://cobaltrestaurant.net, https://maps.google.com/..., https://...',
+        'gcr_items': 'entity_slug, section_key, group_title, item_name, item_description, price_text, price_numeric, item_type\nExample: cobalt-the-restaurant, dinner, Starters, Crab Dip, Served with pita chips, $14, 14, menu_item',
+        'restaurant_full_menu': 'category, name, description, price\nExample: Appetizers, Calamari, Lightly fried with marinara, 12.99',
+        'menu': 'category, name, description, price\nExample: Dinner, Grilled Salmon, Atlantic salmon with lemon butter, 28',
+        'drinks': 'category, name, description, price\nExample: Cocktails, Margarita, Classic with lime, 12',
+        'events': 'business_name, event_name, description, date, start_time, end_time, price, image_url',
+        'specials': 'name, description, days, start_time, end_time, discount_text\nExample: Taco Tuesday, $2 tacos all day, Tuesday, 00:00, 23:59, $2 off',
+        'happy_hour': 'name, description, price\nExample: House Wine, Red or white, $5',
+      };
+      document.getElementById('bulk-format-help').textContent = help[type] || '';
+    }
+
+    async function processBulkCSV() {
+      var type = document.getElementById('bulk-data-type').value;
+      var file = document.getElementById('bulk-csv-file').files[0];
+      if (!file) { toast('Select a CSV file first', 'error'); return; }
+      var text = await file.text();
+      var lines = text.split('\n').filter(function(l){ return l.trim(); });
+      var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g,''); });
+      var rows = lines.slice(1).map(function(line) {
+        var vals = line.split(',').map(function(v){ return v.trim().replace(/^"|"$/g,''); });
+        var obj = {}; headers.forEach(function(h,i){ obj[h] = vals[i]||''; }); return obj;
+      }).filter(function(r){ return Object.values(r).some(function(v){ return v; }); });
+
+      if (!rows.length) { toast('No data rows found in CSV', 'error'); return; }
+      var token = getAuthToken();
+
+      if (type === 'gcr_entities') {
+        var success = 0, errors = 0;
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          try {
+            var res = await fetch(API_BASE + '/api/admin/gcr/entities', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entity: { name: r.name, slug: r.slug, entity_subtype: r.entity_subtype, subtitle: r.subtitle, phone: r.phone, address_line_1: r.address_line_1, city: r.city, state: r.state, zip: r.zip, website_url: r.website_url, directions_url: r.directions_url, hero_image_url: r.hero_image_url } })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            success++;
+          } catch(e) { errors++; console.error(r.name, e.message); }
+        }
+        toast(success + ' entities created' + (errors ? ', ' + errors + ' errors' : ''), errors ? 'error' : 'success');
+        loadEntities();
+        return;
+      }
+
+      if (type === 'gcr_items') {
+        var success = 0, skipped = 0, errors = 0;
+        // Group rows by entity_slug + section_key + group_title
+        var entitySectionMap = {};
+        rows.forEach(function(r) {
+          var key = r.entity_slug + '|' + r.section_key;
+          if (!entitySectionMap[key]) entitySectionMap[key] = { entity_slug: r.entity_slug, section_key: r.section_key, groups: {} };
+          var gKey = r.group_title || 'default';
+          if (!entitySectionMap[key].groups[gKey]) entitySectionMap[key].groups[gKey] = [];
+          entitySectionMap[key].groups[gKey].push(r);
+        });
+
+        for (var key in entitySectionMap) {
+          var entry = entitySectionMap[key];
+          try {
+            // Find entity by slug or name
+            var entRes = await fetch(API_BASE + '/api/gcr/entities?search=' + encodeURIComponent(entry.entity_slug));
+            var entData = await entRes.json();
+            var entity = (entData.entities||[]).find(function(e){ return e.slug === entry.entity_slug || e.name.toLowerCase() === entry.entity_slug.toLowerCase(); });
+            if (!entity) { errors++; console.warn('Entity not found:', entry.entity_slug); continue; }
+
+            // Get or create section
+            var secCreateRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entity.id + '/sections', {
+              method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ section_key: entry.section_key, section_label: entry.section_key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}), section_type: 'grouped_items', sort_order: 99 })
+            });
+            var secCreateData = await secCreateRes.json();
+            var sectionId = secCreateData.section?.id;
+            if (!sectionId) {
+              // Already exists — fetch it
+              var secListRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entity.id + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
+              var secListData = await secListRes.json();
+              var existSec = (secListData.sections||[]).find(function(s){ return s.section_key === entry.section_key; });
+              if (!existSec) { errors++; continue; }
+              sectionId = existSec.id;
+            }
+
+            // Fetch existing items in this section to prevent duplicates
+            var existItemsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
+            var existItemsData = await existItemsRes.json();
+            var existingNames = new Set();
+            (existItemsData.groups||[]).forEach(function(g) {
+              (g.items||[]).forEach(function(i){ existingNames.add(i.item_name.toLowerCase().trim()); });
+            });
+            (existItemsData.ungrouped||[]).forEach(function(i){ existingNames.add(i.item_name.toLowerCase().trim()); });
+
+            for (var gTitle in entry.groups) {
+              var items = entry.groups[gTitle];
+              // Get or create group
+              var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: gTitle === 'default' ? '' : gTitle, sort_order: 0 })
+              });
+              var grpId = (await grpRes.json()).group?.id;
+              if (!grpId) {
+                // Group may already exist — find it
+                var existGrp = (existItemsData.groups||[]).find(function(g){ return g.title === (gTitle === 'default' ? '' : gTitle); });
+                if (existGrp) grpId = existGrp.id;
+              }
+
+              for (var ii = 0; ii < items.length; ii++) {
+                var item = items[ii];
+                var nameKey = (item.item_name||'').toLowerCase().trim();
+                if (existingNames.has(nameKey)) { skipped++; continue; } // duplicate — skip
+                await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/items', {
+                  method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ group_id: grpId||null, item_name: item.item_name, item_description: item.item_description||null, price_text: item.price_text||null, price_numeric: parseFloat(item.price_numeric)||null, item_type: item.item_type||'menu_item', sort_order: ii })
+                });
+                existingNames.add(nameKey); // prevent dupes within same upload
+                success++;
+              }
+            }
+          } catch(e) { errors++; console.error(e.message); }
+        }
+        var msg = success + ' items added';
+        if (skipped) msg += ' · ' + skipped + ' skipped (already exist)';
+        if (errors) msg += ' · ' + errors + ' errors';
+        toast(msg, errors ? 'error' : 'success');
+        return;
+      }
+
+      toast('CSV type "' + type + '" — select a GCR type or use the old bulk upload below', 'error');
+    }
+
+    // ── Bulk Events — GCR Entity mode ─────────────────────────
+    var _bulkGCREvents = [];
+
+    async function processBulkEvents() {
+      if (_bulkEventsMode === 'gcr') {
+        var file = document.getElementById('bulk-events-file').files[0];
+        if (!file) { toast('Select a CSV file', 'error'); return; }
+        var text = await file.text();
+        var lines = text.split('\n').filter(function(l){ return l.trim(); });
+        var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g,''); });
+        _bulkGCREvents = lines.slice(1).map(function(line) {
+          var vals = line.split(',').map(function(v){ return v.trim().replace(/^"|"$/g,''); });
+          var obj = {}; headers.forEach(function(h,i){ obj[h] = vals[i]||''; }); return obj;
+        }).filter(function(r){ return r.business_name && (r.artist_name || r.title); });
+
+        // Build display title and time string per row
+        _bulkGCREvents = _bulkGCREvents.map(function(r) {
+          var title = r.artist_name || r.title || '';
+          var timeStr = r.start_time ? r.start_time + (r.end_time ? ' – ' + r.end_time : '') : '';
+          var badge = r.date ? r.date + (timeStr ? ' · ' + timeStr : '') : timeStr;
+          return { business_name: r.business_name, title: title, subtitle: timeStr, description: r.description, badge_text: badge, price_text: r.price_text, image_url: r.image_url, link_url: r.link_url };
+        });
+
+        // Load all entities to match by name
+        var token = getAuthToken();
+        var entRes = await fetch(API_BASE + '/api/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
+        var entData = await entRes.json();
+        _gcrEntityCache = entData.entities || [];
+
+        var matched = 0, unmatched = [];
+        _bulkGCREvents.forEach(function(e) {
+          var found = _gcrEntityCache.find(function(x) {
+            return x.name.toLowerCase() === e.business_name.toLowerCase() || x.slug === e.business_name.toLowerCase().replace(/\s+/g,'-');
+          });
+          if (found) { e._entityId = found.id; e._entitySlug = found.slug; matched++; }
+          else unmatched.push(e.business_name);
+        });
+
+        var preview = document.getElementById('bulk-events-preview');
+        preview.style.display = '';
+        document.getElementById('bulk-events-stats').innerHTML = '<strong style="color:#22c55e;">' + matched + ' matched</strong>' + (unmatched.length ? ' · <strong style="color:#ef4444;">' + unmatched.length + ' not found: ' + [...new Set(unmatched)].join(', ') + '</strong>' : '');
+        document.getElementById('bulk-events-list').innerHTML = _bulkGCREvents.map(function(e){
+          var color = e._entityId ? 'var(--text)' : '#ef4444';
+          return '<div style="padding:6px 0;border-bottom:1px solid var(--card-border);color:' + color + ';">' +
+            escHtml(e.business_name) + ' — <strong>' + escHtml(e.title) + '</strong>' +
+            (e.badge_text ? ' · ' + escHtml(e.badge_text) : '') +
+            (e.price_text ? ' · ' + escHtml(e.price_text) : '') +
+            (e._entityId ? '' : ' ⚠️ NOT FOUND') +
+            '</div>';
+        }).join('');
+        return;
+      }
+      // Fall through to old mode handler
+    }
+
+    var _gcrEntityCache = [];
+    var _gcrEntitySectionCache = {};
+
+    async function getOrCreateEventsSection(entityId, token) {
+      if (_gcrEntitySectionCache[entityId]) return _gcrEntitySectionCache[entityId];
+      // Try creating — if exists, fetch it
+      var secRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section_key: 'events', section_label: 'Events', section_type: 'cards', sort_order: 50 })
+      });
+      var secData = await secRes.json();
+      if (secData.section?.id) { _gcrEntitySectionCache[entityId] = secData.section.id; return secData.section.id; }
+      // Already exists — fetch
+      var listRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
+      var listData = await listRes.json();
+      var sec = (listData.sections||[]).find(function(s){ return s.section_key === 'events'; });
+      if (sec) { _gcrEntitySectionCache[entityId] = sec.id; return sec.id; }
+      return null;
+    }
+
+    async function uploadBulkEvents() {
+      if (_bulkEventsMode !== 'gcr' || !_bulkGCREvents.length) return;
+      var token = getAuthToken();
+      var success = 0, errors = 0, skipped = 0; // skipped = unmatched business OR duplicate title
+      _gcrEntitySectionCache = {};
+
+      for (var i = 0; i < _bulkGCREvents.length; i++) {
+        var e = _bulkGCREvents[i];
+        if (!e._entityId) { skipped++; continue; }
+        try {
+          var sectionId = await getOrCreateEventsSection(e._entityId, token);
+          if (!sectionId) { errors++; continue; }
+          // Check for duplicate event title in this section
+          var existCardsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', { headers: { 'Authorization': 'Bearer ' + token } });
+          var existCardsData = await existCardsRes.json();
+          var existTitles = new Set((existCardsData.cards||[]).map(function(c){ return (c.title||'').toLowerCase().trim(); }));
+          if (existTitles.has((e.title||'').toLowerCase().trim())) { skipped++; continue; }
+          await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', {
+            method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: e.title, subtitle: e.subtitle, description: e.description, badge_text: e.badge_text, price_text: e.price_text||null, image_url: e.image_url||null, link_url: e.link_url||null, sort_order: i })
+          });
+          success++;
+        } catch(err) { errors++; console.error(err.message); }
+      }
+
+      var msg = success + ' events uploaded';
+      if (skipped) msg += ' · ' + skipped + ' skipped (business not found)';
+      if (errors) msg += ' · ' + errors + ' errors';
+      var ok = errors === 0;
+      document.getElementById('bulk-events-result').innerHTML = '<div style="padding:14px;border-radius:8px;background:' + (ok?'#14532d':'#7f1d1d') + ';color:' + (ok?'#86efac':'#fca5a5') + ';font-size:14px;">' + msg + '</div>';
+      document.getElementById('bulk-events-preview').style.display = 'none';
+      _bulkGCREvents = [];
+    }
+
+    // ── AI → GCR Entity save ──────────────────────────────────
+    async function saveAIToGCREntity() {
+      if (!_aoResult) { toast('No AI result to save', 'error'); return; }
+      var d = _aoResult;
+      var token = getAuthToken();
+      var savingEl = document.getElementById('ao-saved-msg');
+      document.getElementById('ao-step2').style.display = 'none';
+      document.getElementById('ao-loading').style.display = '';
+      document.getElementById('ao-loading').querySelector('div:nth-child(2)').textContent = 'Saving to GCR Entity Database...';
+
+      try {
+        // 1. Create entity
+        var slug = d.subdomain || (d.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        var entityPayload = { name: d.name, slug, subtitle: d.tagline, entity_type: 'business', entity_subtype: d.type, phone: d.phone, address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, website_url: d.website };
+        var entRes = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entityPayload, features: (d.features||[]).map(function(f){ return { label: f }; }), perfect_for: (d.perfect_for||[]).map(function(p){ return { label: p }; }) }) });
+        var entData = await entRes.json();
+        if (!entRes.ok || !entData.id) throw new Error(entData.error || 'Entity creation failed');
+        var entityId = entData.id;
+
+        // Helper to create section + return id
+        async function createSection(key, label, type, order) {
+          var r = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: order }) });
+          var rd = await r.json(); return rd.section?.id;
+        }
+
+        var order = 1;
+
+        // 2. About section
+        if (d.description) {
+          var sid = await createSection('about', 'About', 'rich_text', order++);
+          if (sid) await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: d.description }) });
+        }
+
+        // 3. Highlights
+        if (d.highlights?.length) {
+          var sid = await createSection('highlights', 'Highlights', 'bullets', order++);
+          if (sid) for (var i=0; i<d.highlights.length; i++) {
+            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.highlights[i], sort_order: i }) });
+          }
+        }
+
+        // 4. Schedules (tours/tickets)
+        if (d.schedules?.length) {
+          var sid = await createSection('schedules', 'Times & Tickets', 'grouped_items', order++);
+          if (sid) for (var i=0; i<d.schedules.length; i++) {
+            var sched = d.schedules[i];
+            var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: sched.time||sched.name, subtitle: sched.name, sort_order: i }) });
+            var grpId = (await grpRes.json()).group?.id;
+            if (grpId && sched.tickets) for (var j=0; j<sched.tickets.length; j++) {
+              var t = sched.tickets[j];
+              await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: t.name, price_text: '$'+t.price, price_numeric: parseFloat(t.price)||null, item_type: 'ticket', sort_order: j }) });
+            }
+          }
+        }
+
+        // 5. Food menu — group by category
+        if (d.menu_items?.length) {
+          var byMeal = {};
+          d.menu_items.forEach(function(item) { var m = item.category||'Menu'; if(!byMeal[m]) byMeal[m]=[]; byMeal[m].push(item); });
+          for (var meal in byMeal) {
+            var sid = await createSection(meal.toLowerCase().replace(/\s+/g,'-'), meal, 'grouped_items', order++);
+            if (sid) {
+              var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: meal, sort_order: 0 }) });
+              var grpId = (await grpRes.json()).group?.id;
+              var items = byMeal[meal];
+              for (var i=0; i<items.length; i++) {
+                var item = items[i];
+                await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: item.name, item_description: item.description, price_text: item.price ? '$'+item.price : null, price_numeric: parseFloat(item.price)||null, item_type: 'menu_item', sort_order: i }) });
+              }
+            }
+          }
+        }
+
+        // 6. Happy Hour
+        if (d.happy_hour && (d.happy_hour.deals?.length || typeof d.happy_hour === 'string')) {
+          var hhData = typeof d.happy_hour === 'string' ? { schedule: d.happy_hour, deals: [] } : d.happy_hour;
+          var sid = await createSection('happy_hour', 'Happy Hour', 'grouped_items', order++);
+          if (sid) {
+            var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: hhData.schedule||'Happy Hour', sort_order: 0 }) });
+            var grpId = (await grpRes.json()).group?.id;
+            if (grpId) for (var i=0; i<(hhData.deals||[]).length; i++) {
+              var deal = hhData.deals[i];
+              await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: deal.name, item_description: deal.desc, price_text: deal.price, item_type: 'hh_item', sort_order: i }) });
+            }
+          }
+        }
+
+        // 7. Restrictions/Guest Info
+        if (d.restrictions?.length) {
+          var sid = await createSection('restrictions', 'Guest Info', 'bullets', order++);
+          if (sid) for (var i=0; i<d.restrictions.length; i++) {
+            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.restrictions[i], sort_order: i }) });
+          }
+        }
+
+        // 8. Events
+        if (d.events?.length) {
+          var sid = await createSection('events', 'Events', 'cards', order++);
+          if (sid) for (var i=0; i<d.events.length; i++) {
+            var ev = d.events[i];
+            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/cards', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: ev.title||ev.name, description: ev.description, badge_text: ev.event_date, sort_order: i }) });
+          }
+        }
+
+        // 9. Location section always last
+        var locSid = await createSection('location', 'Location', 'location', 99);
+        if (locSid) await fetch(API_BASE + '/api/admin/gcr/sections/' + locSid + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, phone: d.phone, website_url: d.website, directions_url: d.social?.google_maps }) });
+
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-saved').style.display = '';
+        document.getElementById('ao-saved-msg').textContent = d.name + ' saved to GCR Entity Database with all sections!';
+        toast(d.name + ' saved to GCR!', 'success');
+        loadEntities();
+      } catch(err) {
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-step2').style.display = '';
+        toast('Save failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── Image upload to GCR sections ──────────────────────────
+    // Supports both URL input and file upload (base64 → Supabase storage)
+    async function uploadImageToSection(sectionId, caption) {
+      var token = getAuthToken();
+      var url = prompt('Enter image URL (or leave blank to upload a file):');
+      if (url === null) return;
+      if (!url.trim()) {
+        // File upload
+        var input = document.createElement('input');
+        input.type = 'file'; input.accept = 'image/*';
+        input.onchange = async function() {
+          var file = input.files[0]; if (!file) return;
+          var formData = new FormData(); formData.append('file', file);
+          try {
+            var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+            var d = await r.json();
+            if (!r.ok) { toast(d.error || 'Upload failed', 'error'); return; }
+            await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: d.url, caption: caption || '' }) });
+            toast('Photo uploaded!', 'success');
+          } catch(e) { toast(e.message, 'error'); }
+        };
+        input.click();
+      } else {
+        var cap = caption || prompt('Caption (optional):') || '';
+        await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url.trim(), caption: cap }) });
+        toast('Photo added!', 'success');
+      }
+    }
 
     // ── INIT ──────────────────────────────────────────
     loadOverview();
