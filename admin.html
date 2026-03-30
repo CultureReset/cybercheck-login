@@ -2086,22 +2086,22 @@
     async function saveGCRBusiness(e) {
       e.preventDefault();
       var token = getAuthToken();
-      var siteId = document.getElementById('gcr-edit-site-id').value;
-      var data = {
+      var entityId = document.getElementById('gcr-edit-site-id').value;
+      var entity = {
         name: document.getElementById('gcr-edit-name').value,
-        type: document.getElementById('gcr-edit-type').value,
-        status: document.getElementById('gcr-edit-status').value,
-        emoji: document.getElementById('gcr-edit-emoji').value,
+        entity_subtype: document.getElementById('gcr-edit-type').value,
+        is_active: document.getElementById('gcr-edit-status').value === 'active',
+        icon: document.getElementById('gcr-edit-emoji').value,
         instagram: document.getElementById('gcr-edit-instagram').value,
         facebook: document.getElementById('gcr-edit-facebook').value,
         tiktok: document.getElementById('gcr-edit-tiktok').value,
         featured: document.getElementById('gcr-edit-featured').checked
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + siteId, {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: JSON.stringify({ entity })
         });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
