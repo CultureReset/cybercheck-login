@@ -2040,13 +2040,13 @@
       }
       var html = list.map(function(b) {
         return '<tr style="border-bottom:1px solid var(--card-border);">' +
-          '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml((b.emoji || '') + ' ' + (b.name || '—')) + '</td>' +
-          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.type || '—') + '</td>' +
-          '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.status || '—') + '</td>' +
-          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.subdomain || '—') + '</td>' +
-          '<td style="padding:10px 8px;font-size:13px;">' + (b.featured ? '★' : '') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml((b.icon || '') + ' ' + (b.name || '—')) + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.entity_subtype || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;">' + (b.is_active ? '<span style="color:#22c55e;">Active</span>' : '<span style="color:#f59e0b;">Hidden</span>') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.slug || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;">' + escHtml((b.city || '') + (b.state ? ', ' + b.state : '')) + '</td>' +
           '<td style="padding:10px 8px;">' +
-            '<button onclick="openBizEditor(\'' + b.site_id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+            '<button onclick="showPage(\'gcr-entity-editor\');loadEntityForEdit(\'' + b.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
           '</td>' +
           '</tr>';
       }).join('');
