@@ -1211,16 +1211,24 @@
 
         <!-- Step 2: Review output -->
         <div id="ao-step2" style="display:none;">
+          <button class="btn btn-primary" style="width:100%;padding:16px;font-size:18px;font-weight:bold;margin-bottom:20px;" onclick="saveAIToGCREntity()">💾 SAVE TO GCR DATABASE</button>
           <div class="card" style="padding:24px;margin-bottom:20px;border:1px solid var(--primary);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
               <h3 style="margin:0;font-size:16px;">Step 2 — Review &amp; Edit Organized Data</h3>
-              <div style="display:flex;gap:8px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-outline btn-sm" onclick="resetAIOrganize()">Start Over</button>
                 <button class="btn btn-outline" onclick="approveAIOrganize()">Save to Old DB</button>
                 <button class="btn btn-primary" onclick="saveAIToGCREntity()">✦ Save to GCR Entities</button>
               </div>
             </div>
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Review each section below. Edit anything that looks wrong, then click Save to Database.</div>
+
+            <!-- Prominent Save Section at Bottom -->
+            <div style="padding:16px;background:rgba(79,172,254,0.1);border-radius:8px;margin-bottom:20px;border-left:4px solid var(--primary);">
+              <div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px;">Ready to save?</div>
+              <button class="btn btn-primary" style="width:100%;margin-bottom:8px;" onclick="saveAIToGCREntity()">💾 SAVE TO GCR ENTITIES</button>
+              <button class="btn btn-outline" style="width:100%;" onclick="approveAIOrganize()">Save to Old CyberCheck DB</button>
+            </div>
 
             <!-- Summary bar -->
             <div id="ao-summary" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding:12px;background:var(--bg);border-radius:8px;"></div>
