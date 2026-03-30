@@ -3282,11 +3282,17 @@
         var d = await r.json();
         _aoResult = d.structured;
         document.getElementById('ao-loading').style.display = 'none';
-        document.getElementById('ao-step2').style.display   = '';
+        var step2 = document.getElementById('ao-step2');
+        if (step2) {
+          step2.style.display = 'block';
+          step2.style.visibility = 'visible';
+        }
         renderAOPreview(_aoResult);
+        toast('AI organized your data! Review and click Save.', 'success');
       } catch(e) {
         document.getElementById('ao-loading').style.display = 'none';
         document.getElementById('ao-step1').style.display   = '';
+        console.error('AI error:', e);
         toast('AI error: ' + e.message, 'error');
       }
     }
