@@ -1411,8 +1411,8 @@
           </div>
           <div id="ao-scrape-status" style="display:none;font-size:12px;color:var(--text-muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px;"></div>
 
-          <!-- SAVE BUTTON -->
-          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:16px;font-weight:bold;margin-bottom:16px;background:#0b7a75;" id="ao-save-btn" onclick="saveAIToGCREntity()">💾 SAVE ORGANIZED DATA TO DATABASE</button>
+          <!-- SAVE BUTTON — hidden until AI organizes -->
+          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:16px;font-weight:bold;margin-bottom:16px;background:#0b7a75;display:none;" id="ao-save-btn" onclick="saveAIToGCREntity()">💾 SAVE ORGANIZED DATA TO DATABASE</button>
 
           <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Raw Business Content</label>
           <textarea id="ao-raw" placeholder="Paste anything here: website copy, menu text, scraped HTML, Google Maps info, Facebook page content, PDF text...&#10;&#10;Example:&#10;Cobalt the Restaurant at The Wharf&#10;Upscale seafood restaurant with panoramic marina views&#10;(251) 923-5564 | 4673 Wharf Pkwy, Orange Beach AL&#10;Happy Hour: Mon-Fri 3-6pm — $2 off drinks, $5 appetizers&#10;...and so on" style="width:100%;height:260px;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
@@ -3473,7 +3473,14 @@
         var d = await r.json();
         document.getElementById('ao-raw').value = d.text || '';
         statusEl.style.color = '#22c55e';
-        statusEl.textContent = 'Page scraped! ' + (d.text || '').length + ' characters extracted. You can edit below, then click Organize with AI.';
+        statusEl.textContent = 'Page scraped! ' + (d.text || '').length + ' characters extracted. Now click "Organize with AI" above to structure the data.';
+        // Pulse the Organize button to draw attention
+        var orgBtn = document.querySelector('#ao-step1 .btn-primary');
+        if (orgBtn && orgBtn.textContent.includes('Organize')) {
+          orgBtn.style.animation = 'none'; orgBtn.offsetHeight;
+          orgBtn.style.cssText += ';box-shadow:0 0 0 3px rgba(11,122,117,0.5);transform:scale(1.02);transition:.3s;';
+          setTimeout(function(){ orgBtn.style.cssText = orgBtn.style.cssText.replace(/box-shadow:[^;]+;/,'').replace(/transform:[^;]+;/,''); }, 2000);
+        }
       } catch(e) {
         statusEl.style.color = '#ef4444';
         statusEl.textContent = 'Scrape failed: ' + e.message + '. Try pasting the page content manually instead.';
@@ -5482,7 +5489,7 @@
 
     // ── AI → GCR Entity save (with merge support) ─────────────
     async function saveAIToGCREntity() {
-      if (!_aoResult) { toast('No AI result to save — run the AI organizer first', 'error'); return; }
+      if (!_aoResult) { toast('No AI result yet — click "Organize with AI" first to structure the data, then save', 'error'); return; }
       // Show merge/create chooser modal
       var slug = _aoResult.subdomain || (_aoResult.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
       var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;" id="aoSaveModal">' +
