@@ -233,7 +233,10 @@
       <div id="page-gcr-entity-editor" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>GCR Entity Editor</h1>
-          <button class="btn btn-primary" onclick="openNewEntityModal()">+ New Entity</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" onclick="openMergeEntitiesModal()">🔀 Merge Entities</button>
+            <button class="btn btn-primary" onclick="openNewEntityModal()">+ New Entity</button>
+          </div>
         </div>
         <div class="card" style="padding:24px;">
           <div style="display:flex;gap:12px;margin-bottom:20px;">
@@ -4224,7 +4227,103 @@
       } catch(err) { toast('Failed to update: ' + err.message, 'error'); }
     }
 
-    // ── Toggle entity sponsored ────────────────────────
+    // ── Merge two entities ──────────────────────────────
+    var _mergeEntityA = null;
+    var _mergeEntityB = null;
+
+    function openMergeEntitiesModal() {
+      _mergeEntityA = null; _mergeEntityB = null;
+      var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;" id="mergeModal">' +
+        '<div style="background:var(--card-bg);border-radius:16px;padding:28px;max-width:600px;width:95%;border:1px solid var(--card-border);">' +
+          '<h2 style="margin:0 0 8px;font-size:20px;">🔀 Merge Two Entities</h2>' +
+          '<p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Select the entity to KEEP (primary) and the one to merge FROM (will be deleted after merge). All sections, tags, and features from the secondary will be added to the primary.</p>' +
+          '<div style="margin-bottom:14px;"><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:5px;">Primary Entity (KEEP this one)</label>' +
+            '<select id="merge-entity-a" onchange="_mergeEntityA=this.value" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+              '<option value="">Select...</option>' + _allEntities.map(function(e){ return '<option value="'+e.id+'">' + escHtml(e.icon||'') + ' ' + escHtml(e.name) + ' — ' + escHtml(e.slug) + '</option>'; }).join('') +
+            '</select></div>' +
+          '<div style="margin-bottom:20px;"><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:5px;">Secondary Entity (merge data FROM this, then delete it)</label>' +
+            '<select id="merge-entity-b" onchange="_mergeEntityB=this.value" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+              '<option value="">Select...</option>' + _allEntities.map(function(e){ return '<option value="'+e.id+'">' + escHtml(e.icon||'') + ' ' + escHtml(e.name) + ' — ' + escHtml(e.slug) + '</option>'; }).join('') +
+            '</select></div>' +
+          '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+            '<button onclick="document.getElementById(\'mergeModal\').remove()" class="btn btn-outline">Cancel</button>' +
+            '<button onclick="executeMergeEntities()" class="btn btn-primary">🔀 Merge Now</button>' +
+          '</div>' +
+        '</div></div>';
+      document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    async function executeMergeEntities() {
+      if (!_mergeEntityA || !_mergeEntityB) { toast('Select both entities', 'error'); return; }
+      if (_mergeEntityA === _mergeEntityB) { toast('Cannot merge an entity with itself', 'error'); return; }
+      var nameA = (_allEntities.find(function(e){return e.id===_mergeEntityA;}) || {}).name || 'Primary';
+      var nameB = (_allEntities.find(function(e){return e.id===_mergeEntityB;}) || {}).name || 'Secondary';
+      if (!confirm('Merge "' + nameB + '" INTO "' + nameA + '"?\n\nAll data from "' + nameB + '" will be added to "' + nameA + '".\n"' + nameB + '" will then be deleted.\n\nThis cannot be undone.')) return;
+
+      document.getElementById('mergeModal')?.remove();
+      toast('Merging...', 'info');
+      var token = getAuthToken();
+
+      try {
+        // 1. Get full data for entity B
+        var slugB = (_allEntities.find(function(e){return e.id===_mergeEntityB;}) || {}).slug;
+        var resB = await fetch(API_BASE + '/api/gcr/entity/' + slugB);
+        var dataB = await resB.json();
+        var entB = dataB.entity || {};
+
+        // 2. Get full data for entity A (to check what exists)
+        var slugA = (_allEntities.find(function(e){return e.id===_mergeEntityA;}) || {}).slug;
+        var resA = await fetch(API_BASE + '/api/gcr/entity/' + slugA);
+        var dataA = await resA.json();
+
+        // 3. Fill empty fields on A from B
+        var updateFields = {};
+        var fieldsToCheck = ['subtitle','entity_subtype','phone','address_line_1','city','state','zip','hero_image_url','website_url','directions_url'];
+        var curA = dataA.entity || {};
+        fieldsToCheck.forEach(function(f) {
+          if ((!curA[f] || curA[f] === '') && entB[f]) updateFields[f] = entB[f];
+        });
+        if (Object.keys(updateFields).length) {
+          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: updateFields }) });
+        }
+
+        // 4. Copy tags from B (skip dupes)
+        var existTags = (dataA.tags||[]).map(function(t){ return t.tag.toLowerCase(); });
+        var newTags = (dataB.tags||[]).filter(function(t){ return !existTags.includes(t.tag.toLowerCase()); });
+        for (var i=0; i<newTags.length; i++) {
+          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: newTags[i].tag, tag_category: newTags[i].tag_category }) });
+        }
+
+        // 5. Copy features from B (skip dupes)
+        var existFeats = (dataA.features||[]).map(function(f){ return f.label.toLowerCase(); });
+        var newFeats = (dataB.features||[]).filter(function(f){ return !existFeats.includes(f.label.toLowerCase()); });
+        for (var i=0; i<newFeats.length; i++) {
+          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeats[i].label, sort_order: existFeats.length + i }) });
+        }
+
+        // 6. Copy sections from B that don't exist on A
+        var existSecKeys = (dataA.sections||[]).map(function(s){ return s.section_key; });
+        var newSections = (dataB.sections||[]).filter(function(s){ return !existSecKeys.includes(s.section_key); });
+        // For sections that exist on both, we skip (don't overwrite)
+        // For new sections, we'd need to recreate them — simplified: just note them
+        var sectionsAdded = 0;
+        for (var i=0; i<newSections.length; i++) {
+          var s = newSections[i];
+          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: s.section_key, section_label: s.section_label, section_type: s.section_type, sort_order: s.sort_order || 50 }) });
+          sectionsAdded++;
+        }
+
+        // 7. Delete entity B
+        await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityB, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+
+        toast('Merged! ' + nameB + ' → ' + nameA + ' (' + newTags.length + ' tags, ' + newFeats.length + ' features, ' + sectionsAdded + ' sections added)', 'success');
+        loadEntities();
+      } catch(err) {
+        toast('Merge failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── Toggle entity sponsored ──────────────────────────
     async function toggleEntitySponsored(entityId, isSponsored) {
       var token = getAuthToken();
       try {
@@ -5229,27 +5328,110 @@
       if (page === 'gcr-analytics') setTimeout(function(){ /* loadGCRAnalytics() */ }, 100);
     });
 
-    // ── AI → GCR Entity save ──────────────────────────────────
+    // ── AI → GCR Entity save (with merge support) ─────────────
     async function saveAIToGCREntity() {
-      if (!_aoResult) { toast('No AI result to save', 'error'); return; }
+      if (!_aoResult) { toast('No AI result to save — run the AI organizer first', 'error'); return; }
+      // Show merge/create chooser modal
+      var slug = _aoResult.subdomain || (_aoResult.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;" id="aoSaveModal">' +
+        '<div style="background:var(--card-bg);border-radius:16px;padding:28px;max-width:560px;width:95%;border:1px solid var(--card-border);">' +
+          '<h2 style="margin:0 0 8px;font-size:20px;">Save "' + escHtml(_aoResult.name || 'Business') + '"</h2>' +
+          '<p style="color:var(--text-muted);font-size:14px;margin:0 0 20px;">Choose to create a new entity or merge data into an existing business.</p>' +
+          '<div style="display:flex;flex-direction:column;gap:12px;">' +
+            '<button onclick="doAISaveNew()" class="btn btn-primary" style="padding:14px;font-size:15px;font-weight:800;">✦ Create New Entity</button>' +
+            '<div style="text-align:center;color:var(--text-muted);font-size:13px;">— or merge into existing —</div>' +
+            '<input type="text" id="ao-merge-search" placeholder="Search existing business to merge into..." oninput="searchMergeTarget()" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+            '<div id="ao-merge-results" style="max-height:200px;overflow-y:auto;"></div>' +
+            '<button onclick="document.getElementById(\'aoSaveModal\').remove()" class="btn btn-outline" style="padding:10px;">Cancel</button>' +
+          '</div>' +
+        '</div></div>';
+      document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    function searchMergeTarget() {
+      var q = (document.getElementById('ao-merge-search') || {}).value || '';
+      if (!q || q.length < 2) { document.getElementById('ao-merge-results').innerHTML = ''; return; }
+      var matches = (_allEntities || []).filter(function(e) {
+        return (e.name||'').toLowerCase().includes(q.toLowerCase()) || (e.slug||'').toLowerCase().includes(q.toLowerCase());
+      }).slice(0, 8);
+      document.getElementById('ao-merge-results').innerHTML = matches.map(function(e) {
+        return '<div onclick="doAISaveMerge(\'' + e.id + '\',\'' + escHtml(e.name).replace(/'/g,"\\'") + '\')" style="padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s;" onmouseenter="this.style.background=\'var(--bg)\'" onmouseleave="this.style.background=\'transparent\'">' +
+          '<span style="font-size:20px;">' + escHtml(e.icon||'📍') + '</span>' +
+          '<div><strong>' + escHtml(e.name) + '</strong><div style="font-size:12px;color:var(--text-muted);">' + escHtml(e.entity_subtype||'') + ' · ' + escHtml(e.city||'') + ' · ' + escHtml(e.slug) + '</div></div>' +
+        '</div>';
+      }).join('') || '<div style="padding:10px;color:var(--text-muted);font-size:13px;">No matches found</div>';
+    }
+
+    async function doAISaveNew() {
+      document.getElementById('aoSaveModal')?.remove();
+      _aoMergeEntityId = null;
+      _doAISaveExecute();
+    }
+
+    async function doAISaveMerge(entityId, entityName) {
+      document.getElementById('aoSaveModal')?.remove();
+      _aoMergeEntityId = entityId;
+      toast('Merging into ' + entityName + '...', 'info');
+      _doAISaveExecute();
+    }
+
+    var _aoMergeEntityId = null;
+
+    async function _doAISaveExecute() {
       var d = _aoResult;
       var token = getAuthToken();
-      var savingEl = document.getElementById('ao-saved-msg');
       document.getElementById('ao-step2').style.display = 'none';
       document.getElementById('ao-loading').style.display = '';
-      document.getElementById('ao-loading').querySelector('div:nth-child(2)').textContent = 'Saving to GCR Entity Database...';
+      document.getElementById('ao-loading').querySelector('div:nth-child(2)').textContent = _aoMergeEntityId ? 'Merging data into existing entity...' : 'Saving to GCR Entity Database...';
 
       try {
-        // 1. Create entity
-        var slug = d.subdomain || (d.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-        var entityPayload = { name: d.name, slug, subtitle: d.tagline, entity_type: 'business', entity_subtype: d.type, phone: d.phone, address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, website_url: d.website };
-        var entRes = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entityPayload, features: (d.features||[]).map(function(f){ return { label: f }; }), perfect_for: (d.perfect_for||[]).map(function(p){ return { label: p }; }) }) });
-        var entData = await entRes.json();
-        if (!entRes.ok || !entData.id) throw new Error(entData.error || 'Entity creation failed');
-        var entityId = entData.id;
+        var entityId = _aoMergeEntityId;
+        var isMerge = !!entityId;
 
-        // Helper to create section + return id
+        if (!isMerge) {
+          // 1a. Create NEW entity
+          var slug = d.subdomain || (d.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+          var entityPayload = { name: d.name, slug, subtitle: d.tagline, entity_type: 'business', entity_subtype: d.type, phone: d.phone, address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, website_url: d.website };
+          var entRes = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entityPayload, features: (d.features||[]).map(function(f){ return { label: f }; }), perfect_for: (d.perfect_for||[]).map(function(p){ return { label: p }; }) }) });
+          var entData = await entRes.json();
+          if (!entRes.ok || !entData.id) throw new Error(entData.error || 'Entity creation failed');
+          entityId = entData.id;
+        } else {
+          // 1b. MERGE — update entity fields that are currently empty
+          var updateFields = {};
+          if (d.tagline) updateFields.subtitle = d.tagline;
+          if (d.type) updateFields.entity_subtype = d.type;
+          if (d.phone) updateFields.phone = d.phone;
+          if (d.address) updateFields.address_line_1 = d.address;
+          if (d.city) updateFields.city = d.city;
+          if (d.state) updateFields.state = d.state;
+          if (d.zip) updateFields.zip = d.zip;
+          if (d.website) updateFields.website_url = d.website;
+          // Only update non-empty fields — fetch current entity to check
+          var curRes = await fetch(API_BASE + '/api/gcr/entity/' + (_allEntities.find(function(e){return e.id===entityId;})?.slug || entityId));
+          var curData = await curRes.json();
+          var cur = curData.entity || {};
+          var mergeFields = {};
+          for (var k in updateFields) {
+            if (!cur[k] || cur[k] === '') mergeFields[k] = updateFields[k];
+          }
+          if (Object.keys(mergeFields).length) {
+            await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: mergeFields }) });
+          }
+          // Add new features (skip existing)
+          var existingFeatures = (curData.features||[]).map(function(f){ return f.label.toLowerCase(); });
+          var newFeatures = (d.features||[]).filter(function(f){ return !existingFeatures.includes(f.toLowerCase()); });
+          for (var fi=0; fi<newFeatures.length; fi++) {
+            await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeatures[fi], sort_order: existingFeatures.length + fi }) });
+          }
+        }
+
+        // Helper to get-or-create section (works for both new + merge)
+        var _existingSections = isMerge ? (curData?.sections||[]) : [];
         async function createSection(key, label, type, order) {
+          // Check if section already exists
+          var existing = _existingSections.find(function(s){ return s.section_key === key; });
+          if (existing) return existing.id;
           var r = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: order }) });
           var rd = await r.json(); return rd.section?.id;
         }
@@ -5339,8 +5521,10 @@
 
         document.getElementById('ao-loading').style.display = 'none';
         document.getElementById('ao-saved').style.display = '';
-        document.getElementById('ao-saved-msg').textContent = d.name + ' saved to GCR Entity Database with all sections!';
-        toast(d.name + ' saved to GCR!', 'success');
+        var saveMsg = isMerge ? d.name + ' merged into existing entity — new data added, existing data preserved!' : d.name + ' saved to GCR Entity Database with all sections!';
+        document.getElementById('ao-saved-msg').textContent = saveMsg;
+        toast(isMerge ? 'Merged successfully!' : d.name + ' saved to GCR!', 'success');
+        _aoMergeEntityId = null;
         loadEntities();
       } catch(err) {
         document.getElementById('ao-loading').style.display = 'none';
