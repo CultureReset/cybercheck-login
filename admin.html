@@ -251,6 +251,7 @@
                 <th style="text-align:center;padding:10px 6px;font-size:13px;color:var(--text-muted);width:34px;" title="Sponsored — always first">⭐</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Subtype</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Tags</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">City</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
               </tr></thead>
@@ -4194,11 +4195,17 @@
         var sponsored = e.is_sponsored ? 'checked' : '';
         var rowStyle = e.is_active ? '' : 'opacity:0.5;';
         var sponsorBg = e.is_sponsored ? 'background:#fffbeb;' : '';
+        var tags = (e._tags || []).map(function(t){ return typeof t === 'string' ? t : t.tag || ''; }).filter(Boolean);
+        var tagChips = tags.slice(0, 3).map(function(t){ return '<span style="display:inline-block;padding:2px 7px;background:var(--primary);color:#fff;border-radius:10px;font-size:11px;font-weight:700;margin:1px 2px;">' + escHtml(t.replace(/_/g,' ')) + '</span>'; }).join('');
+        if (tags.length > 3) tagChips += '<span style="font-size:11px;color:var(--text-muted);">+' + (tags.length - 3) + '</span>';
         return '<tr style="border-bottom:1px solid var(--card-border);' + rowStyle + sponsorBg + '">' +
           '<td style="text-align:center;padding:10px 6px;"><input type="checkbox" ' + checked + ' onchange="toggleEntityActive(\'' + e.id + '\', this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary);" title="Show on GCR"></td>' +
           '<td style="text-align:center;padding:10px 6px;"><input type="checkbox" ' + sponsored + ' onchange="toggleEntitySponsored(\'' + e.id + '\', this.checked)" style="width:16px;height:16px;cursor:pointer;accent-color:#f59e0b;" title="Sponsored — show first"></td>' +
           '<td style="padding:10px 8px;font-size:14px;">' + (e.is_sponsored ? '⭐ ' : '') + escHtml(e.icon||'') + ' ' + escHtml(e.name) + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.entity_subtype||'—') + '</td>' +
+          '<td style="padding:10px 8px;max-width:200px;">' + (tagChips || '<span style="color:var(--text-muted);font-size:12px;">—</span>') +
+            ' <button onclick="openQuickTags(\'' + e.id + '\',this)" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 6px;margin-left:2px;" title="Quick-tag">🏷</button>' +
+          '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.city||'—') + '</td>' +
           '<td style="padding:10px 8px;display:flex;gap:6px;">' +
             '<button onclick="openEntEditor(\'' + e.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
@@ -4206,7 +4213,7 @@
           '</td>' +
           '</tr>';
       }).join('');
-      document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
+      document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
     }
 
     function filterEntities() {
@@ -4504,6 +4511,130 @@
           escHtml(t.tag) + (t.tag_category ? ' <span style="opacity:0.7;font-size:11px;">(' + escHtml(t.tag_category) + ')</span>' : '') +
           ' <button onclick="removeEntTag(\'' + t.id + '\')" style="background:none;border:none;color:#fff;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button></span>';
       }).join('') || '<span style="color:var(--text-muted);font-size:13px;">No tags yet.</span>';
+    }
+
+    // ── Quick-Tag Popover (one-click from entity table) ────
+    var QUICK_TAGS = [
+      { tag: 'happy_hour', cat: 'amenity', label: 'Happy Hour' },
+      { tag: 'live_music', cat: 'amenity', label: 'Live Music' },
+      { tag: 'waterfront', cat: 'vibe', label: 'Waterfront' },
+      { tag: 'seafood', cat: 'cuisine', label: 'Seafood' },
+      { tag: 'family_friendly', cat: 'vibe', label: 'Family Friendly' },
+      { tag: 'outdoor_seating', cat: 'amenity', label: 'Outdoor Seating' },
+      { tag: 'pet_friendly', cat: 'amenity', label: 'Pet Friendly' },
+      { tag: 'breakfast', cat: 'cuisine', label: 'Breakfast' },
+      { tag: 'brunch', cat: 'cuisine', label: 'Brunch' },
+      { tag: 'bar_grill', cat: 'cuisine', label: 'Bar & Grill' },
+      { tag: 'southern', cat: 'cuisine', label: 'Southern' },
+      { tag: 'pizza', cat: 'cuisine', label: 'Pizza' },
+      { tag: 'mexican', cat: 'cuisine', label: 'Mexican' },
+      { tag: 'coffee', cat: 'cuisine', label: 'Coffee' },
+      { tag: 'ice_cream', cat: 'cuisine', label: 'Ice Cream' },
+      { tag: 'bakery', cat: 'cuisine', label: 'Bakery' },
+      { tag: 'nightlife', cat: 'activity', label: 'Nightlife' },
+      { tag: 'karaoke', cat: 'activity', label: 'Karaoke' },
+      { tag: 'trivia', cat: 'activity', label: 'Trivia' },
+      { tag: 'bingo', cat: 'activity', label: 'Bingo' },
+      { tag: 'parasailing', cat: 'activity', label: 'Parasailing' },
+      { tag: 'boat_rental', cat: 'activity', label: 'Boat Rental' },
+      { tag: 'fishing', cat: 'activity', label: 'Fishing' },
+      { tag: 'kayak', cat: 'activity', label: 'Kayak' },
+      { tag: 'dolphin', cat: 'activity', label: 'Dolphin Tours' },
+      { tag: 'jet_ski', cat: 'activity', label: 'Jet Ski' },
+      { tag: 'boutique', cat: 'search', label: 'Boutique' },
+      { tag: 'souvenir', cat: 'search', label: 'Souvenir' },
+      { tag: 'waterfront_dining', cat: 'vibe', label: 'Waterfront Dining' },
+      { tag: 'reservations', cat: 'amenity', label: 'Reservations' },
+      { tag: 'delivery', cat: 'amenity', label: 'Delivery' },
+      { tag: 'takeout', cat: 'amenity', label: 'Takeout' },
+    ];
+
+    function openQuickTags(entityId, btn) {
+      // Close any existing popover
+      var old = document.getElementById('quickTagPopover');
+      if (old) old.remove();
+
+      var ent = _allEntities.find(function(e){ return e.id === entityId; });
+      var existing = (ent && ent._tags || []).map(function(t){ return (typeof t === 'string' ? t : t.tag || '').toLowerCase(); });
+
+      var html = QUICK_TAGS.map(function(qt) {
+        var active = existing.includes(qt.tag);
+        return '<button data-tag="' + qt.tag + '" data-cat="' + qt.cat + '" onclick="toggleQuickTag(\'' + entityId + '\',\'' + qt.tag + '\',\'' + qt.cat + '\',this)" style="display:inline-block;padding:4px 10px;margin:3px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid ' + (active ? 'var(--primary)' : 'var(--card-border)') + ';background:' + (active ? 'var(--primary)' : 'transparent') + ';color:' + (active ? '#fff' : 'var(--text)') + ';cursor:pointer;transition:.15s;">' + qt.label + '</button>';
+      }).join('');
+
+      var pop = document.createElement('div');
+      pop.id = 'quickTagPopover';
+      pop.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:20px;max-width:520px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.4);';
+      pop.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+        '<h3 style="margin:0;font-size:16px;">Quick Tags — ' + escHtml((ent && ent.name) || '') + '</h3>' +
+        '<button onclick="document.getElementById(\'quickTagPopover\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted);">×</button></div>' +
+        '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Click to toggle. Tags show as filter chips on GCR pages and appear on the business card.</p>' +
+        '<div>' + html + '</div>' +
+        '<div style="margin-top:14px;display:flex;gap:8px;align-items:center;">' +
+          '<input id="qt-custom" type="text" placeholder="Custom tag..." style="flex:1;padding:7px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;" onkeydown="if(event.key===\'Enter\')addCustomQuickTag(\'' + entityId + '\')">' +
+          '<button onclick="addCustomQuickTag(\'' + entityId + '\')" class="btn btn-primary btn-sm">Add</button>' +
+        '</div>';
+      // Add backdrop
+      var backdrop = document.createElement('div');
+      backdrop.id = 'quickTagBackdrop';
+      backdrop.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9998;';
+      backdrop.onclick = function(){ pop.remove(); backdrop.remove(); };
+      document.body.appendChild(backdrop);
+      document.body.appendChild(pop);
+    }
+
+    async function toggleQuickTag(entityId, tag, cat, btn) {
+      var token = getAuthToken();
+      var ent = _allEntities.find(function(e){ return e.id === entityId; });
+      if (!ent) return;
+      var existingTag = (ent._tags || []).find(function(t){ return (t.tag||'').toLowerCase() === tag; });
+
+      if (existingTag) {
+        // Remove tag
+        await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags/' + existingTag.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        ent._tags = (ent._tags || []).filter(function(t){ return t.id !== existingTag.id; });
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--text)';
+        btn.style.borderColor = 'var(--card-border)';
+      } else {
+        // Add tag
+        try {
+          var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag, tag_category: cat||null }) });
+          var result = await res.json();
+          if (!ent._tags) ent._tags = [];
+          ent._tags.push(result.tag || { tag: tag, tag_category: cat });
+          btn.style.background = 'var(--primary)';
+          btn.style.color = '#fff';
+          btn.style.borderColor = 'var(--primary)';
+        } catch(e) { toast('Failed to add tag', 'error'); }
+      }
+      // Re-render the table row tags
+      renderEntities(_allEntities.filter(function(e){
+        var q = (document.getElementById('ent-search') || {}).value || '';
+        if (!q) return true;
+        q = q.toLowerCase();
+        return (e.name||'').toLowerCase().includes(q) || (e.slug||'').toLowerCase().includes(q) || (e.entity_subtype||'').toLowerCase().includes(q) || (e.city||'').toLowerCase().includes(q);
+      }));
+    }
+
+    async function addCustomQuickTag(entityId) {
+      var input = document.getElementById('qt-custom');
+      var tag = (input || {}).value.trim().toLowerCase().replace(/\s+/g, '_');
+      if (!tag) return;
+      var token = getAuthToken();
+      var ent = _allEntities.find(function(e){ return e.id === entityId; });
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag }) });
+        var result = await res.json();
+        if (!ent._tags) ent._tags = [];
+        ent._tags.push(result.tag || { tag: tag });
+        input.value = '';
+        toast('Tag "' + tag + '" added!', 'success');
+        // Refresh the popover
+        document.getElementById('quickTagPopover')?.remove();
+        document.getElementById('quickTagBackdrop')?.remove();
+        renderEntities(_allEntities);
+      } catch(e) { toast('Failed: ' + e.message, 'error'); }
     }
 
     async function addEntTag() {
