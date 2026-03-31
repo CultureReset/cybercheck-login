@@ -214,7 +214,8 @@
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;">
               <thead><tr style="border-bottom:1px solid var(--card-border);">
-                <th style="text-align:center;padding:10px 6px;font-size:13px;color:var(--text-muted);width:50px;">Live</th>
+                <th style="text-align:center;padding:10px 6px;font-size:13px;color:var(--text-muted);width:44px;">Live</th>
+                <th style="text-align:center;padding:10px 6px;font-size:13px;color:var(--text-muted);width:34px;" title="Sponsored — always first">⭐</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Subtype</th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">City</th>
@@ -253,7 +254,7 @@
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Name</label><input id="ent-name" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Slug</label><input id="ent-slug" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Subtitle / Tagline</label><input id="ent-subtitle" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
-                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Entity Subtype</label><input id="ent-subtype" type="text" placeholder="restaurant, parasailing, dolphin_cruise..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Entity Subtype <span style="font-weight:400;color:var(--text-muted);">(primary category for page placement)</span></label><input id="ent-subtype" type="text" placeholder="restaurant, bar_grill, parasailing..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Icon (emoji)</label><input id="ent-icon" type="text" placeholder="🐬" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Phone</label><input id="ent-phone" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Rating</label><input id="ent-rating" type="number" step="0.1" min="0" max="5" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -266,17 +267,25 @@
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">State</label><input id="ent-state" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Zip</label><input id="ent-zip" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
               </div>
-              <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
-                <input type="checkbox" id="ent-active" checked style="width:20px;height:20px;accent-color:var(--primary);cursor:pointer;">
-                <label for="ent-active" style="font-size:14px;font-weight:600;cursor:pointer;">Live on GCR</label>
-                <span style="font-size:12px;color:var(--text-muted);">Uncheck to hide from the public site</span>
+              <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:20px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input type="checkbox" id="ent-active" checked style="width:20px;height:20px;accent-color:var(--primary);cursor:pointer;">
+                  <label for="ent-active" style="font-size:14px;font-weight:600;cursor:pointer;">Live on GCR</label>
+                  <span style="font-size:12px;color:var(--text-muted);">Uncheck to hide</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input type="checkbox" id="ent-sponsored" style="width:20px;height:20px;accent-color:#f59e0b;cursor:pointer;">
+                  <label for="ent-sponsored" style="font-size:14px;font-weight:600;cursor:pointer;">⭐ Sponsored</label>
+                  <span style="font-size:12px;color:var(--text-muted);">Always shows first in listings</span>
+                </div>
               </div>
               <div style="margin-top:20px;"><button onclick="saveEntInfo()" class="btn btn-primary">Save Info</button></div>
             </div>
 
             <!-- TAGS TAB -->
             <div id="enttab-tags-content" style="display:none;">
-              <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Tags are free-form — type anything. They power search and filtering on the GCR public site.</p>
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 8px;">Tags power search, filtering, and cross-page visibility on GCR.</p>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;background:var(--bg);padding:10px 12px;border-radius:8px;border:1px solid var(--card-border);">💡 <strong>Show on multiple pages:</strong> The subtype (Info tab) sets the primary page. Add category tags here to appear on other pages too — e.g. add <strong>"nightlife"</strong> to a restaurant with live music, or <strong>"happy_hour"</strong> to show on Happy Hours.</p>
               <div style="display:flex;gap:8px;margin-bottom:20px;">
                 <input id="ent-tag-input" type="text" placeholder="Type a tag and press Add..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')addEntTag()">
                 <select id="ent-tag-category" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
@@ -3984,10 +3993,13 @@
       document.getElementById('ent-count').textContent = list.length + ' entities · ' + activeCount + ' live';
       var html = list.map(function(e) {
         var checked = e.is_active ? 'checked' : '';
+        var sponsored = e.is_sponsored ? 'checked' : '';
         var rowStyle = e.is_active ? '' : 'opacity:0.5;';
-        return '<tr style="border-bottom:1px solid var(--card-border);' + rowStyle + '">' +
-          '<td style="text-align:center;padding:10px 6px;"><input type="checkbox" ' + checked + ' onchange="toggleEntityActive(\'' + e.id + '\', this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary);"></td>' +
-          '<td style="padding:10px 8px;font-size:14px;">' + escHtml(e.icon||'') + ' ' + escHtml(e.name) + '</td>' +
+        var sponsorBg = e.is_sponsored ? 'background:#fffbeb;' : '';
+        return '<tr style="border-bottom:1px solid var(--card-border);' + rowStyle + sponsorBg + '">' +
+          '<td style="text-align:center;padding:10px 6px;"><input type="checkbox" ' + checked + ' onchange="toggleEntityActive(\'' + e.id + '\', this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary);" title="Show on GCR"></td>' +
+          '<td style="text-align:center;padding:10px 6px;"><input type="checkbox" ' + sponsored + ' onchange="toggleEntitySponsored(\'' + e.id + '\', this.checked)" style="width:16px;height:16px;cursor:pointer;accent-color:#f59e0b;" title="Sponsored — show first"></td>' +
+          '<td style="padding:10px 8px;font-size:14px;">' + (e.is_sponsored ? '⭐ ' : '') + escHtml(e.icon||'') + ' ' + escHtml(e.name) + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.entity_subtype||'—') + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.city||'—') + '</td>' +
           '<td style="padding:10px 8px;display:flex;gap:6px;">' +
@@ -3996,7 +4008,7 @@
           '</td>' +
           '</tr>';
       }).join('');
-      document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
+      document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
     }
 
     function filterEntities() {
@@ -4021,6 +4033,23 @@
         if (ent) ent.is_active = isActive;
         renderEntities(_allEntities);
         toast(isActive ? 'Now live on GCR' : 'Hidden from GCR', 'success');
+      } catch(err) { toast('Failed to update: ' + err.message, 'error'); }
+    }
+
+    // ── Toggle entity sponsored ────────────────────────
+    async function toggleEntitySponsored(entityId, isSponsored) {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entity: { is_sponsored: isSponsored, sort_order: isSponsored ? 0 : 999 } })
+        });
+        if (!res.ok) throw new Error('Failed');
+        var ent = _allEntities.find(function(e){ return e.id === entityId; });
+        if (ent) { ent.is_sponsored = isSponsored; ent.sort_order = isSponsored ? 0 : 999; }
+        renderEntities(_allEntities);
+        toast(isSponsored ? '⭐ Sponsored — will appear first' : 'Sponsorship removed', 'success');
       } catch(err) { toast('Failed to update: ' + err.message, 'error'); }
     }
 
@@ -4064,6 +4093,7 @@
         sv('ent-hero', e.hero_image_url); sv('ent-website', e.website_url); sv('ent-directions', e.directions_url);
         sv('ent-address', e.address_line_1); sv('ent-city', e.city); sv('ent-state', e.state); sv('ent-zip', e.zip);
         document.getElementById('ent-active').checked = e.is_active !== false;
+        document.getElementById('ent-sponsored').checked = e.is_sponsored === true;
         // Tags / Features / Sections
         _currentEntityTags     = data.tags        || [];
         _currentEntityFeatures = data.features    || [];
@@ -4115,6 +4145,8 @@
         state: document.getElementById('ent-state').value,
         zip: document.getElementById('ent-zip').value,
         is_active: document.getElementById('ent-active').checked,
+        is_sponsored: document.getElementById('ent-sponsored').checked,
+        sort_order: document.getElementById('ent-sponsored').checked ? 0 : 999,
       };
       try {
         var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
