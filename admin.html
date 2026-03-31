@@ -4246,7 +4246,8 @@
             ' <button onclick="openQuickTags(\'' + e.id + '\',this)" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 6px;margin-left:2px;" title="Quick-tag">🏷</button>' +
           '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(e.city||'—') + '</td>' +
-          '<td style="padding:10px 8px;display:flex;gap:6px;">' +
+          '<td style="padding:10px 8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<a href="https://launching-gcr.vercel.app/profile.html?id=' + encodeURIComponent(e.slug||'') + '" target="_blank" class="btn btn-sm" style="background:#e8f7fa;color:#0b6475;border:1px solid #b9e7ef;font-size:11px;" title="View live on GCR">View</a>' +
             '<button onclick="openEntEditor(\'' + e.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
             '<button onclick="deleteEntity(\'' + e.id + '\',\'' + escHtml(e.name).replace(/'/g,"\\'") + '\')" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">Delete</button>' +
           '</td>' +
