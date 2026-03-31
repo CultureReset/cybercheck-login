@@ -5298,6 +5298,37 @@
 
     function openAddCustomerModal() { toast('Customer creation coming soon — customers are auto-added from bookings and reviews', 'info'); }
 
+    // ── GCR Analytics ────────────────────────────────────────
+    async function loadGCRAnalytics() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        var el = function(id){ return document.getElementById(id); };
+        if (el('ga-today-visitors')) el('ga-today-visitors').textContent = data.today_visitors || 0;
+        if (el('ga-today-views'))    el('ga-today-views').textContent    = data.today_views || 0;
+        if (el('ga-today-conv'))     el('ga-today-conv').textContent     = data.today_conversions || 0;
+        if (el('ga-month-visitors')) el('ga-month-visitors').textContent = data.month_views || 0;
+        var topEl = el('ga-top-entities');
+        if (topEl) {
+          var top = data.top_entities || [];
+          if (!top.length) { topEl.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No page view data yet. Add the tracking pixel to your GCR pages.</p>'; return; }
+          topEl.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
+            top.map(function(t,i) {
+              var name = (t.entity && t.entity.name) || t.entity_id || 'Unknown';
+              return '<tr style="border-bottom:1px solid var(--card-border);">' +
+                '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + (i+1) + '</td>' +
+                '<td style="padding:10px 8px;font-size:14px;font-weight:600;">' + escHtml(name) + '</td>' +
+                '<td style="padding:10px 8px;font-size:14px;text-align:right;font-weight:700;color:var(--primary);">' + t.count + ' views</td>' +
+              '</tr>';
+            }).join('') + '</table>';
+        }
+      } catch(e) {
+        var topEl2 = document.getElementById('ga-top-entities');
+        if (topEl2) topEl2.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Analytics tables not yet created — run the GCR dashboard migration SQL first.</p>';
+      }
+    }
+
     // ── GCR Social / Connections ────────────────────────────
     function connectGCRService(provider) {
       toast('OAuth connection for ' + provider + ' — configure API keys in Settings first', 'info');
@@ -5305,13 +5336,133 @@
     }
 
     // ── GCR Messaging ───────────────────────────────────────
+    var _gcrMessagingEntityId = null;
+    async function loadGCRMessaging(entityId) {
+      if (!entityId) return;
+      _gcrMessagingEntityId = entityId;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/messaging/' + entityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        var s = data.settings || {};
+        var el = function(id){ return document.getElementById(id); };
+        if (el('gm-owner-phone') && s.owner_phone) el('gm-owner-phone').value = s.owner_phone;
+        if (el('gm-notif-email') && s.notification_email) el('gm-notif-email').value = s.notification_email;
+        if (el('gm-booking-tpl') && s.booking_sms_template) el('gm-booking-tpl').value = s.booking_sms_template;
+        if (el('gm-review-tpl') && s.review_sms_template) el('gm-review-tpl').value = s.review_sms_template;
+        if (el('gm-notify-booking')) el('gm-notify-booking').checked = s.notify_on_booking !== false;
+        if (el('gm-notify-review')) el('gm-notify-review').checked = s.notify_on_review !== false;
+      } catch(e) {}
+    }
+
     async function saveGCRMessaging() {
-      toast('Messaging settings saved!', 'success');
-      // TODO: wire to gcr_messaging_settings table
+      if (!_gcrMessagingEntityId) { toast('Select an entity to configure messaging', 'error'); return; }
+      var token = getAuthToken();
+      var el = function(id){ return document.getElementById(id); };
+      var payload = {
+        owner_phone: (el('gm-owner-phone') || {}).value || '',
+        notification_email: (el('gm-notif-email') || {}).value || '',
+        booking_sms_template: (el('gm-booking-tpl') || {}).value || '',
+        review_sms_template: (el('gm-review-tpl') || {}).value || '',
+        notify_on_booking: (el('gm-notify-booking') || {}).checked !== false,
+        notify_on_review: (el('gm-notify-review') || {}).checked !== false,
+      };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/messaging/' + _gcrMessagingEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error();
+        toast('Messaging settings saved!', 'success');
+      } catch(e) { toast('Save failed — check if gcr_messaging_settings table exists', 'error'); }
     }
 
     // ── GCR Coupons ─────────────────────────────────────────
-    function openGCRCouponModal() { toast('Coupon creation coming soon', 'info'); }
+    var _gcrCoupons = [];
+    async function loadGCRCoupons() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/coupons', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        _gcrCoupons = data.coupons || [];
+      } catch(e) { _gcrCoupons = []; }
+      renderGCRCoupons();
+    }
+
+    function renderGCRCoupons() {
+      var el = document.getElementById('gcr-coupons-list');
+      if (!el) return;
+      if (!_gcrCoupons.length) { el.innerHTML = '<p style="color:var(--text-muted);">No coupons yet. Create one to get started.</p>'; return; }
+      el.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
+        '<thead><tr style="border-bottom:1px solid var(--card-border);">' +
+          '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Code</th>' +
+          '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Type</th>' +
+          '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Value</th>' +
+          '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Uses</th>' +
+          '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Status</th>' +
+          '<th style="padding:10px 8px;"></th>' +
+        '</tr></thead><tbody>' +
+        _gcrCoupons.map(function(c) {
+          var val = c.type === 'percentage' ? c.amount + '%' : '$' + c.amount;
+          var uses = c.max_uses ? (c.uses_count || 0) + '/' + c.max_uses : (c.uses_count || 0);
+          var active = c.active !== false;
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:10px 8px;font-size:14px;font-weight:700;font-family:monospace;">' + escHtml(c.code) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(c.type||'percentage') + '</td>' +
+            '<td style="padding:10px 8px;font-size:14px;font-weight:700;color:var(--primary);">' + escHtml(val) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + uses + '</td>' +
+            '<td style="padding:10px 8px;"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;background:' + (active?'#22c55e22':'#ef444422') + ';color:' + (active?'#22c55e':'#ef4444') + ';">' + (active?'Active':'Inactive') + '</span></td>' +
+            '<td style="padding:10px 8px;text-align:right;"><button onclick="deleteGCRCoupon(\'' + c.id + '\')" class="btn btn-outline btn-sm" style="font-size:11px;color:#ef4444;border-color:#ef4444;">Delete</button></td>' +
+          '</tr>';
+        }).join('') + '</tbody></table>';
+    }
+
+    async function deleteGCRCoupon(id) {
+      if (!confirm('Delete this coupon?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/coupons/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      _gcrCoupons = _gcrCoupons.filter(function(c){ return c.id !== id; });
+      renderGCRCoupons();
+      toast('Coupon deleted', 'success');
+    }
+
+    function openGCRCouponModal() {
+      var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;" id="couponModal">' +
+        '<div style="background:var(--card-bg);border-radius:16px;padding:28px;max-width:480px;width:95%;border:1px solid var(--card-border);">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h2 style="margin:0;font-size:18px;">Create Coupon</h2><button onclick="document.getElementById(\'couponModal\').remove()" style="background:none;border:none;font-size:26px;cursor:pointer;color:var(--text-muted);">×</button></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+            '<div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Coupon Code</label><input id="cp-code" type="text" placeholder="SUMMER20" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;text-transform:uppercase;"></div>' +
+            '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Type</label><select id="cp-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><option value="percentage">Percentage</option><option value="fixed">Fixed $</option></select></div>' +
+            '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Amount</label><input id="cp-amount" type="number" placeholder="20" min="0" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>' +
+            '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Max Uses (blank = unlimited)</label><input id="cp-maxuses" type="number" placeholder="100" min="1" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>' +
+            '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Expires (optional)</label><input id="cp-expires" type="date" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>' +
+            '<div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px;">Description</label><input id="cp-desc" type="text" placeholder="Summer discount" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;margin-top:18px;">' +
+            '<button onclick="submitGCRCoupon()" class="btn btn-primary" style="flex:1;">Create Coupon</button>' +
+            '<button onclick="document.getElementById(\'couponModal\').remove()" class="btn btn-outline" style="flex:1;">Cancel</button>' +
+          '</div>' +
+        '</div></div>';
+      document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    async function submitGCRCoupon() {
+      var code = (document.getElementById('cp-code') || {}).value || '';
+      var type = (document.getElementById('cp-type') || {}).value || 'percentage';
+      var amount = parseFloat((document.getElementById('cp-amount') || {}).value) || 0;
+      var maxUses = (document.getElementById('cp-maxuses') || {}).value;
+      var expires = (document.getElementById('cp-expires') || {}).value;
+      var desc = (document.getElementById('cp-desc') || {}).value || '';
+      if (!code || !amount) { toast('Code and amount are required', 'error'); return; }
+      var token = getAuthToken();
+      var payload = { code: code.toUpperCase(), type, amount, description: desc };
+      if (maxUses) payload.max_uses = parseInt(maxUses);
+      if (expires) payload.expires_at = expires + 'T23:59:59Z';
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/coupons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error();
+        document.getElementById('couponModal')?.remove();
+        toast('Coupon created!', 'success');
+        loadGCRCoupons();
+      } catch(e) { toast('Failed to create coupon', 'error'); }
+    }
 
     // ── GCR SEO ─────────────────────────────────────────────
     async function saveGCRSEO() { toast('SEO settings saved!', 'success'); }
@@ -5325,7 +5476,8 @@
       var page = navItem.dataset.page;
       if (page === 'gcr-reviews') setTimeout(loadGCRReviews, 100);
       if (page === 'gcr-customers') setTimeout(loadGCRCustomers, 100);
-      if (page === 'gcr-analytics') setTimeout(function(){ /* loadGCRAnalytics() */ }, 100);
+      if (page === 'gcr-analytics') setTimeout(loadGCRAnalytics, 100);
+      if (page === 'gcr-coupons') setTimeout(loadGCRCoupons, 100);
     });
 
     // ── AI → GCR Entity save (with merge support) ─────────────
