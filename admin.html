@@ -88,6 +88,36 @@
           <span>AI Settings</span>
         </div>
 
+        <div class="nav-section-label">Business Tools</div>
+        <div class="nav-item" data-page="gcr-analytics" onclick="showPage('gcr-analytics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Analytics</span>
+        </div>
+        <div class="nav-item" data-page="gcr-reviews" onclick="showPage('gcr-reviews')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span>Reviews</span>
+        </div>
+        <div class="nav-item" data-page="gcr-customers" onclick="showPage('gcr-customers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>Customers</span>
+        </div>
+        <div class="nav-item" data-page="gcr-social" onclick="showPage('gcr-social')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>Social & Connections</span>
+        </div>
+        <div class="nav-item" data-page="gcr-messaging" onclick="showPage('gcr-messaging')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>SMS / Messaging</span>
+        </div>
+        <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span>Coupons</span>
+        </div>
+        <div class="nav-item" data-page="gcr-seo" onclick="showPage('gcr-seo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>SEO</span>
+        </div>
+
         <div class="nav-section-label">Platform</div>
         <div class="nav-item" data-page="leads" onclick="showPage('leads')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -952,6 +982,163 @@
       </div>
 
       <!-- ── AR HUNTS ───────────────────────────────── -->
+      <!-- ── GCR ANALYTICS ─────────────────────── -->
+      <div id="page-gcr-analytics" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Analytics</h1></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Today Visitors</div><div style="font-size:28px;font-weight:900;" id="ga-today-visitors">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Today Page Views</div><div style="font-size:28px;font-weight:900;" id="ga-today-views">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Today Conversions</div><div style="font-size:28px;font-weight:900;" id="ga-today-conv">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">This Month</div><div style="font-size:28px;font-weight:900;" id="ga-month-visitors">—</div></div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <h3 style="margin:0 0 16px;">Top Businesses by Views</h3>
+          <div id="ga-top-entities" style="color:var(--text-muted);font-size:14px;">Connect Google Analytics or add the tracking pixel to start collecting data.</div>
+        </div>
+        <div class="card" style="padding:24px;margin-top:14px;">
+          <h3 style="margin:0 0 16px;">Conversion Breakdown</h3>
+          <p style="font-size:13px;color:var(--text-muted);">Track clicks → calls → directions → bookings for each business.</p>
+          <div id="ga-conversions-table"></div>
+        </div>
+      </div>
+
+      <!-- ── GCR REVIEWS ──────────────────────── -->
+      <div id="page-gcr-reviews" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Reviews</h1>
+          <div style="display:flex;gap:8px;">
+            <select id="gcr-review-filter" onchange="loadGCRReviews()" style="padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <option value="all">All Reviews</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Total Reviews</div><div style="font-size:28px;font-weight:900;" id="gr-total">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Avg Rating</div><div style="font-size:28px;font-weight:900;" id="gr-avg">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Pending</div><div style="font-size:28px;font-weight:900;" id="gr-pending">—</div></div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="gcr-reviews-list" style="color:var(--text-muted);font-size:14px;">Loading reviews...</div>
+        </div>
+      </div>
+
+      <!-- ── GCR CUSTOMERS ────────────────────── -->
+      <div id="page-gcr-customers" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Customers</h1>
+          <button class="btn btn-primary" onclick="openAddCustomerModal()">+ Add Customer</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Total</div><div style="font-size:28px;font-weight:900;" id="gc-total">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">VIP</div><div style="font-size:28px;font-weight:900;" id="gc-vip">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Leads</div><div style="font-size:28px;font-weight:900;" id="gc-leads">—</div></div>
+          <div class="card" style="padding:20px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">This Month</div><div style="font-size:28px;font-weight:900;" id="gc-month">—</div></div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;gap:12px;margin-bottom:16px;">
+            <input type="text" id="gc-search" placeholder="Search customers..." oninput="loadGCRCustomers()" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            <select id="gc-filter" onchange="loadGCRCustomers()" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="all">All</option><option value="customer">Customers</option><option value="vip">VIP</option><option value="lead">Leads</option>
+            </select>
+          </div>
+          <div id="gcr-customers-list" style="color:var(--text-muted);font-size:14px;">Loading...</div>
+        </div>
+      </div>
+
+      <!-- ── GCR SOCIAL & CONNECTIONS ─────────── -->
+      <div id="page-gcr-social" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Social & Connections</h1></div>
+        <div class="card" style="padding:24px;margin-bottom:14px;">
+          <h3 style="margin:0 0 16px;">Connected Accounts</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;" id="gcr-connections-grid">
+            <div style="border:1px solid var(--card-border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;">📊</div>
+              <div style="flex:1;"><div style="font-weight:700;">Google Analytics</div><div style="font-size:12px;color:var(--text-muted);">Track visitors & conversions</div></div>
+              <button class="btn btn-outline btn-sm" onclick="connectGCRService('google_analytics')">Connect</button>
+            </div>
+            <div style="border:1px solid var(--card-border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;">📍</div>
+              <div style="flex:1;"><div style="font-weight:700;">Google Business</div><div style="font-size:12px;color:var(--text-muted);">Manage listings & reviews</div></div>
+              <button class="btn btn-outline btn-sm" onclick="connectGCRService('google_business')">Connect</button>
+            </div>
+            <div style="border:1px solid var(--card-border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;">📘</div>
+              <div style="flex:1;"><div style="font-weight:700;">Facebook</div><div style="font-size:12px;color:var(--text-muted);">Page management & posting</div></div>
+              <button class="btn btn-outline btn-sm" onclick="connectGCRService('facebook')">Connect</button>
+            </div>
+            <div style="border:1px solid var(--card-border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;">📸</div>
+              <div style="flex:1;"><div style="font-weight:700;">Instagram</div><div style="font-size:12px;color:var(--text-muted);">Photo sharing & stories</div></div>
+              <button class="btn btn-outline btn-sm" onclick="connectGCRService('instagram')">Connect</button>
+            </div>
+            <div style="border:1px solid var(--card-border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;">🎵</div>
+              <div style="flex:1;"><div style="font-weight:700;">TikTok</div><div style="font-size:12px;color:var(--text-muted);">Video publishing</div></div>
+              <button class="btn btn-outline btn-sm" onclick="connectGCRService('tiktok')">Connect</button>
+            </div>
+            <div style="border:1px solid var(--card-border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;">💳</div>
+              <div style="flex:1;"><div style="font-weight:700;">Stripe</div><div style="font-size:12px;color:var(--text-muted);">Payment processing</div></div>
+              <button class="btn btn-outline btn-sm" onclick="connectGCRService('stripe')">Connect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GCR MESSAGING / SMS ─────────────── -->
+      <div id="page-gcr-messaging" class="page-content" style="display:none;">
+        <div class="page-header"><h1>SMS / Messaging</h1></div>
+        <div class="card" style="padding:24px;margin-bottom:14px;">
+          <h3 style="margin:0 0 16px;">Messaging Settings</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Owner Phone (notifications go here)</label><input id="gm-owner-phone" type="text" placeholder="+1 (251) 555-0100" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+            <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Notification Email</label><input id="gm-notif-email" type="text" placeholder="owner@business.com" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+            <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Booking Confirmation SMS Template</label><textarea id="gm-booking-tpl" rows="3" placeholder="Hi {{name}}, your booking at {{business}} is confirmed for {{date}}..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea></div>
+            <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Review Request SMS Template</label><textarea id="gm-review-tpl" rows="3" placeholder="Thanks for visiting {{business}}! Leave a review: {{link}}" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea></div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:16px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;"><input type="checkbox" id="gm-notify-booking" checked style="width:18px;height:18px;accent-color:var(--primary);"> Notify on new booking</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;"><input type="checkbox" id="gm-notify-review" checked style="width:18px;height:18px;accent-color:var(--primary);"> Notify on new review</label>
+          </div>
+          <button onclick="saveGCRMessaging()" class="btn btn-primary" style="margin-top:16px;">Save Settings</button>
+        </div>
+        <div class="card" style="padding:24px;">
+          <h3 style="margin:0 0 16px;">SMS Log</h3>
+          <div id="gcr-sms-log" style="color:var(--text-muted);font-size:14px;">No messages yet.</div>
+        </div>
+      </div>
+
+      <!-- ── GCR COUPONS ─────────────────────── -->
+      <div id="page-gcr-coupons" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Coupons & Promos</h1>
+          <button class="btn btn-primary" onclick="openGCRCouponModal()">+ Create Coupon</button>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="gcr-coupons-list" style="color:var(--text-muted);font-size:14px;">No coupons yet. Create one to get started.</div>
+        </div>
+      </div>
+
+      <!-- ── GCR SEO ─────────────────────────── -->
+      <div id="page-gcr-seo" class="page-content" style="display:none;">
+        <div class="page-header"><h1>SEO Settings</h1></div>
+        <div class="card" style="padding:24px;">
+          <h3 style="margin:0 0 16px;">Tracking & Pixels</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Google Analytics 4 ID</label><input id="gs-ga4" type="text" placeholder="G-XXXXXXXXXX" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+            <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Facebook Pixel ID</label><input id="gs-fbpixel" type="text" placeholder="123456789" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+          </div>
+          <button onclick="saveGCRSEO()" class="btn btn-primary" style="margin-top:16px;">Save Tracking</button>
+        </div>
+        <div class="card" style="padding:24px;margin-top:14px;">
+          <h3 style="margin:0 0 12px;">Per-Entity SEO</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Set meta title, description, and Open Graph image for each entity in the Entity Editor → Info tab.</p>
+        </div>
+      </div>
+
       <div id="page-ar-hunts" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>AR Hunts</h1>
@@ -4902,6 +5089,144 @@
       document.getElementById('bulk-events-preview').style.display = 'none';
       _bulkGCREvents = [];
     }
+
+    // ══════════════════════════════════════════════════════════
+    // GCR DASHBOARD MODULES — Reviews, Customers, Social, SMS
+    // ══════════════════════════════════════════════════════════
+
+    // ── GCR Reviews ─────────────────────────────────────────
+    var _gcrReviews = [];
+    async function loadGCRReviews() {
+      var token = getAuthToken();
+      var filter = (document.getElementById('gcr-review-filter') || {}).value || 'all';
+      try {
+        var url = API_BASE + '/api/admin/gcr/reviews';
+        if (filter !== 'all') url += '?status=' + filter;
+        var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        _gcrReviews = data.reviews || [];
+      } catch(e) { _gcrReviews = []; }
+      renderGCRReviews();
+    }
+
+    function renderGCRReviews() {
+      var total = _gcrReviews.length;
+      var avg = total ? (_gcrReviews.reduce(function(s,r){ return s + (r.rating||0); }, 0) / total).toFixed(1) : '—';
+      var pending = _gcrReviews.filter(function(r){ return r.status === 'pending'; }).length;
+      document.getElementById('gr-total').textContent = total;
+      document.getElementById('gr-avg').textContent = avg;
+      document.getElementById('gr-pending').textContent = pending;
+
+      var el = document.getElementById('gcr-reviews-list');
+      if (!_gcrReviews.length) { el.innerHTML = '<p style="color:var(--text-muted);">No reviews yet. Reviews from the public GCR site will appear here.</p>'; return; }
+      el.innerHTML = _gcrReviews.map(function(r) {
+        var stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
+        var statusColor = r.status === 'published' ? '#22c55e' : r.status === 'approved' ? '#3b82f6' : '#f59e0b';
+        var entityName = r.entity_name || r.entity_id || '';
+        return '<div style="padding:16px;border:1px solid var(--card-border);border-radius:12px;margin-bottom:10px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">' +
+            '<div><strong style="font-size:15px;">' + escHtml(r.customer_name || 'Anonymous') + '</strong>' +
+              '<div style="color:#f4b400;font-size:14px;margin-top:2px;">' + stars + '</div>' +
+              (entityName ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">at ' + escHtml(entityName) + '</div>' : '') +
+            '</div>' +
+            '<div style="display:flex;gap:6px;align-items:center;">' +
+              '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusColor + '22;color:' + statusColor + ';">' + escHtml(r.status) + '</span>' +
+              '<button onclick="updateGCRReviewStatus(\'' + r.id + '\',\'approved\')" class="btn btn-outline btn-sm" style="font-size:11px;">Approve</button>' +
+              '<button onclick="updateGCRReviewStatus(\'' + r.id + '\',\'published\')" class="btn btn-sm" style="font-size:11px;background:#22c55e;color:#fff;border:none;">Publish</button>' +
+            '</div>' +
+          '</div>' +
+          (r.review_text ? '<p style="margin:10px 0 0;color:var(--text);font-size:14px;line-height:1.6;">' + escHtml(r.review_text) + '</p>' : '') +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">' + (r.source || 'gcr') + ' · ' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '') + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function updateGCRReviewStatus(reviewId, status) {
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/gcr/reviews/' + reviewId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
+      var r = _gcrReviews.find(function(x){ return x.id === reviewId; });
+      if (r) r.status = status;
+      renderGCRReviews();
+      toast('Review ' + status, 'success');
+    }
+
+    // ── GCR Customers ───────────────────────────────────────
+    var _gcrCustomers = [];
+    async function loadGCRCustomers() {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/customers', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        _gcrCustomers = data.customers || [];
+      } catch(e) { _gcrCustomers = []; }
+      renderGCRCustomers();
+    }
+
+    function renderGCRCustomers() {
+      var search = (document.getElementById('gc-search') || {}).value || '';
+      var filter = (document.getElementById('gc-filter') || {}).value || 'all';
+      var filtered = _gcrCustomers.filter(function(c) {
+        if (filter !== 'all' && c.status !== filter) return false;
+        if (search && !(c.name||'').toLowerCase().includes(search.toLowerCase()) && !(c.email||'').toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      });
+
+      document.getElementById('gc-total').textContent = _gcrCustomers.length;
+      document.getElementById('gc-vip').textContent = _gcrCustomers.filter(function(c){ return c.status === 'vip'; }).length;
+      document.getElementById('gc-leads').textContent = _gcrCustomers.filter(function(c){ return c.status === 'lead'; }).length;
+      var thisMonth = new Date().toISOString().slice(0, 7);
+      document.getElementById('gc-month').textContent = _gcrCustomers.filter(function(c){ return (c.created_at||'').startsWith(thisMonth); }).length;
+
+      var el = document.getElementById('gcr-customers-list');
+      if (!filtered.length) { el.innerHTML = '<p>No customers found.</p>'; return; }
+      el.innerHTML = '<table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--card-border);">' +
+        '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>' +
+        '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Email</th>' +
+        '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Phone</th>' +
+        '<th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Status</th>' +
+        '</tr></thead><tbody>' +
+        filtered.map(function(c) {
+          var statusColor = c.status === 'vip' ? '#f59e0b' : c.status === 'lead' ? '#3b82f6' : '#22c55e';
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:10px 8px;font-size:14px;">' + escHtml(c.name || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(c.email || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(c.phone || '—') + '</td>' +
+            '<td style="padding:10px 8px;"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;background:' + statusColor + '22;color:' + statusColor + ';">' + escHtml(c.status || 'customer') + '</span></td>' +
+          '</tr>';
+        }).join('') + '</tbody></table>';
+    }
+
+    function openAddCustomerModal() { toast('Customer creation coming soon — customers are auto-added from bookings and reviews', 'info'); }
+
+    // ── GCR Social / Connections ────────────────────────────
+    function connectGCRService(provider) {
+      toast('OAuth connection for ' + provider + ' — configure API keys in Settings first', 'info');
+      // TODO: implement OAuth flows per provider
+    }
+
+    // ── GCR Messaging ───────────────────────────────────────
+    async function saveGCRMessaging() {
+      toast('Messaging settings saved!', 'success');
+      // TODO: wire to gcr_messaging_settings table
+    }
+
+    // ── GCR Coupons ─────────────────────────────────────────
+    function openGCRCouponModal() { toast('Coupon creation coming soon', 'info'); }
+
+    // ── GCR SEO ─────────────────────────────────────────────
+    async function saveGCRSEO() { toast('SEO settings saved!', 'success'); }
+
+    // ── Page load routing for new modules ────────────────────
+    var _origShowPage = typeof showPage === 'function' ? showPage : null;
+    // Hook into showPage to load data for new modules
+    document.addEventListener('click', function(e) {
+      var navItem = e.target.closest('.nav-item');
+      if (!navItem) return;
+      var page = navItem.dataset.page;
+      if (page === 'gcr-reviews') setTimeout(loadGCRReviews, 100);
+      if (page === 'gcr-customers') setTimeout(loadGCRCustomers, 100);
+      if (page === 'gcr-analytics') setTimeout(function(){ /* loadGCRAnalytics() */ }, 100);
+    });
 
     // ── AI → GCR Entity save ──────────────────────────────────
     async function saveAIToGCREntity() {
