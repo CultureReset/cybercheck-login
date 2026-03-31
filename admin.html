@@ -1573,7 +1573,7 @@
           <h3 style="margin:0 0 20px;font-size:15px;">Chat / Completion Model</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div>
-              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Provider</label>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Active Provider</label>
               <select id="ai-chat-provider" onchange="updateModelSuggestion()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                 <option value="anthropic">Anthropic (Claude)</option>
                 <option value="openai">OpenAI (GPT)</option>
@@ -1586,11 +1586,27 @@
               <input id="ai-chat-model" type="text" placeholder="e.g. claude-sonnet-4-6" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
             </div>
           </div>
-          <div>
-            <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">API Key</label>
-            <input id="ai-chat-key" type="password" placeholder="sk-... or similar" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Stored securely in your database. Leave blank to keep current key.</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">API Keys — add any or all providers</div>
+          <div style="display:grid;grid-template-columns:1fr;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="min-width:110px;font-size:13px;font-weight:700;">Anthropic</div>
+              <input id="ai-key-anthropic" type="password" placeholder="sk-ant-..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
+              <div id="ai-key-anthropic-status" style="font-size:18px;min-width:24px;text-align:center;">—</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="min-width:110px;font-size:13px;font-weight:700;">OpenAI</div>
+              <input id="ai-key-openai" type="password" placeholder="sk-..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
+              <div id="ai-key-openai-status" style="font-size:18px;min-width:24px;text-align:center;">—</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="min-width:110px;font-size:13px;font-weight:700;">Grok (xAI)</div>
+              <input id="ai-key-grok" type="password" placeholder="xai-..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
+              <div id="ai-key-grok-status" style="font-size:18px;min-width:24px;text-align:center;">—</div>
+            </div>
           </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Leave blank to keep current key. The active provider's key is used for AI features. You can switch providers anytime.</div>
+          <!-- Legacy field hidden — kept for backwards compat -->
+          <input id="ai-chat-key" type="hidden">
         </div>
 
         <div class="card" style="padding:24px;margin-bottom:20px;">
@@ -3328,13 +3344,24 @@
         var d = await r.json();
         document.getElementById('ai-chat-provider').value   = d.chat_provider  || 'anthropic';
         document.getElementById('ai-chat-model').value      = d.chat_model     || 'claude-sonnet-4-6';
-        document.getElementById('ai-chat-key').placeholder  = d.chat_api_key   || 'Enter API key...';
         document.getElementById('ai-embed-provider').value  = d.embed_provider || 'openai';
         document.getElementById('ai-embed-model').value     = d.embed_model    || 'text-embedding-3-small';
         document.getElementById('ai-embed-key').placeholder = d.embed_api_key  || 'Enter embedding API key...';
         document.getElementById('ai-system-prompt').value   = d.system_prompt  || '';
         document.getElementById('ai-rag-enabled').checked   = d.rag_enabled !== false;
         document.getElementById('ai-voice-enabled').checked = !!d.voice_enabled;
+        // Show key status indicators
+        var providers = ['anthropic', 'openai', 'grok'];
+        providers.forEach(function(p) {
+          var statusEl = document.getElementById('ai-key-' + p + '-status');
+          var keyField = 'api_key_' + p;
+          if (statusEl) statusEl.textContent = d[keyField] ? '✅' : '—';
+        });
+        // Backwards compat: if old single key exists, show it on the active provider
+        if (d.chat_api_key && !d.api_key_anthropic && !d.api_key_openai && !d.api_key_grok) {
+          var activeStatus = document.getElementById('ai-key-' + (d.chat_provider || 'anthropic') + '-status');
+          if (activeStatus) activeStatus.textContent = '✅';
+        }
       } catch(e) { toast('Could not load AI settings: ' + e.message, 'error'); }
     }
 
@@ -3356,16 +3383,28 @@
         rag_enabled:    document.getElementById('ai-rag-enabled').checked,
         voice_enabled:  document.getElementById('ai-voice-enabled').checked,
       };
-      var chatKey  = document.getElementById('ai-chat-key').value.trim();
-      var embedKey = document.getElementById('ai-embed-key').value.trim();
-      if (chatKey)  body.chat_api_key  = chatKey;
-      if (embedKey) body.embed_api_key = embedKey;
+      // Per-provider API keys
+      var keyAnthropic = (document.getElementById('ai-key-anthropic') || {}).value || '';
+      var keyOpenai    = (document.getElementById('ai-key-openai') || {}).value || '';
+      var keyGrok      = (document.getElementById('ai-key-grok') || {}).value || '';
+      if (keyAnthropic.trim()) body.api_key_anthropic = keyAnthropic.trim();
+      if (keyOpenai.trim())    body.api_key_openai    = keyOpenai.trim();
+      if (keyGrok.trim())      body.api_key_grok      = keyGrok.trim();
+      // Also set chat_api_key to the active provider's key for backwards compat
+      var activeProvider = body.chat_provider;
+      if (activeProvider === 'anthropic' && keyAnthropic.trim()) body.chat_api_key = keyAnthropic.trim();
+      else if (activeProvider === 'openai' && keyOpenai.trim())  body.chat_api_key = keyOpenai.trim();
+      else if (activeProvider === 'grok' && keyGrok.trim())      body.chat_api_key = keyGrok.trim();
+      var embedKey = (document.getElementById('ai-embed-key') || {}).value || '';
+      if (embedKey.trim()) body.embed_api_key = embedKey.trim();
       try {
         var r = await fetch(API_BASE + '/api/admin/ai-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
         if (!r.ok) throw new Error(await r.text());
         toast('AI settings saved!');
-        document.getElementById('ai-chat-key').value  = '';
-        document.getElementById('ai-embed-key').value = '';
+        // Clear key fields
+        ['ai-key-anthropic','ai-key-openai','ai-key-grok','ai-embed-key'].forEach(function(id){
+          var el = document.getElementById(id); if (el) el.value = '';
+        });
         loadAISettings();
       } catch(e) { toast('Save failed: ' + e.message, 'error'); }
     }
