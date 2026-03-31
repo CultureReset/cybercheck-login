@@ -3500,22 +3500,23 @@
         // Enable save buttons
         var saveBtn = document.getElementById('ao-save-btn');
         if (saveBtn) {
-          saveBtn.style.display = 'block !important';
-          saveBtn.style.opacity = '1';
+          saveBtn.style.cssText = 'display:block !important;opacity:1;';
           saveBtn.disabled = false;
         }
 
         // Show top save button
         var topSave = document.getElementById('ao-top-save');
         if (topSave) {
-          topSave.style.display = 'block !important';
+          topSave.style.cssText = 'display:block !important;';
         }
 
         var step2 = document.getElementById('ao-step2');
         if (step2) {
-          step2.style.display = 'block !important';
-          step2.style.visibility = 'visible !important';
+          step2.style.cssText = 'display:block !important;visibility:visible !important;';
         }
+
+        // Also log to confirm data was received
+        console.log('AI result stored:', _aoResult ? Object.keys(_aoResult) : 'NULL');
         renderAOPreview(_aoResult);
         toast('✨ AI Done! Click the SAVE button at the top.', 'success');
       } catch(e) {
