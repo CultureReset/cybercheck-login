@@ -211,6 +211,7 @@
               <option value="draft">Draft</option>
             </select>
             <button class="btn btn-primary" onclick="loadGCRBusinesses()">Refresh</button>
+            <button class="btn btn-outline" onclick="autoActivateTop5()" style="border-color:#f59e0b;color:#f59e0b;" title="Score all entities by data completeness — activate top 5 per category, hide the rest">⚡ Auto-Activate Top 5</button>
           </div>
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" id="gcr-count">Loading...</div>
           <div style="overflow-x:auto;">
@@ -2442,6 +2443,52 @@
       } catch(e) {
         checkboxEl.checked = !isActive; // revert
         toast('Failed to update: ' + e.message, 'error');
+      }
+    }
+
+    async function autoActivateTop5() {
+      if (!confirm('This will score every entity by data completeness and set the top 5 per category to LIVE — all others will be turned off. Continue?')) return;
+      var token = getAuthToken();
+      var btn = document.querySelector('[onclick="autoActivateTop5()"]');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Running...'; }
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/auto-activate-top5', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        var d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Failed');
+
+        // Build summary modal
+        var summaryRows = Object.entries(d.summary || {}).map(function(entry) {
+          var cat = entry[0], items = entry[1];
+          return '<div style="margin-bottom:14px;">' +
+            '<div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:6px;text-transform:capitalize;">📂 ' + cat + '</div>' +
+            items.map(function(b) {
+              return '<div style="font-size:12px;padding:4px 8px;background:var(--bg);border-radius:4px;margin-bottom:3px;display:flex;justify-content:space-between;">' +
+                '<span>' + escHtml(b.name) + '</span>' +
+                '<span style="color:#22c55e;font-weight:700;">Score: ' + b.score + '</span></div>';
+            }).join('') +
+          '</div>';
+        }).join('');
+
+        var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="this.remove()">' +
+          '<div style="background:var(--card-bg);border-radius:16px;padding:28px;max-width:520px;width:95%;max-height:80vh;overflow-y:auto;border:1px solid var(--card-border);" onclick="event.stopPropagation()">' +
+          '<h2 style="margin:0 0 4px;font-size:18px;">⚡ Auto-Activate Complete</h2>' +
+          '<p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">' + d.activated + ' entities live · ' + d.deactivated + ' turned off</p>' +
+          summaryRows +
+          '<button onclick="this.closest(\'div[style*=fixed]\').remove()" class="btn btn-primary" style="width:100%;margin-top:16px;">Done</button>' +
+          '</div></div>';
+        document.body.insertAdjacentHTML('beforeend', html);
+
+        _gcrLoaded = false;
+        loadGCRBusinesses();
+        toast(d.activated + ' live · ' + d.deactivated + ' off', 'success');
+      } catch(e) {
+        toast('Failed: ' + e.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '⚡ Auto-Activate Top 5'; }
       }
     }
 
