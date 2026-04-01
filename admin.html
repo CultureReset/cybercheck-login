@@ -1123,7 +1123,7 @@
           <h1>Bookings</h1>
           <div style="display:flex;gap:10px;align-items:center;">
             <select id="bk-filter-site" onchange="loadBookings()" style="padding:8px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
-              <option value="beachside-circle-boats">Beachside Circle Boats</option>
+              <option value="22222222-2222-2222-2222-222222222222">Beachside Circle Boats</option>
               <option value="">All Sites</option>
             </select>
             <select id="bk-filter-status" onchange="loadBookings()" style="padding:8px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
@@ -2979,7 +2979,7 @@
           h += '<td style="padding:10px 12px;font-weight:600;">' + escHtml(b.customer_name || '—') + '</td>';
           h += '<td style="padding:10px 12px;">' + escHtml(b.customer_phone || '—') + '</td>';
           h += '<td style="padding:10px 12px;">' + escHtml(b.customer_email || '—') + '</td>';
-          h += '<td style="padding:10px 12px;">' + escHtml(b.slot || '—') + '</td>';
+          h += '<td style="padding:10px 12px;">' + escHtml(b.time_slot_id || '—') + '</td>';
           h += '<td style="padding:10px 12px;text-align:right;">' + (b.total ? '$' + Number(b.total).toFixed(2) : '—') + '</td>';
           h += '<td style="padding:10px 12px;text-align:center;"><span style="background:' + statusColor + '22;color:' + statusColor + ';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">' + escHtml(b.status || 'pending') + '</span></td>';
           h += '<td style="padding:10px 12px;text-align:center;display:flex;gap:6px;justify-content:center;">';
