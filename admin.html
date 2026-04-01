@@ -371,9 +371,44 @@
       </div>
 
       <!-- Add Section Modal -->
-      <div id="addSectionModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;">
-        <div style="background:var(--card-bg);border-radius:12px;padding:28px;width:400px;border:1px solid var(--card-border);">
-          <h3 style="margin:0 0 20px;">Add Section</h3>
+      <div id="addSectionModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:3000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 20px;">
+        <div style="background:var(--card-bg);border-radius:12px;padding:28px;width:560px;border:1px solid var(--card-border);">
+          <h3 style="margin:0 0 6px;">Add Section</h3>
+          <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted);">Pick a preset or fill in manually below.</p>
+
+          <!-- Quick Pick Presets -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;">Quick Add</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <button type="button" onclick="pickSection('about','About','rich_text')" class="btn btn-outline btn-sm">ℹ️ About</button>
+              <button type="button" onclick="pickSection('highlights','Highlights','bullets')" class="btn btn-outline btn-sm">✦ Highlights</button>
+              <button type="button" onclick="pickSection('lunch','Lunch Menu','grouped_items')" class="btn btn-outline btn-sm">🍞 Lunch</button>
+              <button type="button" onclick="pickSection('dinner','Dinner Menu','grouped_items')" class="btn btn-outline btn-sm">🌙 Dinner</button>
+              <button type="button" onclick="pickSection('brunch','Brunch','grouped_items')" class="btn btn-outline btn-sm">🥂 Brunch</button>
+              <button type="button" onclick="pickSection('breakfast','Breakfast','grouped_items')" class="btn btn-outline btn-sm">🍳 Breakfast</button>
+              <button type="button" onclick="pickSection('kids','Kids Menu','grouped_items')" class="btn btn-outline btn-sm">👶 Kids Menu</button>
+              <button type="button" onclick="pickSection('gluten_free','Gluten-Free Menu','grouped_items')" class="btn btn-outline btn-sm">🌿 Gluten Free</button>
+              <button type="button" onclick="pickSection('happy_hour','Happy Hour','grouped_items')" class="btn btn-outline btn-sm">🍺 Happy Hour</button>
+              <button type="button" onclick="pickSection('cocktails','Cocktails','grouped_items')" class="btn btn-outline btn-sm">🍹 Cocktails</button>
+              <button type="button" onclick="pickSection('beer','Beer & Wine','grouped_items')" class="btn btn-outline btn-sm">🍺 Beer & Wine</button>
+              <button type="button" onclick="pickSection('specials','Daily Specials','bullets')" class="btn btn-outline btn-sm">⭐ Specials</button>
+              <button type="button" onclick="pickSection('events','Events','cards')" class="btn btn-outline btn-sm">📅 Events</button>
+              <button type="button" onclick="pickSection('packages','Packages & Pricing','cards')" class="btn btn-outline btn-sm">🎟️ Packages</button>
+              <button type="button" onclick="pickSection('schedules','Schedules','grouped_items')" class="btn btn-outline btn-sm">🎟️ Schedules</button>
+              <button type="button" onclick="pickSection('gallery','Photos','gallery')" class="btn btn-outline btn-sm">📸 Photos</button>
+              <button type="button" onclick="pickSection('reviews','Reviews','reviews')" class="btn btn-outline btn-sm">⭐ Reviews</button>
+              <button type="button" onclick="pickSection('hours','Hours','hours')" class="btn btn-outline btn-sm">🕐 Hours</button>
+              <button type="button" onclick="pickSection('location','Location & Contact','location')" class="btn btn-outline btn-sm">📍 Location</button>
+              <button type="button" onclick="pickSection('league','Leagues','cards')" class="btn btn-outline btn-sm">🏆 League</button>
+              <button type="button" onclick="pickSection('book_a_bay','Book a Bay','cards')" class="btn btn-outline btn-sm">🏌️ Book a Bay</button>
+              <button type="button" onclick="pickSection('restrictions','Requirements','bullets')" class="btn btn-outline btn-sm">📋 Requirements</button>
+              <button type="button" onclick="pickSection('catering','Catering','grouped_items')" class="btn btn-outline btn-sm">🍽️ Catering</button>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--card-border);padding-top:16px;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;">Custom / Manual</div>
+          </div>
           <div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Section Key (internal)</label><input id="sec-new-key" type="text" placeholder="dinner, happy_hour, schedules..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
           <div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Section Label (shown on tab)</label><input id="sec-new-label" type="text" placeholder="Dinner Menu, Happy Hour..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
           <div style="margin-bottom:20px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Section Type</label>
@@ -742,39 +777,99 @@
 
       <!-- Add/Edit Event Modal -->
       <div id="eventModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
-        <div style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+        <div style="max-width:640px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
             <h2 style="margin:0;font-size:20px;" id="event-modal-title">Add Event</h2>
             <button onclick="closeEventModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
           </div>
           <form id="eventForm" onsubmit="saveEvent(event)">
             <input type="hidden" id="event-id">
+            <input type="hidden" id="event-entity-id">
             <div style="display:flex;flex-direction:column;gap:14px;">
               <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business (site_id or search)</label>
-                <input type="text" id="event-site-id" placeholder="Paste site_id" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Event Name</label>
-                <input type="text" id="event-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Description</label>
-                <textarea id="event-description" rows="3" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Entity Slug</label>
+                <input type="text" id="event-slug" placeholder="the-blue-crab" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
-                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Date</label>
-                  <input type="date" id="event-date" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Event Name</label>
+                  <input type="text" id="event-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                 </div>
                 <div>
-                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Time</label>
-                  <input type="time" id="event-time" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Event Type</label>
+                  <select id="event-type" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="">— Select —</option>
+                    <option value="live_music">Live Music</option>
+                    <option value="trivia">Trivia Night</option>
+                    <option value="bingo">Bingo</option>
+                    <option value="karaoke">Karaoke</option>
+                    <option value="comedy">Comedy</option>
+                    <option value="dj">DJ</option>
+                    <option value="special_event">Special Event</option>
+                    <option value="holiday">Holiday Event</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
               </div>
               <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Location</label>
-                <input type="text" id="event-location" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Description</label>
+                <textarea id="event-description" rows="2" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Artist Name</label>
+                  <input type="text" id="event-artist-name" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Music Style</label>
+                  <input type="text" id="event-music-style" placeholder="Country, Beach Rock, Jazz..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Venue / Location</label>
+                  <input type="text" id="event-venue" placeholder="Covered Patio, Main Stage..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Cover Charge</label>
+                  <input type="text" id="event-cover-charge" placeholder="$10 or blank if free" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Day of Week</label>
+                  <select id="event-day-of-week" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="">— For recurring —</option>
+                    <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                    <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Start Time</label>
+                  <input type="text" id="event-start-time" placeholder="8pm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">End Time</label>
+                  <input type="text" id="event-end-time" placeholder="11pm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">
+                <input type="checkbox" id="event-recurring" style="width:18px;height:18px;" onchange="document.getElementById('event-recurring-dates').style.display=this.checked?'grid':'none'">
+                <label for="event-recurring" style="font-size:14px;font-weight:600;">Recurring Event</label>
+              </div>
+              <div id="event-recurring-dates" style="display:none;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">One-Time Date</label>
+                  <input type="date" id="event-date" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Season Start</label>
+                  <input type="date" id="event-recurring-start" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Season End</label>
+                  <input type="date" id="event-recurring-end" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
               </div>
               <div>
                 <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Image URL</label>
@@ -820,37 +915,49 @@
           </div>
           <form id="specialForm" onsubmit="saveSpecial(event)">
             <input type="hidden" id="special-id">
+            <input type="hidden" id="special-entity-id">
             <div style="display:flex;flex-direction:column;gap:14px;">
               <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business (site_id)</label>
-                <input type="text" id="special-site-id" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Special Name</label>
-                <input type="text" id="special-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              </div>
-              <div>
-                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Description</label>
-                <textarea id="special-description" rows="3" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Entity Slug</label>
+                <input type="text" id="special-slug" placeholder="the-blue-crab" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
-                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Day</label>
-                  <select id="special-day" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-                    <option value="">Any Day</option>
-                    <option value="monday">Monday</option>
-                    <option value="tuesday">Tuesday</option>
-                    <option value="wednesday">Wednesday</option>
-                    <option value="thursday">Thursday</option>
-                    <option value="friday">Friday</option>
-                    <option value="saturday">Saturday</option>
-                    <option value="sunday">Sunday</option>
-                    <option value="daily">Daily</option>
-                  </select>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Special Name</label>
+                  <input type="text" id="special-name" required style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                 </div>
                 <div>
-                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Time</label>
-                  <input type="text" id="special-time" placeholder="3pm - 6pm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Type</label>
+                  <select id="special-type" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                    <option value="">— Select —</option>
+                    <option value="daily">Daily Special</option>
+                    <option value="recurring">Recurring (weekly)</option>
+                    <option value="limited_time">Limited Time</option>
+                    <option value="seasonal">Seasonal</option>
+                    <option value="happy_hour">Happy Hour</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Description</label>
+                <textarea id="special-description" rows="2" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Discount Text</label>
+                <input type="text" id="special-discount" placeholder="$3 Tacos · $11 Lunch · Half Off Apps" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Days</label>
+                  <input type="text" id="special-days" placeholder="Tuesday · Mon-Fri · Daily" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Start Time</label>
+                  <input type="text" id="special-start-time" placeholder="4pm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">End Time</label>
+                  <input type="text" id="special-end-time" placeholder="6pm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -2441,11 +2548,13 @@
           return;
         }
         document.getElementById('gcr-events-body').innerHTML = events.map(function(ev) {
+          var biz = ev.entity ? ev.entity.name : '—';
+          var when = ev.recurring ? ('Every ' + (ev.day_of_week || '?')) : (ev.event_date || '—');
           return '<tr style="border-bottom:1px solid var(--card-border);">' +
-            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(ev.name) + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml((ev.businesses && ev.businesses.name) || ev.site_id || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(ev.event_date || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(ev.event_time || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(ev.event_name || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(biz) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(when) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml([ev.start_time, ev.end_time].filter(Boolean).join('–') || '—') + '</td>' +
             '<td style="padding:10px 8px;">' +
               '<button onclick="deleteEvent(\'' + ev.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
             '</td>' +
@@ -2458,24 +2567,50 @@
 
     function openAddEventModal() {
       document.getElementById('event-id').value = '';
+      document.getElementById('event-entity-id').value = '';
       document.getElementById('event-modal-title').textContent = 'Add Event';
       document.getElementById('eventForm').reset();
+      document.getElementById('event-recurring-dates').style.display = 'none';
       document.getElementById('eventModal').style.display = 'block';
     }
     function closeEventModal() { document.getElementById('eventModal').style.display = 'none'; }
+
+    async function resolveEntityId(slug) {
+      if (!slug) return null;
+      // If it looks like a UUID, use directly
+      if (/^[0-9a-f-]{36}$/i.test(slug)) return slug;
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/gcr/entity/' + encodeURIComponent(slug.trim()));
+      var data = res.ok ? await res.json() : null;
+      return data && data.entity ? data.entity.id : null;
+    }
 
     async function saveEvent(e) {
       e.preventDefault();
       var token = getAuthToken();
       var id = document.getElementById('event-id').value;
+      var slug = document.getElementById('event-slug').value.trim();
+      var entityId = document.getElementById('event-entity-id').value || await resolveEntityId(slug);
+      if (!entityId) { toast('Entity not found for slug: ' + slug, 'error'); return; }
+      document.getElementById('event-entity-id').value = entityId;
+      var recurring = document.getElementById('event-recurring').checked;
       var data = {
-        site_id: document.getElementById('event-site-id').value,
-        name: document.getElementById('event-name').value,
-        description: document.getElementById('event-description').value,
+        entity_id: entityId,
+        event_name: document.getElementById('event-name').value,
+        event_type: document.getElementById('event-type').value || null,
+        description: document.getElementById('event-description').value || null,
+        artist_name: document.getElementById('event-artist-name').value || null,
+        music_style: document.getElementById('event-music-style').value || null,
+        venue_location: document.getElementById('event-venue').value || null,
+        day_of_week: document.getElementById('event-day-of-week').value || null,
+        start_time: document.getElementById('event-start-time').value || null,
+        end_time: document.getElementById('event-end-time').value || null,
+        recurring: recurring,
         event_date: document.getElementById('event-date').value || null,
-        event_time: document.getElementById('event-time').value || null,
-        location: document.getElementById('event-location').value,
-        image_url: document.getElementById('event-image-url').value
+        recurring_start_date: document.getElementById('event-recurring-start').value || null,
+        recurring_end_date: document.getElementById('event-recurring-end').value || null,
+        cover_charge: document.getElementById('event-cover-charge').value || null,
+        image_url: document.getElementById('event-image-url').value || null,
       };
       var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
       var method = id ? 'PUT' : 'POST';
@@ -2515,11 +2650,12 @@
           return;
         }
         document.getElementById('gcr-specials-body').innerHTML = specials.map(function(s) {
+          var biz = s.entity ? s.entity.name : '—';
           return '<tr style="border-bottom:1px solid var(--card-border);">' +
-            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(s.name) + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(s.site_id || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(s.day || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;">' + (s.active ? '✓' : '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(s.special_name || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(biz) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(s.days || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + (s.is_active ? '✓' : '—') + '</td>' +
             '<td style="padding:10px 8px;">' +
               '<button onclick="deleteSpecial(\'' + s.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
             '</td>' +
@@ -2532,6 +2668,7 @@
 
     function openAddSpecialModal() {
       document.getElementById('special-id').value = '';
+      document.getElementById('special-entity-id').value = '';
       document.getElementById('special-modal-title').textContent = 'Add Special';
       document.getElementById('specialForm').reset();
       document.getElementById('special-active').checked = true;
@@ -2543,13 +2680,20 @@
       e.preventDefault();
       var token = getAuthToken();
       var id = document.getElementById('special-id').value;
+      var slug = document.getElementById('special-slug').value.trim();
+      var entityId = document.getElementById('special-entity-id').value || await resolveEntityId(slug);
+      if (!entityId) { toast('Entity not found for slug: ' + slug, 'error'); return; }
+      document.getElementById('special-entity-id').value = entityId;
       var data = {
-        site_id: document.getElementById('special-site-id').value,
-        name: document.getElementById('special-name').value,
-        description: document.getElementById('special-description').value,
-        day: document.getElementById('special-day').value,
-        time: document.getElementById('special-time').value,
-        active: document.getElementById('special-active').checked
+        entity_id: entityId,
+        special_name: document.getElementById('special-name').value,
+        description: document.getElementById('special-description').value || null,
+        special_type: document.getElementById('special-type').value || null,
+        discount_text: document.getElementById('special-discount').value || null,
+        days: document.getElementById('special-days').value || null,
+        start_time: document.getElementById('special-start-time').value || null,
+        end_time: document.getElementById('special-end-time').value || null,
+        is_active: document.getElementById('special-active').checked,
       };
       var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
       var method = id ? 'PUT' : 'POST';
@@ -4795,6 +4939,19 @@
       document.getElementById('sec-new-label').value = '';
       document.getElementById('sec-new-type').value = 'rich_text';
       document.getElementById('addSectionModal').style.display = 'flex';
+    }
+
+    function pickSection(key, label, type) {
+      document.getElementById('sec-new-key').value = key;
+      document.getElementById('sec-new-label').value = label;
+      document.getElementById('sec-new-type').value = type;
+      // Highlight the manual fields so user sees them auto-filled
+      document.getElementById('sec-new-key').style.borderColor = 'var(--primary)';
+      document.getElementById('sec-new-label').style.borderColor = 'var(--primary)';
+      setTimeout(function() {
+        document.getElementById('sec-new-key').style.borderColor = '';
+        document.getElementById('sec-new-label').style.borderColor = '';
+      }, 1500);
     }
 
     async function saveNewSection() {
