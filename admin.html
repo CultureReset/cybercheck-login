@@ -985,6 +985,7 @@
               <select id="bulk-data-type" onchange="updateBulkFormatHelp()" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                 <option value="gcr_entities">✦ GCR Entities (New Schema)</option>
                 <option value="gcr_items">✦ GCR Section Items (New Schema)</option>
+                <option value="section_based">✦ Section-Based CSV (restaurant_name + section_type)</option>
                 <option value="restaurant_full_menu">Full Restaurant Menu (Auto-Organize)</option>
                 <option value="menu">Menu Items</option>
                 <option value="drinks">Drinks</option>
@@ -5316,6 +5317,7 @@
     function updateBulkFormatHelp() {
       var type = document.getElementById('bulk-data-type').value;
       var help = {
+        'section_based': 'restaurant_name, city, state, address, phone, section_type, section, item_name, description, price, tags\nsection_type values: profile | menu | special | event | tags | service | dietary\nEach menu row = one item. section = menu section name (Appetizers, Entrees, etc.)\nExample menu row: Pelican Grill, Orange Beach, AL, 27267 Perdido Beach Blvd, (251) 483-3665, menu, Appetizers, Grouper Fingers, Hand-breaded Gulf grouper, 16,\nExample profile row: Pelican Grill, Orange Beach, AL, 27267 Perdido Beach Blvd, (251) 483-3665, profile, Basic Info, Pelican Grill, Waterfront marina restaurant, , waterfront',
         'gcr_entities': 'name, slug, entity_subtype, subtitle, phone, address_line_1, city, state, zip, website_url, directions_url, hero_image_url\nExample: Cobalt The Restaurant, cobalt-the-restaurant, restaurant, Fresh Gulf Seafood, (251) 923-5300, 28099 Perdido Beach Blvd, Orange Beach, Alabama, 36561, https://cobaltrestaurant.net, https://maps.google.com/..., https://...',
         'gcr_items': 'entity_slug, section_key, group_title, item_name, item_description, price_text, price_numeric, item_type\nExample: cobalt-the-restaurant, dinner, Starters, Crab Dip, Served with pita chips, $14, 14, menu_item',
         'menu': 'slug, menu_section_name, menu_item_name, menu_item_description, menu_item_price\nEach row = one menu item. slug = entity slug. Example:\ncobalt-the-restaurant, Entrees, Grilled Grouper, Gulf-fresh with lemon butter, 32',
@@ -5343,6 +5345,27 @@
 
       if (!rows.length) { toast('No data rows found in CSV', 'error'); return; }
       var token = getAuthToken();
+
+      if (type === 'section_based') {
+        var res = await fetch(API_BASE + '/api/admin/gcr/import-section-based', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(rows)
+        });
+        var r = await res.json();
+        var msg = (r.restaurants || 1) + ' restaurant(s) · ' + (r.inserted || 0) + ' items imported';
+        if (r.errors && r.errors.length) msg += ' · ' + r.errors.length + ' errors (check console)';
+        if (r.errors && r.errors.length) console.warn('Import errors:', r.errors);
+        var isErr = !res.ok || (!r.inserted && r.errors && r.errors.length);
+        resultEl.style.display = 'block';
+        resultEl.style.background = isErr ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.15)';
+        resultEl.style.color = isErr ? '#fca5a5' : '#86efac';
+        resultEl.style.border = '1px solid ' + (isErr ? '#7f1d1d' : '#14532d');
+        resultEl.textContent = msg;
+        toast(msg, isErr ? 'error' : 'success');
+        loadEntities();
+        return;
+      }
 
       if (type === 'gcr_entities') {
         var success = 0, errors = 0;
