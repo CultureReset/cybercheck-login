@@ -998,7 +998,8 @@
               <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Upload CSV File</label>
               <input type="file" id="bulk-csv-file" accept=".csv" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
             </div>
-            <button onclick="processBulkCSV()" class="btn btn-primary" style="width:fit-content;">Process CSV &amp; Preview</button>
+            <div id="bulk-upload-result" style="display:none;padding:12px 16px;border-radius:8px;font-size:13px;"></div>
+            <button onclick="processBulkCSV()" class="btn btn-primary" style="width:fit-content;">Upload CSV</button>
           </div>
         </div>
         <div class="card" style="padding:28px;">
@@ -3694,20 +3695,16 @@
         // Enable save buttons
         var saveBtn = document.getElementById('ao-save-btn');
         if (saveBtn) {
-          saveBtn.style.cssText = 'display:block !important;opacity:1;';
+          saveBtn.style.display = 'block';
           saveBtn.disabled = false;
         }
 
-        // Show top save button
+        // Show top save banner (preserve its inline styles)
         var topSave = document.getElementById('ao-top-save');
-        if (topSave) {
-          topSave.style.cssText = 'display:block !important;';
-        }
+        if (topSave) topSave.style.display = 'block';
 
         var step2 = document.getElementById('ao-step2');
-        if (step2) {
-          step2.style.cssText = 'display:block !important;visibility:visible !important;';
-        }
+        if (step2) step2.style.display = 'block';
 
         // Also log to confirm data was received
         console.log('AI result stored:', _aoResult ? Object.keys(_aoResult) : 'NULL');
@@ -5288,12 +5285,11 @@
       var help = {
         'gcr_entities': 'name, slug, entity_subtype, subtitle, phone, address_line_1, city, state, zip, website_url, directions_url, hero_image_url\nExample: Cobalt The Restaurant, cobalt-the-restaurant, restaurant, Fresh Gulf Seafood, (251) 923-5300, 28099 Perdido Beach Blvd, Orange Beach, Alabama, 36561, https://cobaltrestaurant.net, https://maps.google.com/..., https://...',
         'gcr_items': 'entity_slug, section_key, group_title, item_name, item_description, price_text, price_numeric, item_type\nExample: cobalt-the-restaurant, dinner, Starters, Crab Dip, Served with pita chips, $14, 14, menu_item',
-        'restaurant_full_menu': 'category, name, description, price\nExample: Appetizers, Calamari, Lightly fried with marinara, 12.99',
-        'menu': 'category, name, description, price\nExample: Dinner, Grilled Salmon, Atlantic salmon with lemon butter, 28',
-        'drinks': 'category, name, description, price\nExample: Cocktails, Margarita, Classic with lime, 12',
-        'events': 'business_name, event_name, description, date, start_time, end_time, price, image_url',
-        'specials': 'name, description, days, start_time, end_time, discount_text\nExample: Taco Tuesday, $2 tacos all day, Tuesday, 00:00, 23:59, $2 off',
-        'happy_hour': 'name, description, price\nExample: House Wine, Red or white, $5',
+        'menu': 'slug, menu_section_name, menu_item_name, menu_item_description, menu_item_price\nEach row = one menu item. slug = entity slug. Example:\ncobalt-the-restaurant, Entrees, Grilled Grouper, Gulf-fresh with lemon butter, 32',
+        'drinks': 'slug, drink_section_name, drink_item_name, drink_item_description, drink_item_price, drink_item_style\nExample: cobalt-the-restaurant, Cocktails, Sunset Mule, Moscow mule with orange, 13, cocktail',
+        'events': 'slug, event_name, event_date, start_time, end_time, description, price_text, image_url, recurring, day_of_week\nExample: cobalt-the-restaurant, Live Jazz, 2026-05-10, 7:00 PM, 10:00 PM, Jazz trio on the patio, Free, , false,',
+        'specials': 'slug, special_name, description, days_of_week, start_time, end_time, discount_text, special_type\ndays_of_week = comma-separated: Monday,Tuesday or All\nExample: cobalt-the-restaurant, Taco Tuesday, $2 tacos all day, Tuesday, 00:00, 23:59, $2 off, food',
+        'happy_hour': 'slug, hh_days, hh_start, hh_end, hh_description, hh_section_name, hh_item_name, hh_item_description, hh_hh_price, hh_regular_price\nExample: cobalt-the-restaurant, Mon-Fri, 3:00 PM, 6:00 PM, $2 off drinks, Drinks, House Wine, Red or white, 5, 8',
       };
       document.getElementById('bulk-format-help').textContent = help[type] || '';
     }
@@ -5302,6 +5298,8 @@
       var type = document.getElementById('bulk-data-type').value;
       var file = document.getElementById('bulk-csv-file').files[0];
       if (!file) { toast('Select a CSV file first', 'error'); return; }
+      var resultEl = document.getElementById('bulk-upload-result');
+      resultEl.style.display = 'none';
       var text = await file.text();
       var lines = text.split('\n').filter(function(l){ return l.trim(); });
       var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g,''); });
@@ -5413,7 +5411,41 @@
         return;
       }
 
-      toast('CSV type "' + type + '" — select a GCR type or use the old bulk upload below', 'error');
+      // ── menu / drinks / events / specials / happy_hour ──
+      var endpointMap = {
+        'menu':       '/api/admin/gcr/import-menu',
+        'drinks':     '/api/admin/gcr/import-drinks',
+        'events':     '/api/admin/gcr/import-events',
+        'specials':   '/api/admin/gcr/import-specials',
+        'happy_hour': '/api/admin/gcr/import-happyhour',
+      };
+      if (endpointMap[type]) {
+        var endpoint = endpointMap[type];
+        var success = 0, errors = 0;
+        for (var i = 0; i < rows.length; i++) {
+          try {
+            var res = await fetch(API_BASE + endpoint, {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify(rows[i])
+            });
+            var r = await res.json();
+            if (!res.ok || r.error) { errors++; console.error(rows[i].slug, r.error || res.status); }
+            else success += (r.inserted || 1);
+          } catch(e) { errors++; console.error(e.message); }
+        }
+        var msg = success + ' rows imported' + (errors ? ' · ' + errors + ' errors (check console)' : '');
+        var isErr = errors > 0 && success === 0;
+        resultEl.style.display = 'block';
+        resultEl.style.background = isErr ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.15)';
+        resultEl.style.color = isErr ? '#fca5a5' : '#86efac';
+        resultEl.style.border = '1px solid ' + (isErr ? '#7f1d1d' : '#14532d');
+        resultEl.textContent = msg;
+        toast(msg, isErr ? 'error' : 'success');
+        return;
+      }
+
+      toast('Select a data type first', 'error');
     }
 
     // ── Bulk Events — GCR Entity mode ─────────────────────────
