@@ -90,6 +90,10 @@
         </div>
 
         <div class="nav-section-label">Business Tools</div>
+        <div class="nav-item" data-page="bookings" onclick="showPage('bookings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Bookings</span>
+        </div>
         <div class="nav-item" data-page="gcr-analytics" onclick="showPage('gcr-analytics')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
           <span>Analytics</span>
@@ -1094,6 +1098,27 @@
             </table>
           </div>
         </div>
+      </div>
+
+      <!-- ── BOOKINGS ──────────────────────────────── -->
+      <div id="page-bookings" class="page-content" style="display:none;">
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <h1>Bookings</h1>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <select id="bk-filter-site" onchange="loadBookings()" style="padding:8px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
+              <option value="beachside-circle-boats">Beachside Circle Boats</option>
+              <option value="">All Sites</option>
+            </select>
+            <select id="bk-filter-status" onchange="loadBookings()" style="padding:8px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;">
+              <option value="">All Statuses</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button onclick="loadBookings()" class="btn btn-outline btn-sm">Refresh</button>
+          </div>
+        </div>
+        <div id="bk-list" style="margin-top:8px;"></div>
       </div>
 
       <!-- ── AR HUNTS ───────────────────────────────── -->
@@ -2295,6 +2320,7 @@
       if (page === 'rag-index') loadRAGStatus();
       if (page === 'ai-settings') loadAISettings();
       if (page === 'gcr-entity-editor' && !_entityPageLoaded) { _entityPageLoaded = true; loadEntities(); }
+      if (page === 'bookings') loadBookings();
     }
 
     function toast(msg, type) {
@@ -2887,6 +2913,71 @@
 
     // ── LEADS ─────────────────────────────────────────
     var _leadsLoaded = false;
+
+    // ── BOOKINGS ──────────────────────────────────────────
+    async function loadBookings() {
+      var token = getAuthToken();
+      var siteId = document.getElementById('bk-filter-site').value;
+      var status = document.getElementById('bk-filter-status').value;
+      var url = API_BASE + '/api/admin/bookings';
+      var params = [];
+      if (siteId) params.push('site_id=' + encodeURIComponent(siteId));
+      if (status) params.push('status=' + encodeURIComponent(status));
+      if (params.length) url += '?' + params.join('&');
+      var container = document.getElementById('bk-list');
+      container.innerHTML = '<div style="color:var(--text-muted);padding:20px;">Loading…</div>';
+      try {
+        var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+        var bookings = await res.json();
+        if (!bookings.length) { container.innerHTML = '<div class="card" style="padding:24px;color:var(--text-muted);text-align:center;">No bookings found.</div>'; return; }
+        var h = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        h += '<thead><tr style="background:var(--bg);border-bottom:2px solid var(--card-border);">';
+        h += '<th style="padding:10px 12px;text-align:left;">Date</th>';
+        h += '<th style="padding:10px 12px;text-align:left;">Customer</th>';
+        h += '<th style="padding:10px 12px;text-align:left;">Phone</th>';
+        h += '<th style="padding:10px 12px;text-align:left;">Email</th>';
+        h += '<th style="padding:10px 12px;text-align:left;">Slot</th>';
+        h += '<th style="padding:10px 12px;text-align:right;">Total</th>';
+        h += '<th style="padding:10px 12px;text-align:center;">Status</th>';
+        h += '<th style="padding:10px 12px;text-align:center;">Actions</th>';
+        h += '</tr></thead><tbody>';
+        bookings.forEach(function(b) {
+          var statusColor = b.status === 'confirmed' ? '#22c55e' : b.status === 'cancelled' ? '#ef4444' : '#f59e0b';
+          h += '<tr style="border-bottom:1px solid var(--card-border);">';
+          h += '<td style="padding:10px 12px;">' + escHtml(b.booking_date || '—') + '</td>';
+          h += '<td style="padding:10px 12px;font-weight:600;">' + escHtml(b.customer_name || '—') + '</td>';
+          h += '<td style="padding:10px 12px;">' + escHtml(b.customer_phone || '—') + '</td>';
+          h += '<td style="padding:10px 12px;">' + escHtml(b.customer_email || '—') + '</td>';
+          h += '<td style="padding:10px 12px;">' + escHtml(b.slot || '—') + '</td>';
+          h += '<td style="padding:10px 12px;text-align:right;">' + (b.total ? '$' + Number(b.total).toFixed(2) : '—') + '</td>';
+          h += '<td style="padding:10px 12px;text-align:center;"><span style="background:' + statusColor + '22;color:' + statusColor + ';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">' + escHtml(b.status || 'pending') + '</span></td>';
+          h += '<td style="padding:10px 12px;text-align:center;display:flex;gap:6px;justify-content:center;">';
+          if (b.status !== 'cancelled') h += '<button onclick="cancelBooking(\'' + b.id + '\')" class="btn btn-outline btn-sm" style="font-size:12px;">Cancel</button>';
+          h += '<button onclick="deleteBooking(\'' + b.id + '\')" class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;font-size:12px;">Delete</button>';
+          h += '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+        container.innerHTML = h;
+      } catch(e) {
+        container.innerHTML = '<div style="color:#ef4444;padding:20px;">Error loading bookings: ' + e.message + '</div>';
+      }
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Cancel this booking?')) return;
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/admin/bookings/' + id + '/cancel', { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.ok) { toast('Booking cancelled', 'success'); loadBookings(); }
+      else toast('Failed to cancel booking', 'error');
+    }
+
+    async function deleteBooking(id) {
+      if (!confirm('Permanently delete this booking? This cannot be undone.')) return;
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/admin/bookings/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.ok) { toast('Booking deleted', 'success'); loadBookings(); }
+      else toast('Failed to delete booking', 'error');
+    }
 
     async function loadLeads() {
       _leadsLoaded = true;
