@@ -881,6 +881,46 @@ table tr:hover td {
   font-size: 14px;
 }
 
+/* ---- Main Content Wrapper ---- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ---- Page Content ---- */
+.page-content {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+/* ---- Page Header ---- */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ---- Sidebar Overlay (mobile backdrop) ---- */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.sidebar-overlay.open {
+  display: block;
+}
+
 /* ---- Responsive ---- */
 /* ============================================
    RESPONSIVE DESIGN — Multiple Breakpoints
@@ -940,6 +980,10 @@ table tr:hover td {
   }
 
   .topbar { margin-left: 0; }
+
+  .page-content {
+    padding: 14px;
+  }
 
   .content {
     padding: 14px;

@@ -152,8 +152,25 @@
       </div>
     </aside>
 
+    <!-- SIDEBAR BACKDROP -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
     <!-- MAIN CONTENT -->
     <main class="main-content" id="main-content">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span class="topbar-title" id="topbar-title">Admin Overview</span>
+        </div>
+        <div class="topbar-right">
+          <button class="btn-view-site" onclick="window.open('https://circle-boats-main.vercel.app','_blank')">View Site</button>
+          <button class="btn-logout" onclick="adminLogout()">Log Out</button>
+        </div>
+      </div>
 
       <!-- ── OVERVIEW ─────────────────────────────── -->
       <div id="page-overview" class="page-content">
@@ -2303,6 +2320,16 @@
       window.location.href = 'login.html';
     }
 
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
     function showPage(page) {
       document.querySelectorAll('.page-content').forEach(function(el) { el.style.display = 'none'; });
       document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
@@ -2310,6 +2337,10 @@
       if (pageEl) pageEl.style.display = '';
       var navEl = document.querySelector('.nav-item[data-page="' + page + '"]');
       if (navEl) navEl.classList.add('active');
+      // Update topbar title
+      if (navEl) { var t = navEl.querySelector('span'); if (t) document.getElementById('topbar-title').textContent = t.textContent; }
+      // Close sidebar on mobile after navigation
+      if (window.innerWidth <= 768) closeSidebar();
       // Lazy load data
       if (page === 'gcr-businesses' && !_gcrLoaded) loadGCRBusinesses();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
