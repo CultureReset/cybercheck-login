@@ -1,40 +1,71 @@
 // ============================================
 // Menu — Category + Item CRUD for restaurants
+// Backed by Supabase menu_items table via CC.dashboard
 // ============================================
 
-var _menuCategories = [];
-var _menuItems = [];
-var _menuCatIdCounter = 0;
-var _menuItemIdCounter = 0;
+var _menuItems = [];      // items loaded from DB
+var _menuCategories = []; // derived from item.category strings + local additions
 
 function loadMenu() {
-  // No demo data — menu items come from the user or the API
   renderMenu();
   updateMenuStats();
+
+  CC.dashboard.getMenu().then(function(items) {
+    _menuItems = (items || []).map(function(item) {
+      return {
+        id: item.id,             // real DB uuid
+        dbId: item.id,
+        categoryName: item.category || 'Uncategorized',
+        name: item.name || '',
+        price: parseFloat(item.price) || 0,
+        description: item.description || '',
+        tags: Array.isArray(item.tags) ? item.tags : (item.tags ? [item.tags] : []),
+        modifiers: Array.isArray(item.modifiers) ? item.modifiers : [],
+        photo: item.photo_url || '',
+        sort_order: item.sort_order || 0,
+      };
+    });
+
+    // Derive categories from loaded items
+    var seenCats = {};
+    _menuItems.forEach(function(item) {
+      if (!seenCats[item.categoryName]) {
+        seenCats[item.categoryName] = true;
+        _menuCategories.push({ name: item.categoryName });
+      }
+    });
+
+    renderMenu();
+    updateMenuStats();
+  }).catch(function(err) {
+    console.error('Failed to load menu:', err);
+    toast('Could not load menu items', 'error');
+  });
 }
 
 function renderMenu() {
   var container = document.getElementById('menu-categories-list');
   var emptyState = document.getElementById('menu-empty');
+  if (!container) return;
 
   if (_menuCategories.length === 0) {
     container.innerHTML = '';
-    emptyState.style.display = '';
+    if (emptyState) emptyState.style.display = '';
     return;
   }
 
-  emptyState.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
   var html = '';
 
-  _menuCategories.sort(function(a, b) { return a.sortOrder - b.sortOrder; }).forEach(function(cat) {
-    var items = _menuItems.filter(function(i) { return i.categoryId === cat.id; });
+  _menuCategories.forEach(function(cat) {
+    var items = _menuItems.filter(function(i) { return i.categoryName === cat.name; });
 
     html += '<div class="card" style="margin-bottom:12px;">';
     html += '<div class="card-header">';
     html += '<h3 style="font-size:15px;">' + escHtml(cat.name) + ' <span style="color:var(--text-dim);font-weight:400;">(' + items.length + ')</span></h3>';
     html += '<div style="display:flex;gap:6px;">';
-    html += '<button class="btn btn-outline btn-sm" onclick="editCategory(' + cat.id + ')">Edit</button>';
-    html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(' + cat.id + ')">Delete</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="editCategory(\'' + escAttr(cat.name) + '\')">Edit</button>';
+    html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + escAttr(cat.name) + '\')">Delete</button>';
     html += '</div>';
     html += '</div>';
 
@@ -48,8 +79,8 @@ function renderMenu() {
         html += '<td>$' + Number(item.price).toFixed(2) + '</td>';
         html += '<td>' + (item.tags || []).map(function(t) { return '<span class="tag">' + escHtml(t) + '</span>'; }).join('') + '</td>';
         html += '<td><div style="display:flex;gap:6px;">';
-        html += '<button class="btn btn-outline btn-sm" onclick="editMenuItem(' + item.id + ')">Edit</button>';
-        html += '<button class="btn btn-danger btn-sm" onclick="deleteMenuItem(' + item.id + ')">Delete</button>';
+        html += '<button class="btn btn-outline btn-sm" onclick="editMenuItem(\'' + escAttr(item.id) + '\')">Edit</button>';
+        html += '<button class="btn btn-danger btn-sm" onclick="deleteMenuItem(\'' + escAttr(item.id) + '\')">Delete</button>';
         html += '</div></td>';
         html += '</tr>';
       });
@@ -70,19 +101,14 @@ function escHtml(str) {
   return div.innerHTML;
 }
 
-// Category CRUD
-function openCategoryModal(id) {
-  document.getElementById('cat-form-name').value = '';
-  document.getElementById('cat-form-id').value = '';
+function escAttr(str) {
+  return String(str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
 
-  if (id) {
-    var cat = _menuCategories.find(function(c) { return c.id === id; });
-    if (cat) {
-      document.getElementById('cat-form-name').value = cat.name;
-      document.getElementById('cat-form-id').value = cat.id;
-    }
-  }
-
+// ── Category CRUD ──
+function openCategoryModal(existingName) {
+  document.getElementById('cat-form-name').value = existingName || '';
+  document.getElementById('cat-form-id').value = existingName || '';
   openModal('modal-category');
 }
 
@@ -90,42 +116,56 @@ function saveCategory() {
   var name = document.getElementById('cat-form-name').value.trim();
   if (!name) { toast('Category name is required', 'error'); return; }
 
-  var id = document.getElementById('cat-form-id').value;
+  var oldName = document.getElementById('cat-form-id').value;
 
-  if (id) {
-    // Edit
-    var cat = _menuCategories.find(function(c) { return c.id === parseInt(id); });
-    if (cat) cat.name = name;
-    toast('Category updated');
-  } else {
-    // Add
-    _menuCatIdCounter++;
-    _menuCategories.push({
-      id: _menuCatIdCounter,
-      name: name,
-      sortOrder: _menuCategories.length
+  if (oldName && oldName !== name) {
+    // Rename: update all items with this category in DB
+    var toRename = _menuItems.filter(function(i) { return i.categoryName === oldName; });
+    var promises = toRename.map(function(item) {
+      return CC.dashboard.updateMenuItem(item.id, { category: name });
     });
+    Promise.all(promises).then(function() {
+      // Update local state
+      _menuItems.forEach(function(i) { if (i.categoryName === oldName) i.categoryName = name; });
+      var cat = _menuCategories.find(function(c) { return c.name === oldName; });
+      if (cat) cat.name = name;
+      closeModal('modal-category');
+      renderMenu();
+      toast('Category renamed');
+    }).catch(function() { toast('Failed to rename category', 'error'); });
+  } else if (!oldName) {
+    // New category (no items yet, just add locally)
+    if (!_menuCategories.find(function(c) { return c.name === name; })) {
+      _menuCategories.push({ name: name });
+    }
+    closeModal('modal-category');
+    renderMenu();
     toast('Category added');
+  } else {
+    closeModal('modal-category');
   }
-
-  closeModal('modal-category');
-  renderMenu();
 }
 
-function editCategory(id) {
-  openCategoryModal(id);
+function editCategory(name) {
+  openCategoryModal(name);
 }
 
-function deleteCategory(id) {
+function deleteCategory(name) {
   if (!confirm('Delete this category and all its items?')) return;
-  _menuCategories = _menuCategories.filter(function(c) { return c.id !== id; });
-  _menuItems = _menuItems.filter(function(i) { return i.categoryId !== id; });
-  renderMenu();
-  updateMenuStats();
-  toast('Category deleted');
+  var toDelete = _menuItems.filter(function(i) { return i.categoryName === name; });
+  var promises = toDelete.map(function(item) {
+    return CC.dashboard.deleteMenuItem(item.id);
+  });
+  Promise.all(promises).then(function() {
+    _menuItems = _menuItems.filter(function(i) { return i.categoryName !== name; });
+    _menuCategories = _menuCategories.filter(function(c) { return c.name !== name; });
+    renderMenu();
+    updateMenuStats();
+    toast('Category deleted');
+  }).catch(function() { toast('Failed to delete category', 'error'); });
 }
 
-// Menu Item CRUD
+// ── Menu Item CRUD ──
 function openMenuItemModal(id) {
   document.getElementById('mi-form-name').value = '';
   document.getElementById('mi-form-price').value = '';
@@ -140,7 +180,7 @@ function openMenuItemModal(id) {
   select.innerHTML = '';
   _menuCategories.forEach(function(cat) {
     var opt = document.createElement('option');
-    opt.value = cat.id;
+    opt.value = cat.name;
     opt.textContent = cat.name;
     select.appendChild(opt);
   });
@@ -151,16 +191,18 @@ function openMenuItemModal(id) {
   }
 
   if (id) {
-    var item = _menuItems.find(function(i) { return i.id === id; });
+    var item = _menuItems.find(function(i) { return String(i.id) === String(id); });
     if (item) {
       document.getElementById('menu-item-modal-title').textContent = 'Edit Menu Item';
       document.getElementById('mi-form-name').value = item.name;
       document.getElementById('mi-form-price').value = item.price;
       document.getElementById('mi-form-desc').value = item.description || '';
       document.getElementById('mi-form-tags').value = (item.tags || []).join(', ');
-      document.getElementById('mi-form-modifiers').value = (item.modifiers || []).map(function(m) { return m.name + ' | ' + m.price.toFixed(2); }).join('\n');
+      document.getElementById('mi-form-modifiers').value = (item.modifiers || []).map(function(m) {
+        return m.name + ' | ' + (parseFloat(m.price) || 0).toFixed(2);
+      }).join('\n');
       document.getElementById('mi-form-id').value = item.id;
-      select.value = item.categoryId;
+      select.value = item.categoryName;
     }
   }
 
@@ -170,7 +212,7 @@ function openMenuItemModal(id) {
 function saveMenuItem() {
   var name = document.getElementById('mi-form-name').value.trim();
   var price = parseFloat(document.getElementById('mi-form-price').value);
-  var categoryId = parseInt(document.getElementById('mi-form-category').value);
+  var categoryName = document.getElementById('mi-form-category').value;
 
   if (!name) { toast('Item name is required', 'error'); return; }
   if (isNaN(price) || price < 0) { toast('Valid price is required', 'error'); return; }
@@ -189,39 +231,56 @@ function saveMenuItem() {
     });
   }
 
+  var dbPayload = {
+    name: name,
+    price: price,
+    category: categoryName,
+    description: desc,
+    tags: tags,
+    modifiers: modifiers,
+    sort_order: _menuItems.filter(function(i) { return i.categoryName === categoryName; }).length
+  };
+
   var id = document.getElementById('mi-form-id').value;
 
   if (id) {
-    // Edit
-    var item = _menuItems.find(function(i) { return i.id === parseInt(id); });
-    if (item) {
-      item.name = name;
-      item.price = price;
-      item.categoryId = categoryId;
-      item.description = desc;
-      item.tags = tags;
-      item.modifiers = modifiers;
-    }
-    toast('Menu item updated');
+    // Update existing
+    CC.dashboard.updateMenuItem(id, dbPayload).then(function(updated) {
+      var item = _menuItems.find(function(i) { return String(i.id) === String(id); });
+      if (item) {
+        item.name = name;
+        item.price = price;
+        item.categoryName = categoryName;
+        item.description = desc;
+        item.tags = tags;
+        item.modifiers = modifiers;
+      }
+      closeModal('modal-menu-item');
+      renderMenu();
+      updateMenuStats();
+      toast('Menu item updated');
+    }).catch(function() { toast('Failed to save item', 'error'); });
   } else {
-    // Add
-    _menuItemIdCounter++;
-    _menuItems.push({
-      id: _menuItemIdCounter,
-      categoryId: categoryId,
-      name: name,
-      price: price,
-      description: desc,
-      tags: tags,
-      modifiers: modifiers,
-      photo: ''
-    });
-    toast('Menu item added');
+    // Create new
+    CC.dashboard.createMenuItem(dbPayload).then(function(created) {
+      _menuItems.push({
+        id: created.id,
+        dbId: created.id,
+        categoryName: categoryName,
+        name: name,
+        price: price,
+        description: desc,
+        tags: tags,
+        modifiers: modifiers,
+        photo: '',
+        sort_order: dbPayload.sort_order
+      });
+      closeModal('modal-menu-item');
+      renderMenu();
+      updateMenuStats();
+      toast('Menu item added');
+    }).catch(function() { toast('Failed to save item', 'error'); });
   }
-
-  closeModal('modal-menu-item');
-  renderMenu();
-  updateMenuStats();
 }
 
 function editMenuItem(id) {
@@ -230,10 +289,12 @@ function editMenuItem(id) {
 
 function deleteMenuItem(id) {
   if (!confirm('Delete this menu item?')) return;
-  _menuItems = _menuItems.filter(function(i) { return i.id !== id; });
-  renderMenu();
-  updateMenuStats();
-  toast('Menu item deleted');
+  CC.dashboard.deleteMenuItem(id).then(function() {
+    _menuItems = _menuItems.filter(function(i) { return String(i.id) !== String(id); });
+    renderMenu();
+    updateMenuStats();
+    toast('Menu item deleted');
+  }).catch(function() { toast('Failed to delete item', 'error'); });
 }
 
 function updateMenuStats() {
