@@ -4,6 +4,12 @@
   "installCommand": null,
   "framework": null,
   "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/wavegent/:slug",
+      "destination": "/api/wavegent/:slug"
+    }
+  ],
   "headers": [
     {
       "source": "/login.html",
