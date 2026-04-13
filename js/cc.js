@@ -794,6 +794,24 @@ const CC = (function() {
       return data;
     },
 
+    // --- Blackout Dates ---
+    getBlackoutDates: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return [];
+      var { data } = await supabase.from('blackout_dates').select('*').eq('site_id', siteId).order('date_from', { ascending: true });
+      return data || [];
+    },
+    addBlackoutDate: async function(d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var payload = { site_id: siteId, date_from: d.date_from, date_to: d.date_to, label: d.label || null };
+      var { data } = await supabase.from('blackout_dates').insert(payload).select().single();
+      return data;
+    },
+    deleteBlackoutDate: async function(id) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('blackout_dates').delete().eq('id', id).eq('site_id', siteId);
+      return { success: true };
+    },
+
     // --- Messaging Settings ---
     getMessaging: async function() {
       var siteId = await ensureSiteId(); if (!siteId) return null;

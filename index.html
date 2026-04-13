@@ -51,6 +51,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Availability</span>
         </div>
+        <div class="nav-item" data-page="blackout-dates">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <span>Blackout Dates</span>
+        </div>
         <div class="nav-item" data-page="addons">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           <span>Add-ons & Docks</span>
@@ -323,6 +327,72 @@
               <span class="badge badge-success">Available</span>
               <span class="badge badge-danger">Booked</span>
               <span class="badge badge-info">Blocked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLACKOUT DATES -->
+        <div class="page-section" id="page-blackout-dates">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Blackout Dates</h3>
+                <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Block dates when no bookings can be made — holidays, maintenance, weather closures.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openBlackoutModal()">+ Add Blackout</button>
+            </div>
+            <div id="blackout-list"></div>
+            <div class="empty-state" id="blackout-empty">
+              <h3>No blackout dates</h3>
+              <p>Add a blackout period to prevent customers from booking on those days.</p>
+              <button class="btn btn-primary" onclick="openBlackoutModal()">Add First Blackout</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Blackout Calendar Preview</h3>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-outline btn-sm" onclick="blackoutPrevMonth()">&lt;</button>
+                <span id="blackout-month-label" style="min-width:140px;text-align:center;font-weight:600;"></span>
+                <button class="btn btn-outline btn-sm" onclick="blackoutNextMonth()">&gt;</button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="blackout-calendar"></div>
+            <div style="display:flex;gap:16px;margin-top:16px;">
+              <span class="badge badge-success">Open</span>
+              <span class="badge badge-info">Blacked Out</span>
+            </div>
+          </div>
+
+          <!-- Add Blackout Modal -->
+          <div id="blackout-modal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,.5);">
+            <div class="card" style="width:100%;max-width:420px;margin:0 16px;padding:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Add Blackout Period</h3>
+                <button class="btn btn-outline btn-sm" onclick="closeBlackoutModal()">✕</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Label <span style="color:var(--text-muted);font-weight:400;">(optional — e.g. "Holiday", "Maintenance")</span></label>
+                  <input id="blackout-label" type="text" class="form-input" placeholder="e.g. July 4th Holiday" maxlength="80" style="width:100%;">
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;">
+                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Start Date</label>
+                    <input id="blackout-from" type="date" class="form-input" style="width:100%;">
+                  </div>
+                  <div style="flex:1;">
+                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">End Date</label>
+                    <input id="blackout-to" type="date" class="form-input" style="width:100%;">
+                  </div>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin:0;">Customers will not be able to book on any day within this range.</p>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeBlackoutModal()">Cancel</button>
+                <button id="blackout-save-btn" class="btn btn-primary" onclick="saveBlackoutDate()">Save</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1183,6 +1253,7 @@
   <script src="js/media.js?v=4"></script>
   <script src="js/inventory.js?v=4"></script>
   <script src="js/availability.js?v=4"></script>
+  <script src="js/blackout-dates.js?v=1"></script>
   <script src="js/addons.js?v=4"></script>
   <script src="js/locations.js?v=4"></script>
   <script src="js/pages.js?v=4"></script>
