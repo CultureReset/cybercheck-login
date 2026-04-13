@@ -60,6 +60,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           <span>Entity Editor</span>
         </div>
+        <div class="nav-item" data-page="gcr-site-editor" onclick="showPage('gcr-site-editor')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          <span>Site Editor</span>
+        </div>
         <div class="nav-item" data-page="gcr-events" onclick="showPage('gcr-events')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Events</span>
@@ -121,6 +125,10 @@
         <div class="nav-item" data-page="gcr-seo" onclick="showPage('gcr-seo')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span>SEO</span>
+        </div>
+        <div class="nav-item" data-page="integrations" onclick="showPage('integrations')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6M6 9v10a2 2 0 002 2h8a2 2 0 002-2V9"/></svg>
+          <span>Integrations</span>
         </div>
 
         <div class="nav-section-label">Platform</div>
@@ -301,6 +309,8 @@
             <button onclick="switchEntTab('tags')"     id="enttab-tags"     style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Tags</button>
             <button onclick="switchEntTab('features')" id="enttab-features" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Features</button>
             <button onclick="switchEntTab('sections')" id="enttab-sections" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Sections</button>
+            <button onclick="switchEntTab('pages')"    id="enttab-pages"    style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📍 Pages</button>
+            <button onclick="switchEntTab('wavegent')" id="enttab-wavegent" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🎨 Wavegent</button>
           </div>
 
           <div style="padding:28px;" id="ent-editor-body">
@@ -387,6 +397,35 @@
                 <button onclick="openAddSectionModal()" class="btn btn-outline btn-sm">+ Add Section</button>
               </div>
               <div id="ent-sections-list"></div>
+            </div>
+
+            <!-- PAGES TAB -->
+            <div id="enttab-pages-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 6px;">Choose which category pages this business appears on. Check a page to add it. Use "Featured" + position (1–5) to pin it at the top of that page.</p>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 20px;background:var(--bg);padding:10px 12px;border-radius:8px;border:1px solid var(--card-border);">💡 The <strong>primary page</strong> is determined by the entity subtype (Info tab). Check additional pages here to also show this business there.</p>
+              <div id="ent-pages-list" style="display:grid;gap:10px;"></div>
+              <div style="margin-top:20px;"><button onclick="saveEntPages()" class="btn btn-primary">Save Page Assignments</button></div>
+            </div>
+
+            <!-- WAVEGENT TAB -->
+            <div id="enttab-wavegent-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Generate a shareable mobile page from this business's GCR data.</p>
+              <div style="display:flex;gap:12px;margin-bottom:20px;">
+                <button onclick="generateWavegentPage()" class="btn btn-primary" id="wg-generate-btn">✨ Generate Page</button>
+                <span id="wg-status" style="font-size:13px;color:var(--text-muted);align-self:center;">Ready</span>
+              </div>
+              <div id="wg-url-section" style="display:none;margin-bottom:20px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Shareable URL:</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input id="wg-url-input" type="text" readonly style="flex:1;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;font-family:monospace;">
+                  <button onclick="copyWavegentURL()" class="btn btn-outline btn-sm">📋 Copy</button>
+                  <button onclick="openWavegentURL()" class="btn btn-outline btn-sm">🔗 Open</button>
+                </div>
+              </div>
+              <div id="wg-preview-section" style="display:none;">
+                <h4 style="margin:0 0 12px;font-size:13px;">Live Preview</h4>
+                <iframe id="wg-preview-frame" style="width:100%;height:600px;border:1px solid var(--card-border);border-radius:8px;" src=""></iframe>
+              </div>
             </div>
 
           </div>
@@ -772,6 +811,140 @@
           <div style="display:flex;gap:12px;justify-content:flex-end;">
             <button onclick="closeCSVImportModal()" class="btn btn-outline">Cancel</button>
             <button onclick="startCSVImport()" id="csv-import-btn" class="btn btn-primary" disabled>Import Data</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GCR SITE EDITOR ──────────────────────────── -->
+      <div id="page-gcr-site-editor" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Site Editor</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Edit the Gulf Coast Radar website: hero, category cards, page headers, and featured business ordering.</div>
+        </div>
+
+        <!-- Site Editor Tabs -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--card-border);margin-bottom:24px;overflow-x:auto;">
+          <button onclick="switchSiteTab('hero')"     id="sitetab-hero"     style="padding:12px 20px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">🏠 Hero</button>
+          <button onclick="switchSiteTab('cards')"    id="sitetab-cards"    style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🗂️ Category Cards</button>
+          <button onclick="switchSiteTab('pages')"    id="sitetab-pages"    style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📄 Page Headers</button>
+          <button onclick="switchSiteTab('top5')"     id="sitetab-top5"     style="padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">⭐ Featured Top 5</button>
+        </div>
+
+        <!-- HERO TAB -->
+        <div id="sitetab-hero-content">
+          <div class="card" style="padding:28px;max-width:760px;">
+            <h3 style="margin:0 0 20px;">Home Page Hero Section</h3>
+            <div style="display:grid;gap:16px;">
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Eyebrow Text</label>
+                <input id="hero-eyebrow" type="text" placeholder="Orange Beach · Gulf Shores · Fort Morgan" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Main Title</label>
+                <input id="hero-title" type="text" placeholder="Find Anything on the Gulf Coast" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Subtitle</label>
+                <input id="hero-subtitle" type="text" placeholder="Restaurants, happy hours, events, boat rentals, live music & more" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Background Image URL</label>
+                <div style="display:flex;gap:8px;">
+                  <input id="hero-bg-url" type="text" placeholder="https://... (leave blank for default gradient)" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <button onclick="siteEditorUpload('hero-bg-url')" class="btn btn-outline btn-sm">📁 Upload</button>
+                </div>
+                <div id="hero-bg-preview" style="margin-top:8px;height:80px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--card-border);display:none;"></div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Quick Search Tags</label>
+                <div id="hero-tags-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+                <div style="display:flex;gap:8px;">
+                  <input id="hero-tag-emoji" type="text" placeholder="🦀" style="width:60px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <input id="hero-tag-label" type="text" placeholder="Crab Legs" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" onkeydown="if(event.key==='Enter')addHeroTag()">
+                  <button onclick="addHeroTag()" class="btn btn-outline btn-sm">+ Add Tag</button>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:24px;"><button onclick="saveHeroConfig()" class="btn btn-primary">Save Hero Section</button></div>
+          </div>
+        </div>
+
+        <!-- CATEGORY CARDS TAB -->
+        <div id="sitetab-cards-content" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:13px;color:var(--text-muted);">Edit the 11 category tiles on the home page. You can change the name, description, emoji, image, and background color.</div>
+            <button onclick="saveCategoryCards()" class="btn btn-primary">Save All Cards</button>
+          </div>
+          <div id="site-cat-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+        </div>
+
+        <!-- PAGE HEADERS TAB -->
+        <div id="sitetab-pages-content" style="display:none;">
+          <div class="card" style="padding:28px;max-width:760px;">
+            <h3 style="margin:0 0 6px;">Category Page Header</h3>
+            <p style="margin:0 0 20px;font-size:13px;color:var(--text-muted);">Edit the title, description, and background image shown at the top of each category page.</p>
+            <div style="margin-bottom:20px;">
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Page</label>
+              <select id="ph-page-select" onchange="loadPageHeaderEditor()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="restaurants">Restaurants</option>
+                <option value="coffee-sweets">Coffee &amp; Sweets</option>
+                <option value="happy-hours">Happy Hours</option>
+                <option value="specials">Specials</option>
+                <option value="events">Events</option>
+                <option value="things-to-do">Things To Do</option>
+                <option value="shopping">Shopping</option>
+                <option value="public-spots">Public Spots</option>
+                <option value="nightlife">Bars &amp; Nightlife</option>
+                <option value="artists">Local Artists</option>
+                <option value="feed">Live Feed</option>
+              </select>
+            </div>
+            <div style="display:grid;gap:16px;">
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Page Title</label>
+                <input id="ph-title" type="text" placeholder="Restaurants" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Description</label>
+                <textarea id="ph-description" rows="3" placeholder="Browse Gulf Coast spots..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Hero Background Image URL</label>
+                <div style="display:flex;gap:8px;">
+                  <input id="ph-image-url" type="text" placeholder="https://... (Unsplash or uploaded image)" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <button onclick="siteEditorUpload('ph-image-url')" class="btn btn-outline btn-sm">📁 Upload</button>
+                </div>
+                <div id="ph-img-preview" style="margin-top:8px;height:80px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--card-border);display:none;"></div>
+              </div>
+            </div>
+            <div style="margin-top:24px;"><button onclick="savePageHeader()" class="btn btn-primary">Save Page Header</button></div>
+          </div>
+        </div>
+
+        <!-- TOP 5 TAB -->
+        <div id="sitetab-top5-content" style="display:none;">
+          <div class="card" style="padding:28px;max-width:760px;">
+            <h3 style="margin:0 0 6px;">Featured Top 5 Per Page</h3>
+            <p style="margin:0 0 20px;font-size:13px;color:var(--text-muted);">Choose which businesses appear first (positions 1–5) on each category page. Only businesses already assigned to the page appear here.</p>
+            <div style="margin-bottom:20px;">
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Page</label>
+              <select id="top5-page-select" onchange="loadTop5Editor()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="restaurants">Restaurants</option>
+                <option value="coffee-sweets">Coffee &amp; Sweets</option>
+                <option value="happy-hours">Happy Hours</option>
+                <option value="specials">Specials</option>
+                <option value="events">Events</option>
+                <option value="things-to-do">Things To Do</option>
+                <option value="shopping">Shopping</option>
+                <option value="public-spots">Public Spots</option>
+                <option value="nightlife">Bars &amp; Nightlife</option>
+                <option value="artists">Local Artists</option>
+                <option value="feed">Live Feed</option>
+              </select>
+            </div>
+            <div id="top5-editor-body">
+              <div style="color:var(--text-muted);font-size:13px;">Select a page to manage featured order.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1489,6 +1662,106 @@
             <input id="facebook-app-id" type="text" placeholder="Facebook App ID" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;">
           </div>
           <button class="btn btn-primary" onclick="saveAPIKey('oauth')">Save OAuth Settings</button>
+        </div>
+      </div>
+
+      <!-- ── INTEGRATIONS ───────────────────────────────── -->
+      <div id="page-integrations" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Integrations</h1><div style="font-size:13px;color:var(--text-muted);">Connect open source tools to power your links page. Enter config, preview, and enable.</div></div>
+
+        <!-- Cal.com Booking -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">📅 Cal.com Booking</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Embed Cal.com calendar for bookings</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-cal-link" type="text" placeholder="https://cal.com/your-username" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('cal')">Preview</button>
+        </div>
+
+        <!-- Easy!Appointments -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">⏰ Easy!Appointments</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Self-hosted appointment booking system</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-ea-url" type="text" placeholder="https://your-appointments.com" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            <input id="int-ea-key" type="text" placeholder="API Key (optional)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('ea')">Preview</button>
+        </div>
+
+        <!-- Rallly -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">🗳️ Rallly</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Group scheduling polls</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-rallly-url" type="text" placeholder="https://rallly.co/polls/your-poll" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('rallly')">Preview</button>
+        </div>
+
+        <!-- Table Reservations -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">🍽️ Table Reservations</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Reservation booking form</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-table-url" type="text" placeholder="API endpoint (optional)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('table')">Preview</button>
+        </div>
+
+        <!-- Open Food Network -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">🛒 Online Ordering</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Open Food Network ordering link</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-food-url" type="text" placeholder="https://openfoodnetwork.org.au/your-shop" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('food')">Preview</button>
+        </div>
+
+        <!-- Frappe Restaurant -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">🍱 Frappe Restaurant</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Full restaurant management (reserve/order/menu)</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-frappe-url" type="text" placeholder="https://your-frappe.com" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            <input id="int-frappe-key" type="text" placeholder="API Key (optional)" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('frappe')">Preview</button>
+        </div>
+
+        <!-- Castopod Podcast -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">🎙️ Castopod Podcast</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Podcast/audio player embed</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-castopod-url" type="text" placeholder="Castopod embed URL" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('castopod')">Preview</button>
+        </div>
+
+        <!-- Alf.io Ticketing -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">🎟️ Alf.io Event Tickets</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Event ticketing with live availability</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-alfio-url" type="text" placeholder="https://your-alf.io" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            <input id="int-alfio-key" type="text" placeholder="API Key" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            <input id="int-alfio-slug" type="text" placeholder="Event slug" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('alfio')">Preview</button>
+        </div>
+
+        <!-- Open Loyalty -->
+        <div class="card" style="padding:28px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;">⭐ Open Loyalty</h3>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Customer loyalty points & rewards</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+            <input id="int-loyalty-url" type="text" placeholder="https://your-loyalty.com" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            <input id="int-loyalty-key" type="text" placeholder="API Key" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          </div>
+          <button class="btn btn-primary" onclick="previewIntegration('loyalty')">Preview</button>
         </div>
       </div>
 
@@ -2351,6 +2624,7 @@
       if (page === 'rag-index') loadRAGStatus();
       if (page === 'ai-settings') loadAISettings();
       if (page === 'gcr-entity-editor' && !_entityPageLoaded) { _entityPageLoaded = true; loadEntities(); }
+      if (page === 'gcr-site-editor' && !_siteEditorLoaded) { _siteEditorLoaded = true; loadSiteEditor(); }
       if (page === 'bookings') loadBookings();
     }
 
@@ -2469,13 +2743,30 @@
           '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.slug || '—') + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;">' + escHtml((b.city || '') + (b.state ? ', ' + b.state : '')) + '</td>' +
-          '<td style="padding:10px 8px;display:flex;gap:6px;">' +
+          '<td style="padding:10px 8px;display:flex;gap:6px;flex-wrap:wrap;">' +
             '<button onclick="showPage(\'gcr-entity-editor\');loadEntityForEdit(\'' + b.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+            '<button onclick="inviteBusiness(\'' + b.id + '\', \'' + escHtml(b.name).replace(/'/g,"&#39;") + '\')" class="btn btn-sm" style="background:#3b82f6;color:white;border:none;cursor:pointer;padding:6px 10px;border-radius:4px;font-size:12px;">✉ Invite</button>' +
             '<button onclick="deleteGCRBusiness(\'' + b.id + '\', \'' + escHtml(b.name).replace(/'/g,"&#39;") + '\')" class="btn btn-sm" style="background:#ef4444;color:white;border:none;cursor:pointer;padding:6px 10px;border-radius:4px;font-size:12px;">✕</button>' +
           '</td>' +
           '</tr>';
       }).join('');
       document.getElementById('gcr-businesses-body').innerHTML = html;
+    }
+
+    async function inviteBusiness(entityId, name) {
+      if (!confirm('Send dashboard invite email to ' + name + '?')) return;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/invite', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Invite failed');
+        toast('✉ Invite sent to ' + data.email, 'success');
+      } catch(e) {
+        toast('Error: ' + e.message, 'error');
+      }
     }
 
     async function toggleGCRLive(entityId, isActive, checkboxEl) {
@@ -4795,7 +5086,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','tags','features','sections'].forEach(function(t) {
+      ['info','tags','features','sections','pages','wavegent'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -4807,6 +5098,8 @@
           con.style.display = 'none';
         }
       });
+      if (tab === 'pages' && _currentEntityId) loadEntPages();
+      if (tab === 'wavegent' && _currentEntityId) loadWavegentTab();
     }
 
     // ── Save entity info ──────────────────────────────
@@ -5473,6 +5766,7 @@
     }
 
     var _entityPageLoaded = false;
+    var _siteEditorLoaded = false;
     var _bulkEventsMode = 'gcr';
 
     function setBulkEventsMode(mode) {
@@ -6278,6 +6572,406 @@
       }
     }
 
+    // ════════════════════════════════════════════════════════
+    // GCR SITE EDITOR
+    // ════════════════════════════════════════════════════════
+
+    var _siteHeroTags = [];
+    var _siteCatCards = {};
+
+    var GCR_ALL_PAGES = [
+      { id: 'restaurants',   label: 'Restaurants',       emoji: '🍽️' },
+      { id: 'coffee-sweets', label: 'Coffee & Sweets',   emoji: '☕' },
+      { id: 'happy-hours',   label: 'Happy Hours',       emoji: '🍻' },
+      { id: 'specials',      label: 'Specials',          emoji: '🏷️' },
+      { id: 'events',        label: 'Events',            emoji: '🎉' },
+      { id: 'things-to-do',  label: 'Things To Do',      emoji: '🎯' },
+      { id: 'shopping',      label: 'Shopping',          emoji: '🛍️' },
+      { id: 'public-spots',  label: 'Public Spots',      emoji: '✨' },
+      { id: 'nightlife',     label: 'Bars & Nightlife',  emoji: '🎶' },
+      { id: 'artists',       label: 'Local Artists',     emoji: '🎸' },
+      { id: 'feed',          label: 'Live Feed',         emoji: '📡' },
+    ];
+
+    var GCR_CAT_DEFAULTS = {
+      'restaurants':   { label: 'Restaurants',      desc: 'Seafood, Southern, waterfront & more',       emoji: '🍽️', gradient: 'linear-gradient(135deg,#0b7a75,#065f5b)' },
+      'coffee-sweets': { label: 'Coffee & Sweets',  desc: 'Coffee shops, ice cream & bakeries',         emoji: '☕', gradient: 'linear-gradient(135deg,#7c4f2a,#5d3a1f)' },
+      'happy-hours':   { label: 'Happy Hours',      desc: 'Drink deals & food specials near you',       emoji: '🍻', gradient: 'linear-gradient(135deg,#c9831f,#a0621a)' },
+      'specials':      { label: 'Specials',         desc: 'All you can eat, daily deals & more',        emoji: '🏷️', gradient: 'linear-gradient(135deg,#c0392b,#922b21)' },
+      'events':        { label: 'Events',           desc: 'Live music, concerts & festivals',           emoji: '🎉', gradient: 'linear-gradient(135deg,#6c3483,#5b2c6f)' },
+      'things-to-do':  { label: 'Things To Do',     desc: 'Fishing, boat rentals, tours & fun',        emoji: '🎯', gradient: 'linear-gradient(135deg,#1a6496,#134f78)' },
+      'shopping':      { label: 'Shopping',         desc: 'Boutiques, souvenirs & gifts',               emoji: '🛍️', gradient: 'linear-gradient(135deg,#1e8449,#186038)' },
+      'public-spots':  { label: 'Public Spots',     desc: 'Parks, beaches, piers & more',               emoji: '✨', gradient: 'linear-gradient(135deg,#2e4057,#1a2d44)' },
+      'nightlife':     { label: 'Bars & Nightlife', desc: 'Bars, clubs, live music & late nights',      emoji: '🎶', gradient: 'linear-gradient(135deg,#2c1654,#1a0f3d)' },
+      'artists':       { label: 'Local Artists',    desc: 'Musicians, performers & local talent',       emoji: '🎸', gradient: 'linear-gradient(135deg,#1a7a82,#0f5560)' },
+      'feed':          { label: 'Live Feed',        desc: "Photos, reviews & what's happening",         emoji: '📡', gradient: 'linear-gradient(135deg,#0b7a75,#065f5b)' },
+    };
+
+    function switchSiteTab(tab) {
+      ['hero','cards','pages','top5'].forEach(function(t) {
+        var btn = document.getElementById('sitetab-' + t);
+        var con = document.getElementById('sitetab-' + t + '-content');
+        if (!btn || !con) return;
+        if (t === tab) {
+          btn.style.borderBottomColor = 'var(--primary)'; btn.style.color = 'var(--text)'; btn.style.fontWeight = '600';
+          con.style.display = '';
+        } else {
+          btn.style.borderBottomColor = 'transparent'; btn.style.color = 'var(--text-muted)'; btn.style.fontWeight = 'normal';
+          con.style.display = 'none';
+        }
+      });
+      if (tab === 'cards') renderCatCardsEditor();
+      if (tab === 'pages') loadPageHeaderEditor();
+      if (tab === 'top5') loadTop5Editor();
+    }
+
+    async function loadSiteEditor() {
+      var token = getAuthToken();
+      try {
+        var [cfgRes, cardsRes] = await Promise.all([
+          fetch(API_BASE + '/api/admin/gcr/site-config', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(API_BASE + '/api/admin/gcr/category-cards', { headers: { 'Authorization': 'Bearer ' + token } }),
+        ]);
+        if (cfgRes.ok) {
+          var d = await cfgRes.json();
+          var hero = d.config && d.config.hero ? d.config.hero : {};
+          document.getElementById('hero-eyebrow').value = hero.eyebrow || '';
+          document.getElementById('hero-title').value = hero.title || '';
+          document.getElementById('hero-subtitle').value = hero.subtitle || '';
+          document.getElementById('hero-bg-url').value = hero.bg_image || '';
+          _siteHeroTags = Array.isArray(hero.quick_tags) ? hero.quick_tags : [
+            {emoji:'🦀',label:'Crab Legs'},{emoji:'🍻',label:'Happy Hour'},{emoji:'🐟',label:'Seafood'},
+            {emoji:'🚤',label:'Boat Rental'},{emoji:'🎸',label:'Live Music'},{emoji:'🍽️',label:'All You Can Eat'},
+            {emoji:'👨‍👩‍👧',label:'Family Friendly'},{emoji:'🎣',label:'Fishing'}
+          ];
+          renderHeroTags();
+          updateHeroBgPreview();
+        }
+        if (cardsRes.ok) {
+          var cd = await cardsRes.json();
+          (cd.cards || []).forEach(function(c) { _siteCatCards[c.category_id] = c; });
+        }
+      } catch(e) { toast('Could not load site config', 'error'); }
+    }
+
+    // ── HERO SECTION ─────────────────────────────────────────
+
+    function renderHeroTags() {
+      var el = document.getElementById('hero-tags-list');
+      if (!el) return;
+      el.innerHTML = _siteHeroTags.map(function(t, i) {
+        return '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:999px;font-size:13px;">' +
+          escHtml(t.emoji) + ' ' + escHtml(t.label) +
+          '<button onclick="removeHeroTag(' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:0;line-height:1;">×</button>' +
+          '</span>';
+      }).join('');
+    }
+
+    function addHeroTag() {
+      var emoji = document.getElementById('hero-tag-emoji').value.trim();
+      var label = document.getElementById('hero-tag-label').value.trim();
+      if (!label) return;
+      _siteHeroTags.push({ emoji: emoji || '🔍', label });
+      document.getElementById('hero-tag-emoji').value = '';
+      document.getElementById('hero-tag-label').value = '';
+      renderHeroTags();
+    }
+
+    function removeHeroTag(idx) {
+      _siteHeroTags.splice(idx, 1);
+      renderHeroTags();
+    }
+
+    function updateHeroBgPreview() {
+      var url = document.getElementById('hero-bg-url').value.trim();
+      var prev = document.getElementById('hero-bg-preview');
+      if (url && prev) {
+        prev.style.display = '';
+        prev.style.backgroundImage = 'url(' + url + ')';
+      } else if (prev) { prev.style.display = 'none'; }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var bgInput = document.getElementById('hero-bg-url');
+      if (bgInput) bgInput.addEventListener('input', updateHeroBgPreview);
+    });
+
+    async function saveHeroConfig() {
+      var token = getAuthToken();
+      var value = {
+        eyebrow: document.getElementById('hero-eyebrow').value,
+        title: document.getElementById('hero-title').value,
+        subtitle: document.getElementById('hero-subtitle').value,
+        bg_image: document.getElementById('hero-bg-url').value,
+        quick_tags: _siteHeroTags,
+      };
+      var res = await fetch(API_BASE + '/api/admin/gcr/site-config/hero', {
+        method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+      });
+      res.ok ? toast('Hero section saved!', 'success') : toast('Save failed', 'error');
+    }
+
+    // ── CATEGORY CARDS ────────────────────────────────────────
+
+    function renderCatCardsEditor() {
+      var grid = document.getElementById('site-cat-cards-grid');
+      if (!grid) return;
+      grid.innerHTML = GCR_ALL_PAGES.map(function(p) {
+        var saved = _siteCatCards[p.id] || {};
+        var def = GCR_CAT_DEFAULTS[p.id] || {};
+        var imgUrl = saved.image_url || '';
+        var gradient = saved.color_gradient || def.gradient || '';
+        var previewBg = imgUrl
+          ? 'url(' + imgUrl + ') center/cover no-repeat'
+          : gradient;
+        return '<div class="card" style="padding:20px;" data-card-id="' + p.id + '">' +
+          '<div style="height:80px;border-radius:10px;margin-bottom:14px;background:' + escHtml(previewBg) + ';display:flex;align-items:center;justify-content:center;font-size:36px;" id="card-preview-' + p.id + '">' +
+            (imgUrl ? '' : (saved.emoji || def.emoji || p.emoji)) +
+          '</div>' +
+          '<div style="display:grid;gap:10px;">' +
+            '<div style="display:flex;gap:8px;">' +
+              '<div style="flex:0 0 60px;"><label style="font-size:11px;color:var(--text-muted);">Emoji</label><input id="cc-emoji-' + p.id + '" value="' + escHtml(saved.emoji || def.emoji || p.emoji) + '" style="width:100%;padding:7px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:18px;text-align:center;" oninput="updateCardPreview(\'' + p.id + '\')"></div>' +
+              '<div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);">Name</label><input id="cc-label-' + p.id + '" value="' + escHtml(saved.label || def.label || p.label) + '" style="width:100%;padding:7px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;"></div>' +
+            '</div>' +
+            '<div><label style="font-size:11px;color:var(--text-muted);">Description</label><input id="cc-desc-' + p.id + '" value="' + escHtml(saved.description || def.desc || '') + '" style="width:100%;padding:7px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>' +
+            '<div><label style="font-size:11px;color:var(--text-muted);">Background Gradient (CSS)</label><input id="cc-grad-' + p.id + '" value="' + escHtml(gradient) + '" placeholder="linear-gradient(135deg,#0b7a75,#065f5b)" style="width:100%;padding:7px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;" oninput="updateCardPreview(\'' + p.id + '\')"></div>' +
+            '<div style="display:flex;gap:6px;align-items:flex-end;">' +
+              '<div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);">Image URL (overrides gradient)</label><input id="cc-img-' + p.id + '" value="' + escHtml(imgUrl) + '" placeholder="https://..." style="width:100%;padding:7px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;" oninput="updateCardPreview(\'' + p.id + '\')"></div>' +
+              '<button onclick="siteEditorUpload(\'cc-img-' + p.id + '\', \'' + p.id + '\')" class="btn btn-outline btn-sm" style="white-space:nowrap;">📁 Upload</button>' +
+            '</div>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    function updateCardPreview(catId) {
+      var imgUrl = (document.getElementById('cc-img-' + catId) || {}).value || '';
+      var gradient = (document.getElementById('cc-grad-' + catId) || {}).value || '';
+      var emoji = (document.getElementById('cc-emoji-' + catId) || {}).value || '';
+      var prev = document.getElementById('card-preview-' + catId);
+      if (!prev) return;
+      if (imgUrl) {
+        prev.style.background = 'url(' + imgUrl + ') center/cover no-repeat';
+        prev.textContent = '';
+      } else {
+        prev.style.background = gradient;
+        prev.textContent = emoji;
+      }
+    }
+
+    async function saveCategoryCards() {
+      var token = getAuthToken();
+      var promises = GCR_ALL_PAGES.map(function(p) {
+        var payload = {
+          label: (document.getElementById('cc-label-' + p.id) || {}).value || '',
+          description: (document.getElementById('cc-desc-' + p.id) || {}).value || '',
+          emoji: (document.getElementById('cc-emoji-' + p.id) || {}).value || '',
+          image_url: (document.getElementById('cc-img-' + p.id) || {}).value || '',
+          color_gradient: (document.getElementById('cc-grad-' + p.id) || {}).value || '',
+        };
+        return fetch(API_BASE + '/api/admin/gcr/category-cards/' + p.id, {
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      });
+      await Promise.all(promises);
+      toast('Category cards saved!', 'success');
+    }
+
+    // ── PAGE HEADERS ──────────────────────────────────────────
+
+    async function loadPageHeaderEditor() {
+      var catId = document.getElementById('ph-page-select').value;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/category-page-config/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) return;
+        var d = await res.json();
+        var cfg = d.config || {};
+        document.getElementById('ph-title').value = cfg.page_title || '';
+        document.getElementById('ph-description').value = cfg.page_description || '';
+        document.getElementById('ph-image-url').value = cfg.hero_image_url || '';
+        updatePhImgPreview();
+      } catch(e) {}
+    }
+
+    function updatePhImgPreview() {
+      var url = (document.getElementById('ph-image-url') || {}).value || '';
+      var prev = document.getElementById('ph-img-preview');
+      if (url && prev) { prev.style.display = ''; prev.style.backgroundImage = 'url(' + url + ')'; }
+      else if (prev) { prev.style.display = 'none'; }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('ph-image-url');
+      if (el) el.addEventListener('input', updatePhImgPreview);
+    });
+
+    async function savePageHeader() {
+      var catId = document.getElementById('ph-page-select').value;
+      var token = getAuthToken();
+      var payload = {
+        page_title: document.getElementById('ph-title').value,
+        page_description: document.getElementById('ph-description').value,
+        hero_image_url: document.getElementById('ph-image-url').value,
+      };
+      var res = await fetch(API_BASE + '/api/admin/gcr/category-page-config/' + catId, {
+        method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      res.ok ? toast('Page header saved!', 'success') : toast('Save failed', 'error');
+    }
+
+    // ── TOP 5 PER PAGE ────────────────────────────────────────
+
+    var _top5Assignments = [];
+
+    async function loadTop5Editor() {
+      var catId = document.getElementById('top5-page-select').value;
+      var token = getAuthToken();
+      var body = document.getElementById('top5-editor-body');
+      body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = res.ok ? await res.json() : { assignments: [] };
+        _top5Assignments = d.assignments || [];
+        renderTop5Editor(catId);
+      } catch(e) { body.innerHTML = '<div style="color:var(--text-muted);">Could not load.</div>'; }
+    }
+
+    function renderTop5Editor(catId) {
+      var body = document.getElementById('top5-editor-body');
+      if (!_top5Assignments.length) {
+        body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No businesses assigned to this page yet. Use the "Pages" tab in the Entity Editor to add businesses.</div>';
+        return;
+      }
+      var html = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">Check "Featured" and set a position (1–5) to pin a business at the top. Uncheck to keep it on the page but not featured.</div>';
+      html += '<div style="display:grid;gap:8px;">';
+      _top5Assignments.forEach(function(a, i) {
+        var ent = a.entity || {};
+        html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">' +
+          '<input type="checkbox" id="top5-feat-' + i + '" ' + (a.is_featured ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--primary);">' +
+          (ent.hero_image_url ? '<img src="' + escHtml(ent.hero_image_url) + '" style="width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0;">' : '<div style="width:44px;height:44px;border-radius:6px;background:var(--card-border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">🏢</div>') +
+          '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(ent.name || 'Unknown') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(ent.entity_subtype || '') + (ent.city ? ' · ' + ent.city : '') + '</div></div>' +
+          '<label style="font-size:12px;color:var(--text-muted);">Pos:</label>' +
+          '<input type="number" id="top5-pos-' + i + '" value="' + (a.sort_order || 0) + '" min="1" max="5" style="width:52px;padding:6px 8px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;text-align:center;">' +
+          '</div>';
+      });
+      html += '</div>';
+      html += '<div style="margin-top:16px;"><button onclick="saveTop5(\'' + catId + '\')" class="btn btn-primary">Save Featured Order</button></div>';
+      body.innerHTML = html;
+    }
+
+    async function saveTop5(catId) {
+      var token = getAuthToken();
+      var orders = _top5Assignments.map(function(a, i) {
+        return {
+          entity_id: a.entity_id,
+          sort_order: parseInt(document.getElementById('top5-pos-' + i).value) || 0,
+          is_featured: document.getElementById('top5-feat-' + i).checked,
+        };
+      });
+      var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId + '/order', {
+        method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders })
+      });
+      res.ok ? toast('Featured order saved!', 'success') : toast('Save failed', 'error');
+    }
+
+    // ── IMAGE UPLOAD HELPER ───────────────────────────────────
+
+    function siteEditorUpload(targetInputId, cardId) {
+      var input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.onchange = async function() {
+        var file = input.files[0]; if (!file) return;
+        var token = getAuthToken();
+        var formData = new FormData(); formData.append('file', file);
+        try {
+          var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+          var d = await r.json();
+          if (!r.ok) { toast(d.error || 'Upload failed', 'error'); return; }
+          var el = document.getElementById(targetInputId);
+          if (el) { el.value = d.url; el.dispatchEvent(new Event('input')); }
+          if (cardId) updateCardPreview(cardId);
+          toast('Image uploaded!', 'success');
+        } catch(e) { toast(e.message, 'error'); }
+      };
+      input.click();
+    }
+
+    // ── ENTITY PAGES TAB ─────────────────────────────────────
+
+    var _entPageAssignments = [];
+
+    async function loadEntPages() {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      var container = document.getElementById('ent-pages-list');
+      container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = res.ok ? await res.json() : { assignments: [] };
+        _entPageAssignments = d.assignments || [];
+        renderEntPages();
+      } catch(e) { container.innerHTML = '<div style="color:var(--text-muted);">Could not load.</div>'; }
+    }
+
+    function renderEntPages() {
+      var container = document.getElementById('ent-pages-list');
+      container.innerHTML = GCR_ALL_PAGES.map(function(p) {
+        var existing = _entPageAssignments.find(function(a) { return a.category_id === p.id; });
+        var checked = !!existing;
+        var featured = existing ? existing.is_featured : false;
+        var pos = existing ? (existing.sort_order || 1) : 1;
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">' +
+          '<input type="checkbox" id="ep-check-' + p.id + '" ' + (checked ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--primary);" onchange="toggleEntPageRow(\'' + p.id + '\')">' +
+          '<span style="font-size:18px;">' + p.emoji + '</span>' +
+          '<span style="flex:1;font-size:14px;font-weight:500;">' + escHtml(p.label) + '</span>' +
+          '<div id="ep-featured-row-' + p.id + '" style="display:' + (checked ? 'flex' : 'none') + ';align-items:center;gap:8px;">' +
+            '<input type="checkbox" id="ep-feat-' + p.id + '" ' + (featured ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:#f59e0b;">' +
+            '<label for="ep-feat-' + p.id + '" style="font-size:12px;color:var(--text-muted);">Featured</label>' +
+            '<input type="number" id="ep-pos-' + p.id + '" value="' + pos + '" min="1" max="5" placeholder="1-5" style="width:52px;padding:5px 7px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;text-align:center;">' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function toggleEntPageRow(pageId) {
+      var checked = document.getElementById('ep-check-' + pageId).checked;
+      var featRow = document.getElementById('ep-featured-row-' + pageId);
+      if (featRow) featRow.style.display = checked ? 'flex' : 'none';
+    }
+
+    async function saveEntPages() {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      var currentIds = new Set(_entPageAssignments.map(function(a) { return a.category_id; }));
+      var promises = [];
+
+      GCR_ALL_PAGES.forEach(function(p) {
+        var checked = document.getElementById('ep-check-' + p.id).checked;
+        var featured = (document.getElementById('ep-feat-' + p.id) || {}).checked || false;
+        var pos = parseInt((document.getElementById('ep-pos-' + p.id) || {}).value) || 1;
+
+        if (checked) {
+          promises.push(fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId, {
+            method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category_id: p.id, sort_order: pos, is_featured: featured })
+          }));
+        } else if (currentIds.has(p.id)) {
+          promises.push(fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId + '/' + p.id, {
+            method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+          }));
+        }
+      });
+
+      await Promise.all(promises);
+      await loadEntPages();
+      toast('Page assignments saved!', 'success');
+    }
+
     // ── Image upload to GCR sections ──────────────────────────
     // Supports both URL input and file upload (base64 → Supabase storage)
     async function uploadImageToSection(sectionId, caption) {
@@ -6307,9 +7001,335 @@
       }
     }
 
+    // ── INTEGRATIONS ──────────────────────────────────────────
+
+    // Shared utilities for components
+    function escapeHtml(text) {
+      if (!text) return '';
+      var d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+    function escapeAttr(text) {
+      if (!text) return '';
+      return text.replace(/"/g, '&quot;');
+    }
+    function openComponent(id) {
+      var el = document.getElementById('comp-' + id);
+      if (el) el.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeComponent(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Add component styles to page
+    function ensureComponentStyles() {
+      if (document.getElementById('comp-integration-styles')) return;
+      var style = document.createElement('style');
+      style.id = 'comp-integration-styles';
+      style.textContent = `
+        .comp-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          z-index: 2000;
+          overflow-y: auto;
+          padding: 20px;
+        }
+        .comp-overlay.open { display: block; }
+        .comp-modal {
+          background: #fff;
+          border-radius: 16px;
+          max-width: 680px;
+          margin: 0 auto;
+          overflow: hidden;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .comp-modal-header {
+          padding: 18px 20px;
+          border-bottom: 1px solid #eee;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: sticky;
+          top: 0;
+          background: #fff;
+          z-index: 10;
+        }
+        .comp-modal-header h2 { font-size: 1.2rem; font-weight: 700; margin: 0; }
+        .comp-close {
+          width: 32px; height: 32px;
+          border-radius: 50%;
+          border: none;
+          background: #f0f0f0;
+          font-size: 1rem;
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          color: #555;
+          flex-shrink: 0;
+        }
+        .comp-close:hover { background: #ddd; }
+        .comp-ea-no-url, .comp-ea-loading {
+          padding: 40px 20px;
+          text-align: center;
+          color: #999;
+          font-size: 13px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Initialize component styles on page load
+    ensureComponentStyles();
+
+    // Cal.com preview
+    window.renderBooking = function(config) {
+      var body = document.getElementById('comp-booking-body');
+      if (!body) return;
+      if (!config || !config.calLink) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Cal.com URL configured</div>';
+        return;
+      }
+      body.innerHTML = '<iframe src="' + escapeAttr(config.calLink) + '" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+    };
+
+    // Easy!Appointments preview
+    window.renderEasyAppt = function(config) {
+      var body = document.getElementById('comp-ea-body');
+      if (!body) return;
+      if (!config || !config.eaUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Easy!Appointments URL configured</div>';
+        return;
+      }
+      body.innerHTML = '<iframe src="' + escapeAttr(config.eaUrl) + '" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+    };
+
+    // Rallly preview
+    window.renderRallly = function(config) {
+      var body = document.getElementById('comp-rallly-body');
+      if (!body) return;
+      if (!config || !config.ralllyUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Rallly URL configured</div>';
+        return;
+      }
+      body.innerHTML = '<a href="' + escapeAttr(config.ralllyUrl) + '" target="_blank" style="display:block;padding:40px 20px;text-align:center;text-decoration:none;"><button style="padding:14px 28px;background:#0b7a75;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;">Open Polling →</button></a>';
+    };
+
+    // Open Food Network preview
+    window.renderFoodOrder = function(config) {
+      var body = document.getElementById('comp-food-body');
+      if (!body) return;
+      if (!config || !config.foodUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Online Ordering URL configured</div>';
+        return;
+      }
+      body.innerHTML = '<a href="' + escapeAttr(config.foodUrl) + '" target="_blank" style="display:block;padding:40px 20px;text-align:center;text-decoration:none;"><button style="padding:14px 28px;background:#2d8a4e;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;">Order Now →</button></a>';
+    };
+
+    // Frappe preview
+    window.renderFrappe = function(config) {
+      var body = document.getElementById('comp-frappe-body');
+      if (!body) return;
+      if (!config || !config.frappeUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Frappe URL configured</div>';
+        return;
+      }
+      var base = config.frappeUrl.replace(/\/$/, '');
+      body.innerHTML = '<iframe src="' + escapeAttr(base + '/restaurant/menu') + '" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+    };
+
+    // Castopod preview
+    window.renderCastopod = function(config) {
+      var body = document.getElementById('comp-castopod-body');
+      if (!body) return;
+      if (!config || !config.castopodUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Castopod embed URL configured</div>';
+        return;
+      }
+      body.innerHTML = '<iframe src="' + escapeAttr(config.castopodUrl) + '" style="width:100%;height:300px;border:none;border-radius:8px;" allow="autoplay"></iframe>';
+    };
+
+    // Alf.io preview
+    window.renderAlfio = function(config) {
+      var body = document.getElementById('comp-alfio-body');
+      if (!body) return;
+      if (!config || !config.alfioUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Alf.io URL configured</div>';
+        return;
+      }
+      var base = config.alfioUrl.replace(/\/$/, '');
+      var eventSlug = config.alfioSlug || 'event';
+      body.innerHTML = '<iframe src="' + escapeAttr(base + '/event/' + eventSlug) + '" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+    };
+
+    // Open Loyalty preview
+    window.renderLoyalty = function(config) {
+      var body = document.getElementById('comp-loyalty-body');
+      if (!body) return;
+      if (!config || !config.loyaltyUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">No Open Loyalty URL configured</div>';
+        return;
+      }
+      body.innerHTML = '<div style="padding:20px;"><div style="padding:24px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px;color:#fff;text-align:center;"><div style="font-size:2.5rem;font-weight:700;margin-bottom:4px;">0</div><div style="font-size:0.85rem;opacity:0.9;">Points (Demo)</div></div><div style="padding:20px;text-align:center;font-size:13px;color:#999;">Connect your loyalty account to see real points</div></div>';
+    };
+
+    // Main preview function
+    window.previewIntegration = function(toolId) {
+      var config = {};
+      switch(toolId) {
+        case 'cal':
+          config = { calLink: document.getElementById('int-cal-link').value };
+          renderBooking(config);
+          break;
+        case 'ea':
+          config = { eaUrl: document.getElementById('int-ea-url').value };
+          renderEasyAppt(config);
+          break;
+        case 'rallly':
+          config = { ralllyUrl: document.getElementById('int-rallly-url').value };
+          renderRallly(config);
+          break;
+        case 'food':
+          config = { foodUrl: document.getElementById('int-food-url').value };
+          renderFoodOrder(config);
+          break;
+        case 'frappe':
+          config = { frappeUrl: document.getElementById('int-frappe-url').value };
+          renderFrappe(config);
+          break;
+        case 'castopod':
+          config = { castopodUrl: document.getElementById('int-castopod-url').value };
+          renderCastopod(config);
+          break;
+        case 'alfio':
+          config = { alfioUrl: document.getElementById('int-alfio-url').value, alfioSlug: document.getElementById('int-alfio-slug').value };
+          renderAlfio(config);
+          break;
+        case 'loyalty':
+          config = { loyaltyUrl: document.getElementById('int-loyalty-url').value };
+          renderLoyalty(config);
+          break;
+        case 'table':
+          openIntegrationModal('table');
+          return;
+      }
+      openIntegrationModal(toolId);
+    };
+
+    // Helper to open modal
+    window.openIntegrationModal = function(toolId) {
+      var el = document.getElementById('comp-' + toolId);
+      if (el) openComponent(toolId);
+    };
+
+    // Add component overlay HTML to page
+    function ensureComponentHTML() {
+      if (document.getElementById('comp-booking')) return;
+      var html = `
+        <div class="comp-overlay" id="comp-booking">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>📅 Booking</h2>
+              <button class="comp-close" onclick="closeComponent('comp-booking')">✕</button>
+            </div>
+            <div id="comp-booking-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-ea">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>⏰ Appointments</h2>
+              <button class="comp-close" onclick="closeComponent('comp-ea')">✕</button>
+            </div>
+            <div id="comp-ea-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-rallly">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>🗳️ Polling</h2>
+              <button class="comp-close" onclick="closeComponent('comp-rallly')">✕</button>
+            </div>
+            <div id="comp-rallly-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-table">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>🍽️ Reservations</h2>
+              <button class="comp-close" onclick="closeComponent('comp-table')">✕</button>
+            </div>
+            <div style="padding:40px 20px;text-align:center;color:#999;"><p>Table reservation form preview</p><p style="font-size:12px;">In production, this shows a date/time/party picker</p></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-food">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>🛒 Ordering</h2>
+              <button class="comp-close" onclick="closeComponent('comp-food')">✕</button>
+            </div>
+            <div id="comp-food-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-frappe">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>🍱 Restaurant</h2>
+              <button class="comp-close" onclick="closeComponent('comp-frappe')">✕</button>
+            </div>
+            <div id="comp-frappe-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-castopod">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>🎙️ Podcast</h2>
+              <button class="comp-close" onclick="closeComponent('comp-castopod')">✕</button>
+            </div>
+            <div id="comp-castopod-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-alfio">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>🎟️ Tickets</h2>
+              <button class="comp-close" onclick="closeComponent('comp-alfio')">✕</button>
+            </div>
+            <div id="comp-alfio-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+        <div class="comp-overlay" id="comp-loyalty">
+          <div class="comp-modal">
+            <div class="comp-modal-header">
+              <h2>⭐ Loyalty</h2>
+              <button class="comp-close" onclick="closeComponent('comp-loyalty')">✕</button>
+            </div>
+            <div id="comp-loyalty-body"><div class="comp-ea-loading">Loading...</div></div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Close on overlay click
+    document.addEventListener('click', function(e) {
+      if (e.target.classList && e.target.classList.contains('comp-overlay')) {
+        e.target.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Initialize on page load
+    ensureComponentHTML();
+
     // ── INIT ──────────────────────────────────────────
     loadOverview();
     updateBulkFormatHelp();
   </script>
+  <script src="js/wavegent-tab.js"></script>
 </body>
 </html>
