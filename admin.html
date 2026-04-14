@@ -4426,12 +4426,37 @@
 
     async function saveBizDashProfile() {
       var token = getAuthToken();
-      var hours = {};
-      ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d){ hours[d] = (document.getElementById('bd-hours-' + d)||{}).value || ''; });
-      var b = { name: document.getElementById('bd-prof-name').value, type: document.getElementById('bd-prof-type').value, status: document.getElementById('bd-prof-status').value, emoji: document.getElementById('bd-prof-emoji').value, tagline: document.getElementById('bd-prof-tagline').value, price_range: document.getElementById('bd-prof-pricerange').value, instagram: document.getElementById('bd-prof-instagram').value, facebook: document.getElementById('bd-prof-facebook').value, tiktok: document.getElementById('bd-prof-tiktok').value, kids_friendly: document.getElementById('bd-flag-kids').checked, pet_friendly: document.getElementById('bd-flag-pets').checked, live_music: document.getElementById('bd-flag-livemusic').checked, outdoor_seating: document.getElementById('bd-flag-outdoor').checked, reservations: document.getElementById('bd-flag-reservations').checked, delivery: document.getElementById('bd-flag-delivery').checked, takeout: document.getElementById('bd-flag-takeout').checked, alcohol: document.getElementById('bd-flag-alcohol').checked, waterfront: document.getElementById('bd-flag-waterfront').checked };
-      var c = { about_text: document.getElementById('bd-prof-description').value, address: document.getElementById('bd-prof-address').value, city: document.getElementById('bd-prof-city').value, state: document.getElementById('bd-prof-state').value, zip: document.getElementById('bd-prof-zip').value, phone: document.getElementById('bd-prof-phone').value, email: document.getElementById('bd-prof-email').value, website: document.getElementById('bd-prof-website').value, hours: hours };
+      var entity = {
+        name:             (document.getElementById('bd-prof-name')||{}).value,
+        entity_type:      (document.getElementById('bd-prof-type')||{}).value,
+        icon:             (document.getElementById('bd-prof-emoji')||{}).value,
+        subtitle:         (document.getElementById('bd-prof-tagline')||{}).value,
+        price_range:      (document.getElementById('bd-prof-pricerange')||{}).value,
+        description:      (document.getElementById('bd-prof-description')||{}).value,
+        address_line_1:   (document.getElementById('bd-prof-address')||{}).value,
+        city:             (document.getElementById('bd-prof-city')||{}).value,
+        state:            (document.getElementById('bd-prof-state')||{}).value,
+        zip:              (document.getElementById('bd-prof-zip')||{}).value,
+        phone:            (document.getElementById('bd-prof-phone')||{}).value,
+        email:            (document.getElementById('bd-prof-email')||{}).value,
+        website_url:      (document.getElementById('bd-prof-website')||{}).value,
+        social_instagram: (document.getElementById('bd-prof-instagram')||{}).value,
+        social_facebook:  (document.getElementById('bd-prof-facebook')||{}).value,
+        social_tiktok:    (document.getElementById('bd-prof-tiktok')||{}).value,
+        kids_friendly:    (document.getElementById('bd-flag-kids')||{}).checked,
+        pet_friendly:     (document.getElementById('bd-flag-pets')||{}).checked,
+        live_music:       (document.getElementById('bd-flag-livemusic')||{}).checked,
+        outdoor_seating:  (document.getElementById('bd-flag-outdoor')||{}).checked,
+        reservations:     (document.getElementById('bd-flag-reservations')||{}).checked,
+        delivery:         (document.getElementById('bd-flag-delivery')||{}).checked,
+        takeout:          (document.getElementById('bd-flag-takeout')||{}).checked,
+        alcohol:          (document.getElementById('bd-flag-alcohol')||{}).checked,
+        waterfront:       (document.getElementById('bd-flag-waterfront')||{}).checked,
+        is_active:        (document.getElementById('bd-gcr-listed')||{}).checked,
+        featured:         (document.getElementById('bd-gcr-featured')||{}).checked,
+      };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: { name: b.name, description: c.about_text, phone: c.phone, email: c.email, website_url: c.website, address_line_1: c.address, city: c.city, state: c.state, zip: c.zip, social_instagram: b.instagram, social_facebook: b.facebook, social_tiktok: b.tiktok, price_range: b.price_range } }) });
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast('Profile saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
