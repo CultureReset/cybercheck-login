@@ -329,6 +329,7 @@
                 <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Hero Image URL</label><input id="ent-hero" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Website URL</label><input id="ent-website" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Directions URL</label><input id="ent-directions" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Booking URL <span style="color:var(--primary);font-size:11px;">(Book Now button)</span></label><input id="ent-booking" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Address</label><input id="ent-address" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">City</label><input id="ent-city" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">State</label><input id="ent-state" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -5067,7 +5068,7 @@
         sv('ent-name', e.name); sv('ent-slug', e.slug); sv('ent-subtitle', e.subtitle);
         sv('ent-subtype', e.entity_subtype); sv('ent-icon', e.icon); sv('ent-phone', e.phone);
         sv('ent-rating', e.rating); sv('ent-review-count', e.review_count);
-        sv('ent-hero', e.hero_image_url); sv('ent-website', e.website_url); sv('ent-directions', e.directions_url);
+        sv('ent-hero', e.hero_image_url); sv('ent-website', e.website_url); sv('ent-directions', e.directions_url); sv('ent-booking', e.booking_url);
         sv('ent-address', e.address_line_1); sv('ent-city', e.city); sv('ent-state', e.state); sv('ent-zip', e.zip);
         document.getElementById('ent-active').checked = e.is_active !== false;
         document.getElementById('ent-sponsored').checked = e.is_sponsored === true;
@@ -5119,6 +5120,7 @@
         hero_image_url: document.getElementById('ent-hero').value,
         website_url: document.getElementById('ent-website').value,
         directions_url: document.getElementById('ent-directions').value,
+        booking_url: document.getElementById('ent-booking').value || null,
         address_line_1: document.getElementById('ent-address').value,
         city: document.getElementById('ent-city').value,
         state: document.getElementById('ent-state').value,
@@ -5142,7 +5144,7 @@
       _currentEntityId = null;
       document.getElementById('ent-editor-title').textContent = 'New Entity';
       document.getElementById('ent-editor-slug').textContent = '';
-      ['ent-name','ent-slug','ent-subtitle','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions'].forEach(function(id) {
+      ['ent-name','ent-slug','ent-subtitle','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions','ent-booking'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
       });
       _currentEntityTags = []; _currentEntityFeatures = []; _currentEntityPF = []; _currentEntitySections = [];
