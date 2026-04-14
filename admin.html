@@ -2858,7 +2858,7 @@
       var status = document.getElementById('gcr-status-filter').value;
       var filtered = _allGCRBusinesses.filter(function(b) {
         if (search && !(b.name || '').toLowerCase().includes(search)) return false;
-        if (cat && b.type !== cat) return false;
+        if (cat && b.entity_type !== cat) return false;
         if (status && b.status !== status) return false;
         return true;
       });
@@ -2870,12 +2870,12 @@
       if (!b) return;
       document.getElementById('gcr-edit-site-id').value = b.site_id;
       document.getElementById('gcr-edit-name').value = b.name || '';
-      document.getElementById('gcr-edit-type').value = b.type || 'other';
+      document.getElementById('gcr-edit-type').value = b.entity_type || 'other';
       document.getElementById('gcr-edit-status').value = b.status || 'active';
-      document.getElementById('gcr-edit-emoji').value = b.emoji || '';
-      document.getElementById('gcr-edit-instagram').value = b.instagram || '';
-      document.getElementById('gcr-edit-facebook').value = b.facebook || '';
-      document.getElementById('gcr-edit-tiktok').value = b.tiktok || '';
+      document.getElementById('gcr-edit-emoji').value = b.icon || '';
+      document.getElementById('gcr-edit-instagram').value = b.social_instagram || '';
+      document.getElementById('gcr-edit-facebook').value = b.social_facebook || '';
+      document.getElementById('gcr-edit-tiktok').value = b.social_tiktok || '';
       document.getElementById('gcr-edit-featured').checked = !!b.featured;
       document.getElementById('editGCRModal').style.display = 'block';
     }
@@ -3638,10 +3638,10 @@
         renderMenuItems();
         renderDrinkItems();
         // Specials
-        _bizSpecials = (_bizEditorData.specials || []).map(function(s) { return { id: s.id, name: s.name, description: s.description || '', day: s.day_of_week || '', time: s.time_range || '', discount: s.discount_text || '' }; });
+        _bizSpecials = (_bizEditorData.specials || []).map(function(s) { return { id: s.id, special_name: s.special_name, description: s.description || '', days: s.days || '', start_time: s.start_time || '', end_time: s.end_time || '', discount: s.discount_text || '' }; });
         renderBizSpecials();
         // Events
-        _bizEvents = (_bizEditorData.events || []).map(function(e) { return { id: e.id, name: e.name, description: e.description || '', date: e.event_date || '', time: e.event_time || '', location: e.location || '', image_url: e.image_url || '' }; });
+        _bizEvents = (_bizEditorData.events || []).map(function(e) { return { id: e.id, event_name: e.event_name, description: e.description || '', date: e.event_date || '', start_time: e.start_time || '', location: e.location || '', image_url: e.image_url || '' }; });
         renderBizEvents();
         // Photos
         renderBizPhotos(_bizEditorData.media || []);
@@ -3663,7 +3663,7 @@
         '<div style="display:grid;grid-template-columns:2fr 1.5fr 1fr auto;gap:8px;align-items:start;">' +
         '<div>' +
           '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Name</div>' +
-          '<input type="text" value="' + escHtml(item.name || '') + '" onchange="updateBizItem(' + index + ',\'name\',this.value,\'' + (isDrink?'drink':'menu') + '\')" style="' + _inputStyle + '">' +
+          '<input type="text" value="' + escHtml(item.item_name || '') + '" onchange="updateBizItem(' + index + ',\'item_name\',this.value,\'' + (isDrink?'drink':'menu') + '\')" style="' + _inputStyle + '">' +
         '</div>' +
         '<div>' +
           '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Category / Section</div>' +
@@ -3742,7 +3742,7 @@
     function hhItemRow(item, index) {
       var typeOpts = ['Drink Special','Food Special','Beer','Wine','Cocktail','Shot','Non-Alcoholic','Appetizer','Entree'];
       return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:start;" data-idx="' + index + '">' +
-        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Item Name</div><input type="text" value="' + escHtml(item.name||'') + '" onchange="_bizHHItems[' + index + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Item Name</div><input type="text" value="' + escHtml(item.item_name||'') + '" onchange="_bizHHItems[' + index + '].item_name=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Type</div><select onchange="_bizHHItems[' + index + '].type=this.value" style="' + _inputStyle + '">' + typeOpts.map(function(t){ return '<option value="' + t + '"' + (item.type===t?' selected':'') + '>' + t + '</option>'; }).join('') + '</select></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div><input type="text" value="' + escHtml(item.price||'') + '" placeholder="$4.00" onchange="_bizHHItems[' + index + '].price=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Description</div><input type="text" value="' + escHtml(item.description||'') + '" onchange="_bizHHItems[' + index + '].description=this.value" style="' + _inputStyle + '"></div>' +
@@ -3754,7 +3754,7 @@
       document.getElementById('be-hh-items').innerHTML = _bizHHItems.map(function(item, i) { return hhItemRow(item, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No happy hour items yet.</div>';
     }
 
-    function addHHItem() { _bizHHItems.push({ name: '', description: '', price: '' }); renderHHItems(); }
+    function addHHItem() { _bizHHItems.push({ item_name: '', description: '', price: '' }); renderHHItems(); }
 
     async function saveBizHappyHour() {
       var token = getAuthToken();
@@ -3781,7 +3781,7 @@
       var days = ['','monday','tuesday','wednesday','thursday','friday','saturday','sunday','daily'];
       return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;">' +
         '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;">' +
-        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Name</div><input type="text" value="' + escHtml(s.name||'') + '" onchange="_bizSpecials[' + i + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Name</div><input type="text" value="' + escHtml(s.special_name||'') + '" onchange="_bizSpecials[' + i + '].special_name=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Day</div><select onchange="_bizSpecials[' + i + '].day=this.value" style="' + _inputStyle + '">' + days.map(function(d) { return '<option value="' + d + '"' + (s.day===d?' selected':'') + '>' + (d||'Any') + '</option>'; }).join('') + '</select></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Time</div><input type="text" value="' + escHtml(s.time||'') + '" placeholder="3pm-6pm" onchange="_bizSpecials[' + i + '].time=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price</div><input type="text" value="' + escHtml(s.price||'') + '" placeholder="$1 each" onchange="_bizSpecials[' + i + '].price=this.value" style="' + _inputStyle + '"></div>' +
@@ -3796,7 +3796,7 @@
       document.getElementById('be-specials-list').innerHTML = _bizSpecials.map(function(s, i) { return bizSpecialRow(s, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No specials yet.</div>';
     }
 
-    function addBizSpecial() { _bizSpecials.push({ name: '', description: '', day: '', time: '', price: '', discount: '' }); renderBizSpecials(); }
+    function addBizSpecial() { _bizSpecials.push({ special_name: '', description: '', day: '', time: '', price: '', discount: '' }); renderBizSpecials(); }
 
     async function saveBizSpecials() {
       var token = getAuthToken();
@@ -3804,7 +3804,7 @@
         var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ specials: _bizSpecials.filter(function(s) { return s.name; }) })
+          body: JSON.stringify({ specials: _bizSpecials.filter(function(s) { return s.special_name; }) })
         });
         toast('Specials saved!');
       } catch(e) { toast(e.message, 'error'); }
@@ -3815,7 +3815,7 @@
     function bizEventRow(ev, i) {
       return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:12px;">' +
         '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;">' +
-        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Event Name</div><input type="text" value="' + escHtml(ev.name||'') + '" onchange="_bizEvents[' + i + '].name=this.value" style="' + _inputStyle + '"></div>' +
+        '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Event Name</div><input type="text" value="' + escHtml(ev.event_name||'') + '" onchange="_bizEvents[' + i + '].event_name=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Category</div><select onchange="_bizEvents[' + i + '].category=this.value" style="' + _inputStyle + '">' + _evtCategories.map(function(c){ return '<option value="' + c + '"' + (ev.category===c?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Date</div><input type="date" value="' + escHtml(ev.date||'') + '" onchange="_bizEvents[' + i + '].date=this.value" style="' + _inputStyle + '"></div>' +
         '<div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Time</div><input type="time" value="' + escHtml(ev.time||'') + '" onchange="_bizEvents[' + i + '].time=this.value" style="' + _inputStyle + '"></div>' +
@@ -3832,7 +3832,7 @@
       document.getElementById('be-events-list').innerHTML = _bizEvents.map(function(ev, i) { return bizEventRow(ev, i); }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No events yet.</div>';
     }
 
-    function addBizEvent() { _bizEvents.push({ name: '', description: '', date: '', time: '', location: '', image_url: '' }); renderBizEvents(); }
+    function addBizEvent() { _bizEvents.push({ event_name: '', description: '', date: '', time: '', location: '', image_url: '' }); renderBizEvents(); }
 
     async function saveBizEvents() {
       var token = getAuthToken();
@@ -3840,7 +3840,7 @@
         var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ events: _bizEvents.filter(function(e) { return e.name; }) })
+          body: JSON.stringify({ events: _bizEvents.filter(function(e) { return e.event_name; }) })
         });
         toast('Events saved!');
       } catch(e) { toast(e.message, 'error'); }
@@ -4402,7 +4402,7 @@
         renderBizHHDeals(); renderBizDashMenu(); renderBizDashDrinks(); renderBizDashSpecials(); renderBizDashEvents(); renderBizFleet(); renderBizAddons(); renderBizDashReviews(); renderBizSchedule(); renderBizFAQs(); renderBizMedia();
         switchBizPanel('overview');
         var ov = document.getElementById('bd-overview-content');
-        if (ov) ov.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;"><div class="stat-card"><div class="stat-number">' + (_bdData.media||[]).length + '</div><div class="stat-label">Photos</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.reviews||[]).length + '</div><div class="stat-label">Reviews</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.menu||[]).length + '</div><div class="stat-label">Menu Items</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.events||[]).length + '</div><div class="stat-label">Events</div></div></div><p style="color:var(--text-muted);font-size:13px;">Business: <strong>' + escHtml(b.name||'') + '</strong> &middot; Type: ' + escHtml(b.type||'') + ' &middot; Status: ' + escHtml(b.status||'') + '</p>';
+        if (ov) ov.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;"><div class="stat-card"><div class="stat-number">' + (_bdData.media||[]).length + '</div><div class="stat-label">Photos</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.reviews||[]).length + '</div><div class="stat-label">Reviews</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.menu||[]).length + '</div><div class="stat-label">Menu Items</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.events||[]).length + '</div><div class="stat-label">Events</div></div></div><p style="color:var(--text-muted);font-size:13px;">Business: <strong>' + escHtml(b.name||'') + '</strong> &middot; Type: ' + escHtml(b.entity_type||'') + ' &middot; Status: ' + escHtml(b.status||'') + '</p>';
       } catch(err) { toast('Failed to load business: ' + err.message, 'error'); }
     }
 
@@ -4510,12 +4510,12 @@
 
     // ── Happy Hour ──
     function renderBizHHDeals() {
-      var el = document.getElementById('bd-hh-deals'); if (!el) return;
+      var el = document.getElementById('bd-hh-items'); if (!el) return;
       el.innerHTML = _bdHHDeals.length ? _bdHHDeals.map(function(d, i) {
-        return '<div style="display:flex;gap:8px;margin-bottom:8px;"><input type="text" placeholder="Item name" value="' + escHtml(d.name||'') + '" onchange="_bdHHDeals[' + i + '].name=this.value" style="flex:1;' + _inputStyle + '"><input type="text" placeholder="Price/desc" value="' + escHtml(d.price||'') + '" onchange="_bdHHDeals[' + i + '].price=this.value" style="width:120px;' + _inputStyle + '"><button class="btn btn-sm btn-danger" onclick="_bdHHDeals.splice(' + i + ',1);renderBizHHDeals()">×</button></div>';
+        return '<div style="display:flex;gap:8px;margin-bottom:8px;"><input type="text" placeholder="Item name" value="' + escHtml(d.item_name||'') + '" onchange="_bdHHDeals[' + i + '].item_name=this.value" style="flex:1;' + _inputStyle + '"><input type="text" placeholder="Price/desc" value="' + escHtml(d.price||'') + '" onchange="_bdHHDeals[' + i + '].price=this.value" style="width:120px;' + _inputStyle + '"><button class="btn btn-sm btn-danger" onclick="_bdHHDeals.splice(' + i + ',1);renderBizHHDeals()">×</button></div>';
       }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No deals yet.</div>';
     }
-    function addBizHHDeal() { _bdHHDeals.push({ name: '', price: '' }); renderBizHHDeals(); }
+    function addBizHHDeal() { _bdHHDeals.push({ item_name: '', price: '' }); renderBizHHDeals(); }
     async function saveBizDashHappyHour() {
       var token = getAuthToken();
       try {
@@ -4529,12 +4529,12 @@
     function renderBizDashSpecials() {
       var el = document.getElementById('bd-specials-list'); if (!el) return;
       el.innerHTML = _bdSpecials2.length ? _bdSpecials2.map(function(s) {
-        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(s.name||'') + '</strong>' + (s.discount_text ? ' — ' + escHtml(s.discount_text) : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(s.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizSpecialModal(\'' + (s.id||'') + '\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizSpecialItem(\'' + (s.id||'') + '\')">×</button></div>';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(s.special_name||'') + '</strong>' + (s.discount_text ? ' — ' + escHtml(s.discount_text) : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(s.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizSpecialModal(\'' + (s.id||'') + '\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizSpecialItem(\'' + (s.id||'') + '\')">×</button></div>';
       }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No specials yet.</div>';
     }
     function openBizSpecialModal(id) {
       var s = _bdSpecials2.find(function(x){ return x.id === id; }) || {};
-      document.getElementById('bd-special-form-name').value = s.name || '';
+      document.getElementById('bd-special-form-name').value = s.special_name || '';
       document.getElementById('bd-special-form-desc').value = s.description || '';
       document.getElementById('bd-special-form-day').value = Array.isArray(s.days) ? s.days.join(', ') : (s.days||'');
       document.getElementById('bd-special-form-discount').value = s.discount_text || '';
@@ -4545,12 +4545,12 @@
     }
     async function saveBizSpecialItem() {
       var token = getAuthToken();
-      var payload = { name: document.getElementById('bd-special-form-name').value, description: document.getElementById('bd-special-form-desc').value, days: document.getElementById('bd-special-form-day').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean), discount_text: document.getElementById('bd-special-form-discount').value, start_time: document.getElementById('bd-special-form-start').value, end_time: document.getElementById('bd-special-form-end').value, active: true };
+      var payload = { special_name: document.getElementById('bd-special-form-name').value, description: document.getElementById('bd-special-form-desc').value, days: document.getElementById('bd-special-form-day').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean), discount_text: document.getElementById('bd-special-form-discount').value, start_time: document.getElementById('bd-special-form-start').value, end_time: document.getElementById('bd-special-form-end').value, active: true };
       var id = document.getElementById('bd-special-form-id').value; if (id) payload.id = id;
       try {
         var method = id ? 'PUT' : 'POST';
         var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
-        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId, special_name: payload.name })) });
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-special').style.display = 'none';
         var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
@@ -4568,27 +4568,27 @@
     function renderBizDashEvents() {
       var el = document.getElementById('bd-events-list'); if (!el) return;
       el.innerHTML = _bdEvents2.length ? _bdEvents2.map(function(e) {
-        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(e.title||e.name||'') + '</strong>' + (e.event_date ? ' — ' + e.event_date : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(e.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizEventModal(\'' + (e.id||'') + '\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizEventItem(\'' + (e.id||'') + '\')">×</button></div>';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(e.event_name||'') + '</strong>' + (e.event_date ? ' — ' + e.event_date : '') + '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(e.description||'') + '</span></div><button class="btn btn-sm" onclick="openBizEventModal(\'' + (e.id||'') + '\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizEventItem(\'' + (e.id||'') + '\')">×</button></div>';
       }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No events yet.</div>';
     }
     function openBizEventModal(id) {
       var e = _bdEvents2.find(function(x){ return x.id === id; }) || {};
-      document.getElementById('bd-event-form-title').value = e.title || e.name || '';
+      document.getElementById('bd-event-form-title').value = e.event_name || '';
       document.getElementById('bd-event-form-desc').value = e.description || '';
       document.getElementById('bd-event-form-date').value = e.event_date || '';
-      document.getElementById('bd-event-form-time').value = e.event_time || '';
+      document.getElementById('bd-event-form-time').value = e.start_time || '';
       document.getElementById('bd-event-form-photo').value = e.image_url || '';
       document.getElementById('bd-event-form-id').value = e.id || '';
       document.getElementById('modal-biz-event').style.display = 'flex';
     }
     async function saveBizEventItem() {
       var token = getAuthToken();
-      var payload = { title: document.getElementById('bd-event-form-title').value, description: document.getElementById('bd-event-form-desc').value, event_date: document.getElementById('bd-event-form-date').value, event_time: document.getElementById('bd-event-form-time').value, image_url: document.getElementById('bd-event-form-photo').value, active: true };
+      var payload = { event_name: document.getElementById('bd-event-form-title').value, description: document.getElementById('bd-event-form-desc').value, event_date: document.getElementById('bd-event-form-date').value, start_time: document.getElementById('bd-event-form-time').value, image_url: document.getElementById('bd-event-form-photo').value, active: true };
       var id = document.getElementById('bd-event-form-id').value; if (id) payload.id = id;
       try {
         var method = id ? 'PUT' : 'POST';
         var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
-        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId, event_name: payload.title, start_time: payload.event_time })) });
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-event').style.display = 'none';
         var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
@@ -6172,7 +6172,7 @@
         document.getElementById('bulk-events-list').innerHTML = _bulkGCREvents.map(function(e){
           var color = e._entityId ? 'var(--text)' : '#ef4444';
           return '<div style="padding:6px 0;border-bottom:1px solid var(--card-border);color:' + color + ';">' +
-            escHtml(e.business_name) + ' — <strong>' + escHtml(e.title) + '</strong>' +
+            escHtml(e.business_name) + ' — <strong>' + escHtml(e.event_name) + '</strong>' +
             (e.badge_text ? ' · ' + escHtml(e.badge_text) : '') +
             (e.price_text ? ' · ' + escHtml(e.price_text) : '') +
             (e._entityId ? '' : ' ⚠️ NOT FOUND') +
@@ -6219,10 +6219,10 @@
           var existCardsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', { headers: { 'Authorization': 'Bearer ' + token } });
           var existCardsData = await existCardsRes.json();
           var existTitles = new Set((existCardsData.cards||[]).map(function(c){ return (c.title||'').toLowerCase().trim(); }));
-          if (existTitles.has((e.title||'').toLowerCase().trim())) { skipped++; continue; }
+          if (existTitles.has((e.event_name||'').toLowerCase().trim())) { skipped++; continue; }
           await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: e.title, subtitle: e.subtitle, description: e.description, badge_text: e.badge_text, price_text: e.price_text||null, image_url: e.image_url||null, link_url: e.link_url||null, sort_order: i })
+            body: JSON.stringify({ title: e.event_name, subtitle: e.subtitle, description: e.description, badge_text: e.badge_text, price_text: e.price_text||null, image_url: e.image_url||null, link_url: e.link_url||null, sort_order: i })
           });
           success++;
         } catch(err) { errors++; console.error(err.message); }
