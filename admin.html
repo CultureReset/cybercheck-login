@@ -400,6 +400,22 @@
               <div id="ent-sections-list"></div>
             </div>
 
+            <!-- CONTENT TAB: menu, drinks, happy hour, events, specials -->
+            <div id="enttab-content-content" style="display:none;">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;border-bottom:1px solid var(--card-border);padding-bottom:12px;">
+                <button onclick="switchContentSection('menu')"    id="ctab-menu"    class="btn btn-outline btn-sm" style="border-bottom:2px solid var(--primary);">Menu</button>
+                <button onclick="switchContentSection('drinks')"  id="ctab-drinks"  class="btn btn-outline btn-sm">Drinks</button>
+                <button onclick="switchContentSection('hh')"      id="ctab-hh"      class="btn btn-outline btn-sm">Happy Hour</button>
+                <button onclick="switchContentSection('events')"  id="ctab-events"  class="btn btn-outline btn-sm">Events</button>
+                <button onclick="switchContentSection('specials')" id="ctab-specials" class="btn btn-outline btn-sm">Specials</button>
+              </div>
+              <div id="ent-content-menu"></div>
+              <div id="ent-content-drinks"  style="display:none;"></div>
+              <div id="ent-content-hh"      style="display:none;"></div>
+              <div id="ent-content-events"  style="display:none;"></div>
+              <div id="ent-content-specials" style="display:none;"></div>
+            </div>
+
             <!-- PAGES TAB -->
             <div id="enttab-pages-content" style="display:none;">
               <p style="font-size:13px;color:var(--text-muted);margin:0 0 6px;">Choose which category pages this business appears on. Check a page to add it. Use "Featured" + position (1–5) to pin it at the top of that page.</p>
@@ -4377,14 +4393,13 @@
         setC('bd-gcr-listed', b.gcr_listed); setC('bd-gcr-featured', b.featured); setV('bd-gcr-type', b.type);
         setV('bd-seo-title', c.seo_title); setV('bd-seo-desc', c.seo_description); setV('bd-seo-keywords', c.seo_keywords);
         setV('bd-social-instagram', b.instagram); setV('bd-social-facebook', b.facebook); setV('bd-social-tiktok', b.tiktok);
-        var hh = c.happy_hour || {};
-        setV('bd-hh-days', Array.isArray(hh.days) ? hh.days.join(', ') : hh.days); setV('bd-hh-start', hh.start); setV('bd-hh-end', hh.end);
-        _bdHHDeals = Array.isArray(hh.deals) ? hh.deals : [];
+        setV('bd-hh-days', b.hh_days); setV('bd-hh-start', b.hh_start); setV('bd-hh-end', b.hh_end);
+        _bdHHDeals = (_bdData.hh_items || []).map(function(i){ return { id: i.id, name: i.item_name, price: i.price_text || (i.price != null ? String(i.price) : '') }; });
         setV('bd-highlights-text', Array.isArray(c.highlights) ? c.highlights.join('\n') : (c.highlights||''));
         setV('bd-restrictions-text', Array.isArray(c.restrictions) ? c.restrictions.join('\n') : (c.restrictions||''));
         setV('bd-whatbring-text', Array.isArray(c.what_to_bring) ? c.what_to_bring.join('\n') : (c.what_to_bring||''));
-        _bdMenuItems2 = (_bdData.menu||[]).filter(function(i){ return i.item_type !== 'drink'; });
-        _bdDrinkItems2 = (_bdData.menu||[]).filter(function(i){ return i.item_type === 'drink'; });
+        _bdMenuItems2 = _bdData.menu || [];
+        _bdDrinkItems2 = _bdData.drinks || [];
         _bdSpecials2 = _bdData.specials || [];
         _bdEvents2 = _bdData.events || [];
         _bdFleetItems = _bdData.fleet || [];
@@ -4416,7 +4431,7 @@
       var b = { name: document.getElementById('bd-prof-name').value, type: document.getElementById('bd-prof-type').value, status: document.getElementById('bd-prof-status').value, emoji: document.getElementById('bd-prof-emoji').value, tagline: document.getElementById('bd-prof-tagline').value, price_range: document.getElementById('bd-prof-pricerange').value, instagram: document.getElementById('bd-prof-instagram').value, facebook: document.getElementById('bd-prof-facebook').value, tiktok: document.getElementById('bd-prof-tiktok').value, kids_friendly: document.getElementById('bd-flag-kids').checked, pet_friendly: document.getElementById('bd-flag-pets').checked, live_music: document.getElementById('bd-flag-livemusic').checked, outdoor_seating: document.getElementById('bd-flag-outdoor').checked, reservations: document.getElementById('bd-flag-reservations').checked, delivery: document.getElementById('bd-flag-delivery').checked, takeout: document.getElementById('bd-flag-takeout').checked, alcohol: document.getElementById('bd-flag-alcohol').checked, waterfront: document.getElementById('bd-flag-waterfront').checked };
       var c = { about_text: document.getElementById('bd-prof-description').value, address: document.getElementById('bd-prof-address').value, city: document.getElementById('bd-prof-city').value, state: document.getElementById('bd-prof-state').value, zip: document.getElementById('bd-prof-zip').value, phone: document.getElementById('bd-prof-phone').value, email: document.getElementById('bd-prof-email').value, website: document.getElementById('bd-prof-website').value, hours: hours };
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b, content: c }) });
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: { name: b.name, description: c.about_text, phone: c.phone, email: c.email, website_url: c.website, address_line_1: c.address, city: c.city, state: c.state, zip: c.zip, social_instagram: b.instagram, social_facebook: b.facebook, social_tiktok: b.tiktok, price_range: b.price_range } }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast('Profile saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -4426,19 +4441,19 @@
     function renderBizDashMenu() {
       var el = document.getElementById('bd-menu-list'); if (!el) return;
       el.innerHTML = _bdMenuItems2.length ? _bdMenuItems2.map(function(item, i) {
-        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(item.name||'') + '</strong> <span style="color:var(--text-muted);font-size:12px;">' + escHtml(item.category||'') + '</span>' + (item.price ? ' — $' + item.price : '') + '</div><button class="btn btn-sm" onclick="openBizMenuItemModal(' + i + ',\'food\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizMenuItem(\'' + item.id + '\',\'food\')">×</button></div>';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(item.item_name||'') + '</strong>' + (item.price != null ? ' — $' + item.price : (item.price_text ? ' — ' + escHtml(item.price_text) : '')) + (item.description ? '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</span>' : '') + '</div><button class="btn btn-sm" onclick="openBizMenuItemModal(' + i + ',\'food\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizMenuItem(\'' + item.id + '\',\'food\')">×</button></div>';
       }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No food items yet.</div>';
     }
     function renderBizDashDrinks() {
       var el = document.getElementById('bd-drinks-list'); if (!el) return;
       el.innerHTML = _bdDrinkItems2.length ? _bdDrinkItems2.map(function(item, i) {
-        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(item.name||'') + '</strong> <span style="color:var(--text-muted);font-size:12px;">' + escHtml(item.category||'') + '</span>' + (item.price ? ' — $' + item.price : '') + '</div><button class="btn btn-sm" onclick="openBizMenuItemModal(' + i + ',\'drink\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizMenuItem(\'' + item.id + '\',\'drink\')">×</button></div>';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;"><div style="flex:1;"><strong>' + escHtml(item.item_name||'') + '</strong>' + (item.price != null ? ' — $' + item.price : (item.price_text ? ' — ' + escHtml(item.price_text) : '')) + (item.description ? '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</span>' : '') + '</div><button class="btn btn-sm" onclick="openBizMenuItemModal(' + i + ',\'drink\')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteBizMenuItem(\'' + item.id + '\',\'drink\')">×</button></div>';
       }).join('') : '<div style="color:var(--text-muted);font-size:13px;">No drink items yet.</div>';
     }
     function openBizMenuItemModal(idx, type) {
       var list = type === 'drink' ? _bdDrinkItems2 : _bdMenuItems2;
       var item = idx >= 0 ? list[idx] : {};
-      document.getElementById('bd-menuitem-form-name').value = item.name || '';
+      document.getElementById('bd-menuitem-form-name').value = item.item_name || '';
       document.getElementById('bd-menuitem-form-price').value = item.price || '';
       document.getElementById('bd-menuitem-form-category').value = item.category || '';
       document.getElementById('bd-menuitem-form-desc').value = item.description || '';
@@ -4449,23 +4464,27 @@
     }
     async function saveBizMenuItemFromModal() {
       var token = getAuthToken();
-      var payload = { name: document.getElementById('bd-menuitem-form-name').value, price: document.getElementById('bd-menuitem-form-price').value, category: document.getElementById('bd-menuitem-form-category').value, description: document.getElementById('bd-menuitem-form-desc').value, image_url: document.getElementById('bd-menuitem-form-photo').value, item_type: document.getElementById('bd-menuitem-form-type').value, available: true };
+      var isDrink = document.getElementById('bd-menuitem-form-type').value === 'drink';
       var id = document.getElementById('bd-menuitem-form-id').value;
-      if (id) payload.id = id;
+      var payload = { item_name: document.getElementById('bd-menuitem-form-name').value, price: parseFloat(document.getElementById('bd-menuitem-form-price').value) || null, description: document.getElementById('bd-menuitem-form-desc').value || null, image_url: document.getElementById('bd-menuitem-form-photo').value || null };
+      var method = id ? 'PUT' : 'POST';
+      var table = isDrink ? 'drink-items' : 'menu-items';
+      var url = id ? API_BASE + '/api/admin/gcr/' + table + '/' + id : API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/' + table;
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/menu', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-menuitem').style.display = 'none';
         var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
-        _bdMenuItems2 = (d.menu||[]).filter(function(i){ return i.item_type !== 'drink'; });
-        _bdDrinkItems2 = (d.menu||[]).filter(function(i){ return i.item_type === 'drink'; });
+        _bdMenuItems2 = d.menu || [];
+        _bdDrinkItems2 = d.drinks || [];
         renderBizDashMenu(); renderBizDashDrinks(); toast('Saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
     async function deleteBizMenuItem(id, type) {
       if (!confirm('Delete this item?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/menu/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      var table = type === 'drink' ? 'drink-items' : 'menu-items';
+      await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (type === 'drink') { _bdDrinkItems2 = _bdDrinkItems2.filter(function(i){ return i.id !== id; }); renderBizDashDrinks(); }
       else { _bdMenuItems2 = _bdMenuItems2.filter(function(i){ return i.id !== id; }); renderBizDashMenu(); }
       toast('Deleted', 'success');
@@ -4481,9 +4500,8 @@
     function addBizHHDeal() { _bdHHDeals.push({ name: '', price: '' }); renderBizHHDeals(); }
     async function saveBizDashHappyHour() {
       var token = getAuthToken();
-      var hh = { days: document.getElementById('bd-hh-days').value, start: document.getElementById('bd-hh-start').value, end: document.getElementById('bd-hh-end').value, deals: _bdHHDeals };
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: { happy_hour: hh } }) });
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/happy-hour', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hh_days: document.getElementById('bd-hh-days').value, hh_start: document.getElementById('bd-hh-start').value, hh_end: document.getElementById('bd-hh-end').value }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Happy hour saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -4512,7 +4530,9 @@
       var payload = { name: document.getElementById('bd-special-form-name').value, description: document.getElementById('bd-special-form-desc').value, days: document.getElementById('bd-special-form-day').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean), discount_text: document.getElementById('bd-special-form-discount').value, start_time: document.getElementById('bd-special-form-start').value, end_time: document.getElementById('bd-special-form-end').value, active: true };
       var id = document.getElementById('bd-special-form-id').value; if (id) payload.id = id;
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/specials', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var method = id ? 'PUT' : 'POST';
+        var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId, special_name: payload.name })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-special').style.display = 'none';
         var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
@@ -4522,7 +4542,7 @@
     async function deleteBizSpecialItem(id) {
       if (!confirm('Delete?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _bdSpecials2 = _bdSpecials2.filter(function(s){ return s.id !== id; }); renderBizDashSpecials(); toast('Deleted', 'success');
     }
 
@@ -4548,7 +4568,9 @@
       var payload = { title: document.getElementById('bd-event-form-title').value, description: document.getElementById('bd-event-form-desc').value, event_date: document.getElementById('bd-event-form-date').value, event_time: document.getElementById('bd-event-form-time').value, image_url: document.getElementById('bd-event-form-photo').value, active: true };
       var id = document.getElementById('bd-event-form-id').value; if (id) payload.id = id;
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/events', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var method = id ? 'PUT' : 'POST';
+        var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
+        var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId, event_name: payload.title, start_time: payload.event_time })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-event').style.display = 'none';
         var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
@@ -4558,7 +4580,7 @@
     async function deleteBizEventItem(id) {
       if (!confirm('Delete?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _bdEvents2 = _bdEvents2.filter(function(e){ return e.id !== id; }); renderBizDashEvents(); toast('Deleted', 'success');
     }
 
@@ -4850,6 +4872,7 @@
     var _currentEntityFeatures = [];
     var _currentEntityPF = [];
     var _currentEntitySections = [];
+    var _currentEntityContent = { menu: [], drinks: [], hh: null, events: [], specials: [] };
 
     // ── Load entity list ───────────────────────────────
 
@@ -5072,12 +5095,13 @@
         sv('ent-address', e.address_line_1); sv('ent-city', e.city); sv('ent-state', e.state); sv('ent-zip', e.zip);
         document.getElementById('ent-active').checked = e.is_active !== false;
         document.getElementById('ent-sponsored').checked = e.is_sponsored === true;
-        // Tags / Features / Sections
+        // Tags / Features / Sections / Content
         _currentEntityTags     = data.tags        || [];
         _currentEntityFeatures = data.features    || [];
         _currentEntityPF       = data.perfect_for || [];
         _currentEntitySections = data.sections    || [];
-        renderEntTags(); renderEntFeatures(); renderEntPF(); renderEntSections();
+        _currentEntityContent  = { menu: data.menu || [], drinks: data.drinks || [], hh: data.happy_hour || null, events: data.events || [], specials: data.specials || [] };
+        renderEntTags(); renderEntFeatures(); renderEntPF(); renderEntSections(); renderEntContent();
       } catch(err) { toast('Failed to load entity: ' + err.message, 'error'); }
     }
 
@@ -5087,7 +5111,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','tags','features','sections','pages','wavegent'].forEach(function(t) {
+      ['info','tags','features','sections','content','pages','wavegent'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -5466,6 +5490,122 @@
         toast('Section added!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
+
+    // ── Content tab (menu, drinks, HH, events, specials) ──
+
+    // Reload content tab from live API after a save
+    async function reloadEntContent() {
+      if (!_currentEntityId) return;
+      var ent = _allEntities.find(function(e){ return e.id === _currentEntityId; });
+      if (!ent) return;
+      var data = await (await fetch(API_BASE + '/api/gcr/entity/' + ent.slug)).json();
+      _currentEntityContent = { menu: data.menu || [], drinks: data.drinks || [], hh: data.happy_hour || null, events: data.events || [], specials: data.specials || [] };
+      renderEntContent();
+    }
+
+    function renderEntContent() {
+      var c = _currentEntityContent;
+
+      // Helper: render a list of sections+items from {sections:[], items:[]}
+      function renderSectionItems(data, primaryColor, itemNameField) {
+        var secs = (data && data.sections) || [];
+        var allItems = (data && data.items) || [];
+        if (!secs.length && !allItems.length) return null;
+        // If no sections but items exist, group under "Items"
+        if (!secs.length) {
+          var rows = allItems.map(function(item) {
+            var name = item[itemNameField] || item.item_name || item.name || '';
+            var price = item.price != null ? '$' + item.price : (item.price_text || '');
+            return '<tr style="border-bottom:1px solid var(--card-border);"><td style="padding:8px 0;font-size:14px;">' + escHtml(name) +
+              (item.description ? '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</div>' : '') + '</td>' +
+              '<td style="padding:8px 0;font-size:14px;font-weight:600;color:' + primaryColor + ';text-align:right;">' + escHtml(price) + '</td></tr>';
+          }).join('');
+          return '<table style="width:100%;border-collapse:collapse;">' + rows + '</table>';
+        }
+        return secs.map(function(sec) {
+          var secItems = allItems.filter(function(i) { return i.menu_section_id === sec.id || i.hh_section_id === sec.id || i.drink_section_id === sec.id || i.section_id === sec.id; });
+          var rows = secItems.map(function(item) {
+            var name = item[itemNameField] || item.item_name || item.name || '';
+            var price = item.price != null ? '$' + item.price : (item.price_text || '');
+            return '<tr style="border-bottom:1px solid var(--card-border);"><td style="padding:8px 0;font-size:14px;">' + escHtml(name) +
+              (item.description ? '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</div>' : '') + '</td>' +
+              '<td style="padding:8px 0;font-size:14px;font-weight:600;color:' + primaryColor + ';text-align:right;">' + escHtml(price) + '</td></tr>';
+          }).join('');
+          return '<div style="margin-bottom:20px;"><div style="font-weight:700;font-size:15px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid ' + primaryColor + ';">' +
+            escHtml(sec.section_name || sec.name || '') + '</div>' +
+            (rows ? '<table style="width:100%;border-collapse:collapse;">' + rows + '</table>' : '<div style="font-size:13px;color:var(--text-muted);">No items</div>') +
+            '</div>';
+        }).join('');
+      }
+
+      // Menu
+      var menuEl = document.getElementById('ent-content-menu'); if (!menuEl) return;
+      var menuHtml = renderSectionItems(c.menu, 'var(--primary)', 'item_name');
+      menuEl.innerHTML = menuHtml || '<div style="color:var(--text-muted);padding:20px 0;">No menu data found. Upload via Menu Upload in the sidebar.</div>';
+
+      // Drinks
+      var drinksEl = document.getElementById('ent-content-drinks'); if (!drinksEl) return;
+      var drinksHtml = renderSectionItems(c.drinks, 'var(--primary)', 'item_name');
+      drinksEl.innerHTML = drinksHtml || '<div style="color:var(--text-muted);padding:20px 0;">No drink sections found.</div>';
+
+      // Happy Hour
+      var hhEl = document.getElementById('ent-content-hh'); if (!hhEl) return;
+      var hh = c.hh;
+      var hhSecs = hh && hh.sections && hh.sections.length;
+      var hhItems = hh && hh.items && hh.items.length;
+      if (!hh || (!hhSecs && !hhItems && !hh.description && !hh.days)) {
+        hhEl.innerHTML = '<div style="color:var(--text-muted);padding:20px 0;">No happy hour data found.</div>';
+      } else {
+        var hhHtml = '';
+        if (hh.days || hh.description || hh.start) {
+          hhHtml += '<div style="padding:14px;background:var(--bg);border-radius:10px;border-left:4px solid #f59e0b;margin-bottom:16px;">';
+          if (hh.days) hhHtml += '<div style="font-size:13px;margin-bottom:6px;"><strong>Days:</strong> ' + escHtml(hh.days) + '</div>';
+          if (hh.start && hh.end) hhHtml += '<div style="font-size:13px;margin-bottom:6px;"><strong>Hours:</strong> ' + escHtml(hh.start + ' – ' + hh.end) + '</div>';
+          if (hh.description) hhHtml += '<div style="font-size:13px;color:var(--text-muted);">' + escHtml(hh.description) + '</div>';
+          hhHtml += '</div>';
+        }
+        hhHtml += renderSectionItems(hh, '#f59e0b', 'item_name') || '';
+        hhEl.innerHTML = hhHtml || '<div style="color:var(--text-muted);padding:20px 0;">Happy hour set up but no items added yet.</div>';
+      }
+
+      // Events
+      var eventsEl = document.getElementById('ent-content-events'); if (!eventsEl) return;
+      if (!c.events || !c.events.length) {
+        eventsEl.innerHTML = '<div style="color:var(--text-muted);padding:20px 0;">No events found.</div>';
+      } else {
+        eventsEl.innerHTML = c.events.map(function(ev) {
+          return '<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-border);margin-bottom:10px;">' +
+            '<div style="font-weight:700;font-size:15px;">' + escHtml(ev.title||ev.name||'') + '</div>' +
+            (ev.event_date||ev.date ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escHtml(ev.event_date||ev.date||'') + (ev.start_time ? ' at ' + escHtml(ev.start_time) : '') + '</div>' : '') +
+            (ev.description ? '<div style="font-size:13px;margin-top:6px;">' + escHtml(ev.description) + '</div>' : '') +
+            '</div>';
+        }).join('');
+      }
+
+      // Specials
+      var specialsEl = document.getElementById('ent-content-specials'); if (!specialsEl) return;
+      if (!c.specials || !c.specials.length) {
+        specialsEl.innerHTML = '<div style="color:var(--text-muted);padding:20px 0;">No specials found.</div>';
+      } else {
+        specialsEl.innerHTML = c.specials.map(function(sp) {
+          return '<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-border);margin-bottom:10px;">' +
+            '<div style="font-weight:700;font-size:15px;">' + escHtml(sp.title||sp.name||'') + '</div>' +
+            (sp.days ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escHtml(sp.days) + '</div>' : '') +
+            (sp.description ? '<div style="font-size:13px;margin-top:6px;">' + escHtml(sp.description) + '</div>' : '') +
+            '</div>';
+        }).join('');
+      }
+    }
+
+    function switchContentSection(section) {
+      ['menu','drinks','hh','events','specials'].forEach(function(s) {
+        var btn = document.getElementById('ctab-' + s);
+        var panel = document.getElementById('ent-content-' + s);
+        if (btn) btn.style.borderBottom = s === section ? '2px solid var(--primary)' : '2px solid transparent';
+        if (panel) panel.style.display = s === section ? 'block' : 'none';
+      });
+    }
+
 
     async function deleteEntSection(sectionId) {
       if (!confirm('Delete this section and all its content?')) return;
