@@ -6757,9 +6757,14 @@
       document.body.insertAdjacentHTML('beforeend', html);
     }
 
-    function searchMergeTarget() {
+    async function searchMergeTarget() {
       var q = (document.getElementById('ao-merge-search') || {}).value || '';
       if (!q || q.length < 2) { document.getElementById('ao-merge-results').innerHTML = ''; return; }
+      // Fetch entities live if not loaded yet
+      if (!_allEntities || !_allEntities.length) {
+        var r = await fetch(API_BASE + '/api/gcr/entities?limit=500').catch(() => null);
+        if (r && r.ok) { var d = await r.json(); _allEntities = d.entities || d.businesses || []; }
+      }
       var matches = (_allEntities || []).filter(function(e) {
         return (e.name||'').toLowerCase().includes(q.toLowerCase()) || (e.slug||'').toLowerCase().includes(q.toLowerCase());
       }).slice(0, 8);
