@@ -1449,8 +1449,9 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
             <div class="form-group">
               <label>Business</label>
-              <select id="dul-entity-id" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
-                <option value="">— select business —</option>
+              <input type="text" id="dul-search" placeholder="Search businesses..." oninput="dulFilterBusinesses()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);margin-bottom:6px;">
+              <select id="dul-entity-id" size="5" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);height:auto;">
+                <option value="">— loading businesses... —</option>
               </select>
             </div>
             <div class="form-group">
@@ -7684,18 +7685,32 @@
     // ── Daily Update Links ─────────────────────────────
     (function loadDulEntities() {
       // Populate business dropdown when page loads
-      fetch(API_BASE + '/api/gcr/entities', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
+      fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
         .then(function(r){ return r.json(); })
         .then(function(d){
           var sel = document.getElementById('dul-entity-id');
           if (!sel) return;
-          (d.entities || []).sort(function(a,b){ return a.name.localeCompare(b.name); }).forEach(function(e){
+          (Array.isArray(d) ? d : (d.entities || [])).sort(function(a,b){ return a.name.localeCompare(b.name); }).forEach(function(e){
             var opt = document.createElement('option');
-            opt.value = e.id; opt.textContent = e.name;
+            opt.value = e.id; opt.textContent = e.name + (e.city ? ' — ' + e.city : '');
             sel.appendChild(opt);
           });
-        }).catch(function(){});
+          sel.firstChild.textContent = '— select business —';
+        }).catch(function(){ document.getElementById('dul-entity-id').firstChild.textContent = '— failed to load —'; });
     })();
+
+    var _dulAllOptions = [];
+    function dulFilterBusinesses() {
+      var q = document.getElementById('dul-search').value.toLowerCase();
+      var sel = document.getElementById('dul-entity-id');
+      if (!_dulAllOptions.length) {
+        _dulAllOptions = Array.from(sel.options).slice(1); // cache after first load
+      }
+      // rebuild options
+      while (sel.options.length > 1) sel.remove(1);
+      _dulAllOptions.filter(function(o){ return !q || o.textContent.toLowerCase().includes(q); })
+        .forEach(function(o){ sel.appendChild(o.cloneNode(true)); });
+    }
 
     async function generateDailyLink(sendSms) {
       var entityId = document.getElementById('dul-entity-id').value;
