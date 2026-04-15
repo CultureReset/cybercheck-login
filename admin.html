@@ -126,6 +126,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
           <span>Daily Update Links</span>
         </div>
+        <div class="nav-item" data-page="qr-menus" onclick="showPage('qr-menus')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="5" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m4.24-4.24l4.24 4.24M4.22 19.78l4.24-4.24m8.48 0l4.24 4.24"/></svg>
+          <span>QR Menus</span>
+        </div>
         <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span>Coupons</span>
@@ -1530,6 +1534,22 @@
         </div>
       </div>
 
+      <!-- ── QR Menus Page ── -->
+      <div id="page-qr-menus" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🍽️ QR Menus</h1>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:14px;">Manage digital menus for all your restaurants. View live QR menu URLs and generate edit links for businesses to submit their menus.</p>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:14px;">
+          <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="qr-menu-search" placeholder="Search by restaurant name..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;" oninput="filterQRMenus()">
+            <button class="btn btn-primary" onclick="loadQRMenus()" style="font-size:13px;padding:8px 14px;">↻ Reload</button>
+          </div>
+          <div id="qr-menus-list" style="font-size:14px;color:var(--text-muted);">Loading restaurants...</div>
+        </div>
+      </div>
+
       <div id="page-gcr-messaging" class="page-content" style="display:none;">
         <div class="page-header"><h1>SMS / Messaging</h1></div>
         <div class="card" style="padding:24px;margin-bottom:14px;">
@@ -2792,6 +2812,7 @@
       if (page === 'users' && !_usersLoaded) loadUsers();
       if (page === 'rag-index') loadRAGStatus();
       if (page === 'ai-settings') loadAISettings();
+      if (page === 'qr-menus' && !_qrMenusLoaded) { _qrMenusLoaded = true; loadQRMenus(); }
       if (page === 'gcr-entity-editor' && !_entityPageLoaded) { _entityPageLoaded = true; loadEntities(); }
       if (page === 'gcr-site-editor' && !_siteEditorLoaded) { _siteEditorLoaded = true; loadSiteEditor(); }
       if (page === 'bookings') loadBookings();
@@ -7858,6 +7879,124 @@
     }
 
     function loadTodaysLinks() { loadAllTodaysLinks(); }
+
+    // ── QR Menus Management ────────────────────────────
+    var _qrMenusLoaded = false;
+    var _allQRMenus = [];
+
+    async function loadQRMenus() {
+      var el = document.getElementById('qr-menus-list');
+      el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading restaurants...</p>';
+
+      // Load all entities from public API
+      var r = await fetch('https://cybercheck-api-database.vercel.app/api/gcr/entities?limit=500').catch(function(){ return null; });
+      if (!r || !r.ok) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Could not load restaurants.</p>';
+        return;
+      }
+
+      var d = await r.json();
+      _allQRMenus = (d.entities || d.businesses || []).filter(function(e) {
+        return e && e.id && e.name && e.slug;
+      }).sort(function(a, b) {
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      if (!_allQRMenus.length) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No restaurants found.</p>';
+        return;
+      }
+
+      renderQRMenusList();
+    }
+
+    function filterQRMenus() {
+      var q = (document.getElementById('qr-menu-search') || {}).value || '';
+      var filtered = _allQRMenus.filter(function(e) {
+        return !q || (e.name || '').toLowerCase().includes(q.toLowerCase());
+      });
+
+      var el = document.getElementById('qr-menus-list');
+      if (!filtered.length) {
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No matches found.</p>';
+        return;
+      }
+
+      renderQRMenusList(filtered);
+    }
+
+    function renderQRMenusList(items) {
+      items = items || _allQRMenus;
+      var el = document.getElementById('qr-menus-list');
+
+      var rows = items.map(function(biz, idx) {
+        var slug = biz.slug || biz.id;
+        var qrUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(slug);
+        var genBtnId = 'gen-link-' + idx;
+
+        return '<div style="border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--bg-secondary);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:700;font-size:15px;">' + (biz.icon||'🏪') + ' ' + (biz.name||'') + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + (biz.city ? biz.city + (biz.state ? ', '+biz.state : '') : '') + '</div>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+              '<div style="margin-bottom:8px;font-size:12px;"><strong>QR Menu URL:</strong></div>' +
+              '<div style="background:#fff;border:1px solid var(--card-border);border-radius:4px;padding:6px 8px;font-size:11px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\');alert(\'URL copied!\');">' + qrUrl + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<a href="' + qrUrl + '" target="_blank" style="display:inline-block;padding:8px 12px;background:#0b7a75;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;">👁️ View Live Menu</a>' +
+            '<button class="btn btn-outline" onclick="generateEditLink(\'' + (biz.id||'') + '\', \'' + (biz.name||'').replace(/\'/g, "\\'") + '\', ' + idx + ')" style="font-size:12px;padding:8px 12px;" id="' + genBtnId + '">🔗 Generate Edit Link</button>' +
+          '</div>' +
+          '<div id="edit-link-result-' + idx + '"></div>' +
+        '</div>';
+      }).join('');
+
+      el.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:12px;">' + items.length + ' restaurant' + (items.length !== 1 ? 's' : '') + '</div>' + rows;
+    }
+
+    async function generateEditLink(entityId, name, idx) {
+      var btn = document.getElementById('gen-link-' + idx);
+      var resultEl = document.getElementById('edit-link-result-' + idx);
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      resultEl.innerHTML = '';
+
+      try {
+        var r = await fetch(API_BASE + '/api/update/generate', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entity_id: entityId, link_type: 'daily' })
+        });
+
+        if (!r.ok) {
+          resultEl.innerHTML = '<p style="color:#dc2626;font-size:12px;margin-top:8px;">Failed to generate link.</p>';
+          btn.textContent = '🔗 Generate Edit Link';
+          btn.disabled = false;
+          return;
+        }
+
+        var data = await r.json();
+        var editUrl = data.url || '';
+
+        if (editUrl) {
+          resultEl.innerHTML = '<div style="background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:10px;margin-top:8px;font-size:12px;">' +
+            '<div style="font-weight:600;color:#166534;margin-bottom:6px;">📝 Edit Link Generated!</div>' +
+            '<div style="background:#fff;border:1px solid #86efac;border-radius:4px;padding:6px 8px;font-family:monospace;font-size:11px;word-break:break-all;margin-bottom:6px;">' + editUrl + '</div>' +
+            '<button style="padding:6px 10px;background:#16a34a;color:#fff;border:none;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;" onclick="navigator.clipboard.writeText(\'' + editUrl + '\');alert(\'Link copied to clipboard!\');">📋 Copy</button>' +
+          '</div>';
+        } else {
+          resultEl.innerHTML = '<p style="color:#dc2626;font-size:12px;margin-top:8px;">No URL returned.</p>';
+        }
+      } catch(e) {
+        resultEl.innerHTML = '<p style="color:#dc2626;font-size:12px;margin-top:8px;">Error: ' + e.message + '</p>';
+      }
+
+      btn.textContent = '🔗 Generate Edit Link';
+      btn.disabled = false;
+    }
 
     // ── Grok Agentic AI Chat ───────────────────────────
     var _grokHistory = [];
