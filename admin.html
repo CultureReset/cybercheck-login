@@ -2192,6 +2192,24 @@
                   </div>
                   <div class="form-group"><label>Emoji</label><input type="text" id="bd-prof-emoji" placeholder="🍽️" maxlength="4"></div>
                 </div>
+                <div class="card-header" style="margin-top:8px;"><h4>Starting Price <span style="font-weight:400;font-size:12px;color:var(--text-muted);">(Things To Do, Public Spots, Services)</span></h4></div>
+                <div class="form-row">
+                  <div class="form-group"><label>From Price ($)</label><input type="number" id="bd-prof-price-from" placeholder="45" min="0" step="0.01"></div>
+                  <div class="form-group"><label>To Price ($) <span style="font-weight:400;font-size:11px;">optional max</span></label><input type="number" id="bd-prof-price-to" placeholder="120" min="0" step="0.01"></div>
+                  <div class="form-group"><label>Unit</label>
+                    <select id="bd-prof-price-unit">
+                      <option value="">— none —</option>
+                      <option value="person">per person</option>
+                      <option value="hour">per hour</option>
+                      <option value="day">per day</option>
+                      <option value="boat">per boat</option>
+                      <option value="group">per group</option>
+                      <option value="vehicle">per vehicle</option>
+                      <option value="entry">per entry</option>
+                    </select>
+                  </div>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Displays on cards as "From $45/person". Set From Price to 0 for Free. Leave blank to hide.</p>
               </div>
               <div class="card">
                 <div class="card-header"><h3>Address</h3></div>
@@ -4400,6 +4418,7 @@
         var setV = function(id, v) { var el = document.getElementById(id); if (el) el.value = v || ''; };
         var setC = function(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; };
         setV('bd-prof-name', b.name); setV('bd-prof-type', b.entity_type); setV('bd-prof-status', b.status); setV('bd-prof-emoji', b.icon); setV('bd-prof-tagline', b.subtitle); setV('bd-prof-pricerange', b.price_range); setV('bd-prof-description', b.description); setV('bd-prof-address', b.address_line_1); setV('bd-prof-city', b.city); setV('bd-prof-state', b.state); setV('bd-prof-zip', b.zip); setV('bd-prof-phone', b.phone); setV('bd-prof-email', b.email); setV('bd-prof-website', b.website_url); setV('bd-prof-instagram', b.social_instagram); setV('bd-prof-facebook', b.social_facebook); setV('bd-prof-tiktok', b.social_tiktok);
+        setV('bd-prof-price-from', b.price_from != null ? b.price_from : ''); setV('bd-prof-price-to', b.price_to != null ? b.price_to : ''); setV('bd-prof-price-unit', b.price_unit || '');
         setC('bd-flag-kids', b.kids_friendly); setC('bd-flag-pets', b.pet_friendly); setC('bd-flag-livemusic', b.live_music); setC('bd-flag-outdoor', b.outdoor_seating); setC('bd-flag-reservations', b.reservations); setC('bd-flag-delivery', b.delivery); setC('bd-flag-takeout', b.takeout); setC('bd-flag-alcohol', b.alcohol); setC('bd-flag-waterfront', b.waterfront);
         var dayMap = { monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat', sunday:'sun' };
         (_bdData.hours || []).forEach(function(h) { var k = (h.day_of_week||'').toLowerCase(); var d = dayMap[k] || k; var val = (h.open_time && h.close_time) ? h.open_time + ' - ' + h.close_time : (h.open_time || ''); setV('bd-hours-' + d, val); });
@@ -4445,6 +4464,9 @@
         icon:             (document.getElementById('bd-prof-emoji')||{}).value,
         subtitle:         (document.getElementById('bd-prof-tagline')||{}).value,
         price_range:      (document.getElementById('bd-prof-pricerange')||{}).value,
+        price_from:       (document.getElementById('bd-prof-price-from')||{}).value !== '' ? Number((document.getElementById('bd-prof-price-from')||{}).value) : null,
+        price_to:         (document.getElementById('bd-prof-price-to')||{}).value   !== '' ? Number((document.getElementById('bd-prof-price-to')||{}).value)   : null,
+        price_unit:       (document.getElementById('bd-prof-price-unit')||{}).value || null,
         description:      (document.getElementById('bd-prof-description')||{}).value,
         address_line_1:   (document.getElementById('bd-prof-address')||{}).value,
         city:             (document.getElementById('bd-prof-city')||{}).value,
