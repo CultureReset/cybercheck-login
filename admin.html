@@ -7717,12 +7717,12 @@
     // ── Daily Update Links ─────────────────────────────
     (function loadDulEntities() {
       // Populate business dropdown when page loads
-      fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
+      fetch(API_BASE + '/api/gcr/entities?limit=500')
         .then(function(r){ return r.json(); })
         .then(function(d){
           var sel = document.getElementById('dul-entity-id');
           if (!sel) return;
-          (Array.isArray(d) ? d : (d.entities || [])).sort(function(a,b){ return a.name.localeCompare(b.name); }).forEach(function(e){
+          (Array.isArray(d) ? d : (d.entities || d.businesses || [])).sort(function(a,b){ return a.name.localeCompare(b.name); }).forEach(function(e){
             var opt = document.createElement('option');
             opt.value = e.id; opt.textContent = e.name + (e.city ? ' — ' + e.city : '');
             sel.appendChild(opt);
