@@ -4151,29 +4151,49 @@
       var statusEl = document.getElementById('ao-scrape-status');
       statusEl.style.display = '';
       statusEl.style.color   = 'var(--text-muted)';
-      statusEl.textContent   = 'Fetching page content from: ' + url + '...';
+      statusEl.textContent   = '🤖 Fetching + structuring with Grok AI: ' + url + ' (15-30s)...';
       var token = getAuthToken(); if (!token) return;
+
+      // Hide step1, show loading
+      document.getElementById('ao-step1').style.display   = 'none';
+      document.getElementById('ao-loading').style.display = '';
+      document.getElementById('ao-step2').style.display   = 'none';
+      document.getElementById('ao-saved').style.display   = 'none';
+
       try {
-        var r = await fetch(API_BASE + '/api/admin/scrape-url', {
+        var r = await fetch(API_BASE + '/api/admin/ai-scrape-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ url })
         });
-        if (!r.ok) throw new Error(await r.text());
-        var d = await r.json();
-        document.getElementById('ao-raw').value = d.text || '';
-        statusEl.style.color = '#22c55e';
-        statusEl.textContent = 'Page scraped! ' + (d.text || '').length + ' characters extracted. Now click "Organize with AI" above to structure the data.';
-        // Pulse the Organize button to draw attention
-        var orgBtn = document.querySelector('#ao-step1 .btn-primary');
-        if (orgBtn && orgBtn.textContent.includes('Organize')) {
-          orgBtn.style.animation = 'none'; orgBtn.offsetHeight;
-          orgBtn.style.cssText += ';box-shadow:0 0 0 3px rgba(11,122,117,0.5);transform:scale(1.02);transition:.3s;';
-          setTimeout(function(){ orgBtn.style.cssText = orgBtn.style.cssText.replace(/box-shadow:[^;]+;/,'').replace(/transform:[^;]+;/,''); }, 2000);
+        if (!r.ok) {
+          var errData = await r.json().catch(function(){ return {}; });
+          throw new Error(errData.error || ('HTTP ' + r.status));
         }
+        var d = await r.json();
+        _aoResult = d.structured;
+
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-step1').style.display   = '';
+
+        statusEl.style.color = '#22c55e';
+        statusEl.textContent = '✓ Scraped & structured by Grok! Review below then save.';
+
+        // Enable save button
+        var saveBtn = document.getElementById('ao-save-btn');
+        if (saveBtn) { saveBtn.style.display = 'block'; saveBtn.disabled = false; }
+
+        // Show top save banner
+        var topSave = document.getElementById('ao-top-save');
+        if (topSave) topSave.style.display = '';
+
+        renderAOPreview(_aoResult);
+        document.getElementById('ao-step2').style.display = '';
       } catch(e) {
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-step1').style.display   = '';
         statusEl.style.color = '#ef4444';
-        statusEl.textContent = 'Scrape failed: ' + e.message + '. Try pasting the page content manually instead.';
+        statusEl.textContent = '✗ Failed: ' + e.message + '. Try pasting the page content manually instead.';
       }
     }
 
@@ -6588,24 +6608,33 @@
         var isMerge = !!entityId;
 
         if (!isMerge) {
-          // 1a. Create NEW entity
-          var slug = d.subdomain || (d.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-          var entityPayload = { name: d.name, slug, subtitle: d.tagline, entity_type: 'business', entity_subtype: d.type, phone: d.phone, address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, website_url: d.website };
-          var entRes = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entityPayload, features: (d.features||[]).map(function(f){ return { label: f }; }), perfect_for: (d.perfect_for||[]).map(function(p){ return { label: p }; }) }) });
-          var entData = await entRes.json();
-          if (!entRes.ok || !entData.id) throw new Error(entData.error || 'Entity creation failed');
-          entityId = entData.id;
+          // Use the new ai-scrape-approve endpoint — handles all tables in one shot
+          var approveRes = await fetch(API_BASE + '/api/admin/ai-scrape-approve', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ structured: d })
+          });
+          var approveData = await approveRes.json();
+          if (!approveRes.ok || !approveData.entity_id) throw new Error(approveData.error || 'Save failed');
+          entityId = approveData.entity_id;
+          _aoSavedSlug = approveData.slug;
+          var savedSummary = Object.entries(approveData.saved || {}).map(function(kv){ return kv[1] + ' ' + kv[0]; }).join(', ');
+          document.getElementById('ao-loading').style.display = 'none';
+          document.getElementById('ao-saved').style.display = '';
+          document.getElementById('ao-saved-msg').textContent = (d.name || 'Business') + ' saved! ' + savedSummary + (approveData.errors?.length ? ' (' + approveData.errors.length + ' warnings)' : '') + '. Set it active to publish on GCR.';
+          toast((d.name || 'Business') + ' saved to GCR!', 'success');
+          return;
         } else {
           // 1b. MERGE — update entity fields that are currently empty
           var updateFields = {};
-          if (d.tagline) updateFields.subtitle = d.tagline;
-          if (d.type) updateFields.entity_subtype = d.type;
+          if (d.subtitle || d.tagline) updateFields.subtitle = d.subtitle || d.tagline;
+          if (d.entity_subtype || d.type) updateFields.entity_subtype = d.entity_subtype || d.type;
           if (d.phone) updateFields.phone = d.phone;
-          if (d.address) updateFields.address_line_1 = d.address;
+          if (d.address_line_1 || d.address) updateFields.address_line_1 = d.address_line_1 || d.address;
           if (d.city) updateFields.city = d.city;
           if (d.state) updateFields.state = d.state;
           if (d.zip) updateFields.zip = d.zip;
-          if (d.website) updateFields.website_url = d.website;
+          if (d.website_url || d.website) updateFields.website_url = d.website_url || d.website;
           // Only update non-empty fields — fetch current entity to check
           var curRes = await fetch(API_BASE + '/api/gcr/entity/' + (_allEntities.find(function(e){return e.id===entityId;})?.slug || entityId));
           var curData = await curRes.json();
