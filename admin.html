@@ -1520,13 +1520,13 @@
           <p id="dul-submitted-msg" style="display:none;margin-top:12px;color:#4ade80;font-size:14px;">✅ Submitted — menu updated!</p>
         </div>
 
-        <!-- Today's Links Table -->
+        <!-- Today's Links Table — ALL businesses -->
         <div class="card" style="padding:24px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="margin:0;">Today's Links</h3>
-            <button class="btn btn-outline" onclick="loadTodaysLinks()" style="font-size:12px;">Refresh</button>
+            <h3 style="margin:0;">Today's Links — All Businesses</h3>
+            <button class="btn btn-outline" onclick="loadAllTodaysLinks()" style="font-size:12px;">↻ Refresh</button>
           </div>
-          <div id="dul-todays-links"><p style="color:var(--text-muted);font-size:14px;">Select a business above and generate a link to see it here.</p></div>
+          <div id="dul-todays-links"><p style="color:var(--text-muted);font-size:14px;">Loading today's links...</p></div>
         </div>
       </div>
 
@@ -2796,6 +2796,7 @@
       if (page === 'gcr-site-editor' && !_siteEditorLoaded) { _siteEditorLoaded = true; loadSiteEditor(); }
       if (page === 'bookings') loadBookings();
       if (page === 'sales-pages') initSalesPageEditor();
+      if (page === 'daily-update-links') loadAllTodaysLinks();
     }
 
     function toast(msg, type) {
@@ -7806,6 +7807,7 @@
     }
 
     async function checkDulStatus() {
+      // Update the status badge for the currently selected business (used after generating a link)
       var entityId = document.getElementById('dul-entity-id').value;
       if (!entityId) return;
       var r = await fetch(API_BASE + '/api/update/status/' + entityId, { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }).then(function(r){ return r.json(); });
@@ -7813,32 +7815,49 @@
       var submitted = links.some(function(l){ return l.submitted_at; });
       document.getElementById('dul-status-badge').textContent = submitted ? '✅ Submitted' : (links.length ? '⏳ Waiting' : '—');
       document.getElementById('dul-submitted-msg').style.display = submitted ? 'block' : 'none';
-
-      // Render today's links table
-      var el = document.getElementById('dul-todays-links');
-      if (!links.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No links generated today for this business.</p>'; return; }
-      var apiBase = (typeof API_BASE !== 'undefined' ? API_BASE : '').replace('/api','').replace('api.','') || window.location.origin;
-      el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
-        '<thead><tr style="color:var(--text-muted);text-align:left;">' +
-        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">Type</th>' +
-        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">URL</th>' +
-        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">Expires</th>' +
-        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">Status</th>' +
-        '</tr></thead><tbody>' +
-        links.map(function(l) {
-          var url = l.url || ('https://cybercheck-links.vercel.app/menu-editor.html?token=' + l.token);
-          var exp = l.expires_at ? new Date(l.expires_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
-          var status = l.submitted_at ? '<span style="color:#4ade80;">✅ Submitted</span>' : '<span style="color:#fbbf24;">⏳ Waiting</span>';
-          return '<tr>' +
-            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);color:var(--text-muted);">'+l.link_type+'</td>' +
-            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);"><a href="'+url+'" target="_blank" style="color:#38bdf8;font-family:monospace;font-size:12px;">'+url.split('/').pop().substring(0,16)+'…</a></td>' +
-            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);color:var(--text-muted);">'+exp+'</td>' +
-            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);">'+status+'</td>' +
-            '</tr>';
-        }).join('') + '</tbody></table>';
+      loadAllTodaysLinks(); // also refresh the full table
     }
 
-    function loadTodaysLinks() { checkDulStatus(); }
+    async function loadAllTodaysLinks() {
+      var el = document.getElementById('dul-todays-links');
+      el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading...</p>';
+      var r = await fetch(API_BASE + '/api/update/today', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }).catch(function(){ return null; });
+      if (!r || !r.ok) { el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Could not load links.</p>'; return; }
+      var d = await r.json();
+      var links = d.links || [];
+      if (!links.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No links sent today yet.</p>'; return; }
+
+      var rows = links.map(function(l) {
+        var qrUrl  = 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(l.entity_slug || '');
+        var editUrl = 'https://cybercheck-links.vercel.app/menu-editor.html?token=' + l.token;
+        var sentTo = l.send_phone ? '<span style="font-size:12px;color:var(--text-muted);">📱 '+l.send_phone+'</span>' : '';
+        var statusDot, statusText;
+        if (l.submitted_at) {
+          statusDot = '🟢'; statusText = '<span style="color:#4ade80;font-weight:700;">Submitted</span>';
+        } else if (l.opened_at) {
+          statusDot = '🟡'; statusText = '<span style="color:#fbbf24;font-weight:700;">Opened</span>';
+        } else {
+          statusDot = '⚪'; statusText = '<span style="color:var(--text-muted);">Sent</span>';
+        }
+        return '<tr style="border-bottom:1px solid var(--card-border);">' +
+          '<td style="padding:10px 8px 10px 0;font-weight:700;">' + (l.entity_icon||'🏪') + ' ' + (l.entity_name||'') + '<br>' + sentTo + '</td>' +
+          '<td style="padding:10px 8px;text-align:center;font-size:18px;" title="' + (l.submitted_at ? 'Submitted '+new Date(l.submitted_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : l.opened_at ? 'Opened' : 'Not opened yet') + '">' + statusDot + '<br><span style="font-size:11px;">' + statusText + '</span></td>' +
+          '<td style="padding:10px 0 10px 8px;text-align:right;">' +
+            '<a href="' + qrUrl + '" target="_blank" style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;font-size:12px;color:var(--text);text-decoration:none;margin-bottom:4px;">📋 Live Menu</a><br>' +
+            '<a href="' + editUrl + '" target="_blank" style="display:inline-block;padding:5px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;font-size:12px;color:var(--text);text-decoration:none;">✏️ Edit Link</a>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="color:var(--text-muted);">' +
+          '<th style="padding:6px 8px 6px 0;text-align:left;font-weight:600;border-bottom:1px solid var(--card-border);">Business</th>' +
+          '<th style="padding:6px 8px;text-align:center;font-weight:600;border-bottom:1px solid var(--card-border);">Status</th>' +
+          '<th style="padding:6px 0 6px 8px;text-align:right;font-weight:600;border-bottom:1px solid var(--card-border);">Links</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    function loadTodaysLinks() { loadAllTodaysLinks(); }
 
     // ── Grok Agentic AI Chat ───────────────────────────
     var _grokHistory = [];
