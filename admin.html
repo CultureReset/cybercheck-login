@@ -1473,12 +1473,14 @@
         <div class="card" style="padding:24px;margin-bottom:16px;">
           <h3 style="margin:0 0 16px;">Generate Link</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-            <div class="form-group">
+            <div class="form-group" style="position:relative;">
               <label>Business</label>
-              <input type="text" id="dul-search" placeholder="Search businesses..." oninput="dulFilterBusinesses()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);margin-bottom:6px;">
-              <select id="dul-entity-id" size="5" style="width:100%;padding:4px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);height:auto;">
-                <option value="">— loading businesses... —</option>
-              </select>
+              <input type="text" id="dul-search" placeholder="Type a business name..." autocomplete="off"
+                oninput="dulAutoComplete()" onfocus="dulAutoComplete()"
+                style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+              <input type="hidden" id="dul-entity-id">
+              <div id="dul-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:8px;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);margin-top:2px;"></div>
+              <div id="dul-selected" style="display:none;margin-top:6px;font-size:12px;color:#4ade80;font-weight:600;"></div>
             </div>
             <div class="form-group">
               <label>Link Type</label>
@@ -7715,34 +7717,57 @@
     updateBulkFormatHelp();
 
     // ── Daily Update Links ─────────────────────────────
+    var _dulEntities = [];
     (function loadDulEntities() {
-      // Populate business dropdown when page loads
       fetch(API_BASE + '/api/gcr/entities?limit=500')
         .then(function(r){ return r.json(); })
         .then(function(d){
-          var sel = document.getElementById('dul-entity-id');
-          if (!sel) return;
-          (Array.isArray(d) ? d : (d.entities || d.businesses || [])).sort(function(a,b){ return a.name.localeCompare(b.name); }).forEach(function(e){
-            var opt = document.createElement('option');
-            opt.value = e.id; opt.textContent = e.name + (e.city ? ' — ' + e.city : '');
-            sel.appendChild(opt);
-          });
-          sel.firstChild.textContent = '— select business —';
-        }).catch(function(){ document.getElementById('dul-entity-id').firstChild.textContent = '— failed to load —'; });
+          _dulEntities = (Array.isArray(d) ? d : (d.entities || d.businesses || []))
+            .sort(function(a,b){ return a.name.localeCompare(b.name); });
+        })
+        .catch(function(){ console.warn('DUL: failed to load businesses'); });
     })();
 
-    var _dulAllOptions = [];
-    function dulFilterBusinesses() {
-      var q = document.getElementById('dul-search').value.toLowerCase();
-      var sel = document.getElementById('dul-entity-id');
-      if (!_dulAllOptions.length) {
-        _dulAllOptions = Array.from(sel.options).slice(1); // cache after first load
-      }
-      // rebuild options
-      while (sel.options.length > 1) sel.remove(1);
-      _dulAllOptions.filter(function(o){ return !q || o.textContent.toLowerCase().includes(q); })
-        .forEach(function(o){ sel.appendChild(o.cloneNode(true)); });
+    function dulAutoComplete() {
+      var q = document.getElementById('dul-search').value.toLowerCase().trim();
+      var dropdown = document.getElementById('dul-dropdown');
+      // Clear selection if user edits text
+      document.getElementById('dul-entity-id').value = '';
+      document.getElementById('dul-selected').style.display = 'none';
+
+      if (!q) { dropdown.style.display = 'none'; return; }
+
+      var matches = _dulEntities.filter(function(e){
+        return e.name.toLowerCase().includes(q) || (e.city && e.city.toLowerCase().includes(q));
+      }).slice(0, 20);
+
+      if (!matches.length) { dropdown.innerHTML = '<div style="padding:10px 14px;color:var(--text-muted);font-size:13px;">No businesses found</div>'; dropdown.style.display = 'block'; return; }
+
+      dropdown.innerHTML = matches.map(function(e){
+        return '<div data-id="'+e.id+'" data-name="'+e.name.replace(/"/g,'&quot;')+'" '
+          +'onmousedown="dulPickEntity(\''+e.id+'\',\''+e.name.replace(/'/g,"\\'")+'\')" '
+          +'style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--card-border);" '
+          +'onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'">'
+          +'<strong>'+e.name+'</strong>'+(e.city ? ' <span style="color:var(--text-muted);">— '+e.city+'</span>' : '')
+          +'</div>';
+      }).join('');
+      dropdown.style.display = 'block';
     }
+
+    function dulPickEntity(id, name) {
+      document.getElementById('dul-entity-id').value = id;
+      document.getElementById('dul-search').value = name;
+      document.getElementById('dul-dropdown').style.display = 'none';
+      document.getElementById('dul-selected').textContent = '✓ Selected: ' + name;
+      document.getElementById('dul-selected').style.display = 'block';
+    }
+
+    document.addEventListener('click', function(e){
+      if (!e.target.closest('#dul-search') && !e.target.closest('#dul-dropdown')) {
+        var dd = document.getElementById('dul-dropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
 
     async function generateDailyLink(sendSms) {
       var entityId = document.getElementById('dul-entity-id').value;
