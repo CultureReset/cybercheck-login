@@ -118,6 +118,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span>SMS / Messaging</span>
         </div>
+        <div class="nav-item" data-page="daily-update-links" onclick="showPage('daily-update-links')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+          <span>Daily Update Links</span>
+        </div>
         <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span>Coupons</span>
@@ -1436,6 +1440,67 @@
       </div>
 
       <!-- ── GCR MESSAGING / SMS ─────────────── -->
+      <!-- ── Daily Update Links Page ── -->
+      <div id="page-daily-update-links" class="page-content" style="display:none;">
+        <div class="page-header"><h1>Daily Update Links</h1><p style="color:var(--text-muted);margin-top:4px;font-size:14px;">Generate a secure mobile link for any business. They tap it, update today's specials or menu, hit submit — goes live instantly.</p></div>
+
+        <div class="card" style="padding:24px;margin-bottom:16px;">
+          <h3 style="margin:0 0 16px;">Generate Link</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div class="form-group">
+              <label>Business</label>
+              <select id="dul-entity-id" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+                <option value="">— select business —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Link Type</label>
+              <select id="dul-link-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+                <option value="daily">Daily Update (Specials + Menu Prices)</option>
+                <option value="specials">Specials Only</option>
+                <option value="menu_prices">Menu Prices Only</option>
+                <option value="catch_of_day">Catch of the Day</option>
+                <option value="menu_setup">🤖 Menu Setup (AI — first time onboarding)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Send SMS to (optional — leave blank to just copy the link)</label>
+            <input type="tel" id="dul-phone" placeholder="+1 850 555 0000" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="generateDailyLink()">Generate Link</button>
+            <button class="btn btn-outline" onclick="generateAndSend()">Generate + Send SMS Now</button>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div id="dul-result" style="display:none;" class="card" style="padding:24px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <h3 style="margin:0;">Your Link</h3>
+            <span id="dul-status-badge" style="font-size:12px;padding:3px 10px;border-radius:20px;background:#1e3a5f;color:#93c5fd;font-weight:600;"></span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
+            <input id="dul-url" type="text" readonly style="flex:1;padding:10px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#38bdf8;font-size:13px;font-family:monospace;">
+            <button class="btn btn-outline" onclick="copyDulUrl()" style="flex-shrink:0;">Copy</button>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a id="dul-open-link" href="#" target="_blank" class="btn btn-outline">Open Link →</a>
+            <button class="btn btn-outline" onclick="checkDulStatus()">Check Status</button>
+          </div>
+          <p id="dul-submitted-msg" style="display:none;margin-top:12px;color:#4ade80;font-size:14px;">✅ Submitted — menu updated!</p>
+        </div>
+
+        <!-- Today's Links Table -->
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h3 style="margin:0;">Today's Links</h3>
+            <button class="btn btn-outline" onclick="loadTodaysLinks()" style="font-size:12px;">Refresh</button>
+          </div>
+          <div id="dul-todays-links"><p style="color:var(--text-muted);font-size:14px;">Select a business above and generate a link to see it here.</p></div>
+        </div>
+      </div>
+
       <div id="page-gcr-messaging" class="page-content" style="display:none;">
         <div class="page-header"><h1>SMS / Messaging</h1></div>
         <div class="card" style="padding:24px;margin-bottom:14px;">
@@ -2134,6 +2199,7 @@
               <div class="bd-nav-item" data-panel="seo" onclick="switchBizPanel('seo')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">SEO</div>
               <div class="bd-nav-item" data-panel="social" onclick="switchBizPanel('social')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Social Links</div>
               <div class="bd-nav-item" data-panel="gcrsettings" onclick="switchBizPanel('gcrsettings')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">GCR Settings</div>
+              <div class="bd-nav-item" data-panel="grok-chat" onclick="switchBizPanel('grok-chat')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#38bdf8;border-left:3px solid transparent;font-weight:600;">🤖 Grok AI Chat</div>
               <div style="padding:12px 16px;margin-top:8px;">
                 <a id="bd-view-live" href="#" target="_blank" style="display:block;text-align:center;padding:8px;background:var(--primary);color:white;border-radius:6px;font-size:12px;text-decoration:none;font-weight:600;">View Live Profile</a>
               </div>
@@ -2210,6 +2276,18 @@
                   </div>
                 </div>
                 <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Displays on cards as "From $45/person". Set From Price to 0 for Free. Leave blank to hide.</p>
+
+                <div class="card-header" style="margin-top:8px;"><h4>Also List On <span style="font-weight:400;font-size:12px;color:var(--text-muted);">— additional pages this business appears on</span></h4></div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 12px;">
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="restaurants"> Restaurants</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="things-to-do"> Things To Do</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="nightlife"> Nightlife</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="coffee-sweets"> Coffee &amp; Sweets</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="shopping"> Shopping</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="services"> Services</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="public-spots"> Public Spots</label>
+                </div>
+                <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Check extra pages. Primary listing page is set by Business Type above — these are additional.</p>
               </div>
               <div class="card">
                 <div class="card-header"><h3>Address</h3></div>
@@ -2464,6 +2542,33 @@
                   <button class="btn btn-primary" onclick="saveBizDashGCRSettings()">Save GCR Settings</button>
                   <a id="bd-gcr-profile-link" href="#" target="_blank" class="btn btn-outline">View Live Profile</a>
                   <button class="btn btn-outline" onclick="reindexThisBusiness()">Re-index for AI Search</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Grok AI Chat Panel ── -->
+            <div class="bd-panel" id="bd-panel-grok-chat" style="display:none;padding:24px;">
+              <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 200px);">
+                <div class="card-header" style="flex-shrink:0;">
+                  <h3>🤖 Grok AI Assistant</h3>
+                  <p style="margin:0;font-size:13px;color:var(--text-muted);">Ask anything about this business — clicks, bookings, leads, data quality, what to improve, or tell it to make changes.</p>
+                </div>
+                <div id="grok-chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg);border-radius:8px;margin:0 0 12px;">
+                  <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Start a conversation with Grok. Ask about your business data, analytics, or get suggestions.</div>
+                </div>
+                <div style="flex-shrink:0;display:flex;gap:8px;">
+                  <input id="grok-chat-input" type="text" placeholder="Ask Grok anything… e.g. 'How many events do we have this month?'" onkeydown="if(event.key==='Enter')sendGrokMessage();" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <button onclick="sendGrokMessage();" style="padding:10px 18px;background:#38bdf8;color:#0f172a;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">Send</button>
+                  <button onclick="document.getElementById('grok-chat-messages').innerHTML='<div style=text-align:center;color:var(--text-muted);font-size:13px;padding:20px>Conversation cleared.</div>';_grokHistory=[];" title="Clear chat" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">✕</button>
+                </div>
+                <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+                  <button onclick="quickGrokAsk('Pull website analytics for the last 30 days — visitors, page views, top pages, and traffic sources.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📊 Website analytics</button>
+                  <button onclick="quickGrokAsk('Show me all leads and customers — how many came in today and this week.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">👥 Leads &amp; CRM</button>
+                  <button onclick="quickGrokAsk('Check my Google Business profile — reviews, rating, unanswered reviews.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📍 Google reviews</button>
+                  <button onclick="quickGrokAsk('Pull social media analytics — followers, reach, engagement across all connected platforms.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📱 Social stats</button>
+                  <button onclick="quickGrokAsk('Show me what users are actually doing on my pages — clicks, phone taps, map clicks, section views.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🖱️ User behavior</button>
+                  <button onclick="quickGrokAsk('Check my SEO — what keywords am I tracking, do I have GA4 and pixel set up, what pages have meta tags?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🔍 SEO check</button>
+                  <button onclick="quickGrokAsk('What do I need to do to run Facebook, Instagram, and Google ads from this dashboard?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📢 Run ads</button>
                 </div>
               </div>
             </div>
@@ -4406,6 +4511,8 @@
 
     async function openGCRBizDashboard(siteId) {
       _bdSiteId = siteId;
+      _grokBriefed = false; _grokHistory = []; // reset chat when switching businesses
+      if (document.getElementById('grok-chat-messages')) document.getElementById('grok-chat-messages').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Opening Grok AI Chat will auto-brief you on this business.</div>';
       showPage('biz-dashboard');
       document.getElementById('bd-biz-name').textContent = 'Loading…';
       var token = getAuthToken();
@@ -4419,6 +4526,8 @@
         var setC = function(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; };
         setV('bd-prof-name', b.name); setV('bd-prof-type', b.entity_type); setV('bd-prof-status', b.status); setV('bd-prof-emoji', b.icon); setV('bd-prof-tagline', b.subtitle); setV('bd-prof-pricerange', b.price_range); setV('bd-prof-description', b.description); setV('bd-prof-address', b.address_line_1); setV('bd-prof-city', b.city); setV('bd-prof-state', b.state); setV('bd-prof-zip', b.zip); setV('bd-prof-phone', b.phone); setV('bd-prof-email', b.email); setV('bd-prof-website', b.website_url); setV('bd-prof-instagram', b.social_instagram); setV('bd-prof-facebook', b.social_facebook); setV('bd-prof-tiktok', b.social_tiktok);
         setV('bd-prof-price-from', b.price_from != null ? b.price_from : ''); setV('bd-prof-price-to', b.price_to != null ? b.price_to : ''); setV('bd-prof-price-unit', b.price_unit || '');
+        var secTypes = (b.secondary_types || '').split(',').map(function(s){return s.trim().toLowerCase();}).filter(Boolean);
+        document.querySelectorAll('.bd-secondary-type').forEach(function(cb){ cb.checked = secTypes.indexOf(cb.value) !== -1; });
         setC('bd-flag-kids', b.kids_friendly); setC('bd-flag-pets', b.pet_friendly); setC('bd-flag-livemusic', b.live_music); setC('bd-flag-outdoor', b.outdoor_seating); setC('bd-flag-reservations', b.reservations); setC('bd-flag-delivery', b.delivery); setC('bd-flag-takeout', b.takeout); setC('bd-flag-alcohol', b.alcohol); setC('bd-flag-waterfront', b.waterfront);
         var dayMap = { monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat', sunday:'sun' };
         (_bdData.hours || []).forEach(function(h) { var k = (h.day_of_week||'').toLowerCase(); var d = dayMap[k] || k; var val = (h.open_time && h.close_time) ? h.open_time + ' - ' + h.close_time : (h.open_time || ''); setV('bd-hours-' + d, val); });
@@ -4454,6 +4563,7 @@
       if (el) el.style.display = 'block';
       var nav = document.querySelector('.bd-nav-item[data-panel="' + panel + '"]');
       if (nav) nav.classList.add('active');
+      if (panel === 'grok-chat' && typeof onGrokPanelOpen === 'function') onGrokPanelOpen();
     }
 
     async function saveBizDashProfile() {
@@ -4467,6 +4577,7 @@
         price_from:       (document.getElementById('bd-prof-price-from')||{}).value !== '' ? Number((document.getElementById('bd-prof-price-from')||{}).value) : null,
         price_to:         (document.getElementById('bd-prof-price-to')||{}).value   !== '' ? Number((document.getElementById('bd-prof-price-to')||{}).value)   : null,
         price_unit:       (document.getElementById('bd-prof-price-unit')||{}).value || null,
+        secondary_types:  Array.from(document.querySelectorAll('.bd-secondary-type:checked')).map(function(cb){return cb.value;}).join(',') || null,
         description:      (document.getElementById('bd-prof-description')||{}).value,
         address_line_1:   (document.getElementById('bd-prof-address')||{}).value,
         city:             (document.getElementById('bd-prof-city')||{}).value,
@@ -6143,27 +6254,56 @@
       };
       if (endpointMap[type]) {
         var endpoint = endpointMap[type];
-        var success = 0, errors = 0;
-        for (var i = 0; i < rows.length; i++) {
-          try {
-            var res = await fetch(API_BASE + endpoint, {
+        try {
+          // Send all rows at once so Grok AI can normalize the full batch
+          var res = await fetch(API_BASE + endpoint, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(rows)
+          });
+          var r = await res.json();
+
+          // AI needs clarification — show questions popup before saving
+          if (r.needs_clarification && r.questions && r.questions.length) {
+            var qHtml = r.questions.map(function(q, i) {
+              return '<div style="margin-bottom:10px;"><strong>Q' + (i+1) + ':</strong> ' + q + '<br><input type="text" id="ai-q-' + i + '" style="width:100%;margin-top:4px;padding:6px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:13px;" placeholder="Your answer..."></div>';
+            }).join('');
+            var confirmed = await new Promise(function(resolve) {
+              var overlay = document.createElement('div');
+              overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+              overlay.innerHTML = '<div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;">' +
+                '<h3 style="color:#f1f5f9;margin:0 0 8px;">AI has questions about your data</h3>' +
+                '<p style="color:#94a3b8;font-size:13px;margin:0 0 16px;">Answer these to help Grok clean your data correctly, or skip to import as-is.</p>' +
+                qHtml +
+                '<div style="display:flex;gap:10px;margin-top:16px;">' +
+                '<button onclick="this.closest(\'div[style]\').remove();window._aiQResolve(true);" style="flex:1;padding:10px;background:#0b7a75;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Save Answers &amp; Import</button>' +
+                '<button onclick="this.closest(\'div[style]\').remove();window._aiQResolve(false);" style="flex:1;padding:10px;background:#334155;color:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">Skip — Import As-Is</button>' +
+                '</div></div>';
+              window._aiQResolve = resolve;
+              document.body.appendChild(overlay);
+            });
+            // Use the AI-normalized preview rows (already cleaned), import them
+            var finalRows = r.preview || rows;
+            var res2 = await fetch(API_BASE + endpoint + '?skip_ai=1', {
               method: 'POST',
               headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify(rows[i])
+              body: JSON.stringify(finalRows)
             });
-            var r = await res.json();
-            if (!res.ok || r.error) { errors++; console.error(rows[i].slug, r.error || res.status); }
-            else success += (r.inserted || 1);
-          } catch(e) { errors++; console.error(e.message); }
+            r = await res2.json();
+          }
+
+          if (!res.ok || r.error) throw new Error(r.error || res.status);
+          var msg = (r.inserted || 0) + ' rows imported' + (r.errors && r.errors.length ? ' · ' + r.errors.length + ' errors' : '');
+          var isErr = r.errors && r.errors.length && !(r.inserted);
+          resultEl.style.display = 'block';
+          resultEl.style.background = isErr ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.15)';
+          resultEl.style.color = isErr ? '#fca5a5' : '#86efac';
+          resultEl.style.border = '1px solid ' + (isErr ? '#7f1d1d' : '#14532d');
+          resultEl.textContent = msg;
+          toast(msg, isErr ? 'error' : 'success');
+        } catch(e) {
+          toast('Import error: ' + e.message, 'error');
         }
-        var msg = success + ' rows imported' + (errors ? ' · ' + errors + ' errors (check console)' : '');
-        var isErr = errors > 0 && success === 0;
-        resultEl.style.display = 'block';
-        resultEl.style.background = isErr ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.15)';
-        resultEl.style.color = isErr ? '#fca5a5' : '#86efac';
-        resultEl.style.border = '1px solid ' + (isErr ? '#7f1d1d' : '#14532d');
-        resultEl.textContent = msg;
-        toast(msg, isErr ? 'error' : 'success');
         return;
       }
 
@@ -7540,6 +7680,206 @@
     // ── INIT ──────────────────────────────────────────
     loadOverview();
     updateBulkFormatHelp();
+
+    // ── Daily Update Links ─────────────────────────────
+    (function loadDulEntities() {
+      // Populate business dropdown when page loads
+      fetch(API_BASE + '/api/gcr/entities', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var sel = document.getElementById('dul-entity-id');
+          if (!sel) return;
+          (d.entities || []).sort(function(a,b){ return a.name.localeCompare(b.name); }).forEach(function(e){
+            var opt = document.createElement('option');
+            opt.value = e.id; opt.textContent = e.name;
+            sel.appendChild(opt);
+          });
+        }).catch(function(){});
+    })();
+
+    async function generateDailyLink(sendSms) {
+      var entityId = document.getElementById('dul-entity-id').value;
+      var linkType = document.getElementById('dul-link-type').value;
+      var phone    = document.getElementById('dul-phone').value.trim();
+      if (!entityId) { toast('Select a business first', 'error'); return; }
+
+      var endpoint = sendSms ? '/api/update/send-sms' : '/api/update/generate';
+      var body = { entity_id: entityId, link_type: linkType };
+      if (phone) body[sendSms ? 'phone' : 'send_phone'] = phone;
+
+      var r = await fetch(API_BASE + endpoint, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).then(function(r){ return r.json(); });
+
+      if (r.error && !r.url) { toast(r.error, 'error'); return; }
+
+      var url = r.url;
+      document.getElementById('dul-url').value = url;
+      document.getElementById('dul-open-link').href = url;
+      document.getElementById('dul-result').style.display = 'block';
+      document.getElementById('dul-status-badge').textContent = r.submitted ? '✅ Already submitted' : '⏳ Waiting';
+      document.getElementById('dul-submitted-msg').style.display = r.submitted ? 'block' : 'none';
+      if (sendSms && r.sent_to) toast('SMS sent to ' + r.sent_to, 'success');
+      else toast('Link ready — copy and share it', 'success');
+    }
+
+    function generateAndSend() { generateDailyLink(true); }
+
+    function copyDulUrl() {
+      var el = document.getElementById('dul-url');
+      el.select(); document.execCommand('copy');
+      toast('Link copied!', 'success');
+    }
+
+    async function checkDulStatus() {
+      var entityId = document.getElementById('dul-entity-id').value;
+      if (!entityId) return;
+      var r = await fetch(API_BASE + '/api/update/status/' + entityId, { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }).then(function(r){ return r.json(); });
+      var links = r.links || [];
+      var submitted = links.some(function(l){ return l.submitted_at; });
+      document.getElementById('dul-status-badge').textContent = submitted ? '✅ Submitted' : (links.length ? '⏳ Waiting' : '—');
+      document.getElementById('dul-submitted-msg').style.display = submitted ? 'block' : 'none';
+
+      // Render today's links table
+      var el = document.getElementById('dul-todays-links');
+      if (!links.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No links generated today for this business.</p>'; return; }
+      var apiBase = (typeof API_BASE !== 'undefined' ? API_BASE : '').replace('/api','').replace('api.','') || window.location.origin;
+      el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="color:var(--text-muted);text-align:left;">' +
+        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">Type</th>' +
+        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">URL</th>' +
+        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">Expires</th>' +
+        '<th style="padding:8px 0;border-bottom:1px solid var(--card-border);">Status</th>' +
+        '</tr></thead><tbody>' +
+        links.map(function(l) {
+          var url = l.url || ('https://cybercheck-links.vercel.app/menu-editor.html?token=' + l.token);
+          var exp = l.expires_at ? new Date(l.expires_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+          var status = l.submitted_at ? '<span style="color:#4ade80;">✅ Submitted</span>' : '<span style="color:#fbbf24;">⏳ Waiting</span>';
+          return '<tr>' +
+            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);color:var(--text-muted);">'+l.link_type+'</td>' +
+            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);"><a href="'+url+'" target="_blank" style="color:#38bdf8;font-family:monospace;font-size:12px;">'+url.split('/').pop().substring(0,16)+'…</a></td>' +
+            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);color:var(--text-muted);">'+exp+'</td>' +
+            '<td style="padding:8px 0;border-bottom:1px solid var(--card-border);">'+status+'</td>' +
+            '</tr>';
+        }).join('') + '</tbody></table>';
+    }
+
+    function loadTodaysLinks() { checkDulStatus(); }
+
+    // ── Grok Agentic AI Chat ───────────────────────────
+    var _grokHistory = [];
+
+    var TOOL_LABELS = {
+      get_business_profile: '📋 Reading business profile',
+      get_menu: '🍽️ Loading menu',
+      get_drinks: '🍺 Loading drink menu',
+      get_events: '🎉 Checking events',
+      get_specials: '🏷️ Checking specials',
+      get_happy_hours: '🍻 Checking happy hours',
+      get_analytics: '📊 Pulling analytics',
+      get_reviews: '⭐ Reading reviews',
+      get_connected_platforms: '🔌 Checking integrations',
+      get_platform_data: '📡 Querying platform data',
+      get_all_gcr_businesses: '🗺️ Scanning all GCR businesses',
+    };
+
+    function grokAppendMsg(el, html, style) {
+      var d = document.createElement('div');
+      d.style.cssText = style;
+      d.innerHTML = html;
+      el.appendChild(d);
+      el.scrollTop = el.scrollHeight;
+      return d;
+    }
+
+    function quickGrokAsk(text) {
+      document.getElementById('grok-chat-input').value = text;
+      sendGrokMessage();
+    }
+
+    // Auto-brief when Grok panel is first opened
+    var _grokBriefed = false;
+    function onGrokPanelOpen() {
+      if (_grokBriefed) return;
+      _grokBriefed = true;
+      setTimeout(function() {
+        var bizName = (_bdData && _bdData.business && _bdData.business.name) || '';
+        var prompt = bizName
+          ? 'Give me a quick briefing on ' + bizName + ': what looks good, what\'s missing, and what I should focus on.'
+          : 'Give me a platform overview: how many businesses are listed, what\'s missing data, and what needs attention.';
+        document.getElementById('grok-chat-input').value = prompt;
+        sendGrokMessage();
+      }, 300);
+    }
+
+    async function sendGrokMessage() {
+      var input = document.getElementById('grok-chat-input');
+      var msg = (input.value || '').trim();
+      if (!msg) return;
+      input.value = '';
+
+      var messagesEl = document.getElementById('grok-chat-messages');
+
+      // User bubble
+      grokAppendMsg(messagesEl, escHtml(msg),
+        'align-self:flex-end;background:#0b7a75;color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;font-size:14px;line-height:1.5;');
+
+      // Live status container — shows which tools Grok is calling
+      var statusEl = grokAppendMsg(messagesEl, '<span style="color:#94a3b8;font-size:12px;">🤖 Grok is working…</span>',
+        'align-self:flex-start;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted);');
+
+      try {
+        var token = getAuthToken();
+        var biz = (_bdData && _bdData.business) || {};
+
+        _grokHistory.push({ role: 'user', content: msg });
+
+        var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: msg,
+            history: _grokHistory.slice(-8),
+            slug: biz.slug || null,
+            entity_id: biz.id || null,
+          })
+        });
+        var r = await res.json();
+
+        // Show which tools were called
+        if (r.tools_called && r.tools_called.length) {
+          var toolTags = r.tools_called.map(function(t) {
+            return '<span style="display:inline-block;background:#1e3a5f;color:#93c5fd;padding:2px 8px;border-radius:10px;margin:2px;">' + (TOOL_LABELS[t.tool] || t.tool) + '</span>';
+          }).join('');
+          statusEl.innerHTML = '<div style="margin-bottom:4px;">' + toolTags + '</div>';
+        } else {
+          statusEl.remove();
+        }
+
+        var reply = r.reply || r.error || 'No response';
+        _grokHistory.push({ role: 'assistant', content: reply });
+
+        // Format reply — convert markdown-ish text to readable HTML
+        var formatted = reply
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+          .replace(/(<li>.*<\/li>)/s, '<ul style="margin:4px 0 4px 16px;padding:0;">$1</ul>')
+          .replace(/\n\n/g, '<br><br>')
+          .replace(/\n/g, '<br>');
+
+        grokAppendMsg(messagesEl, formatted,
+          'align-self:flex-start;background:var(--card-border);color:var(--text);padding:12px 16px;border-radius:12px 12px 12px 2px;max-width:90%;font-size:14px;line-height:1.6;');
+      } catch(e) {
+        statusEl.innerHTML = '<span style="color:#fca5a5;">Error: ' + escHtml(e.message) + '</span>';
+      }
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
   </script>
   <script src="js/wavegent-tab.js"></script>
 </body>
