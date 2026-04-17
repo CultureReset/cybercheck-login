@@ -401,6 +401,7 @@ function renderBookingsTable() {
     }
     if (b.status !== 'cancelled') {
       html += ' <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();resendConfirmation(\'' + b.id + '\')" style="color:#0ea5e9;border-color:#0ea5e9;" title="Resend SMS + Email confirmation to customer">&#128232; Resend</button>';
+      html += ' <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();sendWaiverLink(\'' + b.id + '\')" style="color:#f59e0b;border-color:#f59e0b;" title="Send waiver link to customer">&#9997; Waiver</button>';
     }
     html += '</td>';
     html += '</tr>';
@@ -671,6 +672,7 @@ function viewBookingDetail(id) {
     html += '<button class="btn btn-outline" onclick="cancelBooking(\'' + b.id + '\');closeModal(\'modal-booking\');loadBookings();" style="color:var(--danger);border-color:var(--danger);">Cancel Booking</button>';
   }
   html += '<button class="btn btn-outline" onclick="resendConfirmation(\'' + b.id + '\')">&#128232; Resend</button>';
+  html += '<button class="btn btn-outline" onclick="sendWaiverLink(\'' + b.id + '\')" style="color:#f59e0b;border-color:#f59e0b;">&#9997; Send Waiver</button>';
   html += '</div>';
 
   body.innerHTML = html;
@@ -691,6 +693,23 @@ async function resendConfirmation(id) {
     toast('Confirmation resent to customer!', 'success');
   } catch(e) {
     toast(e.message || 'Resend failed', 'error');
+  }
+}
+
+async function sendWaiverLink(id) {
+  var apiId = id.startsWith('b-') ? id.slice(2) : id;
+  if (!confirm('Send waiver link to customer?')) return;
+  try {
+    var resp = await fetch('https://cybercheck-api-database.vercel.app/api/public/waivers/send-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id: apiId })
+    });
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed');
+    toast('Waiver link sent to customer!', 'success');
+  } catch(e) {
+    toast(e.message || 'Send failed', 'error');
   }
 }
 
