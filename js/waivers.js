@@ -26,6 +26,10 @@ async function loadWaivers() {
   var apiData = await CC.dashboard.getWaivers();
   if (apiData && Array.isArray(apiData) && apiData.length > 0) {
     _signedWaivers = apiData.map(function(w) {
+      var sig = w.signature_data || '';
+      var method = sig === 'checkbox-acknowledged' ? 'Checkout'
+                 : sig ? 'Signature Link'
+                 : '—';
       return {
         id: w.id,
         customerName: w.customer_name || '',
@@ -33,10 +37,11 @@ async function loadWaivers() {
         customerPhone: w.customer_phone || '',
         bookingId: w.booking_id || '',
         waiverId: w.waiver_template_id || 'w1',
-        signedAt: w.signed_at || w.created_at || '',
+        signedAt: w.signed_at || '',
         ipAddress: w.ip_address || '',
-        signature: w.signature || '',
-        status: w.status || 'signed'
+        signature: w.signature_data || '',
+        method: method,
+        status: w.signed_at ? 'signed' : 'pending'
       };
     });
   } else {
@@ -344,24 +349,28 @@ function renderSignedWaiversLog() {
   if (!container) return;
 
   if (_signedWaivers.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">No signed waivers yet</div>';
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">No waivers yet</div>';
     return;
   }
 
   var html = '<div class="table-wrap"><table><thead><tr>';
-  html += '<th>Customer</th><th>Waiver</th><th>Signed</th><th>Method</th><th>Booking</th>';
+  html += '<th>Customer</th><th>Waiver</th><th>Status</th><th>Signed</th><th>Method</th><th>Booking</th>';
   html += '</tr></thead><tbody>';
 
   _signedWaivers.forEach(function(s) {
     var template = _waiverTemplates.find(function(t) { return t.id === s.waiverId; });
-    var methodLabel = s.method === 'sms_link' ? 'SMS Link' : s.method === 'website' ? 'Website' : s.method === 'docusign' ? 'DocuSign' : s.method;
     var signedDate = s.signedAt ? new Date(s.signedAt).toLocaleString() : '—';
+    var isSigned = s.status === 'signed';
+    var statusBadge = isSigned
+      ? '<span class="badge badge-success">Signed</span>'
+      : '<span class="badge badge-warning">Pending</span>';
 
     html += '<tr>';
     html += '<td><div style="font-weight:600;">' + escHtml(s.customerName) + '</div><div style="font-size:11px;color:var(--text-muted);">' + escHtml(s.customerEmail) + '</div></td>';
-    html += '<td style="font-size:13px;">' + escHtml(template ? template.name : 'Unknown') + '</td>';
+    html += '<td style="font-size:13px;">' + escHtml(template ? template.name : 'Standard Rental Waiver') + '</td>';
+    html += '<td>' + statusBadge + '</td>';
     html += '<td style="font-size:13px;">' + signedDate + '</td>';
-    html += '<td><span class="badge ' + (s.method === 'sms_link' ? 'badge-info' : 'badge-success') + '">' + methodLabel + '</span></td>';
+    html += '<td><span class="badge ' + (isSigned ? 'badge-success' : 'badge-warning') + '">' + escHtml(s.method || '—') + '</span></td>';
     html += '<td style="font-family:\'SF Mono\',monospace;font-size:12px;">' + (s.bookingId || '—') + '</td>';
     html += '</tr>';
   });
