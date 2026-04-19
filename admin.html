@@ -1284,7 +1284,25 @@
 
       <!-- ── LEADS ──────────────────────────────────── -->
       <div id="page-leads" class="page-content" style="display:none;">
-        <div class="page-header"><h1>Leads</h1></div>
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <h1>Sales Leads</h1>
+          <div style="display:flex;gap:10px;">
+            <select id="leads-filter-source" onchange="loadLeads()" style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <option value="">All Sources</option>
+              <option value="launch-gcr-cybercheck">GCR Launch Page</option>
+              <option value="sales-site-index">CyberCheck Homepage</option>
+              <option value="sales-site-booking">Bookings Page</option>
+              <option value="sales-site-reviews">Reviews Page</option>
+              <option value="sales-site-restaurants">Restaurants Page</option>
+            </select>
+            <select id="leads-filter-status" onchange="loadLeads()" style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <option value="">All Status</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="converted">Converted</option>
+            </select>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
           <div class="card" style="padding:20px;text-align:center;">
             <div style="font-size:28px;font-weight:700;color:var(--primary);" id="leads-total">—</div>
@@ -1298,22 +1316,30 @@
             <div style="font-size:28px;font-weight:700;color:#f59e0b;" id="leads-week">—</div>
             <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">This Week</div>
           </div>
+          <div class="card" style="padding:20px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#a78bfa;" id="leads-sms-consent">—</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">SMS Consent</div>
+          </div>
         </div>
         <div class="card" style="padding:24px;">
           <div style="display:flex;gap:12px;margin-bottom:16px;">
-            <button onclick="loadLeads()" class="btn btn-primary">Refresh</button>
+            <button onclick="loadLeads(true)" class="btn btn-primary">Refresh</button>
             <button onclick="exportLeads()" class="btn btn-outline">Export CSV</button>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;">
               <thead><tr style="border-bottom:1px solid var(--card-border);">
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Date</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Email</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Business</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Message</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Date</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Name</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Business</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Phone</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Email</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Type</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Source</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">SMS</th>
+                <th style="text-align:left;padding:10px 8px;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Status</th>
               </tr></thead>
-              <tbody id="leads-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+              <tbody id="leads-body"><tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -3487,30 +3513,98 @@
       else toast('Failed to delete booking', 'error');
     }
 
-    async function loadLeads() {
+    var _allLeads = [];
+
+    async function loadLeads(force) {
+      if (_leadsLoaded && !force) return;
       _leadsLoaded = true;
+      document.getElementById('leads-body').innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</td></tr>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/businesses');
-        var customers = res.ok ? await res.json() : [];
-        if (!Array.isArray(customers)) customers = [];
-        document.getElementById('leads-total').textContent = customers.length;
-        document.getElementById('leads-today').textContent = customers.filter(function(b){ return b.is_active; }).length + ' active';
-        document.getElementById('leads-week').textContent = customers.filter(function(b){ return b.featured; }).length + ' featured';
-        document.getElementById('leads-body').innerHTML = customers.slice(0, 50).map(function(b) {
+        var SUPA_URL  = 'https://mhafixflyffflwjhcgfn.supabase.co';
+        var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYWZpeGZseWZmZmx3amhjZ2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTA4MzUsImV4cCI6MjA4NzM4NjgzNX0.3KW-rGnLhJQ1u3IsSeoGFfgQpcoJNdBGFOGnhc88tHw';
+
+        var sourceFilter = document.getElementById('leads-filter-source') ? document.getElementById('leads-filter-source').value : '';
+        var statusFilter = document.getElementById('leads-filter-status') ? document.getElementById('leads-filter-status').value : '';
+
+        var url = SUPA_URL + '/rest/v1/sales_leads?order=created_at.desc&limit=200';
+        if (sourceFilter) url += '&source=ilike.*' + encodeURIComponent(sourceFilter) + '*';
+        if (statusFilter) url += '&status=eq.' + encodeURIComponent(statusFilter);
+
+        var res = await fetch(url, {
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+        });
+        var leads = res.ok ? await res.json() : [];
+        if (!Array.isArray(leads)) leads = [];
+        _allLeads = leads;
+
+        // Stats
+        var now = new Date();
+        var todayStr = now.toISOString().split('T')[0];
+        var weekAgo = new Date(now - 7*24*60*60*1000).toISOString();
+        document.getElementById('leads-total').textContent = leads.length;
+        document.getElementById('leads-today').textContent = leads.filter(function(l){ return (l.created_at||'').startsWith(todayStr); }).length;
+        document.getElementById('leads-week').textContent  = leads.filter(function(l){ return (l.created_at||'') >= weekAgo; }).length;
+        if (document.getElementById('leads-sms-consent')) {
+          document.getElementById('leads-sms-consent').textContent = leads.filter(function(l){ return l.sms_consent; }).length;
+        }
+
+        if (!leads.length) {
+          document.getElementById('leads-body').innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-muted);">No leads yet. Forms will appear here as they come in.</td></tr>';
+          return;
+        }
+
+        document.getElementById('leads-body').innerHTML = leads.map(function(l) {
+          var date = l.created_at ? l.created_at.replace('T',' ').substring(0,16) : '—';
+          var statusColor = l.status === 'converted' ? '#22c55e' : l.status === 'contacted' ? '#f59e0b' : '#60a5fa';
           return '<tr style="border-bottom:1px solid var(--card-border);">' +
-            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(b.created_at ? b.created_at.split('T')[0] : '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(b.name || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.email || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.city || '—') + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.entity_type || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:12px;color:var(--text-muted);">' + escHtml(date) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(l.name || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + escHtml(l.business_name || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;"><a href="tel:' + escHtml(l.phone||'') + '" style="color:var(--primary);">' + escHtml(l.phone || '—') + '</a></td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(l.email || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:12px;color:var(--text-muted);">' + escHtml(l.business_type || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:11px;color:var(--text-muted);">' + escHtml((l.source||'').replace('sales-site-','')) + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;">' + (l.sms_consent ? '<span style="color:#22c55e;font-weight:700;">✓</span>' : '<span style="color:#555;">—</span>') + '</td>' +
+            '<td style="padding:10px 8px;">' +
+              '<select onchange="updateLeadStatus(\'' + l.id + '\', this.value)" style="padding:4px 8px;background:' + statusColor + '22;color:' + statusColor + ';border:1px solid ' + statusColor + '44;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;">' +
+                '<option value="new"' + (l.status==='new'?' selected':'') + '>New</option>' +
+                '<option value="contacted"' + (l.status==='contacted'?' selected':'') + '>Contacted</option>' +
+                '<option value="converted"' + (l.status==='converted'?' selected':'') + '>Converted</option>' +
+              '</select>' +
+            '</td>' +
             '</tr>';
         }).join('');
       } catch(e) {
-        document.getElementById('leads-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+        document.getElementById('leads-body').innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-muted);">Error loading leads: ' + escHtml(e.message) + '</td></tr>';
       }
     }
 
-    function exportLeads() { toast('Export coming soon.'); }
+    async function updateLeadStatus(id, status) {
+      var SUPA_URL  = 'https://mhafixflyffflwjhcgfn.supabase.co';
+      var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYWZpeGZseWZmZmx3amhjZ2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTA4MzUsImV4cCI6MjA4NzM4NjgzNX0.3KW-rGnLhJQ1u3IsSeoGFfgQpcoJNdBGFOGnhc88tHw';
+      await fetch(SUPA_URL + '/rest/v1/sales_leads?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ status: status, updated_at: new Date().toISOString() })
+      });
+      toast('Lead updated to ' + status, 'success');
+    }
+
+    function exportLeads() {
+      if (!_allLeads.length) { toast('No leads to export', 'error'); return; }
+      var cols = ['created_at','name','business_name','phone','email','business_type','source','sms_consent','status'];
+      var csv  = cols.join(',') + '\n';
+      csv += _allLeads.map(function(l) {
+        return cols.map(function(c) {
+          var v = l[c] != null ? String(l[c]) : '';
+          return '"' + v.replace(/"/g,'""') + '"';
+        }).join(',');
+      }).join('\n');
+      var a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'sales-leads-' + new Date().toISOString().split('T')[0] + '.csv';
+      a.click();
+    }
 
     // ── USERS ─────────────────────────────────────────
     var _usersLoaded = false;
