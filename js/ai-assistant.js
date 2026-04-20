@@ -47,7 +47,7 @@ class BusinessAIAssistant {
       el.style.display = 'flex';
       fab.classList.add('hidden');
       if (this.history.length === 0) {
-        this._addMsg('assistant', "Hey! I'm your business assistant. Ask me anything — bookings, revenue, reviews, marketing ideas, or just tap the mic and talk.");
+        this._addMsg('assistant', "Hey! I can answer questions about your business **and** make real changes.\n\nPaste a full menu, specials list, or event schedule and say **\"add this\"** — I'll import everything at once. Or just ask me anything.");
       }
       setTimeout(() => {
         const input = document.getElementById('ai-input');
@@ -67,7 +67,9 @@ class BusinessAIAssistant {
     if (!text || !text.trim()) return;
     const msg = text.trim();
 
-    this._addMsg('user', msg);
+    // Truncate display of very long pastes
+    const displayMsg = msg.length > 300 ? msg.slice(0, 300) + `\n…(+${msg.length - 300} more chars)` : msg;
+    this._addMsg('user', displayMsg);
     this.history.push({ role: 'user', content: msg });
     this._showTyping();
 
@@ -81,18 +83,38 @@ class BusinessAIAssistant {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': 'Bearer ' + token } : {})
         },
-        body: JSON.stringify({ message: msg, history: this.history.slice(-10) })
+        body: JSON.stringify({ message: msg, history: this.history.slice(-8) })
       });
 
       const data = await res.json();
       this._removeTyping();
 
-      const reply = data.reply || "Sorry, couldn't get a response.";
+      // Show tool result badges first if any
+      if (data.tool_results && data.tool_results.length) {
+        this._showToolResults(data.tool_results);
+      }
+
+      const reply = data.reply || "Done!";
       this._addMsg('assistant', reply);
       this.history.push({ role: 'assistant', content: reply });
 
       if (this.voiceMode) this._speak(reply);
       this.voiceMode = false;
+
+      // Refresh relevant dashboard sections
+      if (data.tool_results && data.tool_results.length) {
+        data.tool_results.forEach(r => {
+          if (r.tool === 'add_menu_items' || r.tool === 'clear_menu_type') {
+            if (typeof loadMenu === 'function') loadMenu();
+          }
+          if (r.tool === 'add_specials') {
+            if (typeof loadSpecials === 'function') loadSpecials();
+          }
+          if (r.tool === 'add_events') {
+            if (typeof loadEvents === 'function') loadEvents();
+          }
+        });
+      }
     } catch (err) {
       this._removeTyping();
       this._addMsg('assistant', 'Connection error — try again.');
@@ -105,8 +127,27 @@ class BusinessAIAssistant {
     const msg = input.value.trim();
     if (!msg) return;
     input.value = '';
+    input.style.height = 'auto';
     this.voiceMode = false;
     this.send(msg);
+  }
+
+  _showToolResults(results) {
+    const container = document.getElementById('ai-chat-messages');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'ai-message ai-system';
+    const badges = results.map(r => {
+      if (r.tool === 'add_menu_items')   return `<span class="ai-tool-badge">✅ Added ${r.count} menu item${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'clear_menu_type')  return `<span class="ai-tool-badge ai-tool-warn">🗑 Cleared ${r.cleared} items</span>`;
+      if (r.tool === 'add_specials')     return `<span class="ai-tool-badge">✅ Added ${r.count} special${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'add_events')       return `<span class="ai-tool-badge">✅ Added ${r.count} event${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'update_hh_schedule') return `<span class="ai-tool-badge">✅ Happy Hour set: ${r.schedule.days} ${r.schedule.start}–${r.schedule.end}</span>`;
+      return '';
+    }).join(' ');
+    div.innerHTML = `<div class="ai-message-content" style="background:transparent;box-shadow:none;">${badges}</div>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
   }
 
   toggleVoice() {

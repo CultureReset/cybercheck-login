@@ -1793,8 +1793,10 @@
   <div class="ai-chat-container" id="ai-chat-messages"></div>
   <div class="ai-input-container">
     <div class="ai-input-wrapper">
-      <input type="text" id="ai-input" placeholder="Ask about your business..."
-        onkeydown="if(event.key==='Enter')window.dashboardAI.handleTextInput()">
+      <textarea id="ai-input" placeholder="Ask anything or paste a full menu, specials list, events schedule…&#10;Enter to send · Shift+Enter for new line"
+        rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.dashboardAI.handleTextInput();}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,160)+'px'"></textarea>
     </div>
     <button id="ai-mic-btn" class="ai-input-btn" onclick="window.dashboardAI.toggleVoice()">🎤</button>
     <button id="ai-send-btn" class="ai-input-btn" onclick="window.dashboardAI.handleTextInput()">➤</button>
