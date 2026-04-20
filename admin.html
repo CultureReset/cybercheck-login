@@ -8669,8 +8669,8 @@
       <div id="mb-ext-upload">
         <div style="border:2px dashed var(--card-border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;margin-bottom:16px;" onclick="document.getElementById('mb-ext-file').click()">
           <div style="font-size:32px;margin-bottom:8px;">📷</div>
-          <div style="font-weight:600;margin-bottom:4px;">Click to upload menu photo</div>
-          <div style="font-size:13px;color:var(--text-muted);">Take a photo or upload any menu image</div>
+          <div style="font-weight:600;margin-bottom:4px;">Upload menu photo — AI does the rest</div>
+          <div style="font-size:13px;color:var(--text-muted);">Items extract and save automatically. Any menu: printed, handwritten, chalkboard.</div>
           <input type="file" id="mb-ext-file" accept="image/*" capture="environment" style="display:none;" onchange="mbHandleExtractFile(this)">
         </div>
         <div id="mb-ext-preview-wrap" style="display:none;text-align:center;margin-bottom:16px;">
@@ -8985,20 +8985,19 @@
     reader.onload = function(e) {
       document.getElementById('mb-ext-preview-img').src = e.target.result;
       document.getElementById('mb-ext-preview-wrap').style.display = '';
-      document.getElementById('mb-ext-scan-btn').style.display = '';
-      document.getElementById('mb-ext-status').textContent = 'Photo ready — click "Scan Menu" to extract items.';
     };
     reader.readAsDataURL(file);
+    // Auto-start scan+import immediately
+    mbRunExtraction();
   }
 
   async function mbRunExtraction() {
     var file = document.getElementById('mb-ext-file').files[0];
-    if (!file) { toast('Upload a photo first', 'error'); return; }
-    var btn = document.getElementById('mb-ext-scan-btn');
-    btn.disabled = true; btn.textContent = 'Scanning...';
-    document.getElementById('mb-ext-status').textContent = 'AI is reading your menu — this takes 5–15 seconds...';
-    document.getElementById('mb-ext-import-btn').style.display = 'none';
+    if (!file) return;
+    document.getElementById('mb-ext-status').textContent = '⏳ AI is reading your menu — 5–15 seconds...';
     document.getElementById('mb-ext-results').style.display = 'none';
+    document.getElementById('mb-ext-scan-btn').style.display = 'none';
+    document.getElementById('mb-ext-import-btn').style.display = 'none';
 
     var base64 = await new Promise(function(resolve) {
       var r = new FileReader();
@@ -9014,36 +9013,23 @@
       });
       var data = await res.json();
       if (!res.ok) {
-        document.getElementById('mb-ext-status').textContent = 'Error: ' + (data.error || 'Extraction failed');
-        btn.disabled = false; btn.textContent = 'Scan Menu'; return;
+        document.getElementById('mb-ext-status').textContent = '❌ Error: ' + (data.error || 'Extraction failed');
+        document.getElementById('mb-ext-scan-btn').style.display = '';
+        return;
       }
       _mbExtracted = data;
       var total = (data.categories||[]).reduce(function(s,c){return s+(c.items||[]).length;},0);
-      document.getElementById('mb-ext-status').textContent = 'Found ' + total + ' items across ' + (data.categories||[]).length + ' categories. Review below, then click Import.';
-      // Render preview
-      var html = '';
-      (data.categories||[]).forEach(function(cat) {
-        html += '<div style="margin-bottom:16px;">';
-        html += '<div style="font-weight:600;font-size:14px;padding:6px 0;border-bottom:1px solid var(--card-border);margin-bottom:8px;">' + mbEsc(cat.name) + ' <span style="font-weight:400;color:var(--text-muted);">(' + (cat.items||[]).length + ' items)</span></div>';
-        html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text-muted);">Item</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);">Price</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);">Description</th></tr></thead><tbody>';
-        (cat.items||[]).forEach(function(item) {
-          html += '<tr style="border-top:1px solid var(--card-border);"><td style="padding:5px 8px;font-weight:500;">' + mbEsc(item.name) + '</td><td style="padding:5px 8px;">' + (item.price?'$'+Number(item.price).toFixed(2):'—') + '</td><td style="padding:5px 8px;color:var(--text-muted);">' + mbEsc(item.description||'') + '</td></tr>';
-        });
-        html += '</tbody></table></div>';
-      });
-      document.getElementById('mb-ext-results-content').innerHTML = html;
-      document.getElementById('mb-ext-results').style.display = '';
-      document.getElementById('mb-ext-import-btn').style.display = '';
+      document.getElementById('mb-ext-status').textContent = '✅ Found ' + total + ' items — saving to menu now...';
+      // Auto-import immediately
+      await mbImportItems();
     } catch(e) {
-      document.getElementById('mb-ext-status').textContent = 'Network error — check connection and try again.';
+      document.getElementById('mb-ext-status').textContent = '❌ Network error — try again.';
+      document.getElementById('mb-ext-scan-btn').style.display = '';
     }
-    btn.disabled = false; btn.textContent = 'Scan Again';
   }
 
   async function mbImportItems() {
     if (!_mbExtracted || !_mbExtracted.categories) return;
-    var btn = document.getElementById('mb-ext-import-btn');
-    btn.disabled = true; btn.textContent = 'Importing...';
     var total = 0, errors = 0;
     for (var ci = 0; ci < _mbExtracted.categories.length; ci++) {
       var cat = _mbExtracted.categories[ci];
@@ -9066,8 +9052,10 @@
     }
     mbCloseModal('mb-modal-extract');
     mbRenderMenu();
-    toast('Imported ' + total + ' items' + (errors?' ('+errors+' failed)':''), 'success');
-    btn.disabled = false; btn.textContent = 'Import to Menu';
+    mbRenderQR();
+    var msg = '✅ ' + total + ' menu items added — QR menu is live!';
+    if (errors) msg += ' (' + errors + ' failed)';
+    toast(msg, 'success');
   }
 
   function mbEsc(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
