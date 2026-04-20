@@ -130,6 +130,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="5" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m4.24-4.24l4.24 4.24M4.22 19.78l4.24-4.24m8.48 0l4.24 4.24"/></svg>
           <span>QR Menus</span>
         </div>
+        <div class="nav-item" data-page="menu-builder" onclick="showPage('menu-builder')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h18v4H3z"/><line x1="7" y1="5" x2="7" y2="5.01"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="7" y1="19" x2="7" y2="19.01"/></svg>
+          <span>Menu Builder</span>
+        </div>
         <div class="nav-item" data-page="qr-tracker" onclick="showPage('qr-tracker')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
           <span>QR Tracker</span>
@@ -1716,6 +1720,53 @@
             <button class="btn btn-primary" onclick="loadQRMenus()" style="font-size:13px;padding:8px 14px;">↻ Reload</button>
           </div>
           <div id="qr-menus-list" style="font-size:14px;color:var(--text-muted);">Loading restaurants...</div>
+        </div>
+      </div>
+
+      <!-- ── Menu Builder Page ── -->
+      <div id="page-menu-builder" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Menu Builder</h1>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:14px;">Scan any menu photo with AI — it extracts every item, price and category automatically. Then manage items and generate a live QR menu.</p>
+        </div>
+
+        <!-- Business selector -->
+        <div class="card" style="padding:16px 20px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:13px;color:var(--text-muted);white-space:nowrap;">Managing:</label>
+            <select id="mb-biz-select" onchange="mbLoadBusiness()" style="flex:1;min-width:220px;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="">— Select a business —</option>
+            </select>
+            <div id="mb-qr-inline" style="display:flex;align-items:center;gap:10px;"></div>
+          </div>
+        </div>
+
+        <!-- Top row: AI Scanner + QR Code -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;" class="mb-top-row">
+          <div class="card" style="margin:0;padding:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <h3 style="margin:0;font-size:15px;">AI Menu Scanner</h3>
+              <button class="btn btn-primary" style="font-size:13px;padding:8px 14px;" onclick="mbOpenExtract()">Scan Photo</button>
+            </div>
+            <p style="color:var(--text-muted);font-size:13px;margin:0;">Upload any menu photo — printed, handwritten, chalkboard — and AI extracts all items automatically.</p>
+          </div>
+          <div class="card" style="margin:0;padding:20px;">
+            <h3 style="margin:0 0 12px;font-size:15px;">Table QR Code</h3>
+            <div id="mb-qr-card" style="text-align:center;color:var(--text-muted);font-size:13px;">Select a business to generate QR code.</div>
+          </div>
+        </div>
+
+        <!-- Menu items -->
+        <div class="card" style="padding:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <h3 style="margin:0;">Menu Items</h3>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline" style="font-size:13px;padding:8px 14px;" onclick="mbOpenCategory()">+ Category</button>
+              <button class="btn btn-primary" style="font-size:13px;padding:8px 14px;" onclick="mbOpenItem()">+ Item</button>
+            </div>
+          </div>
+          <div id="mb-empty" style="color:var(--text-muted);font-size:13px;padding:8px 0;">Select a business above to load their menu.</div>
+          <div id="mb-categories-list"></div>
         </div>
       </div>
 
@@ -8577,5 +8628,459 @@
   </script>
   <script src="js/wavegent-tab.js"></script>
   <script src="js/sales-page.js"></script>
+
+  <!-- ── MENU BUILDER MODALS ── -->
+  <div id="mb-modal-category" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:none;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:420px;max-width:95vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;" id="mb-cat-title">Add Category</h3><button onclick="mbCloseModal('mb-modal-category')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-group"><label>Category Name</label><input type="text" id="mb-cat-name" placeholder="e.g. Appetizers, Mains, Drinks"></div>
+      <input type="hidden" id="mb-cat-old">
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="mbCloseModal('mb-modal-category')">Cancel</button>
+        <button class="btn btn-primary" onclick="mbSaveCategory()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mb-modal-item" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;" id="mb-item-title">Add Menu Item</h3><button onclick="mbCloseModal('mb-modal-item')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>Item Name *</label><input type="text" id="mb-item-name" placeholder="e.g. Grilled Salmon"></div>
+        <div class="form-group"><label>Price *</label><input type="number" id="mb-item-price" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="form-group"><label>Category</label>
+        <select id="mb-item-cat" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></select>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="mb-item-desc" rows="2" placeholder="Short description..."></textarea></div>
+      <div class="form-group"><label>Tags <span style="color:var(--text-muted);font-weight:400;">(comma separated)</span></label><input type="text" id="mb-item-tags" placeholder="spicy, vegetarian, gluten-free"></div>
+      <input type="hidden" id="mb-item-id">
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="mbCloseModal('mb-modal-item')">Cancel</button>
+        <button class="btn btn-primary" onclick="mbSaveItem()">Save Item</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mb-modal-extract" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:var(--card-bg);border-radius:12px;padding:24px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">AI Menu Scanner</h3><button onclick="mbCloseModal('mb-modal-extract')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+
+      <div id="mb-ext-upload">
+        <div style="border:2px dashed var(--card-border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;margin-bottom:16px;" onclick="document.getElementById('mb-ext-file').click()">
+          <div style="font-size:32px;margin-bottom:8px;">📷</div>
+          <div style="font-weight:600;margin-bottom:4px;">Click to upload menu photo</div>
+          <div style="font-size:13px;color:var(--text-muted);">Take a photo or upload any menu image</div>
+          <input type="file" id="mb-ext-file" accept="image/*" capture="environment" style="display:none;" onchange="mbHandleExtractFile(this)">
+        </div>
+        <div id="mb-ext-preview-wrap" style="display:none;text-align:center;margin-bottom:16px;">
+          <img id="mb-ext-preview-img" style="max-width:100%;max-height:240px;border-radius:8px;object-fit:contain;" alt="Menu preview">
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:var(--text-muted);min-height:20px;margin-bottom:12px;" id="mb-ext-status"></div>
+
+      <div id="mb-ext-results" style="display:none;max-height:300px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:12px;margin-bottom:16px;">
+        <div id="mb-ext-results-content"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="mbCloseModal('mb-modal-extract')">Cancel</button>
+        <button class="btn btn-primary" id="mb-ext-scan-btn" style="display:none;" onclick="mbRunExtraction()">Scan Menu</button>
+        <button class="btn btn-success" id="mb-ext-import-btn" style="display:none;" onclick="mbImportItems()">Import to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ── Menu Builder — Admin ──────────────────────────────────────────────────
+  var _mbSiteId   = null;
+  var _mbSlug     = null;
+  var _mbItems    = [];
+  var _mbCats     = [];
+  var _mbExtracted = null;
+
+  function mbOpenModal(id) { var m = document.getElementById(id); if (m) { m.style.display = 'flex'; } }
+  function mbCloseModal(id) { var m = document.getElementById(id); if (m) m.style.display = 'none'; }
+
+  // Load businesses into selector
+  async function mbLoadBusinessSelector() {
+    var sel = document.getElementById('mb-biz-select');
+    if (!sel || sel.options.length > 1) return;
+    try {
+      var res = await fetch(API_BASE + '/api/dashboard/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+      var list = res.ok ? await res.json() : [];
+      list.forEach(function(b) {
+        var o = document.createElement('option');
+        o.value = b.site_id || b.id;
+        o.textContent = b.name || b.business_name || b.site_id;
+        o.dataset.slug = b.entity_slug || b.slug || '';
+        sel.appendChild(o);
+      });
+    } catch(e) {}
+  }
+
+  async function mbLoadBusiness() {
+    var sel = document.getElementById('mb-biz-select');
+    var opt = sel.options[sel.selectedIndex];
+    _mbSiteId = sel.value || null;
+    _mbSlug   = (opt && opt.dataset.slug) || null;
+    _mbItems  = [];
+    _mbCats   = [];
+
+    document.getElementById('mb-empty').textContent = _mbSiteId ? 'Loading...' : 'Select a business above to load their menu.';
+    document.getElementById('mb-categories-list').innerHTML = '';
+    mbRenderQR();
+
+    if (!_mbSiteId) return;
+
+    try {
+      var res = await fetch(API_BASE + '/api/dashboard/menu-items?site_id=' + encodeURIComponent(_mbSiteId), {
+        headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+      });
+      _mbItems = res.ok ? await res.json() : [];
+
+      // Derive categories
+      var seen = {};
+      _mbItems.forEach(function(i) {
+        var c = i.category || 'Uncategorized';
+        if (!seen[c]) { seen[c] = true; _mbCats.push({ name: c }); }
+      });
+
+      mbRenderMenu();
+    } catch(e) {
+      document.getElementById('mb-empty').textContent = 'Failed to load menu.';
+    }
+  }
+
+  function mbRenderQR() {
+    var card = document.getElementById('mb-qr-card');
+    if (!_mbSiteId) { card.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Select a business to generate QR code.</p>'; return; }
+    var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(_mbSiteId);
+    var qrUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(menuUrl);
+    card.innerHTML = '<img src="' + qrUrl + '" style="width:130px;height:130px;border-radius:8px;" alt="QR"><br>' +
+      '<a href="' + menuUrl + '" target="_blank" style="color:var(--primary);font-size:12px;display:block;margin-top:8px;">View Live Menu ↗</a>' +
+      '<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;">' +
+        '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="navigator.clipboard.writeText(\'' + menuUrl.replace(/'/g,"\\'") + '\').then(function(){toast(\'Copied!\',\'success\')})">Copy URL</button>' +
+        '<a href="' + qrUrl.replace('150x150','400x400') + '" download="menu_qr.png" class="btn btn-outline" style="font-size:12px;padding:5px 10px;">Download QR</a>' +
+      '</div>';
+  }
+
+  function mbRenderMenu() {
+    var container = document.getElementById('mb-categories-list');
+    var empty     = document.getElementById('mb-empty');
+    if (!container) return;
+    if (!_mbCats.length) {
+      container.innerHTML = '';
+      empty.style.display = '';
+      empty.textContent = 'No menu items yet. Scan a photo or add items manually.';
+      return;
+    }
+    empty.style.display = 'none';
+    var html = '';
+    _mbCats.forEach(function(cat) {
+      var items = _mbItems.filter(function(i) { return (i.category||'Uncategorized') === cat.name; });
+      html += '<div class="card" style="margin-bottom:12px;padding:16px 20px;">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+      html += '<h4 style="margin:0;font-size:14px;">' + mbEsc(cat.name) + ' <span style="color:var(--text-muted);font-weight:400;font-size:12px;">(' + items.length + ')</span></h4>';
+      html += '<div style="display:flex;gap:6px;">';
+      html += '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="mbOpenItem(null,\'' + mbEscAttr(cat.name) + '\')">+ Item</button>';
+      html += '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="mbEditCategory(\'' + mbEscAttr(cat.name) + '\')">Rename</button>';
+      html += '<button style="font-size:12px;padding:5px 10px;background:none;border:1px solid #f87171;color:#f87171;border-radius:6px;cursor:pointer;" onclick="mbDeleteCategory(\'' + mbEscAttr(cat.name) + '\')">Delete</button>';
+      html += '</div></div>';
+      if (items.length) {
+        html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += '<thead><tr style="border-bottom:1px solid var(--card-border);">';
+        html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Item</th>';
+        html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Price</th>';
+        html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Description</th>';
+        html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Actions</th>';
+        html += '</tr></thead><tbody>';
+        items.forEach(function(item) {
+          html += '<tr style="border-bottom:1px solid var(--card-border);">';
+          html += '<td style="padding:7px 8px;font-weight:500;">' + mbEsc(item.name) + '</td>';
+          html += '<td style="padding:7px 8px;">$' + Number(item.price||0).toFixed(2) + '</td>';
+          html += '<td style="padding:7px 8px;color:var(--text-muted);">' + mbEsc(item.description||'') + '</td>';
+          html += '<td style="padding:7px 8px;"><div style="display:flex;gap:6px;">';
+          html += '<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="mbOpenItem(\'' + item.id + '\')">Edit</button>';
+          html += '<button style="font-size:11px;padding:4px 8px;background:none;border:1px solid #f87171;color:#f87171;border-radius:6px;cursor:pointer;" onclick="mbDeleteItem(\'' + item.id + '\')">Del</button>';
+          html += '</div></td>';
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+      } else {
+        html += '<p style="color:var(--text-muted);font-size:13px;margin:0;">No items yet.</p>';
+      }
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  // ── Category CRUD ──
+  function mbOpenCategory(existing) {
+    document.getElementById('mb-cat-name').value = existing || '';
+    document.getElementById('mb-cat-old').value  = existing || '';
+    document.getElementById('mb-cat-title').textContent = existing ? 'Rename Category' : 'Add Category';
+    mbOpenModal('mb-modal-category');
+    setTimeout(function() { document.getElementById('mb-cat-name').focus(); }, 100);
+  }
+  function mbEditCategory(name) { mbOpenCategory(name); }
+
+  function mbSaveCategory() {
+    var name = document.getElementById('mb-cat-name').value.trim();
+    if (!name) { toast('Name required', 'error'); return; }
+    var oldName = document.getElementById('mb-cat-old').value;
+    if (oldName && oldName !== name) {
+      var toRename = _mbItems.filter(function(i) { return (i.category||'Uncategorized') === oldName; });
+      var promises = toRename.map(function(item) {
+        return fetch(API_BASE + '/api/dashboard/menu-items/' + item.id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ category: name, site_id: _mbSiteId })
+        });
+      });
+      Promise.all(promises).then(function() {
+        _mbItems.forEach(function(i) { if ((i.category||'Uncategorized') === oldName) i.category = name; });
+        var c = _mbCats.find(function(c) { return c.name === oldName; });
+        if (c) c.name = name;
+        mbCloseModal('mb-modal-category');
+        mbRenderMenu();
+        toast('Category renamed');
+      });
+    } else if (!oldName) {
+      if (!_mbCats.find(function(c) { return c.name === name; })) _mbCats.push({ name: name });
+      mbCloseModal('mb-modal-category');
+      mbRenderMenu();
+      toast('Category added');
+    } else {
+      mbCloseModal('mb-modal-category');
+    }
+  }
+
+  function mbDeleteCategory(name) {
+    if (!confirm('Delete "' + name + '" and all its items?')) return;
+    var toDelete = _mbItems.filter(function(i) { return (i.category||'Uncategorized') === name; });
+    Promise.all(toDelete.map(function(item) {
+      return fetch(API_BASE + '/api/dashboard/menu-items/' + item.id + '?site_id=' + encodeURIComponent(_mbSiteId), {
+        method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+      });
+    })).then(function() {
+      _mbItems = _mbItems.filter(function(i) { return (i.category||'Uncategorized') !== name; });
+      _mbCats  = _mbCats.filter(function(c) { return c.name !== name; });
+      mbRenderMenu();
+      toast('Category deleted');
+    });
+  }
+
+  // ── Item CRUD ──
+  function mbOpenItem(id, defaultCat) {
+    if (!_mbSiteId) { toast('Select a business first', 'error'); return; }
+    if (!_mbCats.length) { toast('Add a category first', 'error'); return; }
+    var sel = document.getElementById('mb-item-cat');
+    sel.innerHTML = '';
+    _mbCats.forEach(function(c) {
+      var o = document.createElement('option');
+      o.value = c.name; o.textContent = c.name; sel.appendChild(o);
+    });
+    document.getElementById('mb-item-id').value    = '';
+    document.getElementById('mb-item-name').value  = '';
+    document.getElementById('mb-item-price').value = '';
+    document.getElementById('mb-item-desc').value  = '';
+    document.getElementById('mb-item-tags').value  = '';
+    document.getElementById('mb-item-title').textContent = 'Add Menu Item';
+    if (defaultCat) sel.value = defaultCat;
+
+    if (id) {
+      var item = _mbItems.find(function(i) { return String(i.id) === String(id); });
+      if (item) {
+        document.getElementById('mb-item-title').textContent = 'Edit Menu Item';
+        document.getElementById('mb-item-id').value    = item.id;
+        document.getElementById('mb-item-name').value  = item.name;
+        document.getElementById('mb-item-price').value = item.price;
+        document.getElementById('mb-item-desc').value  = item.description || '';
+        document.getElementById('mb-item-tags').value  = (item.tags||[]).join(', ');
+        sel.value = item.category || 'Uncategorized';
+      }
+    }
+    mbOpenModal('mb-modal-item');
+  }
+
+  async function mbSaveItem() {
+    var name  = document.getElementById('mb-item-name').value.trim();
+    var price = parseFloat(document.getElementById('mb-item-price').value);
+    var cat   = document.getElementById('mb-item-cat').value;
+    if (!name) { toast('Name required', 'error'); return; }
+    if (isNaN(price) || price < 0) { toast('Valid price required', 'error'); return; }
+
+    var payload = {
+      name: name, price: price, category: cat,
+      description: document.getElementById('mb-item-desc').value.trim(),
+      tags: document.getElementById('mb-item-tags').value.split(',').map(function(t){return t.trim();}).filter(Boolean),
+      site_id: _mbSiteId, sort_order: 0
+    };
+
+    var id = document.getElementById('mb-item-id').value;
+    try {
+      var res;
+      if (id) {
+        res = await fetch(API_BASE + '/api/dashboard/menu-items/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(API_BASE + '/api/dashboard/menu-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify(payload)
+        });
+      }
+      if (!res.ok) { toast('Save failed', 'error'); return; }
+      var saved = await res.json();
+      if (id) {
+        var existing = _mbItems.find(function(i) { return String(i.id) === String(id); });
+        if (existing) Object.assign(existing, payload);
+      } else {
+        if (!_mbCats.find(function(c) { return c.name === cat; })) _mbCats.push({ name: cat });
+        _mbItems.push(Object.assign({ id: saved.id }, payload));
+      }
+      mbCloseModal('mb-modal-item');
+      mbRenderMenu();
+      toast(id ? 'Item updated' : 'Item added', 'success');
+    } catch(e) { toast('Request failed', 'error'); }
+  }
+
+  async function mbDeleteItem(id) {
+    if (!confirm('Delete this item?')) return;
+    try {
+      var res = await fetch(API_BASE + '/api/dashboard/menu-items/' + id + '?site_id=' + encodeURIComponent(_mbSiteId), {
+        method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+      });
+      if (res.ok) {
+        _mbItems = _mbItems.filter(function(i) { return String(i.id) !== String(id); });
+        mbRenderMenu();
+        toast('Item deleted');
+      }
+    } catch(e) {}
+  }
+
+  // ── AI Extraction ──
+  function mbOpenExtract() {
+    if (!_mbSiteId) { toast('Select a business first', 'error'); return; }
+    _mbExtracted = null;
+    document.getElementById('mb-ext-file').value = '';
+    document.getElementById('mb-ext-preview-wrap').style.display = 'none';
+    document.getElementById('mb-ext-preview-img').src = '';
+    document.getElementById('mb-ext-status').textContent = '';
+    document.getElementById('mb-ext-results').style.display = 'none';
+    document.getElementById('mb-ext-scan-btn').style.display = 'none';
+    document.getElementById('mb-ext-import-btn').style.display = 'none';
+    mbOpenModal('mb-modal-extract');
+  }
+
+  function mbHandleExtractFile(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('mb-ext-preview-img').src = e.target.result;
+      document.getElementById('mb-ext-preview-wrap').style.display = '';
+      document.getElementById('mb-ext-scan-btn').style.display = '';
+      document.getElementById('mb-ext-status').textContent = 'Photo ready — click "Scan Menu" to extract items.';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function mbRunExtraction() {
+    var file = document.getElementById('mb-ext-file').files[0];
+    if (!file) { toast('Upload a photo first', 'error'); return; }
+    var btn = document.getElementById('mb-ext-scan-btn');
+    btn.disabled = true; btn.textContent = 'Scanning...';
+    document.getElementById('mb-ext-status').textContent = 'AI is reading your menu — this takes 5–15 seconds...';
+    document.getElementById('mb-ext-import-btn').style.display = 'none';
+    document.getElementById('mb-ext-results').style.display = 'none';
+
+    var base64 = await new Promise(function(resolve) {
+      var r = new FileReader();
+      r.onload = function(e) { resolve(e.target.result); };
+      r.readAsDataURL(file);
+    });
+
+    try {
+      var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: JSON.stringify({ image_base64: base64, mime_type: file.type })
+      });
+      var data = await res.json();
+      if (!res.ok) {
+        document.getElementById('mb-ext-status').textContent = 'Error: ' + (data.error || 'Extraction failed');
+        btn.disabled = false; btn.textContent = 'Scan Menu'; return;
+      }
+      _mbExtracted = data;
+      var total = (data.categories||[]).reduce(function(s,c){return s+(c.items||[]).length;},0);
+      document.getElementById('mb-ext-status').textContent = 'Found ' + total + ' items across ' + (data.categories||[]).length + ' categories. Review below, then click Import.';
+      // Render preview
+      var html = '';
+      (data.categories||[]).forEach(function(cat) {
+        html += '<div style="margin-bottom:16px;">';
+        html += '<div style="font-weight:600;font-size:14px;padding:6px 0;border-bottom:1px solid var(--card-border);margin-bottom:8px;">' + mbEsc(cat.name) + ' <span style="font-weight:400;color:var(--text-muted);">(' + (cat.items||[]).length + ' items)</span></div>';
+        html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text-muted);">Item</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);">Price</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);">Description</th></tr></thead><tbody>';
+        (cat.items||[]).forEach(function(item) {
+          html += '<tr style="border-top:1px solid var(--card-border);"><td style="padding:5px 8px;font-weight:500;">' + mbEsc(item.name) + '</td><td style="padding:5px 8px;">' + (item.price?'$'+Number(item.price).toFixed(2):'—') + '</td><td style="padding:5px 8px;color:var(--text-muted);">' + mbEsc(item.description||'') + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      });
+      document.getElementById('mb-ext-results-content').innerHTML = html;
+      document.getElementById('mb-ext-results').style.display = '';
+      document.getElementById('mb-ext-import-btn').style.display = '';
+    } catch(e) {
+      document.getElementById('mb-ext-status').textContent = 'Network error — check connection and try again.';
+    }
+    btn.disabled = false; btn.textContent = 'Scan Again';
+  }
+
+  async function mbImportItems() {
+    if (!_mbExtracted || !_mbExtracted.categories) return;
+    var btn = document.getElementById('mb-ext-import-btn');
+    btn.disabled = true; btn.textContent = 'Importing...';
+    var total = 0, errors = 0;
+    for (var ci = 0; ci < _mbExtracted.categories.length; ci++) {
+      var cat = _mbExtracted.categories[ci];
+      var catName = (cat.name||'Menu Items').trim();
+      if (!_mbCats.find(function(c){return c.name===catName;})) _mbCats.push({name:catName});
+      var items = cat.items||[];
+      for (var ii = 0; ii < items.length; ii++) {
+        var item = items[ii];
+        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, category: catName, description: item.description||'', tags: item.tags||[], site_id: _mbSiteId, sort_order: ii };
+        try {
+          var res = await fetch(API_BASE + '/api/dashboard/menu-items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) { var created = await res.json(); _mbItems.push(Object.assign({id:created.id},payload)); total++; }
+          else errors++;
+        } catch(e) { errors++; }
+      }
+    }
+    mbCloseModal('mb-modal-extract');
+    mbRenderMenu();
+    toast('Imported ' + total + ' items' + (errors?' ('+errors+' failed)':''), 'success');
+    btn.disabled = false; btn.textContent = 'Import to Menu';
+  }
+
+  function mbEsc(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+  function mbEscAttr(s) { return String(s||'').replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+
+  // Hook into showPage
+  var _mbOrigShowPage = showPage;
+  showPage = function(page) {
+    _mbOrigShowPage(page);
+    if (page === 'menu-builder') {
+      mbLoadBusinessSelector();
+    }
+  };
+  </script>
 </body>
 </html>
