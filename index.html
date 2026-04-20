@@ -41,6 +41,17 @@
           <span>Staff / Team</span>
         </div>
 
+        <!-- Food & Menu -->
+        <div class="nav-section-label">Food &amp; Menu</div>
+        <div class="nav-item" data-page="menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <span>Menu Builder</span>
+        </div>
+        <div class="nav-item" data-page="qr-codes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
+          <span>My QR Codes</span>
+        </div>
+
         <!-- Rentals -->
         <div class="nav-section-label">Rentals</div>
         <div class="nav-item" data-page="inventory">
@@ -965,6 +976,128 @@
           </div>
         </div>
 
+        <!-- MENU BUILDER -->
+        <div class="page-section" id="page-menu">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;" class="menu-top-row">
+            <div class="card" style="margin:0;">
+              <div class="card-header">
+                <h3>AI Menu Scanner</h3>
+                <button class="btn btn-primary btn-sm" onclick="openMenuExtractModal()">Scan Photo</button>
+              </div>
+              <p style="color:var(--text-muted);font-size:13px;margin:0;">Upload any menu photo — printed, handwritten, chalkboard — and AI extracts all items automatically.</p>
+            </div>
+            <div class="card" style="margin:0;">
+              <div class="card-header"><h3>Table QR Code</h3></div>
+              <div id="menu-qr-wrap" style="text-align:center;">
+                <p style="color:var(--text-muted);font-size:13px;">Add menu items to generate your table QR code.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Menu Items</h3>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-outline btn-sm" onclick="openCategoryModal()">+ Category</button>
+                <button class="btn btn-primary btn-sm" onclick="openMenuItemModal()">+ Item</button>
+              </div>
+            </div>
+            <div id="menu-empty" style="color:var(--text-muted);font-size:13px;padding:8px 0;">No menu items yet. Scan a photo above or add items manually.</div>
+            <div id="menu-categories-list"></div>
+          </div>
+        </div>
+
+        <!-- MY QR CODES -->
+        <div class="page-section" id="page-qr-codes">
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" class="qrc-stats-row">
+            <div class="card" style="margin:0;text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:var(--primary)" id="qrc-stat-total">—</div>
+              <div style="font-size:12px;color:var(--text-muted);">Total Codes</div>
+            </div>
+            <div class="card" style="margin:0;text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:#4ade80" id="qrc-stat-scans">—</div>
+              <div style="font-size:12px;color:var(--text-muted);">Total Scans</div>
+            </div>
+            <div class="card" style="margin:0;text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:#f59e0b" id="qrc-stat-active">—</div>
+              <div style="font-size:12px;color:var(--text-muted);">Active</div>
+            </div>
+            <div class="card" style="margin:0;text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:#a78bfa" id="qrc-stat-leads">—</div>
+              <div style="font-size:12px;color:var(--text-muted);">Phone Leads</div>
+            </div>
+          </div>
+
+          <!-- Generate new code -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><h3>Generate QR Code</h3></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="qrc-gen-row">
+              <div class="form-group" style="margin:0;">
+                <label>Label <span style="color:var(--text-muted);font-weight:400;">(e.g. "Table 4", "My Card")</span></label>
+                <input type="text" id="qrc-label" placeholder="Label">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Type</label>
+                <select id="qrc-type" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="general">General</option>
+                  <option value="table">Restaurant Table</option>
+                  <option value="card">Business Card</option>
+                  <option value="menu">Menu</option>
+                  <option value="ad">Advertisement</option>
+                  <option value="location">Location</option>
+                  <option value="event">Event</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Destination URL <span style="color:var(--text-muted);font-weight:400;">(leave blank for CyberCheck page)</span></label>
+                <input type="text" id="qrc-dest" placeholder="https://...">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Placement</label>
+                <select id="qrc-placement" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="fixed">Fixed (permanent location)</option>
+                  <option value="portable">Portable (moves around)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;grid-column:1/-1;">
+                <label>Location / Notes</label>
+                <input type="text" id="qrc-notes" placeholder="e.g. Back wall by entrance, Table 4 by window">
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <button class="btn btn-primary btn-sm" onclick="QRC.generate()">Generate Code</button>
+            </div>
+          </div>
+
+          <!-- Codes table -->
+          <div class="card">
+            <div class="card-header">
+              <h3>My Codes</h3>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="qrc-search" placeholder="Search..." style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;width:180px;" oninput="QRC.filter()">
+                <button class="btn btn-outline btn-sm" onclick="QRC.exportCSV()">Export CSV</button>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border);">
+                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">#</th>
+                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Label</th>
+                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Type</th>
+                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Scans</th>
+                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Status</th>
+                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="qrc-table-body">
+                  <tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1222,6 +1355,88 @@
     </div>
   </div></div>
 
+  <!-- Menu: Category Modal -->
+  <div class="modal-overlay" id="modal-category"><div class="modal" style="max-width:420px;">
+    <div class="modal-header"><h3>Menu Category</h3><button class="modal-close" onclick="closeModal('modal-category')">&times;</button></div>
+    <div class="form-group"><label>Category Name</label><input type="text" id="cat-form-name" placeholder="e.g. Appetizers, Entrees, Drinks"></div>
+    <input type="hidden" id="cat-form-id">
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-category')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategory()">Save</button>
+    </div>
+  </div></div>
+
+  <!-- Menu: Item Modal -->
+  <div class="modal-overlay" id="modal-menu-item"><div class="modal" style="max-width:560px;">
+    <div class="modal-header"><h3 id="menu-item-modal-title">Add Menu Item</h3><button class="modal-close" onclick="closeModal('modal-menu-item')">&times;</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>Item Name</label><input type="text" id="mi-form-name" placeholder="e.g. Margherita Pizza"></div>
+      <div class="form-group"><label>Price ($)</label><input type="number" id="mi-form-price" placeholder="0.00" step="0.01" min="0"></div>
+    </div>
+    <div class="form-group"><label>Category</label><select id="mi-form-category"></select></div>
+    <div class="form-group"><label>Description</label><textarea id="mi-form-desc" rows="2" placeholder="Brief description..."></textarea></div>
+    <div class="form-group"><label>Tags (comma-separated)</label><input type="text" id="mi-form-tags" placeholder="vegetarian, gluten-free, popular"></div>
+    <div class="form-group"><label>Modifiers (one per line: Name | Price)</label><textarea id="mi-form-modifiers" rows="3" placeholder="Add Cheese | 1.50&#10;Extra Sauce | 0.75"></textarea></div>
+    <input type="hidden" id="mi-form-id">
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-menu-item')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMenuItem()">Save Item</button>
+    </div>
+  </div></div>
+
+  <!-- Menu: AI Extract Modal -->
+  <div class="modal-overlay" id="modal-menu-extract"><div class="modal" style="max-width:680px;">
+    <div class="modal-header"><h3>AI Menu Scanner</h3><button class="modal-close" onclick="closeModal('modal-menu-extract')">&times;</button></div>
+    <div id="extract-step-upload">
+      <div class="upload-zone" id="extract-drop-zone" onclick="document.getElementById('extract-file-input').click()" style="cursor:pointer;margin-bottom:12px;">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p style="margin:8px 0 4px;font-weight:500;">Drop menu photo here or click to upload</p>
+        <p style="font-size:12px;color:var(--text-muted);">Works with printed menus, chalkboards, handwritten menus, any restaurant menu format</p>
+      </div>
+      <input type="file" id="extract-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleExtractFile(this)">
+      <div id="extract-preview-wrap" style="display:none;text-align:center;margin-bottom:12px;">
+        <img id="extract-preview-img" style="max-height:240px;max-width:100%;border-radius:8px;border:1px solid var(--card-border);">
+      </div>
+    </div>
+    <div id="extract-step-results" style="display:none;max-height:360px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:12px;">
+      <div id="extract-results-content"></div>
+    </div>
+    <div id="extract-status" style="color:var(--text-muted);font-size:13px;margin-top:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-menu-extract')">Cancel</button>
+      <button class="btn btn-primary" id="extract-scan-btn" onclick="runMenuExtraction()" style="display:none;">Scan Menu</button>
+      <button class="btn btn-success" id="extract-import-btn" onclick="importExtractedItems()" style="display:none;">Import to Menu</button>
+    </div>
+  </div></div>
+
+  <!-- QR Code Scan Detail Modal -->
+  <div class="modal-overlay" id="modal-qrc-scans"><div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h3 id="qrc-scan-modal-title">Scan History</h3>
+      <button class="modal-close" onclick="closeModal('modal-qrc-scans')">&times;</button>
+    </div>
+    <div id="qrc-scan-modal-body" style="max-height:520px;overflow-y:auto;"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-qrc-scans')">Close</button></div>
+  </div></div>
+
+  <!-- QR Edit Modal -->
+  <div class="modal-overlay" id="modal-qrc-edit"><div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3>Edit QR Code</h3><button class="modal-close" onclick="closeModal('modal-qrc-edit')">&times;</button></div>
+    <div class="form-group"><label>Label</label><input type="text" id="qrce-label"></div>
+    <div class="form-group"><label>Destination URL</label><input type="text" id="qrce-dest" placeholder="https://..."></div>
+    <div class="form-group"><label>Location / Notes</label><input type="text" id="qrce-notes"></div>
+    <div class="form-group"><label>Placement</label>
+      <select id="qrce-placement" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
+        <option value="fixed">Fixed</option><option value="portable">Portable</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-qrc-edit')">Cancel</button>
+      <button class="btn btn-primary" onclick="QRC.saveEdit()">Save</button>
+    </div>
+    <input type="hidden" id="qrce-id">
+  </div></div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -1279,6 +1494,8 @@
   <script src="js/publish.js?v=4"></script>
   <script src="js/website-content.js?v=3"></script>
   <script src="js/faq.js?v=1"></script>
+  <script src="js/menu.js?v=1"></script>
+  <script src="js/qr-codes.js?v=1"></script>
   <script>
     var _business = null;
 

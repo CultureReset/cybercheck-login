@@ -130,6 +130,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="5" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m4.24-4.24l4.24 4.24M4.22 19.78l4.24-4.24m8.48 0l4.24 4.24"/></svg>
           <span>QR Menus</span>
         </div>
+        <div class="nav-item" data-page="qr-tracker" onclick="showPage('qr-tracker')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
+          <span>QR Tracker</span>
+        </div>
         <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span>Coupons</span>
@@ -1560,6 +1564,145 @@
         </div>
       </div>
 
+      <!-- ── QR Tracker Page ── -->
+      <div id="page-qr-tracker" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>QR Tracker</h1>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:14px;">Generate numbered, trackable QR codes for any use — restaurant tables, business cards, ads, condos, beach chairs, door-to-door, events. Every scan is logged.</p>
+        </div>
+
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;" id="qr-stats-row">
+          <div class="card" style="padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;" id="qr-stat-total">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Total Codes</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#38bdf8;" id="qr-stat-scans">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Total Scans</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#4ade80;" id="qr-stat-leads">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Phone Leads</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#f59e0b;" id="qr-stat-hot">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Hot (10+ scans)</div>
+          </div>
+        </div>
+
+        <!-- Generate -->
+        <div class="card" style="padding:20px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <h3 style="margin:0;">Generate QR Codes</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-outline" style="font-size:13px;" onclick="openQRSingle()">+ Single Code</button>
+              <button class="btn btn-primary" style="font-size:13px;" onclick="openQRBatch()">+ Batch (Sticker Roll)</button>
+            </div>
+          </div>
+          <!-- Single form -->
+          <div id="qr-form-single" style="display:none;border-top:1px solid var(--card-border);padding-top:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div><label style="font-size:12px;color:var(--text-muted);">Label</label><input type="text" id="qr-s-label" placeholder="e.g. Table 5, My Card, Hwy 59 Billboard" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text-muted);">Type</label><select id="qr-s-type" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                <option value="general">General</option>
+                <option value="card">Business Card</option>
+                <option value="table">Restaurant Table</option>
+                <option value="menu">Menu</option>
+                <option value="ad">Advertisement</option>
+                <option value="condo">Condo / Rental</option>
+                <option value="beach_chair">Beach Chair</option>
+                <option value="boat">Boat / Watercraft</option>
+                <option value="event">Event</option>
+                <option value="door">Door-to-Door</option>
+                <option value="location">Location</option>
+              </select></div>
+            </div>
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Destination URL (optional — leave blank for CyberCheck landing page)</label><input type="url" id="qr-s-dest" placeholder="https://... or leave blank" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Assign to Business (optional)</label><input type="text" id="qr-s-biz" placeholder="Business name or site_id" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div><label style="font-size:12px;color:var(--text-muted);">Physical Location / Notes</label><input type="text" id="qr-s-location" placeholder="e.g. Table 5 by window, Fridge door unit 3B" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text-muted);">Portable or Fixed?</label><select id="qr-s-placement" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"><option value="fixed">Fixed Location</option><option value="portable">Portable (hand-out)</option></select></div>
+            </div>
+            <button class="btn btn-primary" onclick="generateSingleQR()" style="font-size:13px;padding:9px 20px;width:auto;">Generate Code</button>
+          </div>
+          <!-- Batch form -->
+          <div id="qr-form-batch" style="display:none;border-top:1px solid var(--card-border);padding-top:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div><label style="font-size:12px;color:var(--text-muted);">Quantity</label><input type="number" id="qr-b-count" value="50" min="1" max="500" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text-muted);">Label Prefix</label><input type="text" id="qr-b-prefix" value="Sticker" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text-muted);">Type</label><select id="qr-b-type" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                <option value="general">General</option>
+                <option value="card">Business Card</option>
+                <option value="table">Restaurant Table</option>
+                <option value="ad">Advertisement</option>
+                <option value="condo">Condo / Rental</option>
+                <option value="beach_chair">Beach Chair</option>
+                <option value="door">Door-to-Door</option>
+              </select></div>
+            </div>
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Default Destination URL (optional)</label><input type="url" id="qr-b-dest" placeholder="https://... or leave blank" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Will create codes numbered from the next available sequence number. Each sticker on the roll gets a unique QR URL.</p>
+            <button class="btn btn-primary" onclick="generateBatchQR()" style="font-size:13px;padding:9px 20px;width:auto;">Generate Batch</button>
+          </div>
+        </div>
+
+        <!-- Filter + Table -->
+        <div class="card" style="padding:20px;">
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="qr-search" placeholder="Search codes..." oninput="filterQRTable()" style="flex:1;min-width:160px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+            <select id="qr-filter-type" onchange="filterQRTable()" style="padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+              <option value="">All Types</option>
+              <option value="card">Card</option>
+              <option value="table">Table</option>
+              <option value="ad">Ad</option>
+              <option value="condo">Condo</option>
+              <option value="beach_chair">Beach Chair</option>
+              <option value="door">Door</option>
+              <option value="general">General</option>
+            </select>
+            <button class="btn btn-outline" onclick="loadQRCodes()" style="font-size:13px;padding:8px 14px;">↻</button>
+            <button class="btn btn-outline" onclick="exportQRCSV()" style="font-size:13px;padding:8px 14px;">Export CSV</button>
+          </div>
+          <div id="qr-table-wrap">
+            <p style="color:var(--text-muted);font-size:14px;">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Scan Detail Modal -->
+        <div id="qr-scan-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px;">
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:12px;max-width:700px;margin:40px auto;padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <div>
+                <h3 id="scan-modal-title" style="margin:0;font-size:16px;"></h3>
+                <div id="scan-modal-url" style="font-size:12px;color:var(--primary,#38bdf8);margin-top:4px;font-family:monospace;word-break:break-all;"></div>
+              </div>
+              <button onclick="closeQRModal()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:0 4px;">&times;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+              <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;" id="smd-scans">0</div>
+                <div style="font-size:11px;color:var(--text-muted);">Total Scans</div>
+              </div>
+              <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#4ade80;" id="smd-leads">0</div>
+                <div style="font-size:11px;color:var(--text-muted);">Phone Leads</div>
+              </div>
+              <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#f59e0b;" id="smd-mobile">0%</div>
+                <div style="font-size:11px;color:var(--text-muted);">Mobile</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <input id="scan-modal-url-input" type="text" readonly style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--primary,#38bdf8);font-size:12px;font-family:monospace;">
+              <button onclick="copyScanUrl()" style="padding:8px 14px;background:var(--card-border);border:none;border-radius:6px;color:var(--text);font-size:12px;cursor:pointer;">Copy</button>
+            </div>
+            <div id="scan-modal-qr" style="text-align:center;margin-bottom:16px;"></div>
+            <div id="scan-modal-list" style="max-height:320px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── QR Menus Page ── -->
       <div id="page-qr-menus" class="page-content" style="display:none;">
         <div class="page-header">
@@ -2839,6 +2982,7 @@
       if (page === 'rag-index') loadRAGStatus();
       if (page === 'ai-settings') loadAISettings();
       if (page === 'qr-menus' && !_qrMenusLoaded) { _qrMenusLoaded = true; loadQRMenus(); }
+      if (page === 'qr-tracker') loadQRCodes();
       if (page === 'gcr-entity-editor' && !_entityPageLoaded) { _entityPageLoaded = true; loadEntities(); }
       if (page === 'gcr-site-editor' && !_siteEditorLoaded) { _siteEditorLoaded = true; loadSiteEditor(); }
       if (page === 'bookings') loadBookings();
@@ -7973,6 +8117,232 @@
     }
 
     function loadTodaysLinks() { loadAllTodaysLinks(); }
+
+    // ── QR Tracker ────────────────────────────────────────────────────────────
+
+    var _allQRCodes = [];
+    var _activeQRId = null;
+
+    function openQRSingle() {
+      var s = document.getElementById('qr-form-single');
+      var b = document.getElementById('qr-form-batch');
+      s.style.display = s.style.display === 'none' ? '' : 'none';
+      b.style.display = 'none';
+    }
+    function openQRBatch() {
+      var b = document.getElementById('qr-form-batch');
+      var s = document.getElementById('qr-form-single');
+      b.style.display = b.style.display === 'none' ? '' : 'none';
+      s.style.display = 'none';
+    }
+
+    async function generateSingleQR() {
+      var label    = document.getElementById('qr-s-label').value.trim();
+      var type     = document.getElementById('qr-s-type').value;
+      var dest     = document.getElementById('qr-s-dest').value.trim();
+      var location = document.getElementById('qr-s-location').value.trim();
+      var placement= document.getElementById('qr-s-placement').value;
+      if (!label) { alert('Label is required'); return; }
+      try {
+        var res = await fetch(API_BASE + '/api/qr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ label, type, destination_url: dest || null, location: location || null, placement })
+        });
+        if (!res.ok) { var e = await res.json(); alert('Error: ' + e.error); return; }
+        document.getElementById('qr-s-label').value = '';
+        document.getElementById('qr-s-dest').value  = '';
+        document.getElementById('qr-s-location').value = '';
+        document.getElementById('qr-form-single').style.display = 'none';
+        toast('QR code created!', 'success');
+        loadQRCodes();
+      } catch(e) { alert('Request failed'); }
+    }
+
+    async function generateBatchQR() {
+      var count  = parseInt(document.getElementById('qr-b-count').value) || 10;
+      var prefix = document.getElementById('qr-b-prefix').value.trim() || 'Sticker';
+      var type   = document.getElementById('qr-b-type').value;
+      var dest   = document.getElementById('qr-b-dest').value.trim();
+      if (count < 1 || count > 500) { alert('Count must be 1–500'); return; }
+      var btn = event.target; btn.disabled = true; btn.textContent = 'Generating…';
+      try {
+        var res = await fetch(API_BASE + '/api/qr/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ count, label_prefix: prefix, type, destination_url: dest || null })
+        });
+        if (!res.ok) { var e = await res.json(); alert('Error: ' + e.error); return; }
+        var d = await res.json();
+        document.getElementById('qr-form-batch').style.display = 'none';
+        toast('Created ' + d.created + ' codes (#' + d.start_seq + '–#' + d.end_seq + ')', 'success');
+        loadQRCodes();
+      } catch(e) { alert('Request failed'); }
+      btn.disabled = false; btn.textContent = 'Generate Batch';
+    }
+
+    async function loadQRCodes() {
+      var wrap = document.getElementById('qr-table-wrap');
+      if (wrap) wrap.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading...</p>';
+      try {
+        var res = await fetch(API_BASE + '/api/qr', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        _allQRCodes = res.ok ? await res.json() : [];
+        renderQRStats(_allQRCodes);
+        filterQRTable();
+      } catch(e) { if (wrap) wrap.innerHTML = '<p style="color:#f87171;">Failed to load</p>'; }
+    }
+
+    function renderQRStats(codes) {
+      var totalScans = codes.reduce(function(s,c){ return s + (c.scan_count||0); }, 0);
+      var hot = codes.filter(function(c){ return (c.scan_count||0) >= 10; }).length;
+      document.getElementById('qr-stat-total').textContent = codes.length;
+      document.getElementById('qr-stat-scans').textContent = totalScans;
+      document.getElementById('qr-stat-hot').textContent   = hot;
+      document.getElementById('qr-stat-leads').textContent = '—';
+    }
+
+    function filterQRTable() {
+      var q    = (document.getElementById('qr-search')||{}).value || '';
+      var type = (document.getElementById('qr-filter-type')||{}).value || '';
+      var codes = _allQRCodes.filter(function(c) {
+        var matchQ = !q || (c.label||'').toLowerCase().includes(q.toLowerCase()) ||
+                     String(c.seq_number||'').includes(q) || (c.location||'').toLowerCase().includes(q.toLowerCase());
+        var matchT = !type || c.type === type;
+        return matchQ && matchT;
+      });
+      renderQRTable(codes);
+    }
+
+    function renderQRTable(codes) {
+      var wrap = document.getElementById('qr-table-wrap');
+      if (!wrap) return;
+      if (!codes.length) { wrap.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No codes found.</p>'; return; }
+
+      var heatColor = function(n) {
+        if (n === 0) return '#475569';
+        if (n < 5)  return '#94a3b8';
+        if (n < 20) return '#f59e0b';
+        return '#4ade80';
+      };
+
+      var rows = codes.map(function(c) {
+        var scanUrl = c.scan_url || ('https://cybercheck-links.vercel.app/q.html?c=' + c.code);
+        var placementIcon = c.placement === 'portable' ? '✋' : '📍';
+        return '<tr style="border-top:1px solid var(--card-border);">' +
+          '<td style="padding:10px 8px;font-weight:600;color:#38bdf8;">#' + (c.seq_number||'—') + '</td>' +
+          '<td style="padding:10px 8px;">' +
+            '<div style="font-weight:500;font-size:13px;">' + esc(c.label) + '</div>' +
+            (c.location ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + placementIcon + ' ' + esc(c.location) + '</div>' : '') +
+          '</td>' +
+          '<td style="padding:10px 8px;"><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(148,163,184,0.15);color:var(--text-muted);">' + esc(c.type||'general') + '</span></td>' +
+          '<td style="padding:10px 8px;"><span style="font-weight:700;color:' + heatColor(c.scan_count||0) + ';">' + (c.scan_count||0) + '</span></td>' +
+          '<td style="padding:10px 8px;font-size:11px;color:var(--text-muted);">' + esc(c.active ? 'Active' : 'Off') + '</td>' +
+          '<td style="padding:10px 8px;">' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+              '<button onclick="viewQRScans(\'' + c.id + '\',\'' + esc(c.label) + '\',' + (c.scan_count||0) + ',\'' + scanUrl + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Scans</button>' +
+              '<button onclick="copyQRUrl(\'' + scanUrl + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Copy</button>' +
+              '<button onclick="toggleQRActive(\'' + c.id + '\',' + c.active + ')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:' + (c.active ? '#f87171' : '#4ade80') + ';cursor:pointer;">' + (c.active ? 'Disable' : 'Enable') + '</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      wrap.innerHTML = '<div class="table-wrap"><table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="border-bottom:1px solid var(--card-border);">' +
+          '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">#</th>' +
+          '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Label / Location</th>' +
+          '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Type</th>' +
+          '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Scans</th>' +
+          '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Status</th>' +
+          '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Actions</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+
+    async function viewQRScans(id, label, totalScans, scanUrl) {
+      _activeQRId = id;
+      document.getElementById('scan-modal-title').textContent = label;
+      document.getElementById('scan-modal-url').textContent = scanUrl;
+      document.getElementById('scan-modal-url-input').value = scanUrl;
+      document.getElementById('smd-scans').textContent = totalScans;
+      document.getElementById('smd-leads').textContent = '…';
+      document.getElementById('smd-mobile').textContent = '…';
+      document.getElementById('scan-modal-list').innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">Loading scans…</p>';
+      var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(scanUrl) + '&bgcolor=1e293b&color=38bdf8&format=png';
+      document.getElementById('scan-modal-qr').innerHTML = '<img src="' + qrImg + '" style="width:140px;height:140px;border-radius:8px;" alt="QR"><br><a href="' + qrImg + '" download="qr-' + id + '.png" style="font-size:12px;color:#38bdf8;text-decoration:none;">Download QR Image</a>';
+      document.getElementById('qr-scan-modal').style.display = '';
+
+      try {
+        var res = await fetch(API_BASE + '/api/qr/' + id + '/scans', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var scans = res.ok ? await res.json() : [];
+        var leads  = scans.filter(function(s){ return s.scanner_phone; }).length;
+        var mobiles= scans.filter(function(s){ return s.device_type === 'mobile'; }).length;
+        document.getElementById('smd-leads').textContent  = leads;
+        document.getElementById('smd-mobile').textContent = scans.length ? Math.round(mobiles/scans.length*100) + '%' : '0%';
+
+        if (!scans.length) {
+          document.getElementById('scan-modal-list').innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No scans yet — share this QR code to start tracking.</p>';
+          return;
+        }
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+          '<thead><tr style="border-bottom:1px solid var(--card-border);"><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Time</th><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Phone</th><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Name</th><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Device</th></tr></thead><tbody>';
+        scans.forEach(function(s) {
+          var isLead = !!s.scanner_phone;
+          var dt = new Date(s.scanned_at);
+          var timeStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+          html += '<tr style="border-top:1px solid var(--card-border);">' +
+            '<td style="padding:6px 8px;color:var(--text-muted);">' + timeStr + '</td>' +
+            '<td style="padding:6px 8px;font-weight:' + (isLead?'600':'400') + ';color:' + (isLead?'#4ade80':'var(--text-muted)') + ';">' + (s.scanner_phone || '—') + '</td>' +
+            '<td style="padding:6px 8px;">' + esc(s.scanner_name || '—') + '</td>' +
+            '<td style="padding:6px 8px;color:var(--text-muted);">' + esc(s.device_type || '—') + '</td>' +
+          '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById('scan-modal-list').innerHTML = html;
+      } catch(e) { document.getElementById('scan-modal-list').innerHTML = '<p style="color:#f87171;font-size:13px;">Failed to load scans</p>'; }
+    }
+
+    function closeQRModal() { document.getElementById('qr-scan-modal').style.display = 'none'; }
+
+    function copyQRUrl(url) {
+      navigator.clipboard.writeText(url).then(function(){ toast('URL copied!', 'success'); });
+    }
+    function copyScanUrl() {
+      var url = document.getElementById('scan-modal-url-input').value;
+      navigator.clipboard.writeText(url).then(function(){ toast('Copied!', 'success'); });
+    }
+
+    async function toggleQRActive(id, currentActive) {
+      try {
+        var res = await fetch(API_BASE + '/api/qr/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ active: !currentActive })
+        });
+        if (res.ok) { toast('Updated', 'success'); loadQRCodes(); }
+      } catch(e) {}
+    }
+
+    function exportQRCSV() {
+      var codes = _allQRCodes;
+      if (!codes.length) { alert('No codes to export'); return; }
+      var header = ['#','Label','Type','Location','Placement','Scan URL','Scans','Active','Created'];
+      var rows = codes.map(function(c) {
+        var scanUrl = c.scan_url || ('https://cybercheck-links.vercel.app/q.html?c=' + c.code);
+        return [c.seq_number, c.label, c.type, c.location||'', c.placement||'fixed', scanUrl, c.scan_count||0, c.active?'Yes':'No', c.created_at ? c.created_at.split('T')[0] : ''].map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
+      });
+      var csv = [header.join(',')].concat(rows).join('\n');
+      var a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'qr-codes-' + new Date().toISOString().split('T')[0] + '.csv';
+      a.click();
+    }
+
+    function esc(s) { if(!s) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+
+    // Close modal on backdrop click
+    document.getElementById('qr-scan-modal') && document.getElementById('qr-scan-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeQRModal();
+    });
 
     // ── QR Menus Management ────────────────────────────
     var _qrMenusLoaded = false;

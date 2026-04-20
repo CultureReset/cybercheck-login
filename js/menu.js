@@ -9,6 +9,7 @@ var _menuCategories = []; // derived from item.category strings + local addition
 function loadMenu() {
   renderMenu();
   updateMenuStats();
+  renderMenuQR();
 
   CC.dashboard.getMenu().then(function(items) {
     _menuItems = (items || []).map(function(item) {
@@ -302,5 +303,179 @@ function updateMenuStats() {
   if (el) el.textContent = _menuItems.length;
 }
 
+function renderMenuQR() {
+  var siteId = getSiteId();
+  var wrap = document.getElementById('menu-qr-wrap');
+  if (!wrap) return;
+  if (!siteId) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Sign in to see your QR code.</p>';
+    return;
+  }
+  var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(siteId);
+  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(menuUrl);
+  wrap.innerHTML =
+    '<img src="' + qrUrl + '" style="width:140px;height:140px;border-radius:8px;" alt="Menu QR Code"><br>' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;word-break:break-all;">' +
+      '<a href="' + menuUrl + '" target="_blank" style="color:var(--primary);">View Live Menu</a>' +
+    '</div>' +
+    '<button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="navigator.clipboard.writeText(\'' + menuUrl.replace(/'/g, "\\'") + '\').then(function(){toast(\'URL copied\')})">Copy URL</button>';
+}
+
 // Register page load callback
 onPageLoad('menu', loadMenu);
+
+// ── AI Menu Extraction ──────────────────────────────────────────────────────
+
+var _extractedData = null;
+
+function openMenuExtractModal() {
+  _extractedData = null;
+  document.getElementById('extract-step-upload').style.display = '';
+  document.getElementById('extract-step-results').style.display = 'none';
+  document.getElementById('extract-preview-wrap').style.display = 'none';
+  document.getElementById('extract-preview-img').src = '';
+  document.getElementById('extract-file-input').value = '';
+  document.getElementById('extract-status').textContent = '';
+  document.getElementById('extract-scan-btn').style.display = 'none';
+  document.getElementById('extract-import-btn').style.display = 'none';
+  openModal('modal-menu-extract');
+}
+
+function handleExtractFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('extract-preview-img').src = e.target.result;
+    document.getElementById('extract-preview-wrap').style.display = '';
+    document.getElementById('extract-scan-btn').style.display = '';
+    document.getElementById('extract-status').textContent = 'Photo ready — click "Scan Menu" to extract items.';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runMenuExtraction() {
+  var input = document.getElementById('extract-file-input');
+  var file = input.files[0];
+  if (!file) { toast('Please select a photo first', 'error'); return; }
+
+  var btn = document.getElementById('extract-scan-btn');
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  document.getElementById('extract-status').textContent = 'AI is reading your menu — this takes 5-15 seconds...';
+  document.getElementById('extract-import-btn').style.display = 'none';
+  document.getElementById('extract-step-results').style.display = 'none';
+
+  var base64 = await new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.readAsDataURL(file);
+  });
+
+  try {
+    var token = window.CC && CC.getToken ? CC.getToken() : '';
+    var res = await fetch((window.CC_API_BASE || '') + '/api/dashboard/menu/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ image_base64: base64, mime_type: file.type })
+    });
+
+    var data = await res.json();
+
+    if (!res.ok) {
+      document.getElementById('extract-status').textContent = 'Error: ' + (data.error || 'Extraction failed');
+      btn.disabled = false;
+      btn.textContent = 'Scan Menu';
+      return;
+    }
+
+    _extractedData = data;
+    renderExtractPreview(data);
+    document.getElementById('extract-step-results').style.display = '';
+    document.getElementById('extract-import-btn').style.display = '';
+
+    var total = (data.categories || []).reduce(function(s, c) { return s + (c.items || []).length; }, 0);
+    document.getElementById('extract-status').textContent = 'Found ' + total + ' items across ' + (data.categories || []).length + ' categories. Review below, then click Import.';
+  } catch (err) {
+    document.getElementById('extract-status').textContent = 'Network error — check connection and try again.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Scan Again';
+}
+
+function renderExtractPreview(data) {
+  var html = '';
+  (data.categories || []).forEach(function(cat) {
+    html += '<div style="margin-bottom:16px;">';
+    html += '<div style="font-weight:600;font-size:14px;padding:6px 0;border-bottom:1px solid var(--card-border);margin-bottom:8px;">';
+    html += escHtml(cat.name) + ' <span style="font-weight:400;color:var(--text-muted);">(' + (cat.items || []).length + ' items)</span></div>';
+    html += '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
+    html += '<thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:500;">Item</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:500;">Price</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:500;">Description</th></tr></thead>';
+    html += '<tbody>';
+    (cat.items || []).forEach(function(item) {
+      html += '<tr style="border-top:1px solid var(--card-border);">';
+      html += '<td style="padding:5px 8px;font-weight:500;">' + escHtml(item.name) + '</td>';
+      html += '<td style="padding:5px 8px;">' + (item.price ? '$' + Number(item.price).toFixed(2) : '—') + '</td>';
+      html += '<td style="padding:5px 8px;color:var(--text-muted);">' + escHtml(item.description || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  });
+  document.getElementById('extract-results-content').innerHTML = html;
+}
+
+async function importExtractedItems() {
+  if (!_extractedData || !_extractedData.categories) return;
+
+  var btn = document.getElementById('extract-import-btn');
+  btn.disabled = true;
+  btn.textContent = 'Importing...';
+
+  var totalItems = 0;
+  var errors = 0;
+
+  for (var ci = 0; ci < _extractedData.categories.length; ci++) {
+    var cat = _extractedData.categories[ci];
+    var catName = (cat.name || 'Menu Items').trim();
+
+    if (!_menuCategories.find(function(c) { return c.name === catName; })) {
+      _menuCategories.push({ name: catName });
+    }
+
+    var items = cat.items || [];
+    for (var ii = 0; ii < items.length; ii++) {
+      var item = items[ii];
+      var dbPayload = {
+        name: item.name || 'Unnamed Item',
+        price: parseFloat(item.price) || 0,
+        category: catName,
+        description: item.description || '',
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        modifiers: [],
+        sort_order: ii
+      };
+      try {
+        var created = await CC.dashboard.createMenuItem(dbPayload);
+        if (created) {
+          _menuItems.push({
+            id: created.id, dbId: created.id,
+            categoryName: catName,
+            name: dbPayload.name, price: dbPayload.price,
+            description: dbPayload.description,
+            tags: dbPayload.tags, modifiers: [],
+            photo: '', sort_order: dbPayload.sort_order
+          });
+          totalItems++;
+        }
+      } catch (e) { errors++; }
+    }
+  }
+
+  closeModal('modal-menu-extract');
+  renderMenu();
+  updateMenuStats();
+  toast('Imported ' + totalItems + ' menu items' + (errors ? ' (' + errors + ' failed)' : ''));
+  btn.disabled = false;
+  btn.textContent = 'Import to Menu';
+}

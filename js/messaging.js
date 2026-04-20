@@ -37,6 +37,7 @@ var _messagingData = {
   // Business enters this — where booking SMS alerts get sent
   notificationPhone: '',
   notificationEmail: '',
+  notificationEmail2: '',
 
   // Booking confirmation templates
   customerBookingTemplate: 'Hi {{customer_name}}! Your booking with {{business_name}} is confirmed.\n\nDate: {{date}}\nTime: {{time_slot}}\nBoats: {{boat_count}}x {{boat_type}}\nAdd-ons: {{addons}}\nTotal: ${{total}}\n\nLocation: {{location}}\n\nQuestions? Reply to this number or call us!\n\nSee you on the water! 🚤',
@@ -65,6 +66,7 @@ async function loadMessaging() {
       owner_phone: 'ownerPhone', customer_phone: 'customerPhone',
       notification_phone: 'notificationPhone',
       notification_email: 'notificationEmail',
+      notification_email_2: 'notificationEmail2',
       customer_booking_template: 'customerBookingTemplate',
       owner_booking_template: 'ownerBookingTemplate',
       photo_gallery_enabled: 'photoGalleryEnabled',
@@ -106,6 +108,7 @@ function saveMessagingData() {
     customer_phone: _messagingData.customerPhone,
     notification_phone: _messagingData.notificationPhone,
     notification_email: _messagingData.notificationEmail,
+    notification_email_2: _messagingData.notificationEmail2,
     customer_booking_template: _messagingData.customerBookingTemplate,
     owner_booking_template: _messagingData.ownerBookingTemplate,
     photo_gallery_enabled: _messagingData.photoGalleryEnabled,
@@ -172,19 +175,34 @@ function renderPhoneNumbers() {
   html += '</p></div>';
   html += '</div>';
 
-  // ── Booking notification email ─────────────────────────────────────────────
+  // ── Booking notification emails ───────────────────────────────────────────────
   html += '<div style="padding:20px;background:var(--bg);border:2px solid var(--primary);border-radius:var(--radius-lg);margin-bottom:20px;">';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
   html += '<div style="width:36px;height:36px;border-radius:50%;background:rgba(0,173,168,0.15);display:flex;align-items:center;justify-content:center;">📧</div>';
-  html += '<div><strong style="font-size:14px;">Your Booking Notification Email</strong>';
-  html += '<div style="font-size:12px;color:var(--text-muted);">You\'ll get an email every time a new booking comes in</div></div>';
+  html += '<div><strong style="font-size:14px;">Booking Notification Emails</strong>';
+  html += '<div style="font-size:12px;color:var(--text-muted);">Get alerts when customers book</div></div>';
   html += '</div>';
-  html += '<div style="display:flex;gap:10px;align-items:center;">';
-  html += '<input id="notification-email-input" type="email" placeholder="you@email.com" value="' + escHtml(_messagingData.notificationEmail || '') + '" style="flex:1;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--card-bg);color:var(--text);font-size:15px;" />';
-  html += '<button class="btn btn-primary" onclick="saveNotificationEmail()">Save</button>';
+
+  // Primary email
+  html += '<div style="margin-bottom:14px;">';
+  html += '<label style="display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--text);">Primary Email</label>';
+  html += '<input id="notification-email-input" type="email" placeholder="beachside@myyahoo.com" value="' + escHtml(_messagingData.notificationEmail || '') + '" style="width:100%;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--card-bg);color:var(--text);font-size:15px;box-sizing:border-box;" />';
   html += '</div>';
-  if (_messagingData.notificationEmail) {
-    html += '<div style="margin-top:8px;font-size:12px;color:var(--success);">✓ Booking alerts will be emailed to ' + escHtml(_messagingData.notificationEmail) + '</div>';
+
+  // Secondary email (CC)
+  html += '<div style="margin-bottom:14px;">';
+  html += '<label style="display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--text);">Secondary Email <span style="font-weight:400;color:var(--text-muted);">(optional — CC)</span></label>';
+  html += '<input id="notification-email-2-input" type="email" placeholder="info@cybercheckinc.com" value="' + escHtml(_messagingData.notificationEmail2 || '') + '" style="width:100%;padding:10px 14px;border:1px solid var(--card-border);border-radius:var(--radius);background:var(--card-bg);color:var(--text);font-size:15px;box-sizing:border-box;" />';
+  html += '</div>';
+
+  html += '<button class="btn btn-primary btn-sm" onclick="saveNotificationEmails()" style="margin-bottom:12px;">Save Emails</button>';
+
+  if (_messagingData.notificationEmail || _messagingData.notificationEmail2) {
+    html += '<div style="padding:10px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius);">';
+    html += '<div style="font-size:12px;color:var(--success);">✓ Booking alerts will be sent to:';
+    if (_messagingData.notificationEmail) html += '<br>' + escHtml(_messagingData.notificationEmail);
+    if (_messagingData.notificationEmail2) html += '<br>' + escHtml(_messagingData.notificationEmail2);
+    html += '</div></div>';
   }
   html += '</div>';
 
@@ -234,13 +252,23 @@ function renderPhoneNumbers() {
   container.innerHTML = html;
 }
 
-function saveNotificationEmail() {
-  var input = document.getElementById('notification-email-input');
-  if (!input) return;
-  _messagingData.notificationEmail = input.value.trim();
+function saveNotificationEmails() {
+  var input1 = document.getElementById('notification-email-input');
+  var input2 = document.getElementById('notification-email-2-input');
+  if (!input1) return;
+
+  _messagingData.notificationEmail = input1.value.trim();
+  _messagingData.notificationEmail2 = (input2 && input2.value.trim()) || '';
+
+  // Validate at least one email is present
+  if (!_messagingData.notificationEmail && !_messagingData.notificationEmail2) {
+    toast('Please enter at least one email address', 'error');
+    return;
+  }
+
   saveMessagingData();
   renderPhoneNumbers();
-  toast('Notification email saved — booking alerts will go to ' + _messagingData.notificationEmail);
+  toast('Notification emails saved.');
 }
 
 function saveNotificationPhone() {
