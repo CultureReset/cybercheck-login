@@ -5,18 +5,26 @@
 
 var _menuItems = [];      // items loaded from DB
 var _menuCategories = []; // derived from item.category strings + local additions
+var _activeMenuTab = 'food'; // 'food' | 'drink' | 'happy_hour'
+
+var MENU_TAB_LABELS = {
+  food:       '🍽️ Menu',
+  drink:      '🍹 Drinks',
+  happy_hour: '🍺 Happy Hour'
+};
 
 function loadMenu() {
-  renderMenu();
+  switchMenuTab(_activeMenuTab); // style the active tab button
   updateMenuStats();
   renderMenuQR();
 
   CC.dashboard.getMenu().then(function(items) {
     _menuItems = (items || []).map(function(item) {
       return {
-        id: item.id,             // real DB uuid
+        id: item.id,
         dbId: item.id,
         categoryName: item.category || 'Uncategorized',
+        itemType: item.item_type || 'food',
         name: item.name || '',
         price: parseFloat(item.price) || 0,
         description: item.description || '',
@@ -27,12 +35,13 @@ function loadMenu() {
       };
     });
 
-    // Derive categories from loaded items
+    // Derive categories from loaded items (keyed by type+name)
     var seenCats = {};
     _menuItems.forEach(function(item) {
-      if (!seenCats[item.categoryName]) {
-        seenCats[item.categoryName] = true;
-        _menuCategories.push({ name: item.categoryName });
+      var key = item.itemType + '|' + item.categoryName;
+      if (!seenCats[key]) {
+        seenCats[key] = true;
+        _menuCategories.push({ name: item.categoryName, type: item.itemType });
       }
     });
 
@@ -44,22 +53,49 @@ function loadMenu() {
   });
 }
 
+function switchMenuTab(type) {
+  _activeMenuTab = type;
+  ['food', 'drink', 'happy_hour'].forEach(function(t) {
+    var btn = document.getElementById('tab-' + t);
+    if (btn) {
+      btn.classList.toggle('active', t === type);
+      btn.style.background   = t === type ? 'var(--primary)' : '';
+      btn.style.color        = t === type ? '#fff' : '';
+      btn.style.borderColor  = t === type ? 'var(--primary)' : '';
+    }
+  });
+  renderMenu();
+}
+
 function renderMenu() {
   var container = document.getElementById('menu-categories-list');
   var emptyState = document.getElementById('menu-empty');
   if (!container) return;
 
-  if (_menuCategories.length === 0) {
+  var tabItems = _menuItems.filter(function(i) { return i.itemType === _activeMenuTab; });
+  var tabCats  = _menuCategories.filter(function(c) { return c.type === _activeMenuTab; });
+
+  // Also include any category implied by items that lack an explicit category entry
+  tabItems.forEach(function(item) {
+    if (!tabCats.find(function(c) { return c.name === item.categoryName; })) {
+      tabCats.push({ name: item.categoryName, type: _activeMenuTab });
+    }
+  });
+
+  if (tabItems.length === 0 && tabCats.length === 0) {
     container.innerHTML = '';
-    if (emptyState) emptyState.style.display = '';
+    if (emptyState) {
+      emptyState.textContent = 'No ' + MENU_TAB_LABELS[_activeMenuTab] + ' items yet. Add one above.';
+      emptyState.style.display = '';
+    }
     return;
   }
 
   if (emptyState) emptyState.style.display = 'none';
   var html = '';
 
-  _menuCategories.forEach(function(cat) {
-    var items = _menuItems.filter(function(i) { return i.categoryName === cat.name; });
+  tabCats.forEach(function(cat) {
+    var items = tabItems.filter(function(i) { return i.categoryName === cat.name; });
 
     html += '<div class="card" style="margin-bottom:12px;">';
     html += '<div class="card-header">';
@@ -110,6 +146,8 @@ function escAttr(str) {
 function openCategoryModal(existingName) {
   document.getElementById('cat-form-name').value = existingName || '';
   document.getElementById('cat-form-id').value = existingName || '';
+  var titleEl = document.getElementById('cat-modal-title');
+  if (titleEl) titleEl.textContent = (existingName ? 'Edit' : 'Add') + ' Section — ' + MENU_TAB_LABELS[_activeMenuTab];
   openModal('modal-category');
 }
 
@@ -136,8 +174,8 @@ function saveCategory() {
     }).catch(function() { toast('Failed to rename category', 'error'); });
   } else if (!oldName) {
     // New category (no items yet, just add locally)
-    if (!_menuCategories.find(function(c) { return c.name === name; })) {
-      _menuCategories.push({ name: name });
+    if (!_menuCategories.find(function(c) { return c.name === name && c.type === _activeMenuTab; })) {
+      _menuCategories.push({ name: name, type: _activeMenuTab });
     }
     closeModal('modal-category');
     renderMenu();
@@ -152,14 +190,14 @@ function editCategory(name) {
 }
 
 function deleteCategory(name) {
-  if (!confirm('Delete this category and all its items?')) return;
-  var toDelete = _menuItems.filter(function(i) { return i.categoryName === name; });
+  if (!confirm('Delete this section and all its items?')) return;
+  var toDelete = _menuItems.filter(function(i) { return i.categoryName === name && i.itemType === _activeMenuTab; });
   var promises = toDelete.map(function(item) {
     return CC.dashboard.deleteMenuItem(item.id);
   });
   Promise.all(promises).then(function() {
-    _menuItems = _menuItems.filter(function(i) { return i.categoryName !== name; });
-    _menuCategories = _menuCategories.filter(function(c) { return c.name !== name; });
+    _menuItems = _menuItems.filter(function(i) { return !(i.categoryName === name && i.itemType === _activeMenuTab); });
+    _menuCategories = _menuCategories.filter(function(c) { return !(c.name === name && c.type === _activeMenuTab); });
     renderMenu();
     updateMenuStats();
     toast('Category deleted');
@@ -174,27 +212,33 @@ function openMenuItemModal(id) {
   document.getElementById('mi-form-tags').value = '';
   document.getElementById('mi-form-modifiers').value = '';
   document.getElementById('mi-form-id').value = '';
-  document.getElementById('menu-item-modal-title').textContent = 'Add Menu Item';
+  document.getElementById('mi-form-type').value = _activeMenuTab;
+  document.getElementById('menu-item-modal-title').textContent = 'Add ' + MENU_TAB_LABELS[_activeMenuTab] + ' Item';
 
-  // Populate category dropdown
+  // Populate category dropdown — only show sections for current tab
   var select = document.getElementById('mi-form-category');
   select.innerHTML = '';
-  _menuCategories.forEach(function(cat) {
+  var tabCats = _menuCategories.filter(function(c) { return c.type === _activeMenuTab; });
+  if (tabCats.length === 0) {
+    // auto-create a default section name for this tab
+    var defaultCat = _activeMenuTab === 'food' ? 'Menu Items'
+                   : _activeMenuTab === 'drink' ? 'Drinks'
+                   : 'Happy Hour Deals';
+    tabCats = [{ name: defaultCat, type: _activeMenuTab }];
+    _menuCategories.push(tabCats[0]);
+  }
+  tabCats.forEach(function(cat) {
     var opt = document.createElement('option');
     opt.value = cat.name;
     opt.textContent = cat.name;
     select.appendChild(opt);
   });
 
-  if (_menuCategories.length === 0) {
-    toast('Please create a category first', 'error');
-    return;
-  }
-
   if (id) {
     var item = _menuItems.find(function(i) { return String(i.id) === String(id); });
     if (item) {
-      document.getElementById('menu-item-modal-title').textContent = 'Edit Menu Item';
+      document.getElementById('menu-item-modal-title').textContent = 'Edit ' + MENU_TAB_LABELS[item.itemType] + ' Item';
+      document.getElementById('mi-form-type').value = item.itemType;
       document.getElementById('mi-form-name').value = item.name;
       document.getElementById('mi-form-price').value = item.price;
       document.getElementById('mi-form-desc').value = item.description || '';
@@ -203,6 +247,14 @@ function openMenuItemModal(id) {
         return m.name + ' | ' + (parseFloat(m.price) || 0).toFixed(2);
       }).join('\n');
       document.getElementById('mi-form-id').value = item.id;
+      // Re-populate select for this item's type
+      select.innerHTML = '';
+      _menuCategories.filter(function(c) { return c.type === item.itemType; }).forEach(function(cat) {
+        var opt = document.createElement('option');
+        opt.value = cat.name;
+        opt.textContent = cat.name;
+        select.appendChild(opt);
+      });
       select.value = item.categoryName;
     }
   }
@@ -232,14 +284,16 @@ function saveMenuItem() {
     });
   }
 
+  var itemType = document.getElementById('mi-form-type').value || _activeMenuTab;
   var dbPayload = {
     name: name,
     price: price,
     category: categoryName,
+    item_type: itemType,
     description: desc,
     tags: tags,
     modifiers: modifiers,
-    sort_order: _menuItems.filter(function(i) { return i.categoryName === categoryName; }).length
+    sort_order: _menuItems.filter(function(i) { return i.categoryName === categoryName && i.itemType === itemType; }).length
   };
 
   var id = document.getElementById('mi-form-id').value;
@@ -252,6 +306,7 @@ function saveMenuItem() {
         item.name = name;
         item.price = price;
         item.categoryName = categoryName;
+        item.itemType = itemType;
         item.description = desc;
         item.tags = tags;
         item.modifiers = modifiers;
@@ -268,6 +323,7 @@ function saveMenuItem() {
         id: created.id,
         dbId: created.id,
         categoryName: categoryName,
+        itemType: itemType,
         name: name,
         price: price,
         description: desc,
@@ -439,8 +495,8 @@ async function importExtractedItems() {
     var cat = _extractedData.categories[ci];
     var catName = (cat.name || 'Menu Items').trim();
 
-    if (!_menuCategories.find(function(c) { return c.name === catName; })) {
-      _menuCategories.push({ name: catName });
+    if (!_menuCategories.find(function(c) { return c.name === catName && c.type === _activeMenuTab; })) {
+      _menuCategories.push({ name: catName, type: _activeMenuTab });
     }
 
     var items = cat.items || [];
@@ -450,6 +506,7 @@ async function importExtractedItems() {
         name: item.name || 'Unnamed Item',
         price: parseFloat(item.price) || 0,
         category: catName,
+        item_type: _activeMenuTab,
         description: item.description || '',
         tags: Array.isArray(item.tags) ? item.tags : [],
         modifiers: [],
@@ -461,6 +518,7 @@ async function importExtractedItems() {
           _menuItems.push({
             id: created.id, dbId: created.id,
             categoryName: catName,
+            itemType: _activeMenuTab,
             name: dbPayload.name, price: dbPayload.price,
             description: dbPayload.description,
             tags: dbPayload.tags, modifiers: [],

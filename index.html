@@ -994,14 +994,18 @@
             </div>
           </div>
           <div class="card">
-            <div class="card-header">
-              <h3>Menu Items</h3>
-              <div style="display:flex;gap:6px;">
-                <button class="btn btn-outline btn-sm" onclick="openCategoryModal()">+ Category</button>
+            <div class="card-header" style="flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button class="btn btn-sm menu-section-tab active" id="tab-food"     onclick="switchMenuTab('food')"      style="border-radius:999px;">🍽️ Menu</button>
+                <button class="btn btn-sm menu-section-tab"        id="tab-drink"    onclick="switchMenuTab('drink')"     style="border-radius:999px;">🍹 Drinks</button>
+                <button class="btn btn-sm menu-section-tab"        id="tab-happy_hour" onclick="switchMenuTab('happy_hour')" style="border-radius:999px;">🍺 Happy Hour</button>
+              </div>
+              <div style="display:flex;gap:6px;margin-left:auto;">
+                <button class="btn btn-outline btn-sm" onclick="openCategoryModal()">+ Section</button>
                 <button class="btn btn-primary btn-sm" onclick="openMenuItemModal()">+ Item</button>
               </div>
             </div>
-            <div id="menu-empty" style="color:var(--text-muted);font-size:13px;padding:8px 0;">No menu items yet. Scan a photo above or add items manually.</div>
+            <div id="menu-empty" style="color:var(--text-muted);font-size:13px;padding:8px 0;">No items yet. Scan a photo above or add items manually.</div>
             <div id="menu-categories-list"></div>
           </div>
         </div>
@@ -1378,6 +1382,7 @@
     <div class="form-group"><label>Tags (comma-separated)</label><input type="text" id="mi-form-tags" placeholder="vegetarian, gluten-free, popular"></div>
     <div class="form-group"><label>Modifiers (one per line: Name | Price)</label><textarea id="mi-form-modifiers" rows="3" placeholder="Add Cheese | 1.50&#10;Extra Sauce | 0.75"></textarea></div>
     <input type="hidden" id="mi-form-id">
+    <input type="hidden" id="mi-form-type" value="food">
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-menu-item')">Cancel</button>
       <button class="btn btn-primary" onclick="saveMenuItem()">Save Item</button>

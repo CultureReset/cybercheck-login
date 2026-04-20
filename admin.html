@@ -1759,6 +1759,7 @@
             <select id="mb-biz-select" onchange="mbLoadBusiness()" style="flex:1;min-width:220px;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
               <option value="">— Select a business —</option>
             </select>
+            <button class="btn btn-primary" style="font-size:13px;padding:8px 16px;white-space:nowrap;" onclick="mbOpenCreateBusiness()">+ New Business</button>
           </div>
         </div>
 
@@ -9086,6 +9087,37 @@
     </div>
   </div>
 
+  <!-- Create Business Modal -->
+  <div id="mb-modal-create-biz" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border-radius:14px;padding:24px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Create New Business</h3><button onclick="mbCloseModal('mb-modal-create-biz')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div><label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Business Name *</label>
+          <input type="text" id="mb-cb-name" placeholder="e.g. Gulf Shrimp Co." style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Business Type *</label>
+          <select id="mb-cb-type" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            <option value="restaurant">Restaurant</option>
+            <option value="bar">Bar</option>
+            <option value="coffee_shop">Coffee Shop</option>
+            <option value="bakery">Bakery</option>
+            <option value="food_truck">Food Truck</option>
+            <option value="retail">Retail</option>
+            <option value="service">Service</option>
+            <option value="other">Other</option>
+          </select></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Owner Email *</label>
+          <input type="email" id="mb-cb-email" placeholder="owner@business.com" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Owner Password (optional)</label>
+          <input type="text" id="mb-cb-password" placeholder="Leave blank for default" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"></div>
+        <div id="mb-cb-error" style="color:#f87171;font-size:13px;display:none;"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;">
+        <button class="btn btn-outline" onclick="mbCloseModal('mb-modal-create-biz')">Cancel</button>
+        <button class="btn btn-primary" id="mb-cb-save-btn" onclick="mbCreateBusiness()">Create Business</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   // ── Menu Builder — Admin ──────────────────────────────────────────────────
   var _mbSiteId   = null;
@@ -9097,12 +9129,73 @@
   function mbOpenModal(id) { var m = document.getElementById(id); if (m) { m.style.display = 'flex'; } }
   function mbCloseModal(id) { var m = document.getElementById(id); if (m) m.style.display = 'none'; }
 
+  // Create new business
+  function mbOpenCreateBusiness() {
+    document.getElementById('mb-cb-name').value = '';
+    document.getElementById('mb-cb-email').value = '';
+    document.getElementById('mb-cb-password').value = '';
+    document.getElementById('mb-cb-type').value = 'restaurant';
+    document.getElementById('mb-cb-error').style.display = 'none';
+    document.getElementById('mb-cb-save-btn').disabled = false;
+    document.getElementById('mb-cb-save-btn').textContent = 'Create Business';
+    mbOpenModal('mb-modal-create-biz');
+    setTimeout(function() { document.getElementById('mb-cb-name').focus(); }, 100);
+  }
+
+  async function mbCreateBusiness() {
+    var name  = document.getElementById('mb-cb-name').value.trim();
+    var type  = document.getElementById('mb-cb-type').value;
+    var email = document.getElementById('mb-cb-email').value.trim();
+    var pass  = document.getElementById('mb-cb-password').value.trim();
+    var errEl = document.getElementById('mb-cb-error');
+    var btn   = document.getElementById('mb-cb-save-btn');
+
+    if (!name || !email) {
+      errEl.textContent = 'Business name and owner email are required.';
+      errEl.style.display = '';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+    errEl.style.display = 'none';
+
+    try {
+      var res = await fetch(API_BASE + '/api/admin/businesses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: JSON.stringify({ businessName: name, businessType: type, ownerEmail: email, ownerPassword: pass || undefined, skipOnboarding: true })
+      });
+      var data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error || 'Failed to create business.'; errEl.style.display = ''; btn.disabled = false; btn.textContent = 'Create Business'; return; }
+
+      // Add to dropdown and select it
+      var sel = document.getElementById('mb-biz-select');
+      var opt = document.createElement('option');
+      opt.value = data.business.site_id || data.site_id;
+      opt.textContent = name;
+      opt.dataset.slug = data.business.entity_slug || data.business.slug || '';
+      sel.appendChild(opt);
+      sel.value = opt.value;
+
+      mbCloseModal('mb-modal-create-biz');
+      mbLoadBusiness();
+      toast('Business created: ' + name);
+    } catch(e) {
+      errEl.textContent = 'Network error — try again.';
+      errEl.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Create Business';
+    }
+  }
+
   // Load businesses into selector
   async function mbLoadBusinessSelector() {
     var sel = document.getElementById('mb-biz-select');
-    if (!sel || sel.options.length > 1) return;
+    if (!sel) return;
+    if (sel.options.length > 1) return; // already populated
     try {
-      var res = await fetch(API_BASE + '/api/dashboard/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+      var res = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
       var list = res.ok ? await res.json() : [];
       list.forEach(function(b) {
         var o = document.createElement('option');
