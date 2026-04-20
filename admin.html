@@ -9356,7 +9356,9 @@
   function mbOpenExtract() {
     if (!_mbSiteId) { toast('Select a business first', 'error'); return; }
     _mbExtracted = null;
-    document.getElementById('mb-ext-file').value = '';
+    var fileEl = document.getElementById('mb-ext-file');
+    fileEl.value = '';
+    fileEl.dataset.mode = 'menu'; // always reset to menu mode
     document.getElementById('mb-ext-preview-wrap').style.display = 'none';
     document.getElementById('mb-ext-preview-img').src = '';
     document.getElementById('mb-ext-status').textContent = '';
