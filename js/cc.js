@@ -339,6 +339,30 @@ const CC = (function() {
       return { success: true };
     },
 
+    // --- Events ---
+    getEvents: async function() {
+      var siteId = await ensureSiteId(); if (!siteId) return [];
+      var { data } = await supabase.from('events').select('*').eq('site_id', siteId).order('event_date', { ascending: true });
+      return data || [];
+    },
+    createEvent: async function(d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
+      var { data } = await supabase.from('events').insert(obj).select().single();
+      return data;
+    },
+    updateEvent: async function(id, d) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
+      var { data } = await supabase.from('events').update(obj).eq('id', id).eq('site_id', siteId).select().single();
+      return data;
+    },
+    deleteEvent: async function(id) {
+      var siteId = await ensureSiteId(); if (!siteId) return null;
+      await supabase.from('events').delete().eq('id', id).eq('site_id', siteId);
+      return { success: true };
+    },
+
     // --- Fleet Types (rentals) ---
     getFleetTypes: async function() {
       try {
@@ -458,8 +482,8 @@ const CC = (function() {
     getBookings: async function(params) {
       var siteId = await ensureSiteId(); if (!siteId) return [];
       var query = supabase.from('bookings')
-        .select('*, fleet_types(name), rental_time_slots(name, start_time, end_time)')
-        .eq('site_id', siteId).order('booking_date', { ascending: true });
+        .select('*, fleet_types(name, image_url), rental_time_slots(name, start_time, end_time)')
+        .eq('site_id', siteId).order('booking_date', { ascending: false });
       if (params) {
         if (params.status) query = query.eq('status', params.status);
         if (params.date) query = query.eq('booking_date', params.date);

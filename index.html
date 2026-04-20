@@ -51,6 +51,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
           <span>My QR Codes</span>
         </div>
+        <div class="nav-item" data-page="events">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+          <span>Events &amp; Live Music</span>
+        </div>
 
         <!-- Rentals -->
         <div class="nav-section-label">Rentals</div>
@@ -1102,6 +1106,32 @@
           </div>
         </div>
 
+        <!-- EVENTS & LIVE MUSIC -->
+        <div class="page-section" id="page-events">
+          <!-- AI Extraction -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <h3>🎉 Events &amp; Live Music</h3>
+              <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ Add Event</button>
+            </div>
+            <div style="padding:0 0 12px;">
+              <input type="file" id="ev-file-input" accept="image/*" style="display:none;" onchange="evFileChanged(this)">
+              <button class="btn btn-outline" id="ev-extract-btn" onclick="evPickFile()" style="margin-bottom:12px;">
+                📸 Scan Flyer / Schedule
+              </button>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
+                Upload a photo of your weekly lineup, event flyer, or schedule — AI will extract the events automatically.
+              </p>
+              <div id="ev-extract-preview"></div>
+            </div>
+          </div>
+          <!-- Events list -->
+          <div class="card">
+            <div class="card-header"><h3>Upcoming Events</h3></div>
+            <div id="events-list"><p style="color:var(--text-muted);font-size:13px;">Loading…</p></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1414,6 +1444,26 @@
     </div>
   </div></div>
 
+  <!-- Event Modal -->
+  <div class="modal-overlay" id="modal-event"><div class="modal" style="max-width:500px;">
+    <div class="modal-header"><h3>Event / Live Music</h3><button class="modal-close" onclick="closeModal('modal-event')">&times;</button></div>
+    <input type="hidden" id="ev-form-id">
+    <div class="form-group"><label>Event Name / Performer *</label><input type="text" id="ev-form-name" placeholder="e.g. Basch Jernigan – Live Music"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Date</label><input type="date" id="ev-form-date"></div>
+      <div class="form-group"><label>Cover Charge</label><input type="text" id="ev-form-cover" placeholder="e.g. $10, Free"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Start Time</label><input type="text" id="ev-form-start" placeholder="5:30 PM"></div>
+      <div class="form-group"><label>End Time</label><input type="text" id="ev-form-end" placeholder="9:00 PM"></div>
+    </div>
+    <div class="form-group"><label>Description / Note</label><input type="text" id="ev-form-desc" placeholder="e.g. Every Monday, weather permitting"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-event')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div></div>
+
   <!-- QR Code Scan Detail Modal -->
   <div class="modal-overlay" id="modal-qrc-scans"><div class="modal" style="max-width:640px;">
     <div class="modal-header">
@@ -1501,6 +1551,7 @@
   <script src="js/faq.js?v=1"></script>
   <script src="js/menu.js?v=1"></script>
   <script src="js/qr-codes.js?v=1"></script>
+  <script src="js/events.js?v=1"></script>
   <script>
     var _business = null;
 
