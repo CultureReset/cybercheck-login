@@ -1861,6 +1861,21 @@
                   <button onclick="mbApplyPreset('harbor_light')" style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#ffffff;color:#0b0f14;font-size:12px;cursor:pointer;text-align:left;">
                     <div style="font-weight:600;margin-bottom:2px;">🌤 Harbor Light</div><div style="color:#64748b;font-size:11px;">White · Teal · Gold</div>
                   </button>
+                  <button onclick="mbApplyPreset('steakhouse')" style="padding:12px;border:1px solid #3d1212;border-radius:8px;background:#1a0a0a;color:#f5e6e6;font-size:12px;cursor:pointer;text-align:left;">
+                    <div style="font-weight:600;margin-bottom:2px;">🥩 Steakhouse</div><div style="color:#c87070;font-size:11px;">Near-black · Deep red</div>
+                  </button>
+                  <button onclick="mbApplyPreset('cafe')" style="padding:12px;border:1px solid #d6c4a8;border-radius:8px;background:#fdf6ec;color:#3b2a1a;font-size:12px;cursor:pointer;text-align:left;">
+                    <div style="font-weight:600;margin-bottom:2px;">☕ Café / Brunch</div><div style="color:#8b6346;font-size:11px;">Warm cream · Terracotta</div>
+                  </button>
+                  <button onclick="mbApplyPreset('sportsbar')" style="padding:12px;border:1px solid #3a3a3a;border-radius:8px;background:#1c1c1c;color:#f5f5f5;font-size:12px;cursor:pointer;text-align:left;">
+                    <div style="font-weight:600;margin-bottom:2px;">🍺 Sports Bar</div><div style="color:#f97316;font-size:11px;">Dark charcoal · Bold orange</div>
+                  </button>
+                  <button onclick="mbApplyPreset('texmex')" style="padding:12px;border:1px solid #c2622a;border-radius:8px;background:#7c2d12;color:#fff7ed;font-size:12px;cursor:pointer;text-align:left;">
+                    <div style="font-weight:600;margin-bottom:2px;">🌮 Tex-Mex</div><div style="color:#fdba74;font-size:11px;">Terracotta · Bright yellow</div>
+                  </button>
+                  <button onclick="mbApplyPreset('winebistro')" style="padding:12px;border:1px solid #6b2040;border-radius:8px;background:#3b0a24;color:#fdf2f8;font-size:12px;cursor:pointer;text-align:left;">
+                    <div style="font-weight:600;margin-bottom:2px;">🍷 Wine Bistro</div><div style="color:#e8a0bc;font-size:11px;">Deep burgundy · Rose gold</div>
+                  </button>
                 </div>
               </div>
               <!-- Custom colors -->
@@ -9769,6 +9784,11 @@
     vibrant:  { bg:'#2e1065', surface:'#4c1d95', surface2:'#5b21b6', primary:'#a78bfa', primary_dark:'#7c3aed', accent:'#f472b6', text:'#faf5ff', text_muted:'#c4b5fd', border:'#5b21b6', radius:'10px' },
     harbor:   { bg:'#0b0f14', surface:'#121923', surface2:'#182230', primary:'#14b8a6', primary_dark:'#0d8f85', accent:'#f5b942', accent_light:'#1f2b3a', text:'#f4f7fb', text_muted:'#96a4b8', text_light:'#6b7a8e', border:'#1c2533', special_bg:'#1b2534', special_border:'#f5b942', hh_bg:'#142218', hh_border:'#22c55e', hh_text:'#4ade80', catch_bg:'#0f1a2d', catch_border:'#3b82f6', catch_text:'#60a5fa', radius:'18px' },
     harbor_light: { bg:'#ffffff', surface:'#f8fafc', surface2:'#f1f5f9', primary:'#14b8a6', primary_dark:'#0d8f85', accent:'#f5b942', accent_light:'#fffbeb', text:'#0b0f14', text_muted:'#64748b', text_light:'#94a3b8', border:'#e2e8f0', special_bg:'#fffbeb', special_border:'#f5b942', hh_bg:'#f0fdf4', hh_border:'#22c55e', hh_text:'#15803d', catch_bg:'#eff6ff', catch_border:'#3b82f6', catch_text:'#1d4ed8', radius:'18px' },
+    steakhouse:   { bg:'#1a0a0a', surface:'#2d1010', surface2:'#3d1a1a', primary:'#c0392b', primary_dark:'#96281b', accent:'#d4af37', text:'#f5e6e6', text_muted:'#c87070', text_light:'#a05050', border:'#3d1a1a', special_bg:'#2d1010', special_border:'#c0392b', hh_bg:'#1f1208', hh_border:'#d4af37', hh_text:'#d4af37', radius:'4px' },
+    cafe:         { bg:'#fdf6ec', surface:'#fef9f2', surface2:'#f5ead8', primary:'#c2714f', primary_dark:'#a85c3c', accent:'#d4956a', text:'#3b2a1a', text_muted:'#7a5c44', text_light:'#a07860', border:'#e8d5bc', special_bg:'#fff4e8', special_border:'#c2714f', hh_bg:'#f0f7ee', hh_border:'#6aaa64', hh_text:'#3d7a38', radius:'10px' },
+    sportsbar:    { bg:'#111111', surface:'#1c1c1c', surface2:'#2a2a2a', primary:'#f97316', primary_dark:'#ea6500', accent:'#facc15', text:'#f5f5f5', text_muted:'#a3a3a3', text_light:'#737373', border:'#2a2a2a', special_bg:'#1e1a10', special_border:'#facc15', hh_bg:'#1a1208', hh_border:'#f97316', hh_text:'#f97316', radius:'6px' },
+    texmex:       { bg:'#431407', surface:'#7c2d12', surface2:'#9a3412', primary:'#fb923c', primary_dark:'#ea7316', accent:'#fde047', text:'#fff7ed', text_muted:'#fdba74', text_light:'#fb923c', border:'#9a3412', special_bg:'#4a2008', special_border:'#fde047', hh_bg:'#1a2e0a', hh_border:'#86efac', hh_text:'#86efac', radius:'8px' },
+    winebistro:   { bg:'#2d0618', surface:'#3b0a24', surface2:'#4f1030', primary:'#c26d8a', primary_dark:'#a55070', accent:'#d4a0b0', text:'#fdf2f8', text_muted:'#e8a0bc', text_light:'#c07090', border:'#4f1030', special_bg:'#3a0f20', special_border:'#c26d8a', hh_bg:'#1a0c10', hh_border:'#d4a0b0', hh_text:'#d4a0b0', radius:'12px' },
   };
 
   var _mbCurrentTheme = {};
