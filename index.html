@@ -51,6 +51,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
           <span>My QR Codes</span>
         </div>
+        <div class="nav-item" data-page="specials">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span>Specials</span>
+        </div>
         <div class="nav-item" data-page="events">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
           <span>Events &amp; Live Music</span>
@@ -257,6 +261,23 @@
           <div class="card">
             <div class="card-header"><h3>Business Hours</h3></div>
             <div id="hours-editor"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>🍺 Happy Hour Schedule</h3></div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Set when happy hour is active — a "NOW" badge appears on the QR menu during those hours.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="hh-day-btns">
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Mon" onclick="hhToggleDay(this)">Mon</button>
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Tue" onclick="hhToggleDay(this)">Tue</button>
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Wed" onclick="hhToggleDay(this)">Wed</button>
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Thu" onclick="hhToggleDay(this)">Thu</button>
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Fri" onclick="hhToggleDay(this)">Fri</button>
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Sat" onclick="hhToggleDay(this)">Sat</button>
+              <button type="button" class="btn btn-sm hh-day-btn" data-day="Sun" onclick="hhToggleDay(this)">Sun</button>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <div class="form-group" style="margin:0;"><label>Start Time</label><input type="text" id="hh-start" placeholder="4:00 PM" style="width:120px;"></div>
+              <div class="form-group" style="margin:0;"><label>End Time</label><input type="text" id="hh-end" placeholder="7:00 PM" style="width:120px;"></div>
+            </div>
           </div>
           <div class="card">
             <div class="card-header"><h3>Social Links</h3></div>
@@ -813,6 +834,8 @@
               .wc-title{font-size:18px!important;}
               .wc-card{padding:14px 16px!important;}
             }
+            .hh-day-btn,.sp-day-btn{background:var(--card-bg);border:1px solid var(--card-border);color:var(--text-muted);border-radius:999px;transition:all .15s;}
+            .hh-day-btn.active,.sp-day-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;}
           </style>
         </div>
 
@@ -1103,6 +1126,30 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- SPECIALS -->
+        <div class="page-section" id="page-specials">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <h3>🔥 Specials</h3>
+              <button class="btn btn-primary btn-sm" onclick="openSpecialModal()">+ Add Special</button>
+            </div>
+            <div style="padding:0 0 12px;">
+              <input type="file" id="sp-file-input" accept="image/*" style="display:none;" onchange="spFileChanged(this)">
+              <button class="btn btn-outline" id="sp-extract-btn" onclick="spPickFile()" style="margin-bottom:12px;">
+                📸 Scan Specials Board
+              </button>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
+                Upload a photo of your specials chalkboard, menu insert, or sign — AI extracts the deals automatically.
+              </p>
+              <div id="sp-extract-preview"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Current Specials</h3></div>
+            <div id="specials-list"><p style="color:var(--text-muted);font-size:13px;">Loading…</p></div>
           </div>
         </div>
 
@@ -1444,6 +1491,36 @@
     </div>
   </div></div>
 
+  <!-- Special Modal -->
+  <div class="modal-overlay" id="modal-special"><div class="modal" style="max-width:500px;">
+    <div class="modal-header"><h3>Add / Edit Special</h3><button class="modal-close" onclick="closeModal('modal-special')">&times;</button></div>
+    <input type="hidden" id="sp-form-id">
+    <div class="form-group"><label>Special Name *</label><input type="text" id="sp-form-name" placeholder="e.g. $5 Burger Night, Half-Off Wings"></div>
+    <div class="form-group"><label>Deal / Discount</label><input type="text" id="sp-form-deal" placeholder="e.g. $5, Half off, 2-for-1"></div>
+    <div class="form-group"><label>Description</label><input type="text" id="sp-form-desc" placeholder="Extra details (optional)"></div>
+    <div class="form-group">
+      <label>Days</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="sp-day-btns">
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Mon" onclick="spToggleDay(this,'Mon')">Mon</button>
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Tue" onclick="spToggleDay(this,'Tue')">Tue</button>
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Wed" onclick="spToggleDay(this,'Wed')">Wed</button>
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Thu" onclick="spToggleDay(this,'Thu')">Thu</button>
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Fri" onclick="spToggleDay(this,'Fri')">Fri</button>
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Sat" onclick="spToggleDay(this,'Sat')">Sat</button>
+        <button type="button" class="btn btn-sm sp-day-btn" data-day="Sun" onclick="spToggleDay(this,'Sun')">Sun</button>
+      </div>
+      <input type="text" id="sp-form-days" placeholder="e.g. Mon-Fri, Every Day, Tuesday" style="font-size:12px;">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Start Time</label><input type="text" id="sp-form-start" placeholder="4:00 PM"></div>
+      <div class="form-group"><label>End Time</label><input type="text" id="sp-form-end" placeholder="7:00 PM"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-special')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSpecial()">Save Special</button>
+    </div>
+  </div></div>
+
   <!-- Event Modal -->
   <div class="modal-overlay" id="modal-event"><div class="modal" style="max-width:500px;">
     <div class="modal-header"><h3>Event / Live Music</h3><button class="modal-close" onclick="closeModal('modal-event')">&times;</button></div>
@@ -1551,6 +1628,7 @@
   <script src="js/faq.js?v=1"></script>
   <script src="js/menu.js?v=1"></script>
   <script src="js/qr-codes.js?v=1"></script>
+  <script src="js/specials.js?v=2"></script>
   <script src="js/events.js?v=1"></script>
   <script>
     var _business = null;

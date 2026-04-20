@@ -190,7 +190,13 @@ const CC = (function() {
       var siteId = await ensureSiteId(); if (!siteId) return null;
       if (d.business) {
         var biz = d.business;
-        await supabase.from('businesses').update({ name: biz.name, type: biz.type, logo_url: biz.logo_url, cover_url: biz.cover_url, updated_at: new Date().toISOString() }).eq('site_id', siteId);
+        var bizUpdate = { name: biz.name, type: biz.type, logo_url: biz.logo_url, cover_url: biz.cover_url, updated_at: new Date().toISOString() };
+        if (biz.metadata !== undefined) {
+          // Merge metadata patch instead of replacing entire object
+          var { data: existing } = await supabase.from('businesses').select('metadata').eq('site_id', siteId).single();
+          bizUpdate.metadata = Object.assign({}, (existing && existing.metadata) || {}, biz.metadata);
+        }
+        await supabase.from('businesses').update(bizUpdate).eq('site_id', siteId);
       }
       if (d.content) {
         var c = Object.assign({}, d.content); delete c.site_id;

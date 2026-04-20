@@ -80,6 +80,13 @@ async function loadProfile() {
       if (content.zip) _profileData.zip = content.zip;
       if (content.social_links) _profileData.socials = Object.assign({}, _profileData.socials, content.social_links);
       if (content.hours) _profileData.hours = content.hours;
+      // Load HH schedule from businesses.metadata
+      if (biz.metadata && biz.metadata.hh_schedule) {
+        var hh = biz.metadata.hh_schedule;
+        if (document.getElementById('hh-start')) document.getElementById('hh-start').value = hh.start || '';
+        if (document.getElementById('hh-end'))   document.getElementById('hh-end').value   = hh.end || '';
+        if (hh.days) hhSetDayBtns(hh.days);
+      }
       // Store owner phone for SMS notifications
       if (content.owner_phone) {
         sessionStorage.setItem('owner_phone', content.owner_phone);
@@ -188,10 +195,16 @@ async function saveProfile() {
 
   document.getElementById('sidebar-biz-name').textContent = _profileData.name || 'My Business';
 
+  // Collect HH schedule from UI
+  var hhDays = Array.from(document.querySelectorAll('#hh-day-btns .hh-day-btn.active')).map(function(b) { return b.dataset.day; }).join(', ');
+  var hhStart = document.getElementById('hh-start') ? document.getElementById('hh-start').value.trim() : '';
+  var hhEnd   = document.getElementById('hh-end')   ? document.getElementById('hh-end').value.trim()   : '';
+  var hhSchedule = (hhDays || hhStart) ? { days: hhDays, start: hhStart, end: hhEnd } : null;
+
   // Save to Supabase
   try {
     await CC.dashboard.updateProfile({
-      business: { name: _profileData.name, logo_url: _profileData.logo },
+      business: { name: _profileData.name, logo_url: _profileData.logo, metadata: hhSchedule ? { hh_schedule: hhSchedule } : undefined },
       content: {
         contact_phone: _profileData.phone,
         contact_email: _profileData.email,
@@ -293,6 +306,18 @@ function updateLivePreview() {
 // Attach live preview when page loads
 function attachLivePreview() {
   setTimeout(setupLivePreview, 500);
+}
+
+// ── HH schedule day-button helpers ──
+function hhToggleDay(btn) {
+  btn.classList.toggle('active');
+}
+
+function hhSetDayBtns(daysStr) {
+  var active = (daysStr || '').toLowerCase().split(/[,\s]+/).map(function(d) { return d.trim(); });
+  document.querySelectorAll('#hh-day-btns .hh-day-btn').forEach(function(b) {
+    b.classList.toggle('active', active.some(function(a) { return b.dataset.day.toLowerCase().startsWith(a.substring(0,3)); }));
+  });
 }
 
 onPageLoad('profile', loadProfile);

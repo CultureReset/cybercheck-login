@@ -1,173 +1,210 @@
 // ============================================
-// Specials — Daily specials CRUD
+// Specials — Daily deals, drink specials, happy hour promos
 // ============================================
 
 var _specials = [];
-var _specialIdCounter = 0;
-var _allDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var _extractedSpecials = null;
+var _allDayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-async function loadSpecials() {
-  var apiData = await CC.dashboard.getSpecials();
-  if (apiData && Array.isArray(apiData)) {
-    _specials = apiData.map(function(s) {
-      return {
-        id: s.id,
-        title: s.title || '',
-        description: s.description || '',
-        days: s.days || [],
-        startTime: s.start_time || '',
-        endTime: s.end_time || '',
-        _apiId: s.id
-      };
-    });
-  }
-  renderSpecials();
-  buildDayCheckboxes();
-}
-
-function buildDayCheckboxes() {
-  var container = document.getElementById('spec-form-days');
-  if (container._built) return;
-  container._built = true;
-
-  container.innerHTML = '';
-  _allDays.forEach(function(day) {
-    var label = document.createElement('label');
-    label.style.cssText = 'display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);font-size:13px;color:var(--text);user-select:none;';
-    var cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.value = day;
-    cb.id = 'spec-day-' + day;
-    label.appendChild(cb);
-    label.appendChild(document.createTextNode(day));
-    container.appendChild(label);
+function loadSpecials() {
+  CC.dashboard.getSpecials().then(function(data) {
+    _specials = data || [];
+    renderSpecialsList();
   });
 }
 
-function renderSpecials() {
+function renderSpecialsList() {
   var container = document.getElementById('specials-list');
-  var emptyState = document.getElementById('specials-empty');
+  if (!container) return;
 
-  if (_specials.length === 0) {
-    container.innerHTML = '';
-    emptyState.style.display = '';
+  if (!_specials.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">No specials yet. Upload a photo of your specials board or add one manually.</p>';
     return;
   }
 
-  emptyState.style.display = 'none';
-
-  var html = '<div class="table-wrap"><table><thead><tr><th>Special</th><th>Days</th><th>Time</th><th>Actions</th></tr></thead><tbody>';
-
+  var html = '<div class="table-wrap"><table><thead><tr><th>Special</th><th>Deal</th><th>Days</th><th>Time</th><th>Actions</th></tr></thead><tbody>';
   _specials.forEach(function(s) {
+    var time = [s.start_time, s.end_time].filter(Boolean).join(' – ');
     html += '<tr>';
-    html += '<td><strong>' + escHtml(s.title) + '</strong>';
-    if (s.description) html += '<br><span style="font-size:12px;color:var(--text-muted);">' + escHtml(s.description) + '</span>';
+    html += '<td><strong>' + escSpHtml(s.special_name || '') + '</strong>';
+    if (s.description) html += '<br><span style="font-size:12px;color:var(--text-muted);">' + escSpHtml(s.description) + '</span>';
     html += '</td>';
-    html += '<td>' + s.days.map(function(d) { return '<span class="badge badge-info" style="margin:2px;">' + d + '</span>'; }).join('') + '</td>';
-    html += '<td style="white-space:nowrap;">' + formatTime(s.startTime) + ' - ' + formatTime(s.endTime) + '</td>';
+    html += '<td style="color:var(--primary);font-weight:600;">' + escSpHtml(s.discount_text || '') + '</td>';
+    html += '<td style="font-size:12px;">' + escSpHtml(s.days || '') + '</td>';
+    html += '<td style="font-size:12px;white-space:nowrap;">' + escSpHtml(time) + '</td>';
     html += '<td><div style="display:flex;gap:6px;">';
-    html += '<button class="btn btn-outline btn-sm" onclick="editSpecial(' + s.id + ')">Edit</button>';
-    html += '<button class="btn btn-danger btn-sm" onclick="deleteSpecial(' + s.id + ')">Delete</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="openSpecialModal(\'' + s.id + '\')">Edit</button>';
+    html += '<button class="btn btn-danger btn-sm" onclick="deleteSpecial(\'' + s.id + '\')">Delete</button>';
     html += '</div></td>';
     html += '</tr>';
   });
-
   html += '</tbody></table></div>';
   container.innerHTML = html;
 }
 
-function formatTime(t) {
-  if (!t) return '';
-  var parts = t.split(':');
-  var h = parseInt(parts[0]);
-  var m = parts[1];
-  var ampm = h >= 12 ? 'PM' : 'AM';
-  if (h > 12) h -= 12;
-  if (h === 0) h = 12;
-  return h + ':' + m + ' ' + ampm;
+function escSpHtml(str) {
+  var d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
 }
 
-function openSpecialModal(id) {
-  buildDayCheckboxes();
-  document.getElementById('spec-form-title').value = '';
-  document.getElementById('spec-form-desc').value = '';
-  document.getElementById('spec-form-start').value = '';
-  document.getElementById('spec-form-end').value = '';
-  document.getElementById('spec-form-id').value = '';
-  document.getElementById('special-modal-title').textContent = 'Add Special';
+// ── Day-of-week quick buttons ──
+function spToggleDay(btn, day) {
+  btn.classList.toggle('active');
+  var selected = Array.from(document.querySelectorAll('#sp-day-btns .sp-day-btn.active')).map(function(b) { return b.dataset.day; });
+  document.getElementById('sp-form-days').value = selected.join(', ');
+}
 
-  // Uncheck all days
-  _allDays.forEach(function(d) {
-    var cb = document.getElementById('spec-day-' + d);
-    if (cb) cb.checked = false;
+function spSetDayBtns(daysStr) {
+  var active = (daysStr || '').toLowerCase().split(/[,\s]+/).map(function(d) { return d.trim(); });
+  document.querySelectorAll('#sp-day-btns .sp-day-btn').forEach(function(b) {
+    b.classList.toggle('active', active.some(function(a) { return b.dataset.day.toLowerCase().startsWith(a.substring(0,3)); }));
   });
+}
+
+// ── Add / Edit modal ──
+function openSpecialModal(id) {
+  document.getElementById('sp-form-id').value = '';
+  document.getElementById('sp-form-name').value = '';
+  document.getElementById('sp-form-deal').value = '';
+  document.getElementById('sp-form-desc').value = '';
+  document.getElementById('sp-form-days').value = '';
+  document.getElementById('sp-form-start').value = '';
+  document.getElementById('sp-form-end').value = '';
+  spSetDayBtns('');
 
   if (id) {
-    var s = _specials.find(function(x) { return x.id === id; });
+    var s = _specials.find(function(x) { return String(x.id) === String(id); });
     if (s) {
-      document.getElementById('special-modal-title').textContent = 'Edit Special';
-      document.getElementById('spec-form-title').value = s.title;
-      document.getElementById('spec-form-desc').value = s.description || '';
-      document.getElementById('spec-form-start').value = s.startTime || '';
-      document.getElementById('spec-form-end').value = s.endTime || '';
-      document.getElementById('spec-form-id').value = s.id;
-      s.days.forEach(function(d) {
-        var cb = document.getElementById('spec-day-' + d);
-        if (cb) cb.checked = true;
-      });
+      document.getElementById('sp-form-id').value = s.id;
+      document.getElementById('sp-form-name').value = s.special_name || '';
+      document.getElementById('sp-form-deal').value = s.discount_text || '';
+      document.getElementById('sp-form-desc').value = s.description || '';
+      document.getElementById('sp-form-days').value = s.days || '';
+      document.getElementById('sp-form-start').value = s.start_time || '';
+      document.getElementById('sp-form-end').value = s.end_time || '';
+      spSetDayBtns(s.days || '');
     }
   }
-
   openModal('modal-special');
 }
 
-function saveSpecial() {
-  var title = document.getElementById('spec-form-title').value.trim();
-  if (!title) { toast('Title is required', 'error'); return; }
+async function saveSpecial() {
+  var name = document.getElementById('sp-form-name').value.trim();
+  if (!name) { toast('Special name required', 'error'); return; }
 
-  var desc = document.getElementById('spec-form-desc').value.trim();
-  var startTime = document.getElementById('spec-form-start').value;
-  var endTime = document.getElementById('spec-form-end').value;
-  var days = [];
-  _allDays.forEach(function(d) {
-    var cb = document.getElementById('spec-day-' + d);
-    if (cb && cb.checked) days.push(d);
-  });
+  var payload = {
+    special_name:  name,
+    discount_text: document.getElementById('sp-form-deal').value.trim() || null,
+    description:   document.getElementById('sp-form-desc').value.trim() || null,
+    days:          document.getElementById('sp-form-days').value.trim() || null,
+    start_time:    document.getElementById('sp-form-start').value.trim() || null,
+    end_time:      document.getElementById('sp-form-end').value.trim() || null,
+  };
 
-  if (days.length === 0) { toast('Select at least one day', 'error'); return; }
-
-  var id = document.getElementById('spec-form-id').value;
-
-  if (id) {
-    CC.dashboard.updateSpecial(id, { title: title, description: desc, days: days, start_time: startTime, end_time: endTime }).then(function() {
-      var s = _specials.find(function(x) { return String(x.id) === String(id); });
-      if (s) { s.title = title; s.description = desc; s.days = days; s.startTime = startTime; s.endTime = endTime; }
-      renderSpecials();
-      toast('Special updated');
-    });
-  } else {
-    CC.dashboard.createSpecial({ title: title, description: desc, days: days, start_time: startTime, end_time: endTime }).then(function(data) {
-      if (data) _specials.push({ id: data.id, title: title, description: desc, days: days, startTime: startTime, endTime: endTime, _apiId: data.id });
-      renderSpecials();
-      toast('Special added');
-    });
-  }
-
-  closeModal('modal-special');
+  var existingId = document.getElementById('sp-form-id').value;
+  try {
+    var saved;
+    if (existingId) {
+      saved = await CC.dashboard.updateSpecial(existingId, payload);
+      var idx = _specials.findIndex(function(x) { return String(x.id) === String(existingId); });
+      if (idx !== -1 && saved) _specials[idx] = saved;
+    } else {
+      saved = await CC.dashboard.createSpecial(payload);
+      if (saved) _specials.push(saved);
+    }
+    closeModal('modal-special');
+    renderSpecialsList();
+    toast(existingId ? 'Special updated' : 'Special added');
+  } catch(e) { toast('Save failed', 'error'); }
 }
 
-function editSpecial(id) {
-  openSpecialModal(id);
-}
-
-function deleteSpecial(id) {
+async function deleteSpecial(id) {
   if (!confirm('Delete this special?')) return;
-  CC.dashboard.deleteSpecial(id).then(function() {
-    _specials = _specials.filter(function(s) { return s.id !== id; });
-    renderSpecials();
-    toast('Special deleted');
-  });
+  await CC.dashboard.deleteSpecial(id);
+  _specials = _specials.filter(function(x) { return String(x.id) !== String(id); });
+  renderSpecialsList();
+  toast('Special deleted');
 }
 
-// Register page load callback
+// ── AI Image extraction ──
+function spPickFile() { document.getElementById('sp-file-input').click(); }
+
+function spFileChanged(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) { spExtract(e.target.result, file.type); };
+  reader.readAsDataURL(file);
+}
+
+async function spExtract(dataUrl, mimeType) {
+  var btn = document.getElementById('sp-extract-btn');
+  var preview = document.getElementById('sp-extract-preview');
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  preview.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Extracting specials from image…</p>';
+
+  try {
+    var token = null;
+    var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+    if (sbKey) { try { var s = JSON.parse(localStorage.getItem(sbKey)); token = s && s.access_token ? s.access_token : null; } catch(e) {} }
+    if (!token) token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+
+    var res = await fetch((window.CC_API_BASE || '') + '/api/dashboard/events/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ image_base64: dataUrl, mime_type: mimeType, extract_type: 'specials' })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Extract failed');
+    _extractedSpecials = data;
+    spShowPreview(data.items || []);
+  } catch(err) {
+    preview.innerHTML = '<p style="color:var(--danger);">' + err.message + '</p>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📸 Scan Specials Board';
+  }
+}
+
+function spShowPreview(items) {
+  var preview = document.getElementById('sp-extract-preview');
+  if (!items.length) { preview.innerHTML = '<p style="color:var(--text-muted);">No specials found.</p>'; return; }
+
+  var html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Found ' + items.length + ' special(s):</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Deal</th><th>Days</th><th>Time</th></tr></thead><tbody>';
+  items.forEach(function(item) {
+    var time = item.start_time ? item.start_time + (item.end_time ? ' – ' + item.end_time : '') : (item.time || '');
+    html += '<tr><td>' + escSpHtml(item.name || '') + '</td><td>' + escSpHtml(item.price_text || item.description || '') + '</td><td>' + escSpHtml(item.days || item.date || '') + '</td><td>' + escSpHtml(time) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<button class="btn btn-primary" style="margin-top:12px;" id="sp-import-btn" onclick="spImport()">Import All Specials</button>';
+  preview.innerHTML = html;
+}
+
+async function spImport() {
+  if (!_extractedSpecials || !(_extractedSpecials.items || []).length) return;
+  var btn = document.getElementById('sp-import-btn');
+  btn.disabled = true; btn.textContent = 'Importing…';
+  var items = _extractedSpecials.items || [];
+  var saved = 0, failed = 0;
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var payload = {
+      special_name:  item.name || 'Special',
+      discount_text: item.price_text || null,
+      description:   item.description || null,
+      days:          item.days || item.date || null,
+      start_time:    item.start_time || item.time || null,
+      end_time:      item.end_time || null,
+    };
+    try { var c = await CC.dashboard.createSpecial(payload); if (c) { _specials.push(c); saved++; } } catch(e) { failed++; }
+  }
+  document.getElementById('sp-extract-preview').innerHTML = '';
+  _extractedSpecials = null;
+  renderSpecialsList();
+  toast('Imported ' + saved + ' special(s)' + (failed ? ' (' + failed + ' failed)' : ''));
+}
+
 onPageLoad('specials', loadSpecials);
