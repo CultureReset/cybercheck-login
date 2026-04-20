@@ -2953,17 +2953,21 @@
                 </div>
                 <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Displays on cards as "From $45/person". Set From Price to 0 for Free. Leave blank to hide.</p>
 
-                <div class="card-header" style="margin-top:8px;"><h4>Also List On <span style="font-weight:400;font-size:12px;color:var(--text-muted);">— additional pages this business appears on</span></h4></div>
+                <div class="card-header" style="margin-top:8px;"><h4>Visible On Pages <span style="font-weight:400;font-size:12px;color:var(--text-muted);">— control exactly which pages this business appears on</span></h4></div>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 12px;">
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="restaurants"> Restaurants</label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="things-to-do"> Things To Do</label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="nightlife"> Nightlife</label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="coffee-sweets"> Coffee &amp; Sweets</label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="shopping"> Shopping</label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="services"> Services</label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="public-spots"> Public Spots</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="restaurants"> 🍽️ Restaurants</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="happy-hours"> 🍻 Happy Hours</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="things-to-do"> 🎯 Things To Do</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="nightlife"> 🎶 Nightlife</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="coffee-sweets"> ☕ Coffee &amp; Sweets</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="services"> 🛠️ Services</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="public-spots"> ✨ Public Spots</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" class="bd-secondary-type" value="shopping"> 🛍️ Shopping</label>
                 </div>
-                <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Check extra pages. Primary listing page is set by Business Type above — these are additional.</p>
+                <p style="font-size:12px;color:var(--text-muted);margin:0 0 4px;">Check every page this business should appear on. Leave all unchecked to use automatic category detection.</p>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-bottom:12px;">
+                  <input type="checkbox" id="bd-flag-hidden"> <span style="color:#e53e3e;font-weight:600;">🚫 Hide from all pages</span>
+                </label>
               </div>
               <div class="card">
                 <div class="card-header"><h3>Address</h3></div>
@@ -5284,7 +5288,7 @@
         setC('bd-flag-kids', b.kids_friendly); setC('bd-flag-pets', b.pet_friendly); setC('bd-flag-livemusic', b.live_music); setC('bd-flag-outdoor', b.outdoor_seating); setC('bd-flag-reservations', b.reservations); setC('bd-flag-delivery', b.delivery); setC('bd-flag-takeout', b.takeout); setC('bd-flag-alcohol', b.alcohol); setC('bd-flag-waterfront', b.waterfront);
         var dayMap = { monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat', sunday:'sun' };
         (_bdData.hours || []).forEach(function(h) { var k = (h.day_of_week||'').toLowerCase(); var d = dayMap[k] || k; var val = (h.open_time && h.close_time) ? h.open_time + ' - ' + h.close_time : (h.open_time || ''); setV('bd-hours-' + d, val); });
-        setC('bd-gcr-listed', b.is_active); setC('bd-gcr-featured', b.featured); setV('bd-gcr-type', b.entity_type);
+        setC('bd-gcr-listed', b.is_active); setC('bd-gcr-featured', b.featured); setV('bd-gcr-type', b.entity_type); setC('bd-flag-hidden', b.hidden);
         setV('bd-seo-title', b.seo_title); setV('bd-seo-desc', b.seo_description); setV('bd-seo-keywords', b.seo_keywords);
         setV('bd-social-instagram', b.social_instagram); setV('bd-social-facebook', b.social_facebook); setV('bd-social-tiktok', b.social_tiktok);
         setV('bd-hh-days', b.hh_days); setV('bd-hh-start', b.hh_start); setV('bd-hh-end', b.hh_end);
@@ -5331,6 +5335,7 @@
         price_to:         (document.getElementById('bd-prof-price-to')||{}).value   !== '' ? Number((document.getElementById('bd-prof-price-to')||{}).value)   : null,
         price_unit:       (document.getElementById('bd-prof-price-unit')||{}).value || null,
         secondary_types:  Array.from(document.querySelectorAll('.bd-secondary-type:checked')).map(function(cb){return cb.value;}).join(',') || null,
+        hidden:           !!(document.getElementById('bd-flag-hidden')||{}).checked,
         description:      (document.getElementById('bd-prof-description')||{}).value,
         address_line_1:   (document.getElementById('bd-prof-address')||{}).value,
         city:             (document.getElementById('bd-prof-city')||{}).value,
