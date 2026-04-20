@@ -1854,6 +1854,9 @@
                   <button onclick="mbApplyPreset('vibrant')" style="padding:12px;border:1px solid var(--card-border);border-radius:8px;background:#4c1d95;color:#faf5ff;font-size:12px;cursor:pointer;text-align:left;">
                     <div style="font-weight:600;margin-bottom:2px;">⚡ Vibrant</div><div style="color:#c4b5fd;font-size:11px;">Purple · Electric</div>
                   </button>
+                  <button onclick="mbApplyPreset('harbor')" style="padding:12px;border:1px solid var(--card-border);border-radius:8px;background:#0b0f14;color:#f4f7fb;font-size:12px;cursor:pointer;text-align:left;">
+                    <div style="font-weight:600;margin-bottom:2px;">⚓ Dark Harbor</div><div style="color:#96a4b8;font-size:11px;">Navy · Teal · Gold</div>
+                  </button>
                 </div>
               </div>
               <!-- Custom colors -->
@@ -9668,6 +9671,7 @@
     coastal:  { bg:'#0c4a6e', surface:'#075985', surface2:'#0369a1', primary:'#38bdf8', primary_dark:'#0ea5e9', accent:'#fbbf24', text:'#f0f9ff', text_muted:'#7dd3fc', border:'#0369a1', radius:'10px' },
     rustic:   { bg:'#1c1917', surface:'#292524', surface2:'#44403c', primary:'#d97706', primary_dark:'#b45309', accent:'#f97316', text:'#fafaf9', text_muted:'#a8a29e', border:'#44403c', radius:'6px' },
     vibrant:  { bg:'#2e1065', surface:'#4c1d95', surface2:'#5b21b6', primary:'#a78bfa', primary_dark:'#7c3aed', accent:'#f472b6', text:'#faf5ff', text_muted:'#c4b5fd', border:'#5b21b6', radius:'10px' },
+    harbor:   { bg:'#0b0f14', surface:'#121923', surface2:'#182230', primary:'#14b8a6', primary_dark:'#0d8f85', accent:'#f5b942', accent_light:'#1f2b3a', text:'#f4f7fb', text_muted:'#96a4b8', text_light:'#6b7a8e', border:'#1c2533', special_bg:'#1b2534', special_border:'#f5b942', hh_bg:'#142218', hh_border:'#22c55e', hh_text:'#4ade80', catch_bg:'#0f1a2d', catch_border:'#3b82f6', catch_text:'#60a5fa', radius:'18px' },
   };
 
   var _mbCurrentTheme = {};
@@ -9692,17 +9696,17 @@
   }
 
   function mbPreviewTheme() {
-    _mbCurrentTheme = {
+    Object.assign(_mbCurrentTheme, {
       bg:           document.getElementById('mb-c-bg').value,
       surface:      document.getElementById('mb-c-surface').value,
       primary:      document.getElementById('mb-c-primary').value,
       primary_dark: document.getElementById('mb-c-primary').value,
       accent:       document.getElementById('mb-c-accent').value,
       text:         document.getElementById('mb-c-text').value,
-      text_muted:   document.getElementById('mb-c-text').value + '99',
-      border:       document.getElementById('mb-c-surface').value,
+      text_muted:   _mbCurrentTheme.text_muted || (document.getElementById('mb-c-text').value + '99'),
+      border:       _mbCurrentTheme.border || document.getElementById('mb-c-surface').value,
       radius:       document.getElementById('mb-c-radius').value,
-    };
+    });
     mbUpdatePreview();
   }
 
