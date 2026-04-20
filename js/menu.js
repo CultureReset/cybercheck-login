@@ -72,20 +72,18 @@ function renderMenu() {
   var emptyState = document.getElementById('menu-empty');
   if (!container) return;
 
-  var tabItems = _menuItems.filter(function(i) { return i.itemType === _activeMenuTab; });
-  var tabCats  = _menuCategories.filter(function(c) { return c.type === _activeMenuTab; });
-
-  // Also include any category implied by items that lack an explicit category entry
-  tabItems.forEach(function(item) {
-    if (!tabCats.find(function(c) { return c.name === item.categoryName; })) {
-      tabCats.push({ name: item.categoryName, type: _activeMenuTab });
+  // Build a unified category list from all items (all types)
+  var allCats = _menuCategories.slice();
+  _menuItems.forEach(function(item) {
+    if (!allCats.find(function(c) { return c.name === item.categoryName && c.type === item.itemType; })) {
+      allCats.push({ name: item.categoryName, type: item.itemType });
     }
   });
 
-  if (tabItems.length === 0 && tabCats.length === 0) {
+  if (_menuItems.length === 0 && allCats.length === 0) {
     container.innerHTML = '';
     if (emptyState) {
-      emptyState.textContent = 'No ' + MENU_TAB_LABELS[_activeMenuTab] + ' items yet. Add one above.';
+      emptyState.textContent = 'No menu items yet. Add one above.';
       emptyState.style.display = '';
     }
     return;
@@ -94,15 +92,19 @@ function renderMenu() {
   if (emptyState) emptyState.style.display = 'none';
   var html = '';
 
-  tabCats.forEach(function(cat) {
-    var items = tabItems.filter(function(i) { return i.categoryName === cat.name; });
+  allCats.forEach(function(cat) {
+    var items = _menuItems.filter(function(i) { return i.categoryName === cat.name && i.itemType === cat.type; });
+    var badge = MENU_TAB_LABELS[cat.type] || cat.type;
 
     html += '<div class="card" style="margin-bottom:12px;">';
     html += '<div class="card-header">';
-    html += '<h3 style="font-size:15px;">' + escHtml(cat.name) + ' <span style="color:var(--text-dim);font-weight:400;">(' + items.length + ')</span></h3>';
+    html += '<h3 style="font-size:15px;">' + escHtml(cat.name)
+          + ' <span style="color:var(--text-dim);font-weight:400;">(' + items.length + ')</span>'
+          + ' <span style="font-size:11px;background:var(--surface-2,#f0f0f0);border-radius:999px;padding:2px 8px;margin-left:6px;">' + badge + '</span>'
+          + '</h3>';
     html += '<div style="display:flex;gap:6px;">';
-    html += '<button class="btn btn-outline btn-sm" onclick="editCategory(\'' + escAttr(cat.name) + '\')">Edit</button>';
-    html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + escAttr(cat.name) + '\')">Delete</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="editCategory(\'' + escAttr(cat.name) + '\',\'' + escAttr(cat.type) + '\')">Edit</button>';
+    html += '<button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + escAttr(cat.name) + '\',\'' + escAttr(cat.type) + '\')">Delete</button>';
     html += '</div>';
     html += '</div>';
 
@@ -123,7 +125,7 @@ function renderMenu() {
       });
       html += '</tbody></table></div>';
     } else {
-      html += '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No items in this category yet.</p>';
+      html += '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No items in this section yet.</p>';
     }
 
     html += '</div>';
@@ -185,19 +187,21 @@ function saveCategory() {
   }
 }
 
-function editCategory(name) {
+function editCategory(name, type) {
+  if (type) _activeMenuTab = type;
   openCategoryModal(name);
 }
 
-function deleteCategory(name) {
+function deleteCategory(name, type) {
+  var useType = type || _activeMenuTab;
   if (!confirm('Delete this section and all its items?')) return;
-  var toDelete = _menuItems.filter(function(i) { return i.categoryName === name && i.itemType === _activeMenuTab; });
+  var toDelete = _menuItems.filter(function(i) { return i.categoryName === name && i.itemType === useType; });
   var promises = toDelete.map(function(item) {
     return CC.dashboard.deleteMenuItem(item.id);
   });
   Promise.all(promises).then(function() {
-    _menuItems = _menuItems.filter(function(i) { return !(i.categoryName === name && i.itemType === _activeMenuTab); });
-    _menuCategories = _menuCategories.filter(function(c) { return !(c.name === name && c.type === _activeMenuTab); });
+    _menuItems = _menuItems.filter(function(i) { return !(i.categoryName === name && i.itemType === useType); });
+    _menuCategories = _menuCategories.filter(function(c) { return !(c.name === name && c.type === useType); });
     renderMenu();
     updateMenuStats();
     toast('Category deleted');
