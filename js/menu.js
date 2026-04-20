@@ -494,9 +494,10 @@ async function importExtractedItems() {
   for (var ci = 0; ci < _extractedData.categories.length; ci++) {
     var cat = _extractedData.categories[ci];
     var catName = (cat.name || 'Menu Items').trim();
+    var catType = (['food','drink','happy_hour'].indexOf(cat.item_type) !== -1) ? cat.item_type : _activeMenuTab;
 
-    if (!_menuCategories.find(function(c) { return c.name === catName && c.type === _activeMenuTab; })) {
-      _menuCategories.push({ name: catName, type: _activeMenuTab });
+    if (!_menuCategories.find(function(c) { return c.name === catName && c.type === catType; })) {
+      _menuCategories.push({ name: catName, type: catType });
     }
 
     var items = cat.items || [];
@@ -506,7 +507,7 @@ async function importExtractedItems() {
         name: item.name || 'Unnamed Item',
         price: parseFloat(item.price) || 0,
         category: catName,
-        item_type: _activeMenuTab,
+        item_type: catType,
         description: item.description || '',
         tags: Array.isArray(item.tags) ? item.tags : [],
         modifiers: [],
@@ -518,7 +519,7 @@ async function importExtractedItems() {
           _menuItems.push({
             id: created.id, dbId: created.id,
             categoryName: catName,
-            itemType: _activeMenuTab,
+            itemType: catType,
             name: dbPayload.name, price: dbPayload.price,
             description: dbPayload.description,
             tags: dbPayload.tags, modifiers: [],
