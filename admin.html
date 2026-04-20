@@ -1539,6 +1539,8 @@
                 oninput="dulAutoComplete()" onfocus="dulAutoComplete()"
                 style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
               <input type="hidden" id="dul-entity-id">
+              <input type="hidden" id="dul-site-id">
+              <input type="hidden" id="dul-biz-name">
               <div id="dul-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:8px;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);margin-top:2px;"></div>
               <div id="dul-selected" style="display:none;margin-top:6px;font-size:12px;color:#4ade80;font-weight:600;"></div>
             </div>
@@ -8449,37 +8451,57 @@
         .catch(function(){ console.warn('DUL: failed to load businesses'); });
     })();
 
+    var _dulSiteIdBizzes = [];
+    async function dulLoadSiteIdBizzes() {
+      if (_dulSiteIdBizzes.length) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        if (r.ok) _dulSiteIdBizzes = (await r.json() || []).map(function(b){ return { id: b.site_id||b.id, name: b.name||b.business_name, site_id: b.site_id||b.id, _is_site: true }; });
+      } catch(e) {}
+    }
+
     function dulAutoComplete() {
       var q = document.getElementById('dul-search').value.toLowerCase().trim();
       var dropdown = document.getElementById('dul-dropdown');
-      // Clear selection if user edits text
       document.getElementById('dul-entity-id').value = '';
+      document.getElementById('dul-site-id').value = '';
+      document.getElementById('dul-biz-name').value = '';
       document.getElementById('dul-selected').style.display = 'none';
 
       if (!q) { dropdown.style.display = 'none'; return; }
+      dulLoadSiteIdBizzes();
 
-      var matches = _dulEntities.filter(function(e){
+      var entityMatches = (_dulEntities||[]).filter(function(e){
         return e.name.toLowerCase().includes(q) || (e.city && e.city.toLowerCase().includes(q));
-      }).slice(0, 20);
+      }).slice(0, 10).map(function(e){ return Object.assign({_is_site: false}, e); });
 
+      var siteMatches = _dulSiteIdBizzes.filter(function(b){
+        return b.name.toLowerCase().includes(q);
+      }).slice(0, 10);
+
+      var matches = entityMatches.concat(siteMatches).slice(0, 20);
       if (!matches.length) { dropdown.innerHTML = '<div style="padding:10px 14px;color:var(--text-muted);font-size:13px;">No businesses found</div>'; dropdown.style.display = 'block'; return; }
 
       dropdown.innerHTML = matches.map(function(e){
-        return '<div data-id="'+e.id+'" data-name="'+e.name.replace(/"/g,'&quot;')+'" '
-          +'onmousedown="dulPickEntity(\''+e.id+'\',\''+e.name.replace(/'/g,"\\'")+'\')" '
+        var label = e._is_site ? ' <span style="color:#818cf8;font-size:11px;">● Menu Builder</span>' : (e.city ? ' <span style="color:var(--text-muted);">— '+e.city+'</span>' : '');
+        return '<div onmousedown="dulPickEntity(\''+String(e.id).replace(/'/g,"\\'")+(e._is_site?'|site':'')+'\',' +
+          '\''+e.name.replace(/'/g,"\\'")+'\')" '
           +'style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--card-border);" '
           +'onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'">'
-          +'<strong>'+e.name+'</strong>'+(e.city ? ' <span style="color:var(--text-muted);">— '+e.city+'</span>' : '')
-          +'</div>';
+          +'<strong>'+e.name+'</strong>'+label+'</div>';
       }).join('');
       dropdown.style.display = 'block';
     }
 
-    function dulPickEntity(id, name) {
-      document.getElementById('dul-entity-id').value = id;
+    function dulPickEntity(idStr, name) {
+      var isSite = idStr.endsWith('|site');
+      var id = isSite ? idStr.slice(0, -5) : idStr;
+      document.getElementById('dul-entity-id').value = isSite ? '' : id;
+      document.getElementById('dul-site-id').value = isSite ? id : '';
+      document.getElementById('dul-biz-name').value = name;
       document.getElementById('dul-search').value = name;
       document.getElementById('dul-dropdown').style.display = 'none';
-      document.getElementById('dul-selected').textContent = '✓ Selected: ' + name;
+      document.getElementById('dul-selected').textContent = '✓ ' + name + (isSite ? ' (Menu Builder)' : '');
       document.getElementById('dul-selected').style.display = 'block';
     }
 
@@ -8492,12 +8514,15 @@
 
     async function generateDailyLink(sendSms) {
       var entityId = document.getElementById('dul-entity-id').value;
+      var siteId   = document.getElementById('dul-site-id').value;
+      var bizName  = document.getElementById('dul-biz-name').value;
       var linkType = document.getElementById('dul-link-type').value;
       var phone    = document.getElementById('dul-phone').value.trim();
-      if (!entityId) { toast('Select a business first', 'error'); return; }
+      if (!entityId && !siteId) { toast('Select a business first', 'error'); return; }
 
       var endpoint = sendSms ? '/api/update/send-sms' : '/api/update/generate';
-      var body = { entity_id: entityId, link_type: linkType };
+      var body = { link_type: linkType, biz_name: bizName };
+      if (siteId) { body.site_id = siteId; } else { body.entity_id = entityId; }
       if (phone) body[sendSms ? 'phone' : 'send_phone'] = phone;
 
       var r = await fetch(API_BASE + endpoint, {
@@ -8813,19 +8838,32 @@
       var el = document.getElementById('qr-menus-list');
       el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading restaurants...</p>';
 
-      // Load all entities from public API
-      var r = await fetch('https://cybercheck-api-database.vercel.app/api/gcr/entities?limit=500').catch(function(){ return null; });
-      if (!r || !r.ok) {
-        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Could not load restaurants.</p>';
-        return;
+      var entitiesP = fetch('https://cybercheck-api-database.vercel.app/api/gcr/entities?limit=500').catch(function(){ return null; });
+      var bizP      = fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }).catch(function(){ return null; });
+
+      var results = await Promise.all([entitiesP, bizP]);
+      var entities = [], siteIdBizzes = [];
+
+      if (results[0] && results[0].ok) {
+        var d = await results[0].json();
+        entities = (d.entities || d.businesses || [])
+          .filter(function(e) { return e && e.id && e.name && e.slug; })
+          .map(function(e) { return Object.assign({ _url_type: 'slug' }, e); });
+      }
+      if (results[1] && results[1].ok) {
+        var list = await results[1].json();
+        siteIdBizzes = (list || [])
+          .filter(function(b) { return b && (b.site_id || b.id) && (b.name || b.business_name); })
+          .map(function(b) { return { id: b.site_id || b.id, site_id: b.site_id || b.id, name: b.name || b.business_name, icon: '🏪', _url_type: 'site_id' }; });
       }
 
-      var d = await r.json();
-      _allQRMenus = (d.entities || d.businesses || []).filter(function(e) {
-        return e && e.id && e.name && e.slug;
-      }).sort(function(a, b) {
-        return (a.name || '').localeCompare(b.name || '');
-      });
+      var seen = {};
+      _allQRMenus = entities.concat(siteIdBizzes).filter(function(b) {
+        var key = String(b.site_id || b.id || '');
+        if (!key || seen[key]) return false;
+        seen[key] = true;
+        return true;
+      }).sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
 
       if (!_allQRMenus.length) {
         el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No restaurants found.</p>';
@@ -8855,30 +8893,84 @@
       var el = document.getElementById('qr-menus-list');
 
       var rows = items.map(function(biz, idx) {
-        var slug = biz.slug || biz.id;
-        var qrUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(slug);
-        var genBtnId = 'gen-link-' + idx;
+        var isSite = biz._url_type === 'site_id';
+        var siteId = biz.site_id || '';
+        var qrUrl = isSite
+          ? 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(siteId)
+          : 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(biz.slug || biz.id);
+        var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(qrUrl);
+        var safeName = (biz.name||'').replace(/\'/g,"\\'");
+        var typeBadge = isSite
+          ? '<span style="font-size:10px;background:rgba(129,140,248,.15);color:#818cf8;border:1px solid rgba(129,140,248,.3);padding:2px 7px;border-radius:10px;font-weight:600;">Menu Builder</span>'
+          : '<span style="font-size:10px;background:rgba(11,122,117,.15);color:#5eead4;border:1px solid rgba(11,122,117,.3);padding:2px 7px;border-radius:10px;font-weight:600;">GCR</span>';
 
-        return '<div style="border:1px solid var(--card-border);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--bg-secondary);">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
-            '<div style="flex:1;">' +
-              '<div style="font-weight:700;font-size:15px;">' + (biz.icon||'🏪') + ' ' + (biz.name||'') + '</div>' +
-              '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + (biz.city ? biz.city + (biz.state ? ', '+biz.state : '') : '') + '</div>' +
-            '</div>' +
-            '<div style="text-align:right;">' +
-              '<div style="margin-bottom:8px;font-size:12px;"><strong>QR Menu URL:</strong></div>' +
-              '<div style="background:#fff;border:1px solid var(--card-border);border-radius:4px;padding:6px 8px;font-size:11px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\');alert(\'URL copied!\');">' + qrUrl + '</div>' +
+        return '<div style="border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:10px;background:var(--bg-secondary);">' +
+          // Top row: name + QR image
+          '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+            '<img src="' + qrImg + '" width="72" height="72" style="border-radius:8px;border:2px solid var(--card-border);flex-shrink:0;" onclick="qrMenusOpenPrint(\'' + encodeURIComponent(qrUrl) + '\',\'' + safeName + '\')" title="Click to print card">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
+                '<span style="font-weight:700;font-size:15px;">' + escHtml(biz.name||'') + '</span>' +
+                typeBadge +
+              '</div>' +
+              '<div style="font-size:11px;font-family:monospace;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;max-width:320px;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\').then(function(){toast(\'URL copied\',\'success\')})" title="Click to copy">' + qrUrl + '</div>' +
+              // SMS send row (site_id only)
+              (isSite ? '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;">' +
+                '<input type="tel" id="qrm-phone-' + idx + '" placeholder="+1 850 555 0000" style="padding:5px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;width:160px;">' +
+                '<button class="btn btn-outline" style="font-size:12px;padding:5px 12px;" onclick="qrMenusSendSMS(\'' + siteId + '\',\'' + safeName + '\',' + idx + ')">📱 Send SMS</button>' +
+              '</div>' : '') +
             '</div>' +
           '</div>' +
+          // Action buttons
           '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">' +
-            '<a href="' + qrUrl + '" target="_blank" style="display:inline-block;padding:8px 12px;background:#0b7a75;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;">👁️ View Live Menu</a>' +
-            '<button class="btn btn-outline" onclick="generateEditLink(\'' + (biz.id||'') + '\', \'' + (biz.name||'').replace(/\'/g, "\\'") + '\', ' + idx + ')" style="font-size:12px;padding:8px 12px;" id="' + genBtnId + '">🔗 Generate Edit Link</button>' +
+            '<a href="' + qrUrl + '" target="_blank" class="btn btn-outline" style="font-size:12px;padding:7px 12px;text-decoration:none;">👁 View Menu</a>' +
+            '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\').then(function(){toast(\'Copied!\',\'success\')})">📋 Copy URL</button>' +
+            (isSite ? '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="qrMenusEditMenu(\'' + siteId + '\')">✏️ Edit Menu</button>' : '') +
+            '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="qrMenusOpenPrint(\'' + encodeURIComponent(qrUrl) + '\',\'' + safeName + '\')">🖨 Print QR</button>' +
+            (isSite ? '' : '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" id="gen-link-' + idx + '" onclick="generateEditLink(\'' + (biz.id||'') + '\',\'' + safeName + '\',' + idx + ')">🔗 Edit Link</button>') +
           '</div>' +
           '<div id="edit-link-result-' + idx + '"></div>' +
         '</div>';
       }).join('');
 
       el.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:12px;">' + items.length + ' restaurant' + (items.length !== 1 ? 's' : '') + '</div>' + rows;
+    }
+
+    function qrMenusEditMenu(siteId) {
+      showPage('menu-builder');
+      setTimeout(function() {
+        var sel = document.getElementById('mb-biz-select');
+        if (sel && sel.value !== siteId) {
+          sel.value = siteId;
+          if (!sel.value) {
+            mbLoadBusinessSelector().then(function() { sel.value = siteId; mbLoadBusiness(); });
+          } else { mbLoadBusiness(); }
+        }
+      }, 300);
+    }
+
+    function qrMenusOpenPrint(encodedUrl, name) {
+      var menuUrl = decodeURIComponent(encodedUrl);
+      var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' + encodeURIComponent(menuUrl);
+      var win = window.open('', '_blank', 'width=480,height=680');
+      win.document.write('<!DOCTYPE html><html><head><title>QR Menu Card</title><style>body{font-family:system-ui,sans-serif;text-align:center;padding:48px 32px;background:#fff;}h1{margin:20px 0 6px;font-size:24px;color:#111;}p{color:#666;font-size:14px;margin:4px 0;}.url{font-family:monospace;font-size:11px;color:#888;word-break:break-all;margin-top:10px;}img{border:3px solid #e5e7eb;border-radius:14px;padding:10px;}.print-btn{margin-top:28px;padding:12px 32px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;}@media print{.print-btn{display:none;}}</style></head><body><img src="' + qrImg + '" width="280" height="280"><h1>' + name.replace(/</g,'&lt;') + '</h1><p>Scan to view our digital menu</p><div class="url">' + menuUrl + '</div><br><button class="print-btn" onclick="window.print()">🖨 Print</button></body></html>');
+      win.document.close();
+    }
+
+    async function qrMenusSendSMS(siteId, bizName, idx) {
+      var phone = (document.getElementById('qrm-phone-' + idx) || {}).value || '';
+      if (!phone) { toast('Enter a phone number first', 'error'); return; }
+      try {
+        var r = await fetch(API_BASE + '/api/update/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ site_id: siteId, biz_name: bizName, phone: phone, link_type: 'full' })
+        });
+        var d = await r.json();
+        if (d.sent_to) toast('SMS sent to ' + d.sent_to, 'success');
+        else if (d.url) { navigator.clipboard.writeText(d.url); toast('SMS not configured — link copied to clipboard', 'success'); }
+        else toast(d.error || 'Failed', 'error');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
     }
 
     async function generateEditLink(entityId, name, idx) {
@@ -9064,6 +9156,11 @@
       </div>
       <div class="form-group"><label>Description</label><textarea id="mb-item-desc" rows="2" placeholder="Short description..."></textarea></div>
       <div class="form-group"><label>Tags <span style="color:var(--text-muted);font-weight:400;">(comma separated)</span></label><input type="text" id="mb-item-tags" placeholder="spicy, vegetarian, gluten-free"></div>
+      <div class="form-group">
+        <label>Photo URL <span style="color:var(--text-muted);font-weight:400;">(paste image link)</span></label>
+        <input type="url" id="mb-item-photo" placeholder="https://..." oninput="mbPreviewPhoto()">
+        <img id="mb-item-photo-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:8px;">
+      </div>
       <input type="hidden" id="mb-item-id">
       <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
         <button class="btn btn-outline" onclick="mbCloseModal('mb-modal-item')">Cancel</button>
@@ -9144,17 +9241,35 @@
   function mbOpenModal(id) { var m = document.getElementById(id); if (m) { m.style.display = 'flex'; } }
   function mbCloseModal(id) { var m = document.getElementById(id); if (m) m.style.display = 'none'; }
 
+  var _mbCreateBizFormHTML = null;
+
   // Create new business
   function mbOpenCreateBusiness() {
-    document.getElementById('mb-cb-name').value = '';
-    document.getElementById('mb-cb-email').value = '';
-    document.getElementById('mb-cb-password').value = '';
-    document.getElementById('mb-cb-type').value = 'restaurant';
-    document.getElementById('mb-cb-error').style.display = 'none';
-    document.getElementById('mb-cb-save-btn').disabled = false;
-    document.getElementById('mb-cb-save-btn').textContent = 'Create Business';
+    var modal = document.getElementById('mb-modal-create-biz');
+    if (!modal) return;
+    var inner = modal.querySelector('div');
+
+    // Restore form HTML if it was replaced by the success panel
+    if (!document.getElementById('mb-cb-name') && _mbCreateBizFormHTML) {
+      inner.innerHTML = _mbCreateBizFormHTML;
+    } else if (!_mbCreateBizFormHTML && document.getElementById('mb-cb-name')) {
+      _mbCreateBizFormHTML = inner.innerHTML;
+    }
+
+    var nameEl = document.getElementById('mb-cb-name');
+    if (nameEl) nameEl.value = '';
+    var emailEl = document.getElementById('mb-cb-email');
+    if (emailEl) emailEl.value = '';
+    var passEl = document.getElementById('mb-cb-password');
+    if (passEl) passEl.value = '';
+    var typeEl = document.getElementById('mb-cb-type');
+    if (typeEl) typeEl.value = 'restaurant';
+    var errEl = document.getElementById('mb-cb-error');
+    if (errEl) errEl.style.display = 'none';
+    var btn = document.getElementById('mb-cb-save-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Create Business'; }
     mbOpenModal('mb-modal-create-biz');
-    setTimeout(function() { document.getElementById('mb-cb-name').focus(); }, 100);
+    setTimeout(function() { var n = document.getElementById('mb-cb-name'); if (n) n.focus(); }, 100);
   }
 
   async function mbCreateBusiness() {
@@ -9193,7 +9308,26 @@
       sel.appendChild(opt);
       sel.value = opt.value;
 
-      mbCloseModal('mb-modal-create-biz');
+      // Show success panel with credentials + scan button
+      var siteId = data.business.site_id || data.site_id;
+      var loginUrl = 'https://cybercheck-login.vercel.app/';
+      var credText = 'Email: ' + email + '\nPassword: ' + (pass || 'cybercheck2024') + '\nLogin: ' + loginUrl;
+      var modalBody = document.querySelector('#mb-modal-create-biz > div');
+      modalBody.innerHTML = '<div style="text-align:center;padding:8px 0;">' +
+        '<div style="font-size:40px;margin-bottom:8px;">✅</div>' +
+        '<h3 style="margin:0 0 4px;">' + name + '</h3>' +
+        '<p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Business created!</p>' +
+        '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:left;font-size:13px;margin-bottom:16px;">' +
+          '<div style="margin-bottom:6px;"><strong>Login Email:</strong> ' + email + '</div>' +
+          '<div style="margin-bottom:6px;"><strong>Password:</strong> ' + (pass || 'cybercheck2024') + '</div>' +
+          '<div><strong>Dashboard:</strong> <a href="' + loginUrl + '" target="_blank" style="color:var(--primary);">' + loginUrl + '</a></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+          '<button class="btn btn-outline" style="font-size:13px;" onclick="navigator.clipboard.writeText(' + JSON.stringify(credText) + ').then(function(){toast(\'Copied!\',\'success\')})">📋 Copy Credentials</button>' +
+          '<button class="btn btn-primary" style="font-size:13px;" onclick="mbCloseModal(\'mb-modal-create-biz\');setTimeout(function(){mbOpenExtract();},200);">📷 Scan Menu Now →</button>' +
+        '</div>' +
+        '<button onclick="mbCloseModal(\'mb-modal-create-biz\')" style="display:block;margin:14px auto 0;background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;">Skip for now</button>' +
+        '</div>';
       mbLoadBusiness();
       toast('Business created: ' + name);
     } catch(e) {
@@ -9220,6 +9354,31 @@
         sel.appendChild(o);
       });
     } catch(e) {}
+  }
+
+  function mbPrintQR() {
+    if (!_mbSiteId) return;
+    var sel = document.getElementById('mb-biz-select');
+    var bizName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Menu';
+    var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(_mbSiteId);
+    var qrImg   = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' + encodeURIComponent(menuUrl);
+    var win = window.open('', '_blank', 'width=480,height=680');
+    win.document.write('<!DOCTYPE html><html><head><title>QR Menu Card</title><style>' +
+      'body{font-family:system-ui,sans-serif;text-align:center;padding:48px 32px;background:#fff;}' +
+      'h1{margin:20px 0 6px;font-size:24px;color:#111;}' +
+      'p{color:#666;font-size:14px;margin:4px 0;}' +
+      '.url{font-family:monospace;font-size:11px;color:#888;word-break:break-all;margin-top:10px;}' +
+      'img{border:3px solid #e5e7eb;border-radius:14px;padding:10px;}' +
+      '.print-btn{margin-top:28px;padding:12px 32px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;}' +
+      '@media print{.print-btn{display:none;}}' +
+      '</style></head><body>' +
+      '<img src="' + qrImg + '" width="280" height="280" alt="QR Code">' +
+      '<h1>' + bizName.replace(/</g,'&lt;') + '</h1>' +
+      '<p>Scan to view our digital menu</p>' +
+      '<div class="url">' + menuUrl + '</div>' +
+      '<br><button class="print-btn" onclick="window.print()">🖨 Print</button>' +
+      '</body></html>');
+    win.document.close();
   }
 
   async function mbLoadBusiness() {
@@ -9262,9 +9421,10 @@
     var qrUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(menuUrl);
     card.innerHTML = '<img src="' + qrUrl + '" style="width:130px;height:130px;border-radius:8px;" alt="QR"><br>' +
       '<a href="' + menuUrl + '" target="_blank" style="color:var(--primary);font-size:12px;display:block;margin-top:8px;">View Live Menu ↗</a>' +
-      '<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;">' +
+      '<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap;">' +
         '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="navigator.clipboard.writeText(\'' + menuUrl.replace(/'/g,"\\'") + '\').then(function(){toast(\'Copied!\',\'success\')})">Copy URL</button>' +
         '<a href="' + qrUrl.replace('150x150','400x400') + '" download="menu_qr.png" class="btn btn-outline" style="font-size:12px;padding:5px 10px;">Download QR</a>' +
+        '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="mbPrintQR()">🖨 Print Card</button>' +
       '</div>';
   }
 
@@ -9299,8 +9459,11 @@
         html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Actions</th>';
         html += '</tr></thead><tbody>';
         items.forEach(function(item) {
+          var thumb = item.photo_url || item.image_url || '';
           html += '<tr style="border-bottom:1px solid var(--card-border);">';
-          html += '<td style="padding:7px 8px;font-weight:500;">' + mbEsc(item.name) + '</td>';
+          html += '<td style="padding:7px 8px;font-weight:500;">' +
+            (thumb ? '<img src="' + mbEscAttr(thumb) + '" style="width:36px;height:36px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;" onerror="this.style.display=\'none\'">' : '') +
+            mbEsc(item.name) + '</td>';
           html += '<td style="padding:7px 8px;">$' + Number(item.price||0).toFixed(2) + '</td>';
           html += '<td style="padding:7px 8px;color:var(--text-muted);">' + mbEsc(item.description||'') + '</td>';
           html += '<td style="padding:7px 8px;"><div style="display:flex;gap:6px;">';
@@ -9389,6 +9552,8 @@
     document.getElementById('mb-item-price').value = '';
     document.getElementById('mb-item-desc').value  = '';
     document.getElementById('mb-item-tags').value  = '';
+    document.getElementById('mb-item-photo').value = '';
+    document.getElementById('mb-item-photo-preview').style.display = 'none';
     document.getElementById('mb-item-title').textContent = 'Add Menu Item';
     if (defaultCat) sel.value = defaultCat;
 
@@ -9401,7 +9566,9 @@
         document.getElementById('mb-item-price').value = item.price;
         document.getElementById('mb-item-desc').value  = item.description || '';
         document.getElementById('mb-item-tags').value  = (item.tags||[]).join(', ');
+        document.getElementById('mb-item-photo').value = item.photo_url || item.image_url || '';
         sel.value = item.category || 'Uncategorized';
+        mbPreviewPhoto();
       }
     }
     mbOpenModal('mb-modal-item');
@@ -9418,6 +9585,7 @@
       name: name, price: price, category: cat,
       description: document.getElementById('mb-item-desc').value.trim(),
       tags: document.getElementById('mb-item-tags').value.split(',').map(function(t){return t.trim();}).filter(Boolean),
+      photo_url: document.getElementById('mb-item-photo').value.trim() || null,
       site_id: _mbSiteId, sort_order: 0
     };
 
@@ -9560,6 +9728,13 @@
     var msg = '✅ ' + total + ' menu items added — QR menu is live!';
     if (errors) msg += ' (' + errors + ' failed)';
     toast(msg, 'success');
+  }
+
+  function mbPreviewPhoto() {
+    var url = (document.getElementById('mb-item-photo') || {}).value || '';
+    var img = document.getElementById('mb-item-photo-preview');
+    if (!img) return;
+    if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
   }
 
   function mbEsc(s) { var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }

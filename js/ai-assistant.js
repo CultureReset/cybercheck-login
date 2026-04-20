@@ -104,7 +104,7 @@ class BusinessAIAssistant {
       // Refresh relevant dashboard sections
       if (data.tool_results && data.tool_results.length) {
         data.tool_results.forEach(r => {
-          if (r.tool === 'add_menu_items' || r.tool === 'clear_menu_type') {
+          if (r.tool === 'add_menu_items' || r.tool === 'clear_menu_type' || r.tool === 'update_menu_item' || r.tool === 'delete_menu_item') {
             if (typeof loadMenu === 'function') loadMenu();
           }
           if (r.tool === 'add_specials') {
@@ -142,6 +142,8 @@ class BusinessAIAssistant {
       if (r.tool === 'clear_menu_type')  return `<span class="ai-tool-badge ai-tool-warn">🗑 Cleared ${r.cleared} items</span>`;
       if (r.tool === 'add_specials')     return `<span class="ai-tool-badge">✅ Added ${r.count} special${r.count !== 1 ? 's' : ''}</span>`;
       if (r.tool === 'add_events')       return `<span class="ai-tool-badge">✅ Added ${r.count} event${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'delete_menu_item')   return `<span class="ai-tool-badge ai-tool-warn">🗑 Removed: ${r.deleted_name}</span>`;
+      if (r.tool === 'update_menu_item')   return `<span class="ai-tool-badge">✏️ Updated: ${r.updated_name}</span>`;
       if (r.tool === 'update_hh_schedule') return `<span class="ai-tool-badge">✅ Happy Hour set: ${r.schedule.days} ${r.schedule.start}–${r.schedule.end}</span>`;
       return '';
     }).join(' ');
