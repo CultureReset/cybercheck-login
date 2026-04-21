@@ -8828,13 +8828,21 @@
       if (siteId) { body.site_id = siteId; } else { body.entity_id = entityId; }
       if (phone) body[sendSms ? 'phone' : 'send_phone'] = phone;
 
-      var r = await fetch(API_BASE + endpoint, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }).then(function(r){ return r.json(); });
-
-      if (r.error && !r.url) { toast(r.error, 'error'); return; }
+      var res, r;
+      try {
+        res = await fetch(API_BASE + endpoint, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } catch (e) {
+        toast('Network error — check connection', 'error');
+        return;
+      }
+      try { r = await res.json(); }
+      catch (_) { toast('Server returned non-JSON (status ' + res.status + ')', 'error'); return; }
+      if (!res.ok) { toast(r.error || ('Request failed (' + res.status + ')'), 'error'); return; }
+      if (!r.url) { toast(r.error || 'No link returned', 'error'); return; }
 
       var url = r.url;
       document.getElementById('dul-url').value = url;
@@ -8931,17 +8939,36 @@
       var dest     = document.getElementById('qr-s-dest').value.trim();
       var location = document.getElementById('qr-s-location').value.trim();
       var placement= document.getElementById('qr-s-placement').value;
+      var bizRaw   = (document.getElementById('qr-s-biz').value || '').trim();
       if (!label) { alert('Label is required'); return; }
+      var siteId = null;
+      if (bizRaw) {
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bizRaw)) {
+          siteId = bizRaw;
+        } else if (Array.isArray(_allGCRBusinesses) && _allGCRBusinesses.length) {
+          var match = _allGCRBusinesses.find(function(b) {
+            return (b.name || '').toLowerCase() === bizRaw.toLowerCase();
+          });
+          if (match) siteId = match.id;
+        }
+        if (!siteId) {
+          toast('No business matched "' + bizRaw + '" — paste the site_id UUID or leave blank', 'error');
+          return;
+        }
+      }
       try {
+        var payload = { label: label, type: type, destination_url: dest || null, location: location || null, placement: placement };
+        if (siteId) payload.site_id = siteId;
         var res = await fetch(API_BASE + '/api/qr', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-          body: JSON.stringify({ label, type, destination_url: dest || null, location: location || null, placement })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) { var e = await res.json(); alert('Error: ' + e.error); return; }
         document.getElementById('qr-s-label').value = '';
         document.getElementById('qr-s-dest').value  = '';
         document.getElementById('qr-s-location').value = '';
+        document.getElementById('qr-s-biz').value   = '';
         document.getElementById('qr-form-single').style.display = 'none';
         toast('QR code created!', 'success');
         loadQRCodes();
