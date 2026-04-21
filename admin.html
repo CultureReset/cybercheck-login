@@ -56,6 +56,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span>GCR Businesses</span>
         </div>
+        <div class="nav-item" data-page="gcr-claims" onclick="showPage('gcr-claims')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+          <span>Claim Requests <span id="gcr-claims-badge" style="display:none;background:#e74c3c;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:4px;">0</span></span>
+        </div>
         <div class="nav-item" data-page="gcr-entity-editor" onclick="showPage('gcr-entity-editor')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           <span>Entity Editor</span>
@@ -298,6 +302,41 @@
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
               </tr></thead>
               <tbody id="gcr-businesses-body"><tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GCR CLAIM REQUESTS ─────────────────────── -->
+      <div id="page-gcr-claims" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Claim Requests</h1>
+          <button class="btn btn-primary" onclick="loadGCRClaims()">Refresh</button>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+            <select id="gcr-claims-status-filter" onchange="filterGCRClaims()" style="padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="contacted">Contacted</option>
+              <option value="approved">Approved</option>
+              <option value="denied">Denied</option>
+            </select>
+            <input type="text" id="gcr-claims-search" placeholder="Search by name or business..." oninput="filterGCRClaims()" style="flex:1;min-width:220px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" id="gcr-claims-count">Loading...</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;" id="gcr-claims-table">
+              <thead><tr style="border-bottom:1px solid var(--card-border);">
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Business</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Contact</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Email / Phone</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Category</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Date</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Status</th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
+              </tr></thead>
+              <tbody id="gcr-claims-body"><tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2876,7 +2915,7 @@
               <div class="bd-nav-item" data-panel="seo" onclick="switchBizPanel('seo')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">SEO</div>
               <div class="bd-nav-item" data-panel="social" onclick="switchBizPanel('social')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">Social Links</div>
               <div class="bd-nav-item" data-panel="gcrsettings" onclick="switchBizPanel('gcrsettings')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;">GCR Settings</div>
-              <div class="bd-nav-item" data-panel="grok-chat" onclick="switchBizPanel('grok-chat')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#38bdf8;border-left:3px solid transparent;font-weight:600;">🤖 Grok AI Chat</div>
+              <div class="bd-nav-item" data-panel="grok-chat" onclick="switchBizPanel('grok-chat')" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#38bdf8;border-left:3px solid transparent;font-weight:600;">🤖 AI Assistant</div>
               <div style="padding:12px 16px;margin-top:8px;">
                 <a id="bd-view-live" href="#" target="_blank" style="display:block;text-align:center;padding:8px;background:var(--primary);color:white;border-radius:6px;font-size:12px;text-decoration:none;font-weight:600;">View Live Profile</a>
               </div>
@@ -3227,29 +3266,37 @@
               </div>
             </div>
 
-            <!-- ── Grok AI Chat Panel ── -->
+            <!-- ── AI Assistant Chat Panel ── -->
             <div class="bd-panel" id="bd-panel-grok-chat" style="display:none;padding:24px;">
               <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 200px);">
-                <div class="card-header" style="flex-shrink:0;">
-                  <h3>🤖 Grok AI Assistant</h3>
-                  <p style="margin:0;font-size:13px;color:var(--text-muted);">Ask anything about this business — clicks, bookings, leads, data quality, what to improve, or tell it to make changes.</p>
+                <div class="card-header" style="flex-shrink:0;display:flex;justify-content:space-between;align-items:flex-start;">
+                  <div>
+                    <h3 style="margin:0;">🤖 AI Assistant <span id="ai-provider-badge" style="font-size:11px;font-weight:500;padding:2px 8px;background:var(--card-border);border-radius:20px;margin-left:8px;color:var(--text-muted);vertical-align:middle;"></span></h3>
+                    <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Ask about data, analytics, or say "add this image to Luna's as the hero photo" — it reads and writes.</p>
+                  </div>
                 </div>
                 <div id="grok-chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg);border-radius:8px;margin:0 0 12px;">
-                  <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Start a conversation with Grok. Ask about your business data, analytics, or get suggestions.</div>
+                  <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Start a conversation. You can ask about data, make changes, or upload an image and say where it goes.</div>
                 </div>
-                <div style="flex-shrink:0;display:flex;gap:8px;">
-                  <input id="grok-chat-input" type="text" placeholder="Ask Grok anything… e.g. 'How many events do we have this month?'" onkeydown="if(event.key==='Enter')sendGrokMessage();" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-                  <button onclick="sendGrokMessage();" style="padding:10px 18px;background:#38bdf8;color:#0f172a;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">Send</button>
-                  <button onclick="document.getElementById('grok-chat-messages').innerHTML='<div style=text-align:center;color:var(--text-muted);font-size:13px;padding:20px>Conversation cleared.</div>';_grokHistory=[];" title="Clear chat" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">✕</button>
+                <!-- Image preview strip -->
+                <div id="ai-image-preview" style="display:none;padding:8px 0;display:flex;gap:8px;flex-wrap:wrap;"></div>
+                <div style="flex-shrink:0;display:flex;gap:8px;align-items:center;">
+                  <!-- Hidden file input -->
+                  <input type="file" id="ai-image-file" accept="image/*" style="display:none;" onchange="handleAiImagePick(this)">
+                  <button onclick="document.getElementById('ai-image-file').click();" title="Attach image" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:16px;flex-shrink:0;">📎</button>
+                  <input id="grok-chat-input" type="text" placeholder="Ask anything or describe what to change…" onkeydown="if(event.key==='Enter')sendGrokMessage();" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <button onclick="sendGrokMessage();" style="padding:10px 18px;background:#38bdf8;color:#0f172a;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;flex-shrink:0;">Send</button>
+                  <button onclick="document.getElementById('grok-chat-messages').innerHTML='<div style=text-align:center;color:var(--text-muted);font-size:13px;padding:20px>Conversation cleared.</div>';_grokHistory=[];_aiPendingImageUrl=null;document.getElementById('ai-image-preview').innerHTML='';document.getElementById('ai-image-preview').style.display='none';" title="Clear" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;">✕</button>
                 </div>
                 <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-                  <button onclick="quickGrokAsk('Pull website analytics for the last 30 days — visitors, page views, top pages, and traffic sources.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📊 Website analytics</button>
-                  <button onclick="quickGrokAsk('Show me all leads and customers — how many came in today and this week.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">👥 Leads &amp; CRM</button>
-                  <button onclick="quickGrokAsk('Check my Google Business profile — reviews, rating, unanswered reviews.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📍 Google reviews</button>
-                  <button onclick="quickGrokAsk('Pull social media analytics — followers, reach, engagement across all connected platforms.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📱 Social stats</button>
-                  <button onclick="quickGrokAsk('Show me what users are actually doing on my pages — clicks, phone taps, map clicks, section views.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🖱️ User behavior</button>
-                  <button onclick="quickGrokAsk('Check my SEO — what keywords am I tracking, do I have GA4 and pixel set up, what pages have meta tags?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🔍 SEO check</button>
-                  <button onclick="quickGrokAsk('What do I need to do to run Facebook, Instagram, and Google ads from this dashboard?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📢 Run ads</button>
+                  <button onclick="quickGrokAsk('Pull website analytics for the last 30 days — visitors, page views, top pages, and traffic sources.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📊 Analytics</button>
+                  <button onclick="quickGrokAsk('Show me all leads and customers — how many came in today and this week.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">👥 Leads</button>
+                  <button onclick="quickGrokAsk('Check my Google Business profile — reviews, rating, unanswered reviews.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📍 Reviews</button>
+                  <button onclick="quickGrokAsk('Pull social media analytics — followers, reach, engagement across all connected platforms.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📱 Social</button>
+                  <button onclick="quickGrokAsk('What data is missing from this business? What should I fill in to make the profile complete?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">✅ Data gaps</button>
+                  <button onclick="quickGrokAsk('Show me all events for this business — upcoming and past.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🎉 Events</button>
+                  <button onclick="quickGrokAsk('Show me the full menu for this business.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🍽️ Menu</button>
+                  <button onclick="quickGrokAsk('Check my SEO — GA4, pixel, tracked keywords, meta tags.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🔍 SEO</button>
                 </div>
               </div>
             </div>
@@ -3437,6 +3484,7 @@
       if (window.innerWidth <= 768) closeSidebar();
       // Lazy load data
       if (page === 'gcr-businesses' && !_gcrLoaded) loadGCRBusinesses();
+      if (page === 'gcr-claims' && !_claimsLoaded) loadGCRClaims();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
       if (page === 'leads' && !_leadsLoaded) loadLeads();
@@ -3518,6 +3566,8 @@
     // ── GCR BUSINESSES ────────────────────────────────
     var _gcrLoaded = false;
     var _allGCRBusinesses = [];
+    var _claimsLoaded = false;
+    var _allGCRClaims = [];
 
     async function deleteGCRBusiness(entityId, name) {
       if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
@@ -3734,6 +3784,108 @@
       });
       renderGCRBusinesses(filtered);
     }
+
+    // ── GCR CLAIM REQUESTS ─────────────────────────────────────
+    async function loadGCRClaims() {
+      _claimsLoaded = true;
+      var token = getAuthToken();
+      document.getElementById('gcr-claims-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/claims', { headers: { 'Authorization': 'Bearer ' + token } });
+        _allGCRClaims = res.ok ? await res.json() : [];
+        renderGCRClaims(_allGCRClaims);
+        // update badge
+        var pending = _allGCRClaims.filter(function(c) { return c.status === 'pending'; }).length;
+        var badge = document.getElementById('gcr-claims-badge');
+        if (badge) { badge.textContent = pending; badge.style.display = pending ? 'inline' : 'none'; }
+      } catch(e) {
+        document.getElementById('gcr-claims-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+      }
+    }
+
+    var CLAIM_STATUS_COLORS = { pending:'#f59e0b', contacted:'#3b82f6', approved:'#22c55e', denied:'#ef4444' };
+
+    function renderGCRClaims(list) {
+      document.getElementById('gcr-claims-count').textContent = list.length + ' claim request(s)';
+      if (!list.length) {
+        document.getElementById('gcr-claims-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No claims found.</td></tr>';
+        return;
+      }
+      var html = list.map(function(c) {
+        var color = CLAIM_STATUS_COLORS[c.status] || '#94a3b8';
+        var date = c.created_at ? new Date(c.created_at).toLocaleDateString() : '—';
+        var statusOpts = ['pending','contacted','approved','denied'].map(function(s) {
+          return '<option value="' + s + '"' + (c.status === s ? ' selected' : '') + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+        }).join('');
+        return '<tr style="border-bottom:1px solid var(--card-border);">' +
+          '<td style="padding:10px 8px;font-size:13px;font-weight:700;">' + escHtml(c.business_name || '—') + (c.business_role ? '<div style="font-size:11px;color:var(--text-muted);font-weight:400;">' + escHtml(c.business_role) + '</div>' : '') + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;">' + escHtml(c.claimant_name || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:12px;color:var(--text-muted);">' +
+            (c.claimant_email ? '<a href="mailto:' + escHtml(c.claimant_email) + '" style="color:#3b82f6;">' + escHtml(c.claimant_email) + '</a>' : '') +
+            (c.claimant_phone ? '<div>' + escHtml(c.claimant_phone) + '</div>' : '') +
+          '</td>' +
+          '<td style="padding:10px 8px;font-size:12px;color:var(--text-muted);">' + escHtml(c.business_role || '—') + '</td>' +
+          '<td style="padding:10px 8px;font-size:12px;color:var(--text-muted);">' + date + '</td>' +
+          '<td style="padding:10px 8px;">' +
+            '<select onchange="updateClaimStatus(\'' + c.id + '\',this.value)" style="padding:5px 8px;background:var(--bg);border:1px solid ' + color + ';border-radius:6px;color:' + color + ';font-size:12px;font-weight:700;cursor:pointer;">' + statusOpts + '</select>' +
+          '</td>' +
+          '<td style="padding:10px 8px;">' +
+            (c.notes ? '<button onclick="alert(' + JSON.stringify(c.notes) + ')" class="btn btn-outline btn-sm" title="View notes">📝</button> ' : '') +
+            '<button onclick="addClaimNote(\'' + c.id + '\')" class="btn btn-outline btn-sm">Note</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+      document.getElementById('gcr-claims-body').innerHTML = html;
+    }
+
+    function filterGCRClaims() {
+      var status = document.getElementById('gcr-claims-status-filter').value;
+      var search = (document.getElementById('gcr-claims-search').value || '').toLowerCase();
+      var filtered = _allGCRClaims.filter(function(c) {
+        if (status && c.status !== status) return false;
+        if (search && !(c.business_name || '').toLowerCase().includes(search) && !(c.claimant_name || '').toLowerCase().includes(search) && !(c.claimant_email || '').toLowerCase().includes(search)) return false;
+        return true;
+      });
+      renderGCRClaims(filtered);
+    }
+
+    async function updateClaimStatus(id, status) {
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/gcr/claims/' + id, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      });
+      if (res.ok) {
+        var idx = _allGCRClaims.findIndex(function(c) { return c.id === id; });
+        if (idx !== -1) _allGCRClaims[idx].status = status;
+        var pending = _allGCRClaims.filter(function(c) { return c.status === 'pending'; }).length;
+        var badge = document.getElementById('gcr-claims-badge');
+        if (badge) { badge.textContent = pending; badge.style.display = pending ? 'inline' : 'none'; }
+        toast('Status updated', 'success');
+      } else {
+        toast('Failed to update status', 'error');
+      }
+    }
+
+    async function addClaimNote(id) {
+      var note = prompt('Admin note:');
+      if (note === null) return;
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/gcr/claims/' + id, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_notes: note })
+      });
+      if (res.ok) {
+        var idx = _allGCRClaims.findIndex(function(c) { return c.id === id; });
+        if (idx !== -1) _allGCRClaims[idx].admin_notes = note;
+        toast('Note saved', 'success');
+      } else {
+        toast('Failed to save note', 'error');
+      }
+    }
+    // ── END CLAIM REQUESTS ──────────────────────────────────────
 
     function openEditGCRModal(siteId) {
       var b = _allGCRBusinesses.find(function(x) { return x.site_id === siteId; });
@@ -5326,7 +5478,7 @@
 
     async function openGCRBizDashboard(siteId) {
       _bdSiteId = siteId;
-      _grokBriefed = false; _grokHistory = []; // reset chat when switching businesses
+      _grokBriefed = false; _grokHistory = []; _aiPendingImageUrl = null; // reset chat when switching businesses
       if (document.getElementById('grok-chat-messages')) document.getElementById('grok-chat-messages').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Opening Grok AI Chat will auto-brief you on this business.</div>';
       showPage('biz-dashboard');
       document.getElementById('bd-biz-name').textContent = 'Loading…';
@@ -9078,8 +9230,9 @@
       btn.disabled = false;
     }
 
-    // ── Grok Agentic AI Chat ───────────────────────────
+    // ── AI Assistant Chat ─────────────────────────────────
     var _grokHistory = [];
+    var _aiPendingImageUrl = null;
 
     var TOOL_LABELS = {
       get_business_profile: '📋 Reading business profile',
@@ -9093,7 +9246,29 @@
       get_connected_platforms: '🔌 Checking integrations',
       get_platform_data: '📡 Querying platform data',
       get_all_gcr_businesses: '🗺️ Scanning all GCR businesses',
+      update_business: '✏️ Updating business profile',
+      set_hero_image: '🖼️ Setting hero image',
+      add_menu_item: '🍽️ Adding menu item',
+      add_drink_item: '🍺 Adding drink item',
+      add_event: '🎉 Adding event',
+      set_business_status: '⚙️ Updating business status',
     };
+
+    // Load and display active AI provider
+    async function loadAiProviderBadge() {
+      try {
+        var token = getAuthToken();
+        var r = await fetch(API_BASE + '/api/admin/ai-provider', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await r.json();
+        var badge = document.getElementById('ai-provider-badge');
+        if (badge && d.configured) {
+          var labels = { anthropic: 'Claude', xai: 'Grok', openai: 'GPT-4o' };
+          badge.textContent = (labels[d.provider] || d.provider) + ' · ' + d.model;
+          badge.style.background = d.provider === 'anthropic' ? '#1a3a2a' : d.provider === 'openai' ? '#1a2a3a' : '#1e3a5f';
+          badge.style.color = d.provider === 'anthropic' ? '#86efac' : d.provider === 'openai' ? '#93c5fd' : '#38bdf8';
+        }
+      } catch(e) { /* silent */ }
+    }
 
     function grokAppendMsg(el, html, style) {
       var d = document.createElement('div');
@@ -9109,9 +9284,36 @@
       sendGrokMessage();
     }
 
-    // Auto-brief when Grok panel is first opened
+    // Handle image file pick — upload then stage for next message
+    async function handleAiImagePick(input) {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      input.value = '';
+      var previewEl = document.getElementById('ai-image-preview');
+      previewEl.style.display = 'flex';
+      previewEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Uploading…</span>';
+      try {
+        var token = getAuthToken();
+        var fd = new FormData();
+        fd.append('file', file);
+        var res = await fetch(API_BASE + '/api/admin/gcr/upload-image', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: fd,
+        });
+        var d = await res.json();
+        if (!d.url) throw new Error(d.error || 'Upload failed');
+        _aiPendingImageUrl = d.url;
+        previewEl.innerHTML = '<img src="' + escHtml(d.url) + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready — type where this goes</span>';
+      } catch(e) {
+        previewEl.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Upload error: ' + escHtml(e.message) + '</span>';
+      }
+    }
+
+    // Auto-brief when panel is first opened
     var _grokBriefed = false;
     function onGrokPanelOpen() {
+      loadAiProviderBadge();
       if (_grokBriefed) return;
       _grokBriefed = true;
       setTimeout(function() {
@@ -9127,30 +9329,39 @@
     async function sendGrokMessage() {
       var input = document.getElementById('grok-chat-input');
       var msg = (input.value || '').trim();
-      if (!msg) return;
+      var pendingImage = _aiPendingImageUrl;
+      if (!msg && !pendingImage) return;
       input.value = '';
 
       var messagesEl = document.getElementById('grok-chat-messages');
 
-      // User bubble
-      grokAppendMsg(messagesEl, escHtml(msg),
+      // User bubble — show image thumbnail if attached
+      var userHtml = msg ? escHtml(msg) : '';
+      if (pendingImage) {
+        userHtml += (userHtml ? '<br>' : '') + '<img src="' + escHtml(pendingImage) + '" style="max-width:160px;max-height:100px;border-radius:6px;margin-top:6px;object-fit:cover;display:block;">';
+        _aiPendingImageUrl = null;
+        var previewEl = document.getElementById('ai-image-preview');
+        previewEl.innerHTML = '';
+        previewEl.style.display = 'none';
+      }
+      grokAppendMsg(messagesEl, userHtml,
         'align-self:flex-end;background:#0b7a75;color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;font-size:14px;line-height:1.5;');
 
-      // Live status container — shows which tools Grok is calling
-      var statusEl = grokAppendMsg(messagesEl, '<span style="color:#94a3b8;font-size:12px;">🤖 Grok is working…</span>',
+      var statusEl = grokAppendMsg(messagesEl, '<span style="color:#94a3b8;font-size:12px;">🤖 AI is working…</span>',
         'align-self:flex-start;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted);');
 
       try {
         var token = getAuthToken();
         var biz = (_bdData && _bdData.business) || {};
 
-        _grokHistory.push({ role: 'user', content: msg });
+        _grokHistory.push({ role: 'user', content: (msg || '') + (pendingImage ? '\n[Image: ' + pendingImage + ']' : '') });
 
         var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: msg,
+            message: msg || 'I uploaded an image.',
+            image_url: pendingImage || undefined,
             history: _grokHistory.slice(-8),
             slug: biz.slug || null,
             entity_id: biz.id || null,
@@ -9158,10 +9369,9 @@
         });
         var r = await res.json();
 
-        // Show which tools were called
         if (r.tools_called && r.tools_called.length) {
           var toolTags = r.tools_called.map(function(t) {
-            return '<span style="display:inline-block;background:#1e3a5f;color:#93c5fd;padding:2px 8px;border-radius:10px;margin:2px;">' + (TOOL_LABELS[t.tool] || t.tool) + '</span>';
+            return '<span style="display:inline-block;background:#1e3a5f;color:#93c5fd;padding:2px 8px;border-radius:10px;margin:2px;">' + escHtml(TOOL_LABELS[t.tool] || t.tool) + '</span>';
           }).join('');
           statusEl.innerHTML = '<div style="margin-bottom:4px;">' + toolTags + '</div>';
         } else {
@@ -9171,7 +9381,6 @@
         var reply = r.reply || r.error || 'No response';
         _grokHistory.push({ role: 'assistant', content: reply });
 
-        // Format reply — convert markdown-ish text to readable HTML
         var formatted = reply
           .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
           .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
