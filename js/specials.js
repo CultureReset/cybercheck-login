@@ -133,9 +133,12 @@ function spPickFile() { document.getElementById('sp-file-input').click(); }
 function spFileChanged(input) {
   var file = input.files[0];
   if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) { spExtract(e.target.result, file.type); };
-  reader.readAsDataURL(file);
+  CC.compressImage(file, 1280, 0.75).then(function(c) {
+    spExtract(c.dataUrl, c.mimeType);
+  }).catch(function() {
+    var preview = document.getElementById('sp-extract-preview');
+    if (preview) preview.innerHTML = '<p style="color:var(--danger);">Could not read image.</p>';
+  });
 }
 
 async function spExtract(dataUrl, mimeType) {
@@ -156,7 +159,9 @@ async function spExtract(dataUrl, mimeType) {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ image_base64: dataUrl, mime_type: mimeType, extract_type: 'specials' })
     });
-    var data = await res.json();
+    var data;
+    try { data = await res.json(); }
+    catch (_) { throw new Error('Server returned non-JSON (status ' + res.status + ')'); }
     if (!res.ok) throw new Error(data.error || 'Extract failed');
     _extractedSpecials = data;
     spShowPreview(data.items || []);

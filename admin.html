@@ -9631,6 +9631,7 @@
         o.dataset.slug = b.entity_slug || b.slug || '';
         sel.appendChild(o);
       });
+      if (window.CC && CC.attachSelectSearch) CC.attachSelectSearch(sel, 'Search businesses...');
     } catch(e) {}
   }
 
@@ -9949,19 +9950,25 @@
     document.getElementById('mb-ext-scan-btn').style.display = 'none';
     document.getElementById('mb-ext-import-btn').style.display = 'none';
 
-    var base64 = await new Promise(function(resolve) {
-      var r = new FileReader();
-      r.onload = function(e) { resolve(e.target.result); };
-      r.readAsDataURL(file);
-    });
+    var base64, sendMime;
+    try {
+      var c = await CC.compressImage(file, 1280, 0.75);
+      base64 = c.dataUrl; sendMime = c.mimeType;
+    } catch (e) {
+      document.getElementById('mb-ext-status').textContent = '❌ Could not read image.';
+      document.getElementById('mb-ext-scan-btn').style.display = '';
+      return;
+    }
 
     try {
       var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-        body: JSON.stringify({ image_base64: base64, mime_type: file.type })
+        body: JSON.stringify({ image_base64: base64, mime_type: sendMime })
       });
-      var data = await res.json();
+      var data;
+      try { data = await res.json(); }
+      catch (_) { data = { error: 'Server returned non-JSON (status ' + res.status + ')' }; }
       if (!res.ok) {
         document.getElementById('mb-ext-status').textContent = '❌ Error: ' + (data.error || 'Extraction failed');
         document.getElementById('mb-ext-scan-btn').style.display = '';
@@ -10172,18 +10179,25 @@
     document.getElementById('mb-ext-scan-btn').style.display = 'none';
     document.getElementById('mb-ext-import-btn').style.display = 'none';
 
-    var base64 = await new Promise(function(resolve) {
-      var r = new FileReader(); r.onload = function(e) { resolve(e.target.result); }; r.readAsDataURL(file);
-    });
+    var base64, sendMime;
+    try {
+      var cmp = await CC.compressImage(file, 1280, 0.75);
+      base64 = cmp.dataUrl; sendMime = cmp.mimeType;
+    } catch (e) {
+      document.getElementById('mb-ext-status').textContent = '❌ Could not read image.';
+      return;
+    }
 
     if (mode === 'events') {
       try {
         var res = await fetch(API_BASE + '/api/dashboard/events/extract', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-          body: JSON.stringify({ image_base64: base64, mime_type: file.type })
+          body: JSON.stringify({ image_base64: base64, mime_type: sendMime })
         });
-        var data = await res.json();
+        var data;
+        try { data = await res.json(); }
+        catch (_) { data = { error: 'Server returned non-JSON (status ' + res.status + ')' }; }
         if (!res.ok) { document.getElementById('mb-ext-status').textContent = '❌ Error: ' + (data.error||'Failed'); return; }
         _mbExtracted = Object.assign({ _mode: 'events' }, data);
         var total = (data.items||[]).length;
@@ -10534,6 +10548,7 @@
         return '<option value="' + (b.id||b.slug) + '">' + (b.name||'Business') + '</option>';
       }).join('');
       sel.innerHTML = '<option value="">Select a business...</option>' + opts;
+      if (window.CC && CC.attachSelectSearch) CC.attachSelectSearch(sel, 'Search businesses...');
     }
 
     function quickAsk(q) {

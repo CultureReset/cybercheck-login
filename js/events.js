@@ -134,9 +134,12 @@ function evPickFile() {
 function evFileChanged(input) {
   var file = input.files[0];
   if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) { evExtract(e.target.result, file.type); };
-  reader.readAsDataURL(file);
+  CC.compressImage(file, 1280, 0.75).then(function(c) {
+    evExtract(c.dataUrl, c.mimeType);
+  }).catch(function() {
+    var preview = document.getElementById('ev-extract-preview');
+    if (preview) preview.innerHTML = '<p style="color:var(--danger);">Could not read image.</p>';
+  });
 }
 
 async function evExtract(dataUrl, mimeType) {
@@ -157,7 +160,9 @@ async function evExtract(dataUrl, mimeType) {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ image_base64: dataUrl, mime_type: mimeType })
     });
-    var data = await res.json();
+    var data;
+    try { data = await res.json(); }
+    catch (_) { throw new Error('Server returned non-JSON (status ' + res.status + ')'); }
     if (!res.ok) throw new Error(data.error || 'Extract failed');
 
     _extractedEvents = data;

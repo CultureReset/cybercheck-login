@@ -1184,6 +1184,68 @@ const CC = (function() {
     });
   })();
 
+  // Resize + re-encode to JPEG so uploads stay under Vercel's 4.5MB body limit
+  // and cut vision-token cost on the backend.
+  function compressImage(file, maxDim, quality) {
+    maxDim = maxDim || 1280;
+    quality = quality == null ? 0.75 : quality;
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function() { reject(new Error('read failed')); };
+      reader.onload = function(e) {
+        var img = new Image();
+        img.onerror = function() { reject(new Error('decode failed')); };
+        img.onload = function() {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var scale = Math.min(1, maxDim / Math.max(w, h));
+          var cw = Math.round(w * scale), ch = Math.round(h * scale);
+          var canvas = document.createElement('canvas');
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          var dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve({ dataUrl: dataUrl, mimeType: 'image/jpeg' });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Adds a search input above a <select> that live-filters its <option>s
+  // as the user types. Idempotent — safe to call again after repopulating.
+  function attachSelectSearch(sel, placeholder) {
+    if (!sel || sel.dataset.ccSearch === '1') { if (sel) ccSyncSearchOptions(sel); return; }
+    sel.dataset.ccSearch = '1';
+    var input = document.createElement('input');
+    input.type = 'search';
+    input.placeholder = placeholder || 'Type to filter...';
+    input.setAttribute('aria-label', placeholder || 'Filter list');
+    input.style.cssText = 'display:block;width:100%;margin-top:6px;padding:7px 10px;' +
+      'background:var(--bg);border:1px solid var(--card-border);border-radius:8px;' +
+      'color:var(--text);font-size:13px;box-sizing:border-box;';
+    input.addEventListener('input', function() {
+      var q = (input.value || '').trim().toLowerCase();
+      var any = false;
+      Array.prototype.forEach.call(sel.options, function(o, i) {
+        if (i === 0 && o.value === '') { o.hidden = false; return; }
+        var match = !q || (o.textContent || '').toLowerCase().indexOf(q) !== -1;
+        o.hidden = !match;
+        if (match) any = true;
+      });
+      if (!any && sel.options[0]) sel.options[0].hidden = false;
+    });
+    if (sel.parentNode) sel.parentNode.insertBefore(input, sel.nextSibling);
+    sel._ccSearchInput = input;
+  }
+
+  function ccSyncSearchOptions(sel) {
+    // Re-apply current filter after options are repopulated.
+    if (sel._ccSearchInput) {
+      var ev = new Event('input', { bubbles: true });
+      sel._ccSearchInput.dispatchEvent(ev);
+    }
+  }
+
   // ---- Public API ----
   return {
     get: get, post: post, put: put, del: del,
@@ -1191,6 +1253,8 @@ const CC = (function() {
     getToken: getToken, setToken: setToken, clearToken: clearToken,
     dashboard: dashboard,
     clearDashCache: dashCacheClear,
+    compressImage: compressImage,
+    attachSelectSearch: attachSelectSearch,
     API_BASE: API_BASE
   };
 })();
