@@ -4582,17 +4582,18 @@
     }
     function closeHuntModal() { document.getElementById('hunt-modal').style.display = 'none'; }
 
-    function handleHuntImageUpload(e) {
+    async function handleHuntImageUpload(e) {
       var file = e.target.files[0];
       if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(ev) {
+      try {
+        var c = await CC.compressImage(file, 1920, 0.85);
         var img = document.getElementById('brand-image-preview');
-        img.src = ev.target.result;
+        img.src = c.dataUrl;
         img.style.display = 'block';
-        img._dataUrl = ev.target.result;
-      };
-      reader.readAsDataURL(file);
+        img._dataUrl = c.dataUrl;
+      } catch (err) {
+        toast('Could not read image', 'error');
+      }
     }
 
     function useCurrentLocation() {
@@ -5026,11 +5027,15 @@
       if (!files.length) return;
       var token = getAuthToken();
       var status = document.getElementById('be-upload-status');
-      status.textContent = 'Uploading ' + files.length + ' photo(s)...';
+      status.textContent = 'Compressing ' + files.length + ' photo(s)...';
+      var compressed = await Promise.all(Array.prototype.map.call(files, function(f) {
+        return CC.compressImageFile(f, 1920, 0.85);
+      }));
+      status.textContent = 'Uploading ' + compressed.length + ' photo(s)...';
       var success = 0;
-      for (var i = 0; i < files.length; i++) {
+      for (var i = 0; i < compressed.length; i++) {
         var fd = new FormData();
-        fd.append('file', files[i]);
+        fd.append('file', compressed[i]);
         fd.append('site_id', _bizEditorSiteId);
         fd.append('folder', 'gallery');
         try {
@@ -5043,7 +5048,7 @@
           if (r.url) success++;
         } catch(e) {}
       }
-      status.textContent = success + ' of ' + files.length + ' uploaded.';
+      status.textContent = success + ' of ' + compressed.length + ' uploaded.';
       // Reload photos
       var res2 = await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bizEditorSiteId, { headers: { 'Authorization': 'Bearer ' + token } });
       var d = await res2.json();
@@ -5948,7 +5953,13 @@
       var token = getAuthToken(); var uploaded = 0;
       for (var f of Array.from(input.files)) {
         try {
-          var dataUrl = await new Promise(function(resolve){ var r = new FileReader(); r.onload = function(e){ resolve(e.target.result); }; r.readAsDataURL(f); });
+          var dataUrl;
+          if (f.type && f.type.indexOf('image/') === 0) {
+            var c = await CC.compressImage(f, 1920, 0.85);
+            dataUrl = c.dataUrl;
+          } else {
+            dataUrl = await new Promise(function(resolve){ var r = new FileReader(); r.onload = function(e){ resolve(e.target.result); }; r.readAsDataURL(f); });
+          }
           var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: dataUrl, caption: f.name }) });
           if (res.ok) uploaded++;
         } catch(e) { console.error(e); }
@@ -6104,6 +6115,10 @@
           '</div>' +
         '</div></div>';
       document.body.insertAdjacentHTML('beforeend', html);
+      if (window.CC && CC.attachSelectSearch) {
+        CC.attachSelectSearch(document.getElementById('merge-entity-a'), 'Search entities...');
+        CC.attachSelectSearch(document.getElementById('merge-entity-b'), 'Search entities...');
+      }
     }
 
     async function executeMergeEntities() {
@@ -9300,8 +9315,9 @@
       previewEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Uploading…</span>';
       try {
         var token = getAuthToken();
+        var toSend = await CC.compressImageFile(file, 1600, 0.8);
         var fd = new FormData();
-        fd.append('file', file);
+        fd.append('file', toSend);
         var res = await fetch(API_BASE + '/api/admin/gcr/upload-image', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token },

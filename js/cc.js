@@ -1185,7 +1185,7 @@ const CC = (function() {
   })();
 
   // Resize + re-encode to JPEG so uploads stay under Vercel's 4.5MB body limit
-  // and cut vision-token cost on the backend.
+  // and cut vision-token cost on the backend. Returns { dataUrl, blob, mimeType }.
   function compressImage(file, maxDim, quality) {
     maxDim = maxDim || 1280;
     quality = quality == null ? 0.75 : quality;
@@ -1203,12 +1203,26 @@ const CC = (function() {
           canvas.width = cw; canvas.height = ch;
           canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
           var dataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve({ dataUrl: dataUrl, mimeType: 'image/jpeg' });
+          canvas.toBlob(function(blob) {
+            resolve({ dataUrl: dataUrl, blob: blob, mimeType: 'image/jpeg' });
+          }, 'image/jpeg', quality);
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  // Compress a File if it's an image; otherwise return the original (for videos, etc).
+  // Returns a File/Blob suitable for FormData.
+  async function compressImageFile(file, maxDim, quality) {
+    if (!file || !file.type || file.type.indexOf('image/') !== 0) return file;
+    try {
+      var c = await compressImage(file, maxDim, quality);
+      if (!c.blob) return file;
+      var name = (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg';
+      return new File([c.blob], name, { type: 'image/jpeg' });
+    } catch (e) { return file; }
   }
 
   // Adds a search input above a <select> that live-filters its <option>s
@@ -1254,6 +1268,7 @@ const CC = (function() {
     dashboard: dashboard,
     clearDashCache: dashCacheClear,
     compressImage: compressImage,
+    compressImageFile: compressImageFile,
     attachSelectSearch: attachSelectSearch,
     API_BASE: API_BASE
   };
