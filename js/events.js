@@ -182,21 +182,46 @@ function evShowExtractPreview(items) {
     return;
   }
 
+  var inpS = 'width:100%;padding:4px 6px;background:var(--bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text);font-size:12px;box-sizing:border-box;';
   var html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Found ' + items.length + ' event(s) — review and import:</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Day / Date</th><th>Time</th><th>Details</th></tr></thead><tbody>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Day / Date</th><th>Time</th><th>Details</th><th style="width:36px;"></th></tr></thead><tbody>';
   items.forEach(function(item, i) {
     var dayDate = item.days || item.date || '';
     var time = item.time || (item.start_time ? item.start_time + (item.end_time ? ' – ' + item.end_time : '') : '');
-    html += '<tr>';
-    html += '<td>' + escEvHtml(item.name || '') + '</td>';
-    html += '<td>' + escEvHtml(dayDate) + '</td>';
-    html += '<td>' + escEvHtml(time) + '</td>';
-    html += '<td style="font-size:12px;color:var(--text-muted);">' + escEvHtml(item.price_text || item.description || '') + '</td>';
+    html += '<tr id="ev-ex-row-' + i + '">';
+    html += '<td><input data-i="' + i + '" data-k="name" value="' + escEvHtml(item.name || '') + '" oninput="evUpdateExtracted(this)" style="' + inpS + 'font-weight:500;"></td>';
+    html += '<td><input data-i="' + i + '" data-k="_dayDate" value="' + escEvHtml(dayDate) + '" oninput="evUpdateExtracted(this)" style="' + inpS + '"></td>';
+    html += '<td><input data-i="' + i + '" data-k="_time" value="' + escEvHtml(time) + '" oninput="evUpdateExtracted(this)" style="' + inpS + '"></td>';
+    html += '<td><input data-i="' + i + '" data-k="_details" value="' + escEvHtml(item.price_text || item.description || '') + '" oninput="evUpdateExtracted(this)" style="' + inpS + 'color:var(--text-muted);"></td>';
+    html += '<td style="text-align:center;"><button onclick="evDeleteExtracted(' + i + ')" title="Remove" style="background:none;border:none;color:var(--danger);font-size:15px;cursor:pointer;padding:2px 6px;">✕</button></td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   html += '<button class="btn btn-primary" style="margin-top:12px;" id="ev-import-btn" onclick="evImport()">Import All Events</button>';
   preview.innerHTML = html;
+}
+
+function evUpdateExtracted(el) {
+  if (!_extractedEvents || !_extractedEvents.items) return;
+  var i = +el.dataset.i, k = el.dataset.k, v = el.value;
+  var it = _extractedEvents.items[i];
+  if (!it) return;
+  if (k === '_dayDate') {
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)) { it.date = v; it.days = ''; }
+    else { it.days = v; it.date = ''; }
+  } else if (k === '_time') {
+    it.time = v;
+  } else if (k === '_details') {
+    it.description = v;
+  } else {
+    it[k] = v;
+  }
+}
+
+function evDeleteExtracted(i) {
+  if (!_extractedEvents || !_extractedEvents.items) return;
+  _extractedEvents.items.splice(i, 1);
+  evShowExtractPreview(_extractedEvents.items);
 }
 
 // Wire to page router

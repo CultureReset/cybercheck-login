@@ -294,11 +294,11 @@
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;" id="gcr-table">
               <thead><tr style="border-bottom:1px solid var(--card-border);">
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Name</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Category</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Status</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Subdomain</th>
-                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Featured</th>
+                <th onclick="sortGCRBy('name')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Name <span id="gcr-sort-name"></span></th>
+                <th onclick="sortGCRBy('entity_subtype')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Category <span id="gcr-sort-entity_subtype"></span></th>
+                <th onclick="sortGCRBy('is_active')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Status <span id="gcr-sort-is_active"></span></th>
+                <th onclick="sortGCRBy('slug')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Subdomain <span id="gcr-sort-slug"></span></th>
+                <th onclick="sortGCRBy('updated_at')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Last Edited <span id="gcr-sort-updated_at"></span></th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
               </tr></thead>
               <tbody id="gcr-businesses-body"><tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
@@ -3584,6 +3584,29 @@
       } catch(err) { toast('Error: ' + err.message, 'error'); }
     }
 
+    var _gcrSortKey = 'updated_at';
+    var _gcrSortDir = -1;
+    function sortGCRBy(key) {
+      if (_gcrSortKey === key) { _gcrSortDir = -_gcrSortDir; }
+      else { _gcrSortKey = key; _gcrSortDir = key === 'updated_at' ? -1 : 1; }
+      renderGCRBusinesses(_allGCRBusinesses || []);
+    }
+    function relativeTime(iso) {
+      var ms = Date.now() - new Date(iso).getTime();
+      if (isNaN(ms)) return '—';
+      var s = Math.round(ms / 1000);
+      if (s < 60) return 'just now';
+      var m = Math.round(s / 60);
+      if (m < 60) return m + 'm ago';
+      var h = Math.round(m / 60);
+      if (h < 24) return h + 'h ago';
+      var d = Math.round(h / 24);
+      if (d < 30) return d + 'd ago';
+      var mo = Math.round(d / 30);
+      if (mo < 12) return mo + 'mo ago';
+      return Math.round(mo / 12) + 'y ago';
+    }
+
     async function loadGCRBusinesses() {
       _gcrLoaded = true;
       var token = getAuthToken();
@@ -3603,9 +3626,26 @@
         document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">No businesses found.</td></tr>';
         return;
       }
-      var html = list.map(function(b) {
+      var sorted = _gcrSortKey ? list.slice().sort(function(a, b) {
+        var av = a[_gcrSortKey], bv = b[_gcrSortKey];
+        if (_gcrSortKey === 'is_active') { av = av ? 1 : 0; bv = bv ? 1 : 0; }
+        av = (av == null) ? '' : av;
+        bv = (bv == null) ? '' : bv;
+        if (typeof av === 'string' && typeof bv === 'string') {
+          return _gcrSortDir * av.toLowerCase().localeCompare(bv.toLowerCase());
+        }
+        return _gcrSortDir * (av > bv ? 1 : av < bv ? -1 : 0);
+      }) : list;
+      ['name','entity_subtype','is_active','slug','updated_at'].forEach(function(k) {
+        var el = document.getElementById('gcr-sort-' + k);
+        if (el) el.textContent = _gcrSortKey === k ? (_gcrSortDir > 0 ? '▲' : '▼') : '';
+      });
+      var html = sorted.map(function(b) {
         var liveChecked = b.is_active ? 'checked' : '';
         var liveLabel = b.is_active ? '<span style="color:#22c55e;font-weight:700;font-size:12px;">LIVE</span>' : '<span style="color:#94a3b8;font-size:12px;">Off</span>';
+        var updated = b.updated_at || b.created_at;
+        var updatedText = updated ? relativeTime(updated) : '—';
+        var updatedTitle = updated ? new Date(updated).toLocaleString() : '';
         return '<tr style="border-bottom:1px solid var(--card-border);">' +
           '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml((b.icon || '') + ' ' + (b.name || '—')) + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.entity_subtype || '—') + '</td>' +
@@ -3616,7 +3656,7 @@
             '</label>' +
           '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.slug || '—') + '</td>' +
-          '<td style="padding:10px 8px;font-size:13px;">' + escHtml((b.city || '') + (b.state ? ', ' + b.state : '')) + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);" title="' + escHtml(updatedTitle) + '">' + escHtml(updatedText) + '</td>' +
           '<td style="padding:10px 8px;display:flex;gap:6px;flex-wrap:wrap;">' +
             '<button onclick="showPage(\'gcr-entity-editor\');loadEntityForEdit(\'' + b.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
             '<button onclick="inviteBusiness(\'' + b.id + '\', \'' + escHtml(b.name).replace(/'/g,"&#39;") + '\')" class="btn btn-sm" style="background:#3b82f6;color:white;border:none;cursor:pointer;padding:6px 10px;border-radius:4px;font-size:12px;">✉ Invite</button>' +
@@ -5480,9 +5520,32 @@
 
     // ── GCR BIZ DASHBOARD ─────────────────────────────
     var _bdSiteId, _bdSlug, _bdData, _bdFleetItems = [], _bdAddonItems = [], _bdScheduleSlots = [], _bdFaqItems = [], _bdMenuItems2 = [], _bdDrinkItems2 = [], _bdSpecials2 = [], _bdEvents2 = [], _bdHHDeals = [];
+    var _bdDirty = false;
+    (function() {
+      var page = document.getElementById('page-biz-dashboard');
+      if (page) {
+        page.addEventListener('input', function(e) {
+          var t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) _bdDirty = true;
+        });
+        page.addEventListener('change', function(e) {
+          var t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) _bdDirty = true;
+        });
+      }
+      window.addEventListener('beforeunload', function(e) {
+        if (_bdDirty && page && page.style.display !== 'none') {
+          e.preventDefault();
+          e.returnValue = '';
+          return '';
+        }
+      });
+    })();
+    function clearBdDirty() { _bdDirty = false; }
 
     async function openGCRBizDashboard(siteId) {
       _bdSiteId = siteId;
+      clearBdDirty();
       _grokBriefed = false; _grokHistory = []; _aiPendingImageUrl = null; // reset chat when switching businesses
       if (document.getElementById('grok-chat-messages')) document.getElementById('grok-chat-messages').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Opening Grok AI Chat will auto-brief you on this business.</div>';
       showPage('biz-dashboard');
@@ -5578,6 +5641,7 @@
         var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast('Profile saved!', 'success');
+        clearBdDirty();
       } catch(err) { toast(err.message, 'error'); }
     }
 
@@ -5648,6 +5712,7 @@
         var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/happy-hour', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hh_days: document.getElementById('bd-hh-days').value, hh_start: document.getElementById('bd-hh-start').value, hh_end: document.getElementById('bd-hh-end').value }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Happy hour saved!', 'success');
+        clearBdDirty();
       } catch(err) { toast(err.message, 'error'); }
     }
 
@@ -5947,11 +6012,15 @@
       if (_bdData && _bdData.media) _bdData.media = _bdData.media.filter(function(m){ return m.id !== id; });
       renderBizMedia(); toast('Deleted', 'success');
     }
-    async function uploadBizMediaFiles() {
-      var input = document.getElementById('bd-media-file');
-      if (!input || !input.files || !input.files.length) return toast('Select files first', 'error');
+    async function uploadBizMediaFiles(filesArg) {
+      var files = filesArg;
+      if (!files || !files.length) {
+        var input = document.getElementById('bd-media-upload-input') || document.getElementById('bd-media-file');
+        files = input && input.files;
+      }
+      if (!files || !files.length) return toast('Select files first', 'error');
       var token = getAuthToken(); var uploaded = 0;
-      for (var f of Array.from(input.files)) {
+      for (var f of Array.from(files)) {
         try {
           var dataUrl;
           if (f.type && f.type.indexOf('image/') === 0) {
@@ -5964,7 +6033,8 @@
           if (res.ok) uploaded++;
         } catch(e) { console.error(e); }
       }
-      input.value = '';
+      var clearInput = document.getElementById('bd-media-upload-input') || document.getElementById('bd-media-file');
+      if (clearInput) clearInput.value = '';
       var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
       _bdData.media = d.media || []; renderBizMedia(); toast(uploaded + ' photo(s) uploaded!', 'success');
     }
@@ -5977,6 +6047,7 @@
         var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b }) });
         if (!res.ok) throw new Error('Save failed');
         toast('GCR settings saved!', 'success');
+        clearBdDirty();
       } catch(err) { toast(err.message, 'error'); }
     }
 
@@ -5988,6 +6059,7 @@
         var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: c }) });
         if (!res.ok) throw new Error('Save failed');
         toast('SEO saved!', 'success');
+        clearBdDirty();
       } catch(err) { toast(err.message, 'error'); }
     }
 
@@ -6126,7 +6198,8 @@
       if (_mergeEntityA === _mergeEntityB) { toast('Cannot merge an entity with itself', 'error'); return; }
       var nameA = (_allEntities.find(function(e){return e.id===_mergeEntityA;}) || {}).name || 'Primary';
       var nameB = (_allEntities.find(function(e){return e.id===_mergeEntityB;}) || {}).name || 'Secondary';
-      if (!confirm('Merge "' + nameB + '" INTO "' + nameA + '"?\n\nAll data from "' + nameB + '" will be added to "' + nameA + '".\n"' + nameB + '" will then be deleted.\n\nThis cannot be undone.')) return;
+      var typed = prompt('Merge "' + nameB + '" INTO "' + nameA + '"?\n\nAll data from "' + nameB + '" will be added to "' + nameA + '", then "' + nameB + '" will be deleted. This cannot be undone.\n\nType MERGE to confirm:');
+      if (typed !== 'MERGE') { toast('Merge cancelled', 'info'); return; }
 
       document.getElementById('mergeModal')?.remove();
       toast('Merging...', 'info');

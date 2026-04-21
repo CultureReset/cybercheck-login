@@ -177,15 +177,42 @@ function spShowPreview(items) {
   var preview = document.getElementById('sp-extract-preview');
   if (!items.length) { preview.innerHTML = '<p style="color:var(--text-muted);">No specials found.</p>'; return; }
 
-  var html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Found ' + items.length + ' special(s):</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Deal</th><th>Days</th><th>Time</th></tr></thead><tbody>';
-  items.forEach(function(item) {
+  var inpS = 'width:100%;padding:4px 6px;background:var(--bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text);font-size:12px;box-sizing:border-box;';
+  var html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Found ' + items.length + ' special(s) — edit, remove, then import:</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Deal</th><th>Days</th><th>Time</th><th style="width:36px;"></th></tr></thead><tbody>';
+  items.forEach(function(item, i) {
     var time = item.start_time ? item.start_time + (item.end_time ? ' – ' + item.end_time : '') : (item.time || '');
-    html += '<tr><td>' + escSpHtml(item.name || '') + '</td><td>' + escSpHtml(item.price_text || item.description || '') + '</td><td>' + escSpHtml(item.days || item.date || '') + '</td><td>' + escSpHtml(time) + '</td></tr>';
+    html += '<tr>';
+    html += '<td><input data-i="' + i + '" data-k="name" value="' + escSpHtml(item.name || '') + '" oninput="spUpdateExtracted(this)" style="' + inpS + 'font-weight:500;"></td>';
+    html += '<td><input data-i="' + i + '" data-k="_deal" value="' + escSpHtml(item.price_text || item.description || '') + '" oninput="spUpdateExtracted(this)" style="' + inpS + '"></td>';
+    html += '<td><input data-i="' + i + '" data-k="_days" value="' + escSpHtml(item.days || item.date || '') + '" oninput="spUpdateExtracted(this)" style="' + inpS + '"></td>';
+    html += '<td><input data-i="' + i + '" data-k="_time" value="' + escSpHtml(time) + '" oninput="spUpdateExtracted(this)" style="' + inpS + '"></td>';
+    html += '<td style="text-align:center;"><button onclick="spDeleteExtracted(' + i + ')" title="Remove" style="background:none;border:none;color:var(--danger);font-size:15px;cursor:pointer;padding:2px 6px;">✕</button></td>';
+    html += '</tr>';
   });
   html += '</tbody></table></div>';
   html += '<button class="btn btn-primary" style="margin-top:12px;" id="sp-import-btn" onclick="spImport()">Import All Specials</button>';
   preview.innerHTML = html;
+}
+
+function spUpdateExtracted(el) {
+  if (!_extractedSpecials || !_extractedSpecials.items) return;
+  var i = +el.dataset.i, k = el.dataset.k, v = el.value;
+  var it = _extractedSpecials.items[i];
+  if (!it) return;
+  if (k === '_deal') it.price_text = v;
+  else if (k === '_days') {
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)) { it.date = v; it.days = ''; }
+    else { it.days = v; it.date = ''; }
+  }
+  else if (k === '_time') it.time = v;
+  else it[k] = v;
+}
+
+function spDeleteExtracted(i) {
+  if (!_extractedSpecials || !_extractedSpecials.items) return;
+  _extractedSpecials.items.splice(i, 1);
+  spShowPreview(_extractedSpecials.items);
 }
 
 async function spImport() {

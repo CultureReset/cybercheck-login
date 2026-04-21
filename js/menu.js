@@ -474,23 +474,48 @@ async function runMenuExtraction() {
 
 function renderExtractPreview(data) {
   var html = '';
-  (data.categories || []).forEach(function(cat) {
+  var inpS = 'width:100%;padding:4px 6px;background:var(--bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text);font-size:13px;box-sizing:border-box;';
+  (data.categories || []).forEach(function(cat, ci) {
     html += '<div style="margin-bottom:16px;">';
     html += '<div style="font-weight:600;font-size:14px;padding:6px 0;border-bottom:1px solid var(--card-border);margin-bottom:8px;">';
     html += escHtml(cat.name) + ' <span style="font-weight:400;color:var(--text-muted);">(' + (cat.items || []).length + ' items)</span></div>';
-    html += '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
-    html += '<thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:500;">Item</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:500;">Price</th><th style="text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:500;">Description</th></tr></thead>';
+    html += '<table style="width:100%;font-size:13px;border-collapse:collapse;table-layout:fixed;">';
+    html += '<thead><tr>' +
+      '<th style="text-align:left;padding:4px 6px;color:var(--text-muted);font-weight:500;width:28%;">Item</th>' +
+      '<th style="text-align:left;padding:4px 6px;color:var(--text-muted);font-weight:500;width:14%;">Price</th>' +
+      '<th style="text-align:left;padding:4px 6px;color:var(--text-muted);font-weight:500;">Description</th>' +
+      '<th style="width:36px;"></th>' +
+      '</tr></thead>';
     html += '<tbody>';
-    (cat.items || []).forEach(function(item) {
-      html += '<tr style="border-top:1px solid var(--card-border);">';
-      html += '<td style="padding:5px 8px;font-weight:500;">' + escHtml(item.name) + '</td>';
-      html += '<td style="padding:5px 8px;">' + (item.price ? '$' + Number(item.price).toFixed(2) : '—') + '</td>';
-      html += '<td style="padding:5px 8px;color:var(--text-muted);">' + escHtml(item.description || '') + '</td>';
+    (cat.items || []).forEach(function(item, ii) {
+      html += '<tr id="ex-row-' + ci + '-' + ii + '" style="border-top:1px solid var(--card-border);">';
+      html += '<td style="padding:4px 6px;"><input data-ci="' + ci + '" data-ii="' + ii + '" data-k="name" value="' + escHtml(item.name || '') + '" style="' + inpS + 'font-weight:500;" oninput="updateExtractedField(this)"></td>';
+      html += '<td style="padding:4px 6px;"><input type="number" step="0.01" min="0" data-ci="' + ci + '" data-ii="' + ii + '" data-k="price" value="' + (item.price || 0) + '" style="' + inpS + '" oninput="updateExtractedField(this)"></td>';
+      html += '<td style="padding:4px 6px;"><input data-ci="' + ci + '" data-ii="' + ii + '" data-k="description" value="' + escHtml(item.description || '') + '" style="' + inpS + 'color:var(--text-muted);" oninput="updateExtractedField(this)"></td>';
+      html += '<td style="padding:4px 2px;text-align:center;"><button onclick="deleteExtractedItem(' + ci + ',' + ii + ')" title="Remove" style="background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 6px;">✕</button></td>';
       html += '</tr>';
     });
     html += '</tbody></table></div>';
   });
   document.getElementById('extract-results-content').innerHTML = html;
+}
+
+function updateExtractedField(el) {
+  if (!_extractedData || !_extractedData.categories) return;
+  var ci = +el.dataset.ci, ii = +el.dataset.ii, k = el.dataset.k;
+  var item = _extractedData.categories[ci] && _extractedData.categories[ci].items[ii];
+  if (!item) return;
+  item[k] = k === 'price' ? parseFloat(el.value) || 0 : el.value;
+}
+
+function deleteExtractedItem(ci, ii) {
+  if (!_extractedData || !_extractedData.categories) return;
+  var cat = _extractedData.categories[ci];
+  if (!cat) return;
+  cat.items.splice(ii, 1);
+  renderExtractPreview(_extractedData);
+  var total = _extractedData.categories.reduce(function(s, c) { return s + (c.items || []).length; }, 0);
+  document.getElementById('extract-status').textContent = total + ' items remaining — click Import when ready.';
 }
 
 async function importExtractedItems() {
