@@ -9110,9 +9110,12 @@
       var rows = items.map(function(biz, idx) {
         var isSite = biz._url_type === 'site_id';
         var siteId = biz.site_id || '';
+        var nameSlug = String(biz.name || '').toLowerCase().trim()
+          .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')
+          .replace(/^-|-$/g, '') || 'business';
         var qrUrl = isSite
-          ? 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(siteId)
-          : 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(biz.slug || biz.id);
+          ? 'https://cybercheck-links.vercel.app/' + nameSlug + '/menu?site_id=' + encodeURIComponent(siteId)
+          : 'https://cybercheck-links.vercel.app/' + encodeURIComponent(biz.slug || nameSlug) + '/menu';
         var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(qrUrl);
         var safeName = (biz.name||'').replace(/\'/g,"\\'");
         var typeBadge = isSite
@@ -9142,7 +9145,7 @@
             '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\').then(function(){toast(\'Copied!\',\'success\')})">📋 Copy URL</button>' +
             (isSite ? '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="qrMenusEditMenu(\'' + siteId + '\')">✏️ Edit Menu</button>' : '') +
             '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="qrMenusOpenPrint(\'' + encodeURIComponent(qrUrl) + '\',\'' + safeName + '\')">🖨 Print QR</button>' +
-            (isSite ? '' : '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" id="gen-link-' + idx + '" onclick="generateEditLink(\'' + (biz.id||'') + '\',\'' + safeName + '\',' + idx + ')">🔗 Edit Link</button>') +
+            '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" id="gen-link-' + idx + '" onclick="generateEditLink(\'' + (isSite ? siteId : (biz.id||'')) + '\',\'' + safeName + '\',' + idx + ',' + (isSite ? 'true' : 'false') + ')">🔗 Edit Link</button>' +
           '</div>' +
           '<div id="edit-link-result-' + idx + '"></div>' +
         '</div>';
@@ -9188,7 +9191,7 @@
       } catch(e) { toast('Error: ' + e.message, 'error'); }
     }
 
-    async function generateEditLink(entityId, name, idx) {
+    async function generateEditLink(id, name, idx, isSite) {
       var btn = document.getElementById('gen-link-' + idx);
       var resultEl = document.getElementById('edit-link-result-' + idx);
 
@@ -9197,10 +9200,13 @@
       resultEl.innerHTML = '';
 
       try {
+        var body = isSite
+          ? { site_id: id, biz_name: name, link_type: 'daily' }
+          : { entity_id: id, biz_name: name, link_type: 'daily' };
         var r = await fetch(API_BASE + '/api/update/generate', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entity_id: entityId, link_type: 'daily' })
+          body: JSON.stringify(body)
         });
 
         if (!r.ok) {
