@@ -3085,7 +3085,17 @@
 
             <!-- MENU -->
             <div class="bd-panel" id="bd-panel-menu" style="display:none;padding:24px;">
-              <div class="card">
+              <div class="card" style="border-left:3px solid #f59e0b;">
+                <div class="card-header">
+                  <div>
+                    <h3>🔄 Daily Rotating Sections</h3>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Preset options (e.g. "Catch of the Day → Mahi, Grouper, Tuna"). Owner picks which are active today via the daily update link.</div>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="addDailyRotationSection()">+ Add Section</button>
+                </div>
+                <div id="bd-rotation-list" style="margin-top:12px;"><p style="color:var(--text-muted);font-size:13px;">Loading…</p></div>
+              </div>
+              <div class="card" style="margin-top:16px;">
                 <div class="card-header"><h3>Food Menu</h3><button class="btn btn-primary btn-sm" onclick="openBizMenuItemModal('food')">+ Add Item</button></div>
                 <div id="bd-menu-list"></div>
               </div>
@@ -5583,6 +5593,7 @@
         _bdScheduleSlots = _bdData.packages || [];
         _bdFaqItems = _bdData.faqs || [];
         renderBizHHDeals(); renderBizDashMenu(); renderBizDashDrinks(); renderBizDashSpecials(); renderBizDashEvents(); renderBizFleet(); renderBizAddons(); renderBizDashReviews(); renderBizSchedule(); renderBizFAQs(); renderBizMedia();
+        loadDailyRotation();
         switchBizPanel('overview');
         var ov = document.getElementById('bd-overview-content');
         if (ov) ov.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;"><div class="stat-card"><div class="stat-number">' + (_bdData.media||[]).length + '</div><div class="stat-label">Photos</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.reviews||[]).length + '</div><div class="stat-label">Reviews</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.menu||[]).length + '</div><div class="stat-label">Menu Items</div></div><div class="stat-card"><div class="stat-number">' + (_bdData.events||[]).length + '</div><div class="stat-label">Events</div></div></div><p style="color:var(--text-muted);font-size:13px;">Business: <strong>' + escHtml(b.name||'') + '</strong> &middot; Type: ' + escHtml(b.entity_type||'') + ' &middot; Status: ' + escHtml(b.status||'') + '</p>';
@@ -6072,6 +6083,144 @@
         if (!res.ok) throw new Error('Save failed');
         toast('Social links saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Daily Rotating Sections (admin setup) ──────────────
+    var _rotationSections = [];
+
+    async function loadDailyRotation() {
+      var wrap = document.getElementById('bd-rotation-list');
+      if (!wrap || !_bdSiteId) return;
+      wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation', {
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!res.ok) throw new Error('Load failed');
+        var data = await res.json();
+        _rotationSections = data.sections || [];
+        renderDailyRotation();
+      } catch (e) {
+        wrap.innerHTML = '<p style="color:var(--danger);font-size:13px;">Could not load: ' + escHtml(e.message) + '</p>';
+      }
+    }
+
+    function renderDailyRotation() {
+      var wrap = document.getElementById('bd-rotation-list');
+      if (!wrap) return;
+      if (!_rotationSections.length) {
+        wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px;margin:8px 0;">No rotating sections yet. Click <strong>+ Add Section</strong> to create one (e.g. "Catch of the Day", "Veggie of the Day").</p>';
+        return;
+      }
+      wrap.innerHTML = _rotationSections.map(function(s) {
+        var opts = (s.options || []).map(function(o) {
+          return '<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--card-border);border-radius:6px;margin-bottom:4px;">' +
+            '<input value="' + escHtml(o.name || '') + '" placeholder="Option name" oninput="rotationOptionChange(\'' + o.id + '\',\'name\',this.value)" style="flex:2;padding:5px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text);font-size:13px;">' +
+            '<input type="number" step="0.01" min="0" value="' + (o.default_price != null ? o.default_price : '') + '" placeholder="Default $" oninput="rotationOptionChange(\'' + o.id + '\',\'default_price\',this.value)" style="flex:1;padding:5px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text);font-size:13px;">' +
+            '<input value="' + escHtml(o.default_description || '') + '" placeholder="Description (optional)" oninput="rotationOptionChange(\'' + o.id + '\',\'default_description\',this.value)" style="flex:2;padding:5px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:4px;color:var(--text);font-size:13px;">' +
+            '<button onclick="deleteRotationOption(\'' + o.id + '\',\'' + s.id + '\')" title="Remove" style="background:none;border:none;color:var(--danger);font-size:15px;cursor:pointer;padding:2px 6px;">✕</button>' +
+            '</div>';
+        }).join('');
+        return '<div style="border:1px solid var(--card-border);border-radius:8px;padding:12px;margin-bottom:10px;background:var(--bg);">' +
+          '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">' +
+            '<input value="' + escHtml(s.emoji || '') + '" placeholder="🐟" maxlength="4" oninput="rotationSectionChange(\'' + s.id + '\',\'emoji\',this.value)" style="width:60px;padding:6px 8px;background:var(--card);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:16px;text-align:center;">' +
+            '<input value="' + escHtml(s.name || '') + '" placeholder="Section name (e.g. Catch of the Day)" oninput="rotationSectionChange(\'' + s.id + '\',\'name\',this.value)" style="flex:1;padding:6px 10px;background:var(--card);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;font-weight:600;">' +
+            '<button onclick="addRotationOption(\'' + s.id + '\')" class="btn btn-outline btn-sm">+ Option</button>' +
+            '<button onclick="deleteRotationSection(\'' + s.id + '\')" title="Delete section" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer;">Delete</button>' +
+          '</div>' +
+          (opts || '<p style="color:var(--text-muted);font-size:12px;margin:4px 0;">No options yet — click <strong>+ Option</strong> above.</p>') +
+          '</div>';
+      }).join('');
+    }
+
+    async function addDailyRotationSection() {
+      var name = prompt('Section name (e.g. "Catch of the Day", "Veggie of the Day"):');
+      if (!name || !name.trim()) return;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation/sections', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), sort_order: _rotationSections.length })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Create failed');
+        var s = await res.json();
+        _rotationSections.push({ ...s, options: [] });
+        renderDailyRotation();
+      } catch (e) { toast('Failed: ' + e.message, 'error'); }
+    }
+
+    async function deleteRotationSection(id) {
+      if (!confirm('Delete this rotating section and all its options?')) return;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/daily-rotation/sections/' + id, {
+          method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        _rotationSections = _rotationSections.filter(function(s) { return s.id !== id; });
+        renderDailyRotation();
+        toast('Section deleted', 'success');
+      } catch (e) { toast('Failed: ' + e.message, 'error'); }
+    }
+
+    var _rotationSaveTimers = {};
+    function rotationSectionChange(id, key, value) {
+      clearTimeout(_rotationSaveTimers['s_' + id]);
+      _rotationSaveTimers['s_' + id] = setTimeout(async function() {
+        var body = {}; body[key] = value;
+        try {
+          await fetch(API_BASE + '/api/admin/daily-rotation/sections/' + id, {
+            method: 'PATCH',
+            headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          var sec = _rotationSections.find(function(s){ return s.id === id; });
+          if (sec) sec[key] = value;
+        } catch(e) { toast('Save failed', 'error'); }
+      }, 600);
+    }
+
+    async function addRotationOption(sectionId) {
+      try {
+        var res = await fetch(API_BASE + '/api/admin/daily-rotation/sections/' + sectionId + '/options', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'New option' })
+        });
+        if (!res.ok) throw new Error('Add failed');
+        var opt = await res.json();
+        var sec = _rotationSections.find(function(s){ return s.id === sectionId; });
+        if (sec) { (sec.options = sec.options || []).push(opt); renderDailyRotation(); }
+      } catch (e) { toast('Failed: ' + e.message, 'error'); }
+    }
+
+    function rotationOptionChange(id, key, value) {
+      clearTimeout(_rotationSaveTimers['o_' + id]);
+      _rotationSaveTimers['o_' + id] = setTimeout(async function() {
+        var body = {};
+        body[key] = (key === 'default_price' && value !== '') ? Number(value) : (value === '' && key === 'default_price' ? null : value);
+        try {
+          await fetch(API_BASE + '/api/admin/daily-rotation/options/' + id, {
+            method: 'PATCH',
+            headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          for (var si = 0; si < _rotationSections.length; si++) {
+            var o = (_rotationSections[si].options || []).find(function(x){ return x.id === id; });
+            if (o) { o[key] = body[key]; break; }
+          }
+        } catch(e) { toast('Save failed', 'error'); }
+      }, 600);
+    }
+
+    async function deleteRotationOption(id, sectionId) {
+      try {
+        var res = await fetch(API_BASE + '/api/admin/daily-rotation/options/' + id, {
+          method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        var sec = _rotationSections.find(function(s){ return s.id === sectionId; });
+        if (sec) { sec.options = (sec.options || []).filter(function(o){ return o.id !== id; }); renderDailyRotation(); }
+      } catch (e) { toast('Failed: ' + e.message, 'error'); }
     }
 
     // ── Re-index RAG ──
