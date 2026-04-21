@@ -426,21 +426,29 @@ async function runMenuExtraction() {
   document.getElementById('extract-import-btn').style.display = 'none';
   document.getElementById('extract-step-results').style.display = 'none';
 
-  var base64 = await new Promise(function(resolve) {
-    var reader = new FileReader();
-    reader.onload = function(e) { resolve(e.target.result); };
-    reader.readAsDataURL(file);
-  });
+  var base64, sendMime;
+  try {
+    var compressed = await compressImageForUpload(file, 1280, 0.75);
+    base64 = compressed.dataUrl;
+    sendMime = compressed.mimeType;
+  } catch (e) {
+    document.getElementById('extract-status').textContent = 'Could not read image — try a different photo.';
+    btn.disabled = false;
+    btn.textContent = 'Scan Menu';
+    return;
+  }
 
   try {
     var token = window.CC && CC.getToken ? CC.getToken() : '';
     var res = await fetch((window.CC_API_BASE || '') + '/api/dashboard/menu/extract', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ image_base64: base64, mime_type: file.type })
+      body: JSON.stringify({ image_base64: base64, mime_type: sendMime })
     });
 
-    var data = await res.json();
+    var data;
+    try { data = await res.json(); }
+    catch (_) { data = { error: 'Server returned non-JSON (status ' + res.status + ')' }; }
 
     if (!res.ok) {
       document.getElementById('extract-status').textContent = 'Error: ' + (data.error || 'Extraction failed');
@@ -541,4 +549,28 @@ async function importExtractedItems() {
   toast('Imported ' + totalItems + ' menu items' + (errors ? ' (' + errors + ' failed)' : ''));
   btn.disabled = false;
   btn.textContent = 'Import to Menu';
+}
+
+// Resize + re-encode to JPEG so uploads stay under Vercel's 4.5MB body limit.
+function compressImageForUpload(file, maxDim, quality) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onerror = function() { reject(new Error('read failed')); };
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onerror = function() { reject(new Error('decode failed')); };
+      img.onload = function() {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var scale = Math.min(1, maxDim / Math.max(w, h));
+        var cw = Math.round(w * scale), ch = Math.round(h * scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = cw; canvas.height = ch;
+        canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        var dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ dataUrl: dataUrl, mimeType: 'image/jpeg' });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
