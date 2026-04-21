@@ -1184,11 +1184,48 @@ const CC = (function() {
     });
   })();
 
+  // iPhone HEIC/HEIF detection — MIME type is often empty on macOS/desktop
+  // so we fall back to extension.
+  function isHeicFile(file) {
+    if (!file) return false;
+    var t = (file.type || '').toLowerCase();
+    if (t === 'image/heic' || t === 'image/heif') return true;
+    return /\.hei[cf]$/i.test(file.name || '');
+  }
+
+  // Lazy-load heic2any from CDN only when a HEIC is encountered.
+  var _heic2anyPromise = null;
+  function loadHeic2Any() {
+    if (window.heic2any) return Promise.resolve(window.heic2any);
+    if (_heic2anyPromise) return _heic2anyPromise;
+    _heic2anyPromise = new Promise(function(resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+      s.onload = function() { window.heic2any ? resolve(window.heic2any) : reject(new Error('heic2any not available')); };
+      s.onerror = function() { reject(new Error('failed to load heic2any')); };
+      document.head.appendChild(s);
+    });
+    return _heic2anyPromise;
+  }
+
+  async function heicToJpeg(file) {
+    var h = await loadHeic2Any();
+    var out = await h({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+    var blob = Array.isArray(out) ? out[0] : out;
+    var name = (file.name || 'image').replace(/\.[^.]+$/i, '') + '.jpg';
+    return new File([blob], name, { type: 'image/jpeg' });
+  }
+
   // Resize + re-encode to JPEG so uploads stay under Vercel's 4.5MB body limit
   // and cut vision-token cost on the backend. Returns { dataUrl, blob, mimeType }.
-  function compressImage(file, maxDim, quality) {
+  // Transparently converts HEIC/HEIF (iPhone default) to JPEG first.
+  async function compressImage(file, maxDim, quality) {
     maxDim = maxDim || 1280;
     quality = quality == null ? 0.75 : quality;
+    if (isHeicFile(file)) {
+      try { file = await heicToJpeg(file); }
+      catch (e) { throw new Error('HEIC conversion failed: ' + e.message); }
+    }
     return new Promise(function(resolve, reject) {
       var reader = new FileReader();
       reader.onerror = function() { reject(new Error('read failed')); };
@@ -1216,7 +1253,9 @@ const CC = (function() {
   // Compress a File if it's an image; otherwise return the original (for videos, etc).
   // Returns a File/Blob suitable for FormData.
   async function compressImageFile(file, maxDim, quality) {
-    if (!file || !file.type || file.type.indexOf('image/') !== 0) return file;
+    if (!file) return file;
+    var isImg = (file.type || '').indexOf('image/') === 0 || isHeicFile(file);
+    if (!isImg) return file;
     try {
       var c = await compressImage(file, maxDim, quality);
       if (!c.blob) return file;
