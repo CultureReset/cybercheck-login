@@ -134,6 +134,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="5" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m4.24-4.24l4.24 4.24M4.22 19.78l4.24-4.24m8.48 0l4.24 4.24"/></svg>
           <span>QR Menus</span>
         </div>
+        <div class="nav-item" data-page="trip-swipe-questions" onclick="showPage('trip-swipe-questions')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Trip-Swipe Questions</span>
+        </div>
         <div class="nav-item" data-page="menu-builder" onclick="showPage('menu-builder')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h18v4H3z"/><line x1="7" y1="5" x2="7" y2="5.01"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="7" y1="19" x2="7" y2="19.01"/></svg>
           <span>Menu Builder</span>
@@ -1784,6 +1788,77 @@
             <button class="btn btn-primary" onclick="loadQRMenus()" style="font-size:13px;padding:8px 14px;">↻ Reload</button>
           </div>
           <div id="qr-menus-list" style="font-size:14px;color:var(--text-muted);">Loading restaurants...</div>
+        </div>
+      </div>
+
+      <!-- ── Trip-Swipe Questions Page ── -->
+      <div id="page-trip-swipe-questions" class="page-content" style="display:none;">
+        <div class="content-section">
+          <h1>🧭 Trip-Swipe Questions</h1>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:14px;">Edit the signup/setup questions tourists answer when they first join trip-swipe. Drag ⋮ to reorder, toggle active, or add new questions. Changes go live immediately.</p>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="tsqAdd()" style="font-size:13px;padding:8px 14px;">+ New Question</button>
+            <button class="btn btn-outline" onclick="tsqLoad()" style="font-size:13px;padding:8px 14px;">↻ Reload</button>
+          </div>
+          <div id="tsq-list" style="margin-top:16px;font-size:14px;color:var(--text-muted);">Loading...</div>
+        </div>
+
+        <!-- Edit modal -->
+        <div id="tsq-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;overflow-y:auto;">
+          <div style="max-width:640px;margin:32px auto;background:var(--card-bg);border-radius:16px;border:1px solid var(--card-border);padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <h2 style="margin:0;" id="tsq-modal-title">Edit question</h2>
+              <button onclick="tsqClose()" style="background:none;border:none;font-size:28px;color:var(--text-muted);cursor:pointer;">×</button>
+            </div>
+            <div style="display:grid;gap:12px;">
+              <label>Key (unique identifier, no spaces)
+                <input type="text" id="tsq-f-key" style="width:100%;padding:10px;margin-top:6px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-family:monospace;">
+              </label>
+              <label>Question text
+                <input type="text" id="tsq-f-label" style="width:100%;padding:10px;margin-top:6px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+              </label>
+              <label>Subtitle / helper text (optional)
+                <input type="text" id="tsq-f-subtitle" style="width:100%;padding:10px;margin-top:6px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+              </label>
+              <label>Input type
+                <select id="tsq-f-type" onchange="tsqOnTypeChange()" style="width:100%;padding:10px;margin-top:6px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+                  <option value="text">Text</option>
+                  <option value="email">Email</option>
+                  <option value="number">Number</option>
+                  <option value="date">Single date</option>
+                  <option value="daterange">Date range (arrival + departure)</option>
+                  <option value="textarea">Long text</option>
+                  <option value="select">Dropdown (select one)</option>
+                  <option value="radio">Radio buttons (select one)</option>
+                  <option value="tags">Tags / multi-select pills</option>
+                  <option value="multi_select">Multi-select</option>
+                </select>
+              </label>
+              <label>Placeholder (optional)
+                <input type="text" id="tsq-f-placeholder" style="width:100%;padding:10px;margin-top:6px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+              </label>
+              <div id="tsq-f-options-wrap" style="display:none;">
+                <label>Options — one per line, format: <code>value | label</code> or <code>value | label | icon</code>
+                  <textarea id="tsq-f-options" rows="6" style="width:100%;padding:10px;margin-top:6px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-family:monospace;font-size:13px;" placeholder="solo | Solo&#10;couple | Couple&#10;family | Family&#10;friends | Friends"></textarea>
+                </label>
+              </div>
+              <div style="display:flex;gap:20px;">
+                <label style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" id="tsq-f-required"> Required
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" id="tsq-f-active" checked> Active (visible in the flow)
+                </label>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:20px;">
+              <button class="btn btn-outline danger" id="tsq-f-delete-btn" onclick="tsqDelete()" style="display:none;">🗑 Delete</button>
+              <div style="display:flex;gap:10px;margin-left:auto;">
+                <button class="btn btn-outline" onclick="tsqClose()">Cancel</button>
+                <button class="btn btn-primary" onclick="tsqSave()">Save</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -3503,6 +3578,7 @@
       if (page === 'rag-index') loadRAGStatus();
       if (page === 'ai-settings') loadAISettings();
       if (page === 'qr-menus' && !_qrMenusLoaded) { _qrMenusLoaded = true; loadQRMenus(); }
+      if (page === 'trip-swipe-questions' && !_tsqLoaded) { _tsqLoaded = true; tsqLoad(); }
       if (page === 'qr-tracker') loadQRCodes();
       if (page === 'tripswipe-overview' && !_tsOverviewLoaded) { _tsOverviewLoaded = true; loadTSOverview(); }
       if (page === 'tripswipe-businesses' && !_tsBusinessesLoaded) { _tsBusinessesLoaded = true; loadTSBusinesses(); }
@@ -9308,6 +9384,160 @@
     document.getElementById('qr-scan-modal') && document.getElementById('qr-scan-modal').addEventListener('click', function(e) {
       if (e.target === this) closeQRModal();
     });
+
+    // ── Trip-Swipe Setup Questions Editor ───────────────
+    var _tsqLoaded = false;
+    var _tsqList = [];
+    var _tsqEditing = null; // null = new, {id, ...} = existing
+
+    async function tsqLoad() {
+      var el = document.getElementById('tsq-list');
+      el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading...</p>';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/setup-questions', {
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        var d = await r.json();
+        _tsqList = d.questions || [];
+        tsqRender();
+      } catch(e) {
+        el.innerHTML = '<p style="color:#fca5a5;">Failed to load: ' + e.message + '</p>';
+      }
+    }
+
+    function tsqRender() {
+      var el = document.getElementById('tsq-list');
+      if (!_tsqList.length) {
+        el.innerHTML = '<p style="color:var(--text-muted);">No questions yet — click "New Question" to add one.</p>';
+        return;
+      }
+      el.innerHTML = _tsqList.map(function(q, i) {
+        var opts = Array.isArray(q.options) ? q.options : [];
+        var optStr = opts.slice(0, 4).map(function(o){return o.label||o.value;}).join(', ');
+        if (opts.length > 4) optStr += ', +' + (opts.length - 4) + ' more';
+        var statusBadge = q.active
+          ? '<span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3);padding:2px 7px;border-radius:10px;font-weight:600;">Active</span>'
+          : '<span style="font-size:10px;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);padding:2px 7px;border-radius:10px;font-weight:600;">Hidden</span>';
+        var reqBadge = q.required ? '<span style="font-size:10px;color:#f97316;margin-left:6px;">★ required</span>' : '';
+        return ''
+          + '<div style="border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--bg-secondary);display:flex;gap:12px;align-items:flex-start;">'
+            + '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;">'
+              + '<button onclick="tsqMove(' + i + ', -1)" ' + (i === 0 ? 'disabled' : '') + ' style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">▲</button>'
+              + '<button onclick="tsqMove(' + i + ', 1)" ' + (i === _tsqList.length-1 ? 'disabled' : '') + ' style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0;">▼</button>'
+            + '</div>'
+            + '<div style="flex:1;min-width:0;">'
+              + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">'
+                + '<span style="font-weight:700;font-size:15px;">' + escHtml(q.label) + '</span>'
+                + statusBadge
+                + reqBadge
+              + '</div>'
+              + (q.subtitle ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + escHtml(q.subtitle) + '</div>' : '')
+              + '<div style="font-size:11px;color:var(--text-muted);font-family:monospace;">key: ' + escHtml(q.key) + ' · type: ' + q.input_type + (optStr ? ' · options: ' + escHtml(optStr) : '') + '</div>'
+            + '</div>'
+            + '<button class="btn btn-outline" onclick="tsqEdit(\'' + q.id + '\')" style="font-size:12px;padding:6px 12px;">Edit</button>'
+          + '</div>';
+      }).join('');
+    }
+
+    function tsqAdd() { _tsqEditing = null; tsqOpenModal({ active: true, input_type: 'text' }); }
+    function tsqEdit(id) {
+      var q = _tsqList.find(function(x){ return x.id === id; });
+      if (!q) return;
+      _tsqEditing = q;
+      tsqOpenModal(q);
+    }
+    function tsqOpenModal(q) {
+      document.getElementById('tsq-modal-title').textContent = _tsqEditing ? 'Edit question' : 'New question';
+      document.getElementById('tsq-f-key').value = q.key || '';
+      document.getElementById('tsq-f-label').value = q.label || '';
+      document.getElementById('tsq-f-subtitle').value = q.subtitle || '';
+      document.getElementById('tsq-f-type').value = q.input_type || 'text';
+      document.getElementById('tsq-f-placeholder').value = q.placeholder || '';
+      document.getElementById('tsq-f-required').checked = !!q.required;
+      document.getElementById('tsq-f-active').checked = q.active !== false;
+      var opts = Array.isArray(q.options) ? q.options : [];
+      document.getElementById('tsq-f-options').value = opts.map(function(o){
+        var parts = [o.value, o.label];
+        if (o.icon) parts.push(o.icon);
+        return parts.join(' | ');
+      }).join('\n');
+      document.getElementById('tsq-f-delete-btn').style.display = _tsqEditing ? 'inline-block' : 'none';
+      tsqOnTypeChange();
+      document.getElementById('tsq-edit-modal').style.display = 'block';
+    }
+    function tsqClose() { document.getElementById('tsq-edit-modal').style.display = 'none'; }
+    function tsqOnTypeChange() {
+      var type = document.getElementById('tsq-f-type').value;
+      var hasOptions = ['select','radio','tags','multi_select'].includes(type);
+      document.getElementById('tsq-f-options-wrap').style.display = hasOptions ? 'block' : 'none';
+    }
+
+    async function tsqSave() {
+      var body = {
+        key: document.getElementById('tsq-f-key').value.trim(),
+        label: document.getElementById('tsq-f-label').value,
+        subtitle: document.getElementById('tsq-f-subtitle').value,
+        input_type: document.getElementById('tsq-f-type').value,
+        placeholder: document.getElementById('tsq-f-placeholder').value,
+        required: document.getElementById('tsq-f-required').checked,
+        active: document.getElementById('tsq-f-active').checked,
+        options: document.getElementById('tsq-f-options').value.split('\n').map(function(line){
+          var parts = line.split('|').map(function(s){return s.trim();});
+          if (!parts[0]) return null;
+          var opt = { value: parts[0], label: parts[1] || parts[0] };
+          if (parts[2]) opt.icon = parts[2];
+          return opt;
+        }).filter(Boolean),
+      };
+      if (!body.key || !body.label) { toast('key and label required', 'error'); return; }
+
+      var url = API_BASE + '/api/admin/setup-questions' + (_tsqEditing ? '/' + _tsqEditing.id : '');
+      try {
+        var r = await fetch(url, {
+          method: _tsqEditing ? 'PUT' : 'POST',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        var d = await r.json();
+        if (!r.ok) { toast(d.error || 'Save failed', 'error'); return; }
+        toast('Saved', 'success');
+        tsqClose();
+        tsqLoad();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    async function tsqDelete() {
+      if (!_tsqEditing) return;
+      if (!confirm('Delete this question?')) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/setup-questions/' + _tsqEditing.id, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+        });
+        if (!r.ok) { toast('Delete failed', 'error'); return; }
+        toast('Deleted', 'success');
+        tsqClose();
+        tsqLoad();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    async function tsqMove(idx, delta) {
+      var newIdx = idx + delta;
+      if (newIdx < 0 || newIdx >= _tsqList.length) return;
+      var copy = _tsqList.slice();
+      var [item] = copy.splice(idx, 1);
+      copy.splice(newIdx, 0, item);
+      _tsqList = copy;
+      tsqRender();
+      try {
+        await fetch(API_BASE + '/api/admin/setup-questions/reorder', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: copy.map(function(q){return q.id;}) }),
+        });
+      } catch(e) { toast('Reorder failed — reloading', 'error'); tsqLoad(); }
+    }
 
     // ── QR Menus Management ────────────────────────────
     var _qrMenusLoaded = false;
