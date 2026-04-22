@@ -10491,16 +10491,19 @@
     try {
       var pSel = document.getElementById('mb-ext-provider');
       var prov = pSel ? pSel.value : '';
+      console.log('[menu-scan] POST /api/dashboard/menu/extract provider=' + (prov || 'auto') + ' mime=' + sendMime + ' b64_len=' + (base64 ? base64.length : 0));
       var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
         body: JSON.stringify({ image_base64: base64, mime_type: sendMime, provider: prov || undefined })
       });
+      var rawText = await res.text();
+      console.log('[menu-scan] status=' + res.status + ' body=' + rawText.slice(0, 400));
       var data;
-      try { data = await res.json(); }
-      catch (_) { data = { error: 'Server returned non-JSON (status ' + res.status + ')' }; }
+      try { data = JSON.parse(rawText); }
+      catch (_) { data = { error: 'Non-JSON response: ' + rawText.slice(0, 120) }; }
       if (!res.ok) {
-        document.getElementById('mb-ext-status').textContent = '❌ Error: ' + (data.error || 'Extraction failed');
+        document.getElementById('mb-ext-status').textContent = '❌ ' + res.status + ': ' + (data.error || 'Extraction failed');
         document.getElementById('mb-ext-scan-btn').style.display = '';
         return;
       }
@@ -10510,7 +10513,8 @@
       // Auto-import immediately
       await mbImportItems();
     } catch(e) {
-      document.getElementById('mb-ext-status').textContent = '❌ Network error — try again.';
+      console.error('[menu-scan] network error', e);
+      document.getElementById('mb-ext-status').textContent = '❌ Network error: ' + (e.message || e);
       document.getElementById('mb-ext-scan-btn').style.display = '';
     }
   }
@@ -10523,9 +10527,12 @@
       var catName = (cat.name||'Menu Items').trim();
       if (!_mbCats.find(function(c){return c.name===catName;})) _mbCats.push({name:catName});
       var items = cat.items||[];
+      var sectionMods = Array.isArray(cat.section_modifiers) ? cat.section_modifiers : [];
       for (var ii = 0; ii < items.length; ii++) {
         var item = items[ii];
-        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, category: catName, description: item.description||'', tags: item.tags||[], site_id: _mbSiteId, sort_order: ii };
+        var itemMods = Array.isArray(item.modifiers) ? item.modifiers : [];
+        var mods = itemMods.concat(sectionMods).map(function(m){ return { name: String(m.name||'').trim(), price: parseFloat(m.price)||0 }; }).filter(function(m){ return m.name; });
+        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, category: catName, description: item.description||'', tags: item.tags||[], modifiers: mods, site_id: _mbSiteId, sort_order: ii };
         try {
           var res = await fetch(API_BASE + '/api/dashboard/menu-items', {
             method: 'POST',

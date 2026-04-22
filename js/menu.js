@@ -567,8 +567,14 @@ async function importExtractedItems() {
     }
 
     var items = cat.items || [];
+    // Merge category-level section_modifiers into each item's modifiers
+    var sectionMods = Array.isArray(cat.section_modifiers) ? cat.section_modifiers : [];
     for (var ii = 0; ii < items.length; ii++) {
       var item = items[ii];
+      var itemMods = Array.isArray(item.modifiers) ? item.modifiers : [];
+      var mergedMods = itemMods.concat(sectionMods).map(function(m) {
+        return { name: String(m.name || '').trim(), price: parseFloat(m.price) || 0 };
+      }).filter(function(m) { return m.name; });
       var dbPayload = {
         name: item.name || 'Unnamed Item',
         price: parseFloat(item.price) || 0,
@@ -576,7 +582,7 @@ async function importExtractedItems() {
         item_type: catType,
         description: item.description || '',
         tags: Array.isArray(item.tags) ? item.tags : [],
-        modifiers: [],
+        modifiers: mergedMods,
         sort_order: ii
       };
       try {
@@ -588,7 +594,7 @@ async function importExtractedItems() {
             itemType: catType,
             name: dbPayload.name, price: dbPayload.price,
             description: dbPayload.description,
-            tags: dbPayload.tags, modifiers: [],
+            tags: dbPayload.tags, modifiers: mergedMods,
             photo: '', sort_order: dbPayload.sort_order
           });
           totalItems++;
