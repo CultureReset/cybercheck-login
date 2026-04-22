@@ -522,6 +522,11 @@
             <div class="oauth-grid" id="google-connections"></div>
           </div>
           <div class="card">
+            <div class="card-header"><h3>Messaging</h3></div>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Connect WhatsApp Business to receive booking notifications instantly.</p>
+            <div class="oauth-grid" id="whatsapp-oauth-card"></div>
+          </div>
+          <div class="card">
             <div class="card-header"><h3>Social Media Accounts</h3></div>
             <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Connect your social accounts to auto-post updates, share photos, and engage with customers.</p>
             <div class="oauth-grid" id="social-connections"></div>
@@ -603,6 +608,12 @@
           <div class="card">
             <div class="card-header"><h3>Voice & Text Dashboard Control</h3></div>
             <div id="voice-ai-section"></div>
+          </div>
+
+          <!-- WhatsApp Notifications -->
+          <div class="card">
+            <div class="card-header"><h3>WhatsApp Notifications</h3></div>
+            <div id="whatsapp-section"></div>
           </div>
         </div>
 
@@ -1479,6 +1490,12 @@
       <div id="extract-preview-wrap" style="display:none;text-align:center;margin-bottom:12px;">
         <img id="extract-preview-img" style="max-height:240px;max-width:100%;border-radius:8px;border:1px solid var(--card-border);">
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;">
+        <label for="extract-provider" style="color:var(--text-muted);white-space:nowrap;">AI model:</label>
+        <select id="extract-provider" style="flex:1;padding:6px 8px;border:1px solid var(--card-border);border-radius:6px;background:var(--bg);color:var(--text);">
+          <option value="">Auto (default)</option>
+        </select>
+      </div>
     </div>
     <div id="extract-step-results" style="display:none;max-height:360px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:12px;">
       <div id="extract-results-content"></div>
@@ -1578,6 +1595,10 @@
     // Backend API base URL — auto-detects when served by backend, falls back to localhost
     window.CC_API_BASE = 'https://cybercheck-api-database.vercel.app';
     window.CC_STRIPE_PUBLISHABLE_KEY = 'pk_test_51SmhDo0pR4BTjK5e8Dzz6VUlW7q8osjZilWVuh3nBESdyT0pdNMyH7rXXfxjx07wY8tU4LSt8hwDFsiTjSuXm74u00JReWlp2Q';
+    // Meta App ID for WhatsApp Business OAuth — set your Meta App ID here
+    window.META_APP_ID = '';
+    // Optional: Meta WhatsApp Embedded Signup Config ID (from Meta Business settings)
+    window.META_WHATSAPP_CONFIG_ID = '';
   </script>
   <script>
     // Auth guard — checks localStorage directly before any client loads

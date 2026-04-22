@@ -398,7 +398,34 @@ function openMenuExtractModal() {
   document.getElementById('extract-status').textContent = '';
   document.getElementById('extract-scan-btn').style.display = 'none';
   document.getElementById('extract-import-btn').style.display = 'none';
+  loadVisionProviders('extract-provider');
   openModal('modal-menu-extract');
+}
+
+// Populates a <select> with the list of configured AI vision providers.
+// Remembers the last choice in localStorage so it persists across sessions.
+var _visionProvidersCache = null;
+async function loadVisionProviders(selectId) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  try {
+    if (!_visionProvidersCache) {
+      var token = window.CC && CC.getToken ? CC.getToken() : '';
+      var res = await fetch((window.CC_API_BASE || '') + '/api/dashboard/ai/vision-providers', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      _visionProvidersCache = res.ok ? await res.json() : { providers: [] };
+    }
+    var saved = localStorage.getItem('cc_ai_provider') || '';
+    var html = '<option value="">Auto (' + (_visionProvidersCache.default || 'default') + ')</option>';
+    (_visionProvidersCache.providers || []).forEach(function(p) {
+      var disabled = p.configured ? '' : ' disabled';
+      var suffix   = p.configured ? '' : ' — not configured';
+      html += '<option value="' + p.id + '"' + disabled + (p.id === saved ? ' selected' : '') + '>' + p.label + suffix + '</option>';
+    });
+    sel.innerHTML = html;
+    sel.onchange = function() { localStorage.setItem('cc_ai_provider', sel.value || ''); };
+  } catch (e) { /* dropdown keeps its single "Auto" option */ }
 }
 
 function handleExtractFile(input) {
@@ -440,10 +467,12 @@ async function runMenuExtraction() {
 
   try {
     var token = window.CC && CC.getToken ? CC.getToken() : '';
+    var providerSel = document.getElementById('extract-provider');
+    var provider = providerSel ? providerSel.value : '';
     var res = await fetch((window.CC_API_BASE || '') + '/api/dashboard/menu/extract', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ image_base64: base64, mime_type: sendMime })
+      body: JSON.stringify({ image_base64: base64, mime_type: sendMime, provider: provider || undefined })
     });
 
     var data;

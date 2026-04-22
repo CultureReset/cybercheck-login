@@ -9960,6 +9960,13 @@
         </div>
       </div>
 
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;">
+        <label for="mb-ext-provider" style="color:var(--text-muted);white-space:nowrap;">AI model:</label>
+        <select id="mb-ext-provider" style="flex:1;padding:6px 8px;border:1px solid var(--card-border);border-radius:6px;background:var(--bg);color:var(--text);">
+          <option value="">Auto (default)</option>
+        </select>
+      </div>
+
       <div style="font-size:13px;color:var(--text-muted);min-height:20px;margin-bottom:12px;" id="mb-ext-status"></div>
 
       <div id="mb-ext-results" style="display:none;max-height:300px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:12px;margin-bottom:16px;">
@@ -10423,7 +10430,31 @@
     document.getElementById('mb-ext-results').style.display = 'none';
     document.getElementById('mb-ext-scan-btn').style.display = 'none';
     document.getElementById('mb-ext-import-btn').style.display = 'none';
+    mbLoadVisionProviders();
     mbOpenModal('mb-modal-extract');
+  }
+
+  var _mbProvidersCache = null;
+  async function mbLoadVisionProviders() {
+    var sel = document.getElementById('mb-ext-provider');
+    if (!sel) return;
+    try {
+      if (!_mbProvidersCache) {
+        var r = await fetch(API_BASE + '/api/dashboard/ai/vision-providers', {
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        _mbProvidersCache = r.ok ? await r.json() : { providers: [] };
+      }
+      var saved = localStorage.getItem('cc_ai_provider') || '';
+      var html = '<option value="">Auto (' + (_mbProvidersCache.default || 'default') + ')</option>';
+      (_mbProvidersCache.providers || []).forEach(function(p) {
+        var dis = p.configured ? '' : ' disabled';
+        var sfx = p.configured ? '' : ' — not configured';
+        html += '<option value="' + p.id + '"' + dis + (p.id === saved ? ' selected' : '') + '>' + p.label + sfx + '</option>';
+      });
+      sel.innerHTML = html;
+      sel.onchange = function() { localStorage.setItem('cc_ai_provider', sel.value || ''); };
+    } catch (e) { /* keep default */ }
   }
 
   function mbHandleExtractFile(input) {
@@ -10458,10 +10489,12 @@
     }
 
     try {
+      var pSel = document.getElementById('mb-ext-provider');
+      var prov = pSel ? pSel.value : '';
       var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-        body: JSON.stringify({ image_base64: base64, mime_type: sendMime })
+        body: JSON.stringify({ image_base64: base64, mime_type: sendMime, provider: prov || undefined })
       });
       var data;
       try { data = await res.json(); }
@@ -10607,6 +10640,7 @@
     document.getElementById('mb-ext-import-btn').style.display = 'none';
     // Switch to events extraction mode
     document.getElementById('mb-ext-file').dataset.mode = 'events';
+    mbLoadVisionProviders();
     mbOpenModal('mb-modal-extract');
   }
 
@@ -10687,10 +10721,12 @@
 
     if (mode === 'events') {
       try {
+        var pSelE = document.getElementById('mb-ext-provider');
+        var provE = pSelE ? pSelE.value : '';
         var res = await fetch(API_BASE + '/api/dashboard/events/extract', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-          body: JSON.stringify({ image_base64: base64, mime_type: sendMime })
+          body: JSON.stringify({ image_base64: base64, mime_type: sendMime, provider: provE || undefined })
         });
         var data;
         try { data = await res.json(); }
