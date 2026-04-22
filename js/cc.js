@@ -1193,6 +1193,20 @@ const CC = (function() {
     return /\.hei[cf]$/i.test(file.name || '');
   }
 
+  // Check for HEIC by magic bytes: bytes 4–7 are 'ftyp', and brand contains 'heic'/'heis'/'hevx'/'mif1'
+  // Needed because iOS camera sometimes delivers HEIC with type="" or type="image/jpeg"
+  async function isHeicByMagicBytes(file) {
+    try {
+      var buf = await file.slice(0, 12).arrayBuffer();
+      var v = new Uint8Array(buf);
+      // bytes 4-7 must be 'ftyp'
+      if (v[4]!==0x66||v[5]!==0x74||v[6]!==0x79||v[7]!==0x70) return false;
+      // major brand at bytes 8-11: heic, heis, hevx, hevc, mif1, msf1
+      var brand = String.fromCharCode(v[8],v[9],v[10],v[11]);
+      return /^(heic|heis|hevx|hevc|mif1|msf1)/i.test(brand);
+    } catch(e) { return false; }
+  }
+
   // Lazy-load heic2any from CDN only when a HEIC is encountered.
   var _heic2anyPromise = null;
   function loadHeic2Any() {
@@ -1222,7 +1236,7 @@ const CC = (function() {
   async function compressImage(file, maxDim, quality) {
     maxDim = maxDim || 1280;
     quality = quality == null ? 0.75 : quality;
-    if (isHeicFile(file)) {
+    if (isHeicFile(file) || await isHeicByMagicBytes(file)) {
       try { file = await heicToJpeg(file); }
       catch (e) { throw new Error('HEIC conversion failed: ' + e.message); }
     }

@@ -432,7 +432,7 @@ async function runMenuExtraction() {
     base64 = compressed.dataUrl;
     sendMime = compressed.mimeType;
   } catch (e) {
-    document.getElementById('extract-status').textContent = 'Could not read image — try a different photo.';
+    document.getElementById('extract-status').textContent = 'Could not read image (' + (e.message || 'unknown error') + ') — try a different photo.';
     btn.disabled = false;
     btn.textContent = 'Scan Menu';
     return;
