@@ -2550,8 +2550,8 @@
       <!-- ── TRIP SWIPE: TOURISTS ── -->
       <div id="page-tripswipe-tourists" class="page-content" style="display:none;">
         <div class="page-header">
-          <h1>Tourist Sessions</h1>
-          <div style="font-size:13px;color:var(--text-muted);">All tourists using the swipe platform — stored by phone number</div>
+          <h1>Tourist Accounts</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Everyone who signed up — via Trip Swipe or by saving places on GCR. Same account, both platforms.</div>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
@@ -2574,6 +2574,7 @@
             <thead>
               <tr style="background:var(--bg);border-bottom:1px solid var(--card-border);">
                 <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Tourist</th>
+                <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Source</th>
                 <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Destination</th>
                 <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Dates</th>
                 <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Swipes</th>
@@ -11690,12 +11691,61 @@
     }
 
     // ── Tourists ──
-    function loadTSTourists() {
-      document.getElementById('ts-tourist-total').textContent = '0';
-      document.getElementById('ts-tourist-week').textContent = '0';
-      document.getElementById('ts-tourist-itineraries').textContent = '0';
+    async function loadTSTourists() {
       document.getElementById('ts-tourists-body').innerHTML =
-        '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No tourist sessions yet — they will appear here as users sign up on the app</td></tr>';
+        '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/tourists', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var tourists = r.ok ? await r.json() : [];
+        if (!Array.isArray(tourists)) tourists = [];
+
+        // Stats
+        var now = new Date();
+        var weekAgo = new Date(now - 7*24*3600*1000);
+        var thisWeek = tourists.filter(function(t){ return t.profile && new Date(t.profile.created_at) > weekAgo; }).length;
+        var withItinerary = tourists.filter(function(t){ return t.itinerary_count > 0; }).length;
+        document.getElementById('ts-tourist-total').textContent = tourists.length;
+        document.getElementById('ts-tourist-week').textContent = thisWeek;
+        document.getElementById('ts-tourist-itineraries').textContent = withItinerary;
+
+        if (!tourists.length) {
+          document.getElementById('ts-tourists-body').innerHTML =
+            '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);">No tourists yet — they appear here when users sign up via Trip Swipe or GCR saves</td></tr>';
+          return;
+        }
+
+        document.getElementById('ts-tourists-body').innerHTML = tourists.map(function(t) {
+          var p = t.profile || {};
+          var saves = t.save_count || 0;
+          var swipes = t.swipe_count || 0;
+          var email = t.email || '—';
+          var name = p.name || email.split('@')[0];
+          var dest = p.destination || '—';
+          var arrival = p.arrival ? p.arrival.slice(0,10) : '';
+          var departure = p.departure ? p.departure.slice(0,10) : '';
+          var dates = arrival ? arrival + (departure ? ' → ' + departure : '') : '—';
+          var interests = (p.interests || []).slice(0,3).join(', ') || '—';
+          var source = saves > 0 && swipes === 0 ? '<span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">GCR Saves</span>'
+            : swipes > 0 ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">Trip Swipe</span>'
+            : '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">Signed Up</span>';
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:12px 16px;">' +
+              '<div style="font-weight:600;font-size:14px;">' + escHtml(name) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(email) + '</div>' +
+            '</td>' +
+            '<td style="padding:12px 16px;">' + source + '</td>' +
+            '<td style="padding:12px 16px;font-size:13px;">' + escHtml(dest) + '</td>' +
+            '<td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">' + escHtml(dates) + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;font-weight:700;">' + swipes + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' + (saves > 0 ? '<span style="color:#e11d48;font-weight:700;">❤️ ' + saves + '</span>' : '0') + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' + (t.itinerary_count > 0 ? '✅' : '—') + '</td>' +
+            '<td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">' + escHtml(interests) + '</td>' +
+          '</tr>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('ts-tourists-body').innerHTML =
+          '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--danger);">Error loading tourists: ' + escHtml(e.message) + '</td></tr>';
+      }
     }
 
     // ── Analytics ──
