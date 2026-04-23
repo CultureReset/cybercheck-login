@@ -10750,30 +10750,22 @@
       sendGrokMessage();
     }
 
-    // Handle image file pick — upload then stage for next message
+    // Handle image file pick — compress and store as base64, no storage upload needed
     async function handleAiImagePick(input) {
       var file = input.files && input.files[0];
       if (!file) return;
       input.value = '';
       var previewEl = document.getElementById('ai-image-preview');
       previewEl.style.display = 'flex';
-      previewEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Uploading…</span>';
+      previewEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Reading…</span>';
       try {
-        var token = getAuthToken();
-        var toSend = await CC.compressImageFile(file, 1600, 0.8);
-        var fd = new FormData();
-        fd.append('file', toSend);
-        var res = await fetch(API_BASE + '/api/admin/gcr/upload-image', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token },
-          body: fd,
-        });
-        var d = await res.json();
-        if (!d.url) throw new Error(d.error || 'Upload failed');
-        _aiPendingImageUrl = d.url;
-        previewEl.innerHTML = '<img src="' + escHtml(d.url) + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready — type where this goes</span>';
+        var c = await CC.compressImage(file, 1600, 0.8);
+        _aiPendingImageUrl = null;
+        _aiPendingImageBase64 = c.dataUrl;
+        _aiPendingImageMime = c.mimeType;
+        previewEl.innerHTML = '<img src="' + escHtml(c.dataUrl) + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready — type where this goes</span>';
       } catch(e) {
-        previewEl.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Upload error: ' + escHtml(e.message) + '</span>';
+        previewEl.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Error: ' + escHtml(e.message) + '</span>';
       }
     }
 
@@ -10797,16 +10789,21 @@
       var input = document.getElementById('grok-chat-input');
       var msg = (input.value || '').trim();
       var pendingImage = _aiPendingImageUrl;
-      if (!msg && !pendingImage) return;
+      var pendingB64 = _aiPendingImageBase64;
+      var pendingMime = _aiPendingImageMime;
+      if (!msg && !pendingImage && !pendingB64) return;
       input.value = '';
 
       var messagesEl = document.getElementById('grok-chat-messages');
 
       // User bubble — show image thumbnail if attached
       var userHtml = msg ? escHtml(msg) : '';
-      if (pendingImage) {
-        userHtml += (userHtml ? '<br>' : '') + '<img src="' + escHtml(pendingImage) + '" style="max-width:160px;max-height:100px;border-radius:6px;margin-top:6px;object-fit:cover;display:block;">';
+      var thumbSrc = pendingB64 || pendingImage;
+      if (thumbSrc) {
+        userHtml += (userHtml ? '<br>' : '') + '<img src="' + escHtml(thumbSrc) + '" style="max-width:160px;max-height:100px;border-radius:6px;margin-top:6px;object-fit:cover;display:block;">';
         _aiPendingImageUrl = null;
+        _aiPendingImageBase64 = null;
+        _aiPendingImageMime = null;
         var previewEl = document.getElementById('ai-image-preview');
         previewEl.innerHTML = '';
         previewEl.style.display = 'none';
@@ -10821,7 +10818,7 @@
         var token = getAuthToken();
         var biz = (_bdData && _bdData.business) || {};
 
-        _grokHistory.push({ role: 'user', content: (msg || '') + (pendingImage ? '\n[Image: ' + pendingImage + ']' : '') });
+        _grokHistory.push({ role: 'user', content: (msg || '') + (thumbSrc ? '\n[Image attached]' : '') });
 
         var _provSel = document.getElementById('grok-provider-select');
         var _modSel = document.getElementById('grok-model-select');
@@ -10834,6 +10831,8 @@
           body: JSON.stringify({
             message: msg || 'I uploaded an image.',
             image_url: pendingImage || undefined,
+            image_base64: pendingB64 || undefined,
+            image_mime: pendingMime || undefined,
             provider: _chosenProvider,
             model: _chosenModel,
             history: _grokHistory.slice(-8),
@@ -13009,19 +13008,24 @@
     var input = document.getElementById('aichat-input');
     var msg = input.value.trim();
     var pendingImg = _aichatPendingImage;
-    if (!msg && !pendingImg) return;
+    var pendingB64 = _aichatPendingImageBase64;
+    var pendingMime = _aichatPendingImageMime;
+    if (!msg && !pendingImg && !pendingB64) return;
     input.value = '';
     input.style.height = 'auto';
 
+    var thumbSrc = pendingB64 || pendingImg;
     var userHtml = msg ? msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
-    if (pendingImg) {
-      userHtml += (userHtml ? '<br>' : '') + '<img src="' + pendingImg + '" style="max-width:160px;max-height:100px;border-radius:6px;margin-top:6px;object-fit:cover;display:block;">';
+    if (thumbSrc) {
+      userHtml += (userHtml ? '<br>' : '') + '<img src="' + thumbSrc + '" style="max-width:160px;max-height:100px;border-radius:6px;margin-top:6px;object-fit:cover;display:block;">';
       _aichatPendingImage = null;
+      _aichatPendingImageBase64 = null;
+      _aichatPendingImageMime = null;
       document.getElementById('aichat-image-preview').style.display = 'none';
       document.getElementById('aichat-image-preview').innerHTML = '';
     }
     aichatAppend('user', userHtml);
-    _aichatHistory.push({ role: 'user', content: (msg || '') + (pendingImg ? '\n[Image: ' + pendingImg + ']' : '') });
+    _aichatHistory.push({ role: 'user', content: (msg || '') + (thumbSrc ? '\n[Image attached]' : '') });
 
     // Detect URL — route to scrape flow
     var urlMatch = msg.match(/(https?:\/\/[^\s]+)/);
@@ -13040,6 +13044,8 @@
         body: JSON.stringify({
           message: msg || 'I uploaded an image.',
           image_url: pendingImg || undefined,
+          image_base64: pendingB64 || undefined,
+          image_mime: pendingMime || undefined,
           history: _aichatHistory.slice(-10),
           provider: prov,
           model: model,
@@ -13121,19 +13127,15 @@
     input.value = '';
     var prev = document.getElementById('aichat-image-preview');
     prev.style.display = 'flex';
-    prev.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Uploading…</span>';
+    prev.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Reading…</span>';
     try {
-      var fd = new FormData();
-      fd.append('file', file);
-      var res = await fetch(API_BASE + '/api/admin/gcr/upload-image', {
-        method: 'POST', headers: { 'Authorization': 'Bearer ' + getAuthToken() }, body: fd
-      });
-      var d = await res.json();
-      if (!d.url) throw new Error('Upload failed');
-      _aichatPendingImage = d.url;
-      prev.innerHTML = '<img src="' + d.url + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready</span>';
+      var c = await CC.compressImage(file, 1600, 0.8);
+      _aichatPendingImage = null;
+      _aichatPendingImageBase64 = c.dataUrl;
+      _aichatPendingImageMime = c.mimeType;
+      prev.innerHTML = '<img src="' + c.dataUrl + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready</span>';
     } catch(e) {
-      prev.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Upload failed</span>';
+      prev.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Failed: ' + escHtml(e.message) + '</span>';
     }
   }
 
