@@ -2017,7 +2017,7 @@
             <div style="flex:1;min-width:220px;position:relative;">
               <input type="text" id="mb-biz-search" placeholder="🔍 Search businesses..." autocomplete="off"
                 style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
-                oninput="mbFilterBiz(this.value)" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},180)">
+                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},180)">
               <div id="mb-biz-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:240px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
               <!-- hidden select kept for value/slug lookup -->
               <select id="mb-biz-select" style="display:none"></select>
@@ -2919,7 +2919,7 @@
             <div style="flex:1;min-width:200px;position:relative;">
               <input type="text" id="aoc-biz-search" placeholder="🔍 Search business..." autocomplete="off"
                 style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
-                oninput="aocFilterBiz(this.value)" onfocus="aocShowDrop()" onblur="setTimeout(function(){var d=document.getElementById('aoc-biz-drop');if(d)d.style.display='none'},180)">
+                oninput="aocShowDrop()" onfocus="aocShowDrop()" onblur="setTimeout(function(){var d=document.getElementById('aoc-biz-drop');if(d)d.style.display='none'},180)">
               <div id="aoc-biz-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
               <input type="hidden" id="aoc-site-id">
             </div>
@@ -3019,7 +3019,7 @@
                 <div style="position:relative;">
                   <input type="text" id="ao-biz-search" placeholder="🔍 Search business..." autocomplete="off"
                     style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
-                    oninput="aoFilterBiz(this.value)" onfocus="aoShowBizDrop()" onblur="setTimeout(function(){var d=document.getElementById('ao-biz-drop');if(d)d.style.display='none'},180)">
+                    oninput="aoShowBizDrop()" onfocus="aoShowBizDrop()" onblur="setTimeout(function(){var d=document.getElementById('ao-biz-drop');if(d)d.style.display='none'},180)">
                   <div id="ao-biz-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:180px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
                   <input type="hidden" id="ao-biz-site-id">
                 </div>
@@ -3227,6 +3227,40 @@
           <h3 style="margin:0 0 16px;font-size:15px;">System Prompt</h3>
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">This sets the AI's personality and context. Edit to customize for GCR.</div>
           <textarea id="ai-system-prompt" style="width:100%;height:140px;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px;">
+          <h3 style="margin:0 0 4px;font-size:15px;">🔊 Voice (Text-to-Speech)</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">Choose the voice the AI assistant speaks with. Browser = free built-in device voice. OpenAI TTS and Grok are high quality but cost per character.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Voice Provider</label>
+              <select id="ai-tts-provider" onchange="updateTTSOptions()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="browser">Browser (free, built-in)</option>
+                <option value="openai">OpenAI TTS</option>
+                <option value="grok">Grok TTS (xAI)</option>
+              </select>
+            </div>
+            <div id="ai-tts-voice-wrap">
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Voice</label>
+              <select id="ai-tts-voice" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="alloy">Alloy (neutral)</option>
+                <option value="echo">Echo (male)</option>
+                <option value="fable">Fable (british)</option>
+                <option value="onyx">Onyx (deep male)</option>
+                <option value="nova">Nova (female)</option>
+                <option value="shimmer">Shimmer (female)</option>
+              </select>
+            </div>
+          </div>
+          <div id="ai-tts-key-row" style="display:none;margin-bottom:8px;">
+            <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">TTS API Key <span style="font-weight:400;">(leave blank to reuse your OpenAI/Grok key above)</span></label>
+            <input id="ai-tts-key" type="password" placeholder="Leave blank to use key above" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;font-family:monospace;">
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-outline btn-sm" onclick="testTTSVoice()" id="ai-tts-test-btn">▶ Test Voice</button>
+            <span id="ai-tts-test-status" style="font-size:12px;color:var(--text-muted);"></span>
+          </div>
         </div>
 
         <div class="card" style="padding:24px;margin-bottom:20px;">
@@ -3652,6 +3686,29 @@
                     <h3 style="margin:0;">🤖 AI Assistant <span id="ai-provider-badge" style="font-size:11px;font-weight:500;padding:2px 8px;background:var(--card-border);border-radius:20px;margin-left:8px;color:var(--text-muted);vertical-align:middle;"></span></h3>
                     <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Ask about data, analytics, or say "add this image to Luna's as the hero photo" — it reads and writes.</p>
                   </div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+                    <!-- Provider picker -->
+                    <select id="grok-provider-select" onchange="grokProviderChanged()" title="AI Provider" style="padding:6px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">
+                      <option value="anthropic">Claude</option>
+                      <option value="openai">GPT-4o</option>
+                      <option value="xai">Grok</option>
+                    </select>
+                    <!-- Model picker -->
+                    <select id="grok-model-select" title="Model" style="padding:6px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">
+                      <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+                      <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+                      <option value="claude-opus-4-7">Opus 4.7</option>
+                    </select>
+                    <!-- Always-speak toggle -->
+                    <button id="grok-voice-reply-btn" onclick="toggleGrokVoiceReply()" title="Always speak replies" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">🔇</button>
+                    <!-- Voice selector -->
+                    <select id="grok-voice-select" onchange="grokSetVoice(this.value)" title="Choose voice" style="padding:6px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;max-width:130px;display:none;"></select>
+                  </div>
+                </div>
+                <!-- Wake word status bar -->
+                <div id="grok-wake-bar" style="display:none;padding:6px 12px;background:#1e3a5f;border-radius:8px;margin-bottom:8px;font-size:12px;color:#93c5fd;flex-shrink:0;">
+                  👂 Listening for <strong>"hey"</strong> — say it to activate, then speak your question
+                  <button onclick="stopGrokWakeWord()" style="float:right;background:none;border:none;color:#93c5fd;cursor:pointer;font-size:12px;">Stop</button>
                 </div>
                 <div id="grok-chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg);border-radius:8px;margin:0 0 12px;">
                   <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Start a conversation. You can ask about data, make changes, or upload an image and say where it goes.</div>
@@ -3662,6 +3719,10 @@
                   <!-- Hidden file input -->
                   <input type="file" id="ai-image-file" accept="image/*" style="display:none;" onchange="handleAiImagePick(this)">
                   <button onclick="document.getElementById('ai-image-file').click();" title="Attach image" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:16px;flex-shrink:0;">📎</button>
+                  <!-- Push-to-talk mic -->
+                  <button id="grok-mic-btn" onmousedown="startGrokPTT()" onmouseup="stopGrokPTT()" ontouchstart="startGrokPTT()" ontouchend="stopGrokPTT()" title="Hold to talk" style="padding:10px 13px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:18px;flex-shrink:0;transition:.15s;">🎤</button>
+                  <!-- Wake word toggle -->
+                  <button id="grok-wake-btn" onclick="toggleGrokWakeWord()" title="Hey — wake word mode" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;">👂</button>
                   <input id="grok-chat-input" type="text" placeholder="Ask anything or describe what to change…" onkeydown="if(event.key==='Enter')sendGrokMessage();" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                   <button onclick="sendGrokMessage();" style="padding:10px 18px;background:#38bdf8;color:#0f172a;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;flex-shrink:0;">Send</button>
                   <button onclick="document.getElementById('grok-chat-messages').innerHTML='<div style=text-align:center;color:var(--text-muted);font-size:13px;padding:20px>Conversation cleared.</div>';_grokHistory=[];_aiPendingImageUrl=null;document.getElementById('ai-image-preview').innerHTML='';document.getElementById('ai-image-preview').style.display='none';" title="Clear" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0;">✕</button>
@@ -10656,12 +10717,19 @@
 
         _grokHistory.push({ role: 'user', content: (msg || '') + (pendingImage ? '\n[Image: ' + pendingImage + ']' : '') });
 
+        var _provSel = document.getElementById('grok-provider-select');
+        var _modSel = document.getElementById('grok-model-select');
+        var _chosenProvider = _provSel ? _provSel.value : 'anthropic';
+        var _chosenModel = _modSel ? _modSel.value : 'claude-sonnet-4-6';
+
         var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: msg || 'I uploaded an image.',
             image_url: pendingImage || undefined,
+            provider: _chosenProvider,
+            model: _chosenModel,
             history: _grokHistory.slice(-8),
             slug: biz.slug || null,
             entity_id: biz.id || null,
@@ -10699,6 +10767,374 @@
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
+
+    // ── TTS VOICE ENGINE ─────────────────────────────────────────
+    var _ttsProvider = 'browser';
+    var _ttsVoice = 'nova';
+    var _ttsKey = '';
+
+    function updateTTSOptions() {
+      var prov = document.getElementById('ai-tts-provider').value;
+      _ttsProvider = prov;
+      var keyRow = document.getElementById('ai-tts-key-row');
+      var voiceWrap = document.getElementById('ai-tts-voice-wrap');
+      var voiceSel = document.getElementById('ai-tts-voice');
+      if (prov === 'browser') {
+        keyRow.style.display = 'none';
+        voiceWrap.style.display = 'none';
+      } else if (prov === 'openai') {
+        keyRow.style.display = 'block';
+        voiceWrap.style.display = 'block';
+        voiceSel.innerHTML = '<option value="alloy">Alloy (neutral)</option><option value="echo">Echo (male)</option><option value="fable">Fable (british)</option><option value="onyx">Onyx (deep male)</option><option value="nova">Nova (female)</option><option value="shimmer">Shimmer (female)</option>';
+      } else if (prov === 'grok') {
+        keyRow.style.display = 'block';
+        voiceWrap.style.display = 'block';
+        voiceSel.innerHTML = '<option value="ash">Ash</option><option value="coral">Coral</option><option value="sage">Sage</option><option value="alloy">Alloy</option><option value="echo">Echo</option>';
+      }
+    }
+
+    async function testTTSVoice() {
+      var prov = (document.getElementById('ai-tts-provider') || {}).value || 'browser';
+      var status = document.getElementById('ai-tts-test-status');
+      if (prov === 'browser') {
+        grokSpeak('Hello, I am your AI assistant. How can I help you today?');
+        if (status) status.textContent = 'Playing browser voice…';
+        return;
+      }
+      var voice = (document.getElementById('ai-tts-voice') || {}).value || 'nova';
+      var key = (document.getElementById('ai-tts-key') || {}).value.trim() ||
+                (prov === 'openai' ? (document.getElementById('ai-key-openai') || {}).value : (document.getElementById('ai-key-grok') || {}).value) || '';
+      if (!key) { if (status) status.textContent = '⚠️ No API key — add one above'; return; }
+      if (status) status.textContent = 'Generating…';
+      try {
+        var endpoint = prov === 'openai'
+          ? 'https://api.openai.com/v1/audio/speech'
+          : 'https://api.x.ai/v1/audio/speech';
+        var res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: prov === 'openai' ? 'tts-1' : 'grok-tts', input: 'Hello, I am your AI assistant. How can I help you today?', voice: voice })
+        });
+        if (!res.ok) throw new Error('API error ' + res.status);
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var audio = new Audio(url);
+        audio.play();
+        if (status) status.textContent = '✓ Playing ' + prov + ' voice';
+        _ttsProvider = prov;
+        _ttsVoice = voice;
+        _ttsKey = key;
+      } catch(e) {
+        if (status) status.textContent = '✗ ' + e.message;
+      }
+    }
+
+    // Override grokSpeak to use OpenAI/Grok TTS when configured
+    var _browserGrokSpeak = grokSpeak;
+    grokSpeak = async function(text) {
+      var prov = _ttsProvider || 'browser';
+      if (prov === 'browser') { _browserGrokSpeak(text); return; }
+      var voice = _ttsVoice || 'nova';
+      var key = _ttsKey ||
+        (prov === 'openai' ? (document.getElementById('ai-key-openai') || {}).value : (document.getElementById('ai-key-grok') || {}).value) || '';
+      if (!key) { _browserGrokSpeak(text); return; }
+      try {
+        var endpoint = prov === 'openai'
+          ? 'https://api.openai.com/v1/audio/speech'
+          : 'https://api.x.ai/v1/audio/speech';
+        var clean = text.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').replace(/<[^>]+>/g,'').replace(/\n/g,' ').slice(0, 1000);
+        var res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: prov === 'openai' ? 'tts-1' : 'grok-tts', input: clean, voice: voice })
+        });
+        if (!res.ok) throw new Error();
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var audio = new Audio(url);
+        audio.play();
+        audio.onended = function() {
+          if (_grokWakeActive && !_grokWakeListening) _grokStartWakeLoop();
+        };
+      } catch(e) {
+        _browserGrokSpeak(text);
+      }
+    };
+    // ── END TTS VOICE ENGINE ──────────────────────────────────────
+
+    // ── PROVIDER / MODEL PICKER ───────────────────────────────────
+    var _providerModels = {
+      anthropic: [
+        { value: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
+        { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
+        { value: 'claude-opus-4-7', label: 'Opus 4.7' },
+      ],
+      openai: [
+        { value: 'gpt-4o', label: 'GPT-4o' },
+        { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+        { value: 'o3-mini', label: 'o3 Mini' },
+      ],
+      xai: [
+        { value: 'grok-3', label: 'Grok 3' },
+        { value: 'grok-3-mini', label: 'Grok 3 Mini' },
+        { value: 'grok-2', label: 'Grok 2' },
+      ],
+    };
+
+    function grokProviderChanged() {
+      var prov = document.getElementById('grok-provider-select').value;
+      var modSel = document.getElementById('grok-model-select');
+      var models = _providerModels[prov] || [];
+      modSel.innerHTML = models.map(function(m) {
+        return '<option value="' + m.value + '">' + m.label + '</option>';
+      }).join('');
+      // Update badge color
+      var badge = document.getElementById('ai-provider-badge');
+      if (badge) {
+        var labels = { anthropic: 'Claude', xai: 'Grok', openai: 'GPT-4o' };
+        badge.textContent = (labels[prov] || prov) + ' · ' + (models[0] ? models[0].label : '');
+        badge.style.background = prov === 'anthropic' ? '#1a3a2a' : prov === 'openai' ? '#1a2a3a' : '#1e3a5f';
+        badge.style.color = prov === 'anthropic' ? '#86efac' : prov === 'openai' ? '#93c5fd' : '#38bdf8';
+      }
+    }
+
+    // Sync badge with saved provider on panel open
+    var _origLoadAiProviderBadge = loadAiProviderBadge;
+    loadAiProviderBadge = async function() {
+      await _origLoadAiProviderBadge();
+      try {
+        var token = getAuthToken();
+        var r = await fetch(API_BASE + '/api/admin/ai-provider', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await r.json();
+        if (d.configured && d.provider) {
+          var pSel = document.getElementById('grok-provider-select');
+          if (pSel) { pSel.value = d.provider; grokProviderChanged(); }
+          var mSel = document.getElementById('grok-model-select');
+          if (mSel && d.model) mSel.value = d.model;
+        }
+      } catch(e) {}
+    };
+    // ── END PROVIDER PICKER ───────────────────────────────────────
+
+    // ── VOICE ENGINE ──────────────────────────────────────────────
+    var _grokVoiceReply = false;       // always-speak toggle
+    var _grokSelectedVoice = null;     // chosen TTS voice
+    var _grokPTTRecog = null;          // push-to-talk recognition
+    var _grokWakeRecog = null;         // wake word recognition
+    var _grokWakeActive = false;       // wake word mode on/off
+    var _grokWakeListening = false;    // currently hearing command after "hey"
+    var _grokWakeCommandRecog = null;  // command recognition after wake word
+
+    // Init TTS UI state
+    updateTTSOptions();
+
+    // Populate voice selector once voices load
+    function grokLoadVoices() {
+      var voices = speechSynthesis.getVoices();
+      if (!voices.length) return;
+      var sel = document.getElementById('grok-voice-select');
+      if (!sel) return;
+      sel.innerHTML = '';
+      var enVoices = voices.filter(function(v) { return v.lang.startsWith('en'); });
+      enVoices.forEach(function(v) {
+        var opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = v.name.replace('Google ', '').replace('Microsoft ', '') + (v.localService ? ' ✓' : '');
+        sel.appendChild(opt);
+      });
+      // Default: prefer Samantha (Mac), else first local en-US
+      var preferred = voices.find(function(v) { return v.name === 'Samantha'; }) ||
+                      voices.find(function(v) { return v.lang === 'en-US' && v.localService; }) ||
+                      enVoices[0];
+      if (preferred) { sel.value = preferred.name; _grokSelectedVoice = preferred; }
+    }
+    if (window.speechSynthesis) {
+      speechSynthesis.onvoiceschanged = grokLoadVoices;
+      grokLoadVoices();
+    }
+
+    function grokSetVoice(name) {
+      var voices = speechSynthesis.getVoices();
+      _grokSelectedVoice = voices.find(function(v) { return v.name === name; }) || null;
+    }
+
+    function grokSpeak(text) {
+      if (!window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      // Strip markdown for speech
+      var clean = text.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').replace(/<[^>]+>/g,'').replace(/\n/g,' ');
+      var utter = new SpeechSynthesisUtterance(clean);
+      utter.rate = 1.05;
+      if (_grokSelectedVoice) utter.voice = _grokSelectedVoice;
+      utter.onend = function() {
+        // Resume wake word listening after reply finishes
+        if (_grokWakeActive && !_grokWakeListening) _grokStartWakeLoop();
+      };
+      speechSynthesis.speak(utter);
+    }
+
+    // Always-speak toggle
+    function toggleGrokVoiceReply() {
+      _grokVoiceReply = !_grokVoiceReply;
+      var btn = document.getElementById('grok-voice-reply-btn');
+      var sel = document.getElementById('grok-voice-select');
+      if (_grokVoiceReply) {
+        btn.textContent = '🔊';
+        btn.style.background = '#1a3a2a';
+        btn.style.color = '#86efac';
+        sel.style.display = 'block';
+        grokLoadVoices();
+      } else {
+        btn.textContent = '🔇';
+        btn.style.background = 'var(--card-border)';
+        btn.style.color = 'var(--text-muted)';
+        sel.style.display = 'none';
+        speechSynthesis.cancel();
+      }
+    }
+
+    // Patch sendGrokMessage to speak replies when voice reply is on
+    var _origSendGrok = sendGrokMessage;
+    sendGrokMessage = async function() {
+      var messagesEl = document.getElementById('grok-chat-messages');
+      var before = messagesEl ? messagesEl.children.length : 0;
+      await _origSendGrok();
+      if (_grokVoiceReply && messagesEl) {
+        // Find the last assistant bubble added
+        var last = messagesEl.lastElementChild;
+        if (last) {
+          var txt = last.innerText || last.textContent || '';
+          if (txt) grokSpeak(txt);
+        }
+      }
+    };
+
+    // Push-to-talk
+    function _initPTT() {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+      var r = new SR();
+      r.continuous = false;
+      r.interimResults = false;
+      r.lang = 'en-US';
+      r.onresult = function(e) {
+        var txt = e.results[0][0].transcript;
+        document.getElementById('grok-chat-input').value = txt;
+        sendGrokMessage();
+      };
+      r.onend = function() {
+        var btn = document.getElementById('grok-mic-btn');
+        if (btn) { btn.textContent = '🎤'; btn.style.background = 'var(--card-border)'; btn.style.color = 'var(--text-muted)'; }
+      };
+      r.onerror = function() { r.onend(); };
+      return r;
+    }
+
+    function startGrokPTT() {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { alert('Voice not supported in this browser. Try Chrome or Safari.'); return; }
+      if (!_grokPTTRecog) _grokPTTRecog = _initPTT();
+      try {
+        _grokPTTRecog.start();
+        var btn = document.getElementById('grok-mic-btn');
+        if (btn) { btn.textContent = '🔴'; btn.style.background = '#7f1d1d'; btn.style.color = '#fca5a5'; }
+      } catch(e) {}
+    }
+
+    function stopGrokPTT() {
+      if (_grokPTTRecog) try { _grokPTTRecog.stop(); } catch(e) {}
+    }
+
+    // Wake word — listens for "hey" then captures the command
+    function toggleGrokWakeWord() {
+      if (_grokWakeActive) {
+        stopGrokWakeWord();
+      } else {
+        startGrokWakeWord();
+      }
+    }
+
+    function startGrokWakeWord() {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { alert('Voice not supported in this browser. Try Chrome or Safari.'); return; }
+      _grokWakeActive = true;
+      var btn = document.getElementById('grok-wake-btn');
+      var bar = document.getElementById('grok-wake-bar');
+      if (btn) { btn.style.background = '#1e3a5f'; btn.style.color = '#38bdf8'; }
+      if (bar) bar.style.display = 'block';
+      _grokStartWakeLoop();
+    }
+
+    function stopGrokWakeWord() {
+      _grokWakeActive = false;
+      _grokWakeListening = false;
+      if (_grokWakeRecog) try { _grokWakeRecog.stop(); } catch(e) {}
+      if (_grokWakeCommandRecog) try { _grokWakeCommandRecog.stop(); } catch(e) {}
+      var btn = document.getElementById('grok-wake-btn');
+      var bar = document.getElementById('grok-wake-bar');
+      if (btn) { btn.style.background = 'var(--card-border)'; btn.style.color = 'var(--text-muted)'; }
+      if (bar) bar.style.display = 'none';
+    }
+
+    function _grokStartWakeLoop() {
+      if (!_grokWakeActive) return;
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      _grokWakeRecog = new SR();
+      _grokWakeRecog.continuous = false;
+      _grokWakeRecog.interimResults = false;
+      _grokWakeRecog.lang = 'en-US';
+      _grokWakeRecog.onresult = function(e) {
+        var txt = (e.results[0][0].transcript || '').toLowerCase().trim();
+        if (txt.startsWith('hey') || txt === 'hey' || txt.includes('hey ')) {
+          _grokWakeListening = true;
+          speechSynthesis.cancel();
+          // Play a short beep / say "yes?" to confirm activation
+          var ack = new SpeechSynthesisUtterance('Yes?');
+          ack.rate = 1.2;
+          if (_grokSelectedVoice) ack.voice = _grokSelectedVoice;
+          ack.onend = function() { _grokListenForCommand(); };
+          speechSynthesis.speak(ack);
+        }
+      };
+      _grokWakeRecog.onend = function() {
+        if (_grokWakeActive && !_grokWakeListening) {
+          // Keep looping
+          setTimeout(_grokStartWakeLoop, 200);
+        }
+      };
+      _grokWakeRecog.onerror = function() {
+        if (_grokWakeActive && !_grokWakeListening) setTimeout(_grokStartWakeLoop, 500);
+      };
+      try { _grokWakeRecog.start(); } catch(e) {}
+    }
+
+    function _grokListenForCommand() {
+      if (!_grokWakeActive) return;
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      _grokWakeCommandRecog = new SR();
+      _grokWakeCommandRecog.continuous = false;
+      _grokWakeCommandRecog.interimResults = false;
+      _grokWakeCommandRecog.lang = 'en-US';
+      _grokWakeCommandRecog.onresult = function(e) {
+        var cmd = e.results[0][0].transcript;
+        _grokWakeListening = false;
+        document.getElementById('grok-chat-input').value = cmd;
+        // Auto-enable voice reply when using wake word
+        if (!_grokVoiceReply) toggleGrokVoiceReply();
+        sendGrokMessage();
+      };
+      _grokWakeCommandRecog.onend = function() {
+        _grokWakeListening = false;
+        if (_grokWakeActive) setTimeout(_grokStartWakeLoop, 300);
+      };
+      _grokWakeCommandRecog.onerror = function() {
+        _grokWakeListening = false;
+        if (_grokWakeActive) setTimeout(_grokStartWakeLoop, 500);
+      };
+      try { _grokWakeCommandRecog.start(); } catch(e) {}
+    }
+    // ── END VOICE ENGINE ──────────────────────────────────────────
+
   </script>
   <script src="js/wavegent-tab.js"></script>
   <script src="js/sales-page.js"></script>
