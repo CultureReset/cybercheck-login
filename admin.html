@@ -9905,6 +9905,47 @@
   </script>
   <script src="js/wavegent-tab.js"></script>
   <script src="js/sales-page.js"></script>
+  <script>
+  // Inline image compression — used by AI scan in Menu Builder.
+  // Mirrors cc.js compressImage without requiring the full CC library.
+  var CC = window.CC || {};
+  if (!CC.compressImage) {
+    CC.compressImage = async function(file, maxDim, quality) {
+      maxDim = maxDim || 1280; quality = quality == null ? 0.75 : quality;
+      // HEIC detection via magic bytes
+      async function isHeic(f) {
+        try { var b=new Uint8Array(await f.slice(0,12).arrayBuffer()); if(b[4]!==0x66||b[5]!==0x74||b[6]!==0x79||b[7]!==0x70)return false; return /^(heic|heis|hevx|hevc|mif1|msf1)/i.test(String.fromCharCode(b[8],b[9],b[10],b[11])); } catch(e){return false;}
+      }
+      if (/^(image\/heic|image\/heif)$/i.test(file.type||'')||/\.hei[cf]$/i.test(file.name||'')||await isHeic(file)) {
+        try {
+          if (!window._heic2anyP) window._heic2anyP = new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';s.onload=function(){res(window.heic2any);};s.onerror=function(){rej(new Error('heic2any load failed'));};document.head.appendChild(s);});
+          var h = await window._heic2anyP;
+          var out = await h({blob:file,toType:'image/jpeg',quality:0.92});
+          file = new File([Array.isArray(out)?out[0]:out],(file.name||'image').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
+        } catch(e) { throw new Error('HEIC conversion failed: '+e.message); }
+      }
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onerror = function() { reject(new Error('read failed')); };
+        reader.onload = function(e) {
+          var img = new Image();
+          img.onerror = function() { reject(new Error('decode failed')); };
+          img.onload = function() {
+            var scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+            var cw = Math.round(img.naturalWidth*scale), ch = Math.round(img.naturalHeight*scale);
+            var canvas = document.createElement('canvas');
+            canvas.width=cw; canvas.height=ch;
+            canvas.getContext('2d').drawImage(img,0,0,cw,ch);
+            var dataUrl = canvas.toDataURL('image/jpeg', quality);
+            canvas.toBlob(function(blob){resolve({dataUrl:dataUrl,blob:blob,mimeType:'image/jpeg'});}, 'image/jpeg', quality);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+  }
+  </script>
 
   <!-- ── MENU BUILDER MODALS ── -->
   <div id="mb-modal-category" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:none;align-items:center;justify-content:center;">
