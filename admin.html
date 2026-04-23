@@ -13072,10 +13072,23 @@
         .replace(/\*(.*?)\*/g,'<em>$1</em>')
         .replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
       statusDiv.innerHTML = formatted;
-      if (_aichatVoiceReply) grokSpeak(reply);
+      if (_aichatVoiceReply) _aichatSpeak(reply);
     } catch(e) {
       statusDiv.innerHTML = '<span style="color:#fca5a5;">Error: ' + e.message + '</span>';
     }
+  }
+
+  function _aichatSpeak(text) {
+    if (!window.speechSynthesis) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.05;
+      var voices = speechSynthesis.getVoices();
+      var pick = voices.find(function(v){return v.name.indexOf('Samantha')>-1;}) || voices.find(function(v){return v.lang==='en-US'&&v.localService;}) || voices[0];
+      if (pick) u.voice = pick;
+      speechSynthesis.speak(u);
+    } catch(e) {}
   }
 
   async function aichatScrapeUrl(url) {
@@ -13147,7 +13160,7 @@
       _aichatPendingImageMime = c.mimeType;
       prev.innerHTML = '<img src="' + c.dataUrl + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready</span>';
     } catch(e) {
-      prev.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Failed: ' + escHtml(e.message) + '</span>';
+      prev.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Failed: ' + String(e.message).replace(/</g,'&lt;') + '</span>';
     }
   }
 
