@@ -10003,7 +10003,7 @@
 
       <div style="font-size:13px;color:var(--text-muted);min-height:20px;margin-bottom:12px;" id="mb-ext-status"></div>
 
-      <div id="mb-ext-results" style="display:none;max-height:300px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div id="mb-ext-results" style="display:none;max-height:60vh;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:16px;margin-bottom:16px;">
         <div id="mb-ext-results-content"></div>
       </div>
 
@@ -10543,14 +10543,58 @@
       }
       _mbExtracted = data;
       var total = (data.categories||[]).reduce(function(s,c){return s+(c.items||[]).length;},0);
-      document.getElementById('mb-ext-status').textContent = '✅ Found ' + total + ' items — saving to menu now...';
-      // Auto-import immediately
-      await mbImportItems();
+      document.getElementById('mb-ext-status').textContent = '✅ Found ' + total + ' items across ' + (data.categories||[]).length + ' sections — review below then click Import.';
+      mbRenderExtractPreview();
+      document.getElementById('mb-ext-results').style.display = '';
+      document.getElementById('mb-ext-import-btn').style.display = '';
     } catch(e) {
       console.error('[menu-scan] network error', e);
       document.getElementById('mb-ext-status').textContent = '❌ Network error: ' + (e.message || e);
       document.getElementById('mb-ext-scan-btn').style.display = '';
     }
+  }
+
+  function mbRenderExtractPreview() {
+    if (!_mbExtracted || !_mbExtracted.categories) return;
+    var inp = 'width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;';
+    var html = '';
+    (_mbExtracted.categories || []).forEach(function(cat, ci) {
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div style="font-weight:700;font-size:14px;padding:8px 0 6px;border-bottom:2px solid var(--primary);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">';
+      html += '<span>' + escHtml(cat.name) + ' <span style="font-weight:400;color:var(--text-muted);font-size:12px;">(' + (cat.item_type||'food') + ' · ' + (cat.items||[]).length + ' items)</span></span>';
+      html += '</div>';
+      (cat.items || []).forEach(function(item, ii) {
+        html += '<div id="mb-ex-row-' + ci + '-' + ii + '" style="background:var(--surface);border:1px solid var(--card-border);border-radius:8px;padding:10px;margin-bottom:8px;">';
+        html += '<div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:start;">';
+        html += '<input data-ci="'+ci+'" data-ii="'+ii+'" data-k="name" value="'+escHtml(item.name||'')+'" placeholder="Item name" style="'+inp+'font-weight:600;" oninput="mbExEdit(this)">';
+        html += '<input type="number" step="0.01" min="0" data-ci="'+ci+'" data-ii="'+ii+'" data-k="price" value="'+(item.price||0)+'" placeholder="Price" style="'+inp+'" oninput="mbExEdit(this)">';
+        html += '<button onclick="mbExDelete('+ci+','+ii+')" style="background:none;border:none;color:var(--danger,#ef4444);font-size:18px;cursor:pointer;padding:0 4px;" title="Remove">✕</button>';
+        html += '</div>';
+        html += '<textarea data-ci="'+ci+'" data-ii="'+ii+'" data-k="description" placeholder="Description..." rows="2" style="'+inp+'margin-top:6px;resize:vertical;" oninput="mbExEdit(this)">'+escHtml(item.description||'')+'</textarea>';
+        if ((item.modifiers||[]).length) {
+          html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Add-ons: ' + item.modifiers.map(function(m){return escHtml(m.name)+' $'+m.price;}).join(' · ') + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    document.getElementById('mb-ext-results-content').innerHTML = html || '<p style="color:var(--text-muted);">No items found.</p>';
+  }
+
+  function mbExEdit(el) {
+    var ci = +el.dataset.ci, ii = +el.dataset.ii, k = el.dataset.k;
+    var item = _mbExtracted && _mbExtracted.categories[ci] && _mbExtracted.categories[ci].items[ii];
+    if (!item) return;
+    item[k] = k === 'price' ? (parseFloat(el.value) || 0) : el.value;
+  }
+
+  function mbExDelete(ci, ii) {
+    if (!_mbExtracted) return;
+    _mbExtracted.categories[ci].items.splice(ii, 1);
+    if (!_mbExtracted.categories[ci].items.length) _mbExtracted.categories.splice(ci, 1);
+    mbRenderExtractPreview();
+    var total = (_mbExtracted.categories||[]).reduce(function(s,c){return s+(c.items||[]).length;},0);
+    document.getElementById('mb-ext-status').textContent = total + ' items remaining — click Import when ready.';
   }
 
   async function mbImportItems() {
