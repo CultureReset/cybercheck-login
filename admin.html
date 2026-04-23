@@ -2782,24 +2782,35 @@
 
         <!-- Step 2: Review output -->
         <div id="ao-step2" style="display:none;">
-          <button class="btn btn-primary" style="width:100%;padding:16px;font-size:18px;font-weight:bold;margin-bottom:20px;" onclick="saveAIToGCREntity()">💾 SAVE TO GCR DATABASE</button>
-          <div class="card" style="padding:24px;margin-bottom:20px;border:1px solid var(--primary);">
+          <!-- ── Save to Database card ── -->
+          <div class="card" style="padding:20px;margin-bottom:16px;border:2px solid var(--primary);">
+            <h3 style="margin:0 0 14px;font-size:15px;">💾 Save to Database</h3>
+            <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;">
+              <div style="flex:1;min-width:180px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Select Business to save into</label>
+                <div style="position:relative;">
+                  <input type="text" id="ao-biz-search" placeholder="🔍 Search business..." autocomplete="off"
+                    style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
+                    oninput="aoFilterBiz(this.value)" onfocus="aoShowBizDrop()" onblur="setTimeout(function(){var d=document.getElementById('ao-biz-drop');if(d)d.style.display='none'},180)">
+                  <div id="ao-biz-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:180px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
+                  <input type="hidden" id="ao-biz-site-id">
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="aoSaveToDatabase()" style="padding:10px 24px;font-size:15px;font-weight:700;white-space:nowrap;" id="ao-db-save-btn">Save to Database</button>
+            </div>
+            <div id="ao-db-save-status" style="font-size:13px;color:var(--text-muted);display:none;"></div>
+            <div style="font-size:12px;color:var(--text-muted);">Saves menu items → menu_items · specials → specials · events → events · Also saves to GCR if linked.</div>
+          </div>
+
+          <div class="card" style="padding:24px;margin-bottom:20px;border:1px solid var(--card-border);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
               <h3 style="margin:0;font-size:16px;">Step 2 — Review &amp; Edit Organized Data</h3>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-outline btn-sm" onclick="resetAIOrganize()">Start Over</button>
-                <button class="btn btn-outline" onclick="approveAIOrganize()">Save to Old DB</button>
-                <button class="btn btn-primary" onclick="saveAIToGCREntity()">✦ Save to GCR Entities</button>
+                <button class="btn btn-outline btn-sm" onclick="saveAIToGCREntity()">Save to GCR Entities</button>
               </div>
             </div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Review each section below. Edit anything that looks wrong, then click Save to Database.</div>
-
-            <!-- Prominent Save Section at Bottom -->
-            <div style="padding:16px;background:rgba(79,172,254,0.1);border-radius:8px;margin-bottom:20px;border-left:4px solid var(--primary);">
-              <div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px;">Ready to save?</div>
-              <button class="btn btn-primary" style="width:100%;margin-bottom:8px;" onclick="saveAIToGCREntity()">💾 SAVE TO GCR ENTITIES</button>
-              <button class="btn btn-outline" style="width:100%;" onclick="approveAIOrganize()">Save to Old CyberCheck DB</button>
-            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Review each section below. Edit anything that looks wrong, then click Save to Database above.</div>
 
             <!-- Summary bar -->
             <div id="ao-summary" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding:12px;background:var(--bg);border-radius:8px;"></div>
@@ -5622,6 +5633,81 @@
         statusEl.textContent = '❌ ' + e.message;
       }
       input.value = '';
+    }
+
+    var _aoBizList = [];
+    async function aoLoadBizList() {
+      if (_aoBizList.length) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        _aoBizList = r.ok ? await r.json() : [];
+      } catch(e) {}
+    }
+    function aoShowBizDrop() { aoLoadBizList().then(function(){ aoFilterBiz(document.getElementById('ao-biz-search').value || ''); }); }
+    function aoFilterBiz(q) {
+      var dd = document.getElementById('ao-biz-drop'); if (!dd) return;
+      var term = q.trim().toLowerCase();
+      var matches = term ? _aoBizList.filter(function(b){ return (b.name||'').toLowerCase().includes(term); }) : _aoBizList.slice(0,20);
+      dd.innerHTML = matches.length ? matches.map(function(b){
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);" onmousedown="aoSelectBiz('+JSON.stringify(b.site_id||b.id)+','+JSON.stringify(b.name||'')+')">' + escHtml(b.name||b.site_id) + '</div>';
+      }).join('') : '<div style="padding:12px;color:var(--text-muted);font-size:13px;">No businesses found</div>';
+      dd.style.display = '';
+    }
+    function aoSelectBiz(siteId, name) {
+      document.getElementById('ao-biz-search').value = name;
+      document.getElementById('ao-biz-site-id').value = siteId;
+      document.getElementById('ao-biz-drop').style.display = 'none';
+    }
+
+    async function aoSaveToDatabase() {
+      var siteId = document.getElementById('ao-biz-site-id').value;
+      if (!siteId) { toast('Select a business first', 'error'); return; }
+      if (!_aoResult) { toast('No organized data yet', 'error'); return; }
+      var btn = document.getElementById('ao-db-save-btn');
+      var statusEl = document.getElementById('ao-db-save-status');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      statusEl.style.display = ''; statusEl.textContent = 'Saving...';
+      var saved = [], errors = [];
+      try {
+        // Save menu items
+        var items = _aoResult.menu_items || [];
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
+          var r = await fetch(API_BASE + '/api/dashboard/menu-items', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+            body: JSON.stringify({ name: item.name || item.item_name, price: parseFloat(item.price)||0, description: item.description||'', category: item.category||'Menu Items', item_type: item.item_type||'food', tags: item.tags||[], modifiers: item.modifiers||[], site_id: siteId })
+          });
+          if (r.ok) saved.push('menu item'); else errors.push('menu item');
+        }
+        // Save specials
+        var specials = _aoResult.specials || [];
+        for (var j = 0; j < specials.length; j++) {
+          var sp = specials[j];
+          var r2 = await fetch(API_BASE + '/api/dashboard/specials', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+            body: JSON.stringify({ special_name: sp.special_name||sp.name, discount_text: sp.discount_text||'', description: sp.description||'', days: sp.days||'', start_time: sp.start_time||null, end_time: sp.end_time||null, site_id: siteId })
+          });
+          if (r2.ok) saved.push('special'); else errors.push('special');
+        }
+        // Save events
+        var events = _aoResult.events || [];
+        for (var k = 0; k < events.length; k++) {
+          var ev = events[k];
+          var r3 = await fetch(API_BASE + '/api/dashboard/events', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+            body: JSON.stringify({ name: ev.name||ev.event_name, description: ev.description||'', event_date: ev.event_date||null, start_time: ev.start_time||null, end_time: ev.end_time||null, site_id: siteId })
+          });
+          if (r3.ok) saved.push('event'); else errors.push('event');
+        }
+        var msg = '✅ Saved ' + saved.length + ' items (' + (items.length ? items.length + ' menu, ' : '') + (specials.length ? specials.length + ' specials, ' : '') + (events.length ? events.length + ' events' : '') + ')';
+        if (errors.length) msg += ' — ' + errors.length + ' failed';
+        statusEl.style.color = errors.length ? '#f59e0b' : '#4ade80';
+        statusEl.textContent = msg;
+        toast(msg, 'success');
+      } catch(e) {
+        statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message;
+      }
+      btn.disabled = false; btn.textContent = 'Save to Database';
     }
 
     var _aoResult = null;
