@@ -119,6 +119,10 @@
 
         <!-- ── AI TOOLS ── -->
         <div class="nav-section-label">🤖 AI Tools</div>
+        <div class="nav-item" data-page="ai-chat" onclick="showPage('ai-chat')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>AI Chat ✨</span>
+        </div>
         <div class="nav-item" data-page="ai-organize" onclick="showPage('ai-organize')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
           <span>AI Data Organizer</span>
@@ -2906,6 +2910,74 @@
       </div>
 
       <!-- ── AI DATA ORGANIZER ──────────────────────── -->
+      <!-- ── AI CHAT PAGE ── -->
+      <div id="page-ai-chat" class="page-content" style="display:none;height:calc(100vh - 60px);flex-direction:column;">
+        <div class="card" style="display:flex;flex-direction:column;flex:1;height:calc(100vh - 80px);margin:0;border-radius:0;border-left:none;border-right:none;border-bottom:none;">
+
+          <!-- Header -->
+          <div style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--card-border);">
+            <div>
+              <h2 style="margin:0;font-size:18px;">✨ AI Chat</h2>
+              <p style="margin:2px 0 0;font-size:12px;color:var(--text-muted);">Ask anything, post data, add businesses, update info — speak or type.</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <select id="aichat-provider" onchange="aichatProviderChanged()" style="padding:6px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">
+                <option value="anthropic">Claude</option>
+                <option value="openai">GPT-4o</option>
+                <option value="xai">Grok</option>
+              </select>
+              <select id="aichat-model" style="padding:6px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">
+                <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+                <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+                <option value="claude-opus-4-7">Opus 4.7</option>
+              </select>
+              <button id="aichat-voice-btn" onclick="toggleAichatVoiceReply()" title="Speak replies" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">🔇</button>
+              <button id="aichat-wake-btn" onclick="toggleAichatWakeWord()" title="Hey — wake word" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">👂</button>
+              <button onclick="aichatClear()" title="Clear chat" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">🗑</button>
+            </div>
+          </div>
+
+          <!-- Wake word bar -->
+          <div id="aichat-wake-bar" style="display:none;padding:6px 16px;background:#1e3a5f;font-size:12px;color:#93c5fd;flex-shrink:0;">
+            👂 Listening for <strong>"hey"</strong> — say it to activate, then speak your question
+            <button onclick="stopAichatWakeWord()" style="float:right;background:none;border:none;color:#93c5fd;cursor:pointer;font-size:12px;">Stop</button>
+          </div>
+
+          <!-- Messages -->
+          <div id="aichat-messages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;">
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:40px 20px;">
+              <div style="font-size:32px;margin-bottom:12px;">✨</div>
+              <div style="font-weight:600;margin-bottom:6px;">Ask me anything</div>
+              <div style="font-size:12px;">Add a restaurant, update data, ask questions, post a menu — type or speak</div>
+            </div>
+          </div>
+
+          <!-- Image preview -->
+          <div id="aichat-image-preview" style="display:none;padding:8px 16px;gap:8px;flex-wrap:wrap;"></div>
+
+          <!-- Input bar -->
+          <div style="flex-shrink:0;padding:12px 16px;border-top:1px solid var(--card-border);display:flex;gap:8px;align-items:center;">
+            <input type="file" id="aichat-file" accept="image/*" style="display:none;" onchange="aichatImagePick(this)">
+            <button onclick="document.getElementById('aichat-file').click()" title="Attach image" style="padding:10px 12px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:16px;flex-shrink:0;">📎</button>
+            <button id="aichat-mic-btn" onmousedown="startAichatPTT()" onmouseup="stopAichatPTT()" ontouchstart="startAichatPTT()" ontouchend="stopAichatPTT()" title="Hold to talk" style="padding:10px 13px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:18px;flex-shrink:0;">🎤</button>
+            <textarea id="aichat-input" placeholder="Ask anything or paste data here…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aichatSend();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:none;font-family:inherit;line-height:1.5;"></textarea>
+            <button onclick="aichatSend()" style="padding:10px 18px;background:#38bdf8;color:#0f172a;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;flex-shrink:0;">Send</button>
+          </div>
+
+          <!-- Quick prompts -->
+          <div style="flex-shrink:0;padding:8px 16px 12px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--card-border);">
+            <button onclick="aichatQuick('What businesses are missing data or photos?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🔍 Data gaps</button>
+            <button onclick="aichatQuick('Give me a full platform overview — businesses, tourists, bookings, recent activity.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">📊 Platform overview</button>
+            <button onclick="aichatQuick('List all active restaurants on GCR with their current data.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🍽️ All restaurants</button>
+            <button onclick="aichatQuick('What events are coming up this week across all businesses?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🎉 Upcoming events</button>
+            <button onclick="aichatQuick('Show me all businesses with happy hour specials.')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">🍻 Happy hours</button>
+            <button onclick="aichatQuick('What are the top performing businesses on Trip Swipe this week?')" style="padding:5px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:20px;cursor:pointer;font-size:12px;">❤️ Trip Swipe top</button>
+          </div>
+
+        </div>
+      </div>
+      <!-- ── END AI CHAT PAGE ── -->
+
       <div id="page-ai-organize" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>AI Data Organizer</h1>
@@ -12868,6 +12940,232 @@
         el.innerHTML = 'Platform ready — ' + _tsAllBusinesses.length + ' businesses loaded from GCR. Launch the tourist app to start collecting swipe data.';
       }
     }
+  </script>
+
+  <script>
+  // ── Standalone AI Chat page ───────────────────────────────────
+  var _aichatHistory = [];
+  var _aichatPendingImage = null;
+  var _aichatVoiceReply = false;
+  var _aichatWakeActive = false;
+  var _aichatWakeListening = false;
+  var _aichatWakeRecog = null;
+  var _aichatWakeCmdRecog = null;
+  var _aichatPTTRecog = null;
+
+  var _aichatProviderModels = {
+    anthropic: [
+      { value: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
+      { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
+      { value: 'claude-opus-4-7', label: 'Opus 4.7' },
+    ],
+    openai: [
+      { value: 'gpt-4o', label: 'GPT-4o' },
+      { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+    ],
+    xai: [
+      { value: 'grok-3', label: 'Grok 3' },
+      { value: 'grok-3-mini', label: 'Grok 3 Mini' },
+    ],
+  };
+
+  function aichatProviderChanged() {
+    var prov = document.getElementById('aichat-provider').value;
+    var modSel = document.getElementById('aichat-model');
+    var models = _aichatProviderModels[prov] || [];
+    modSel.innerHTML = models.map(function(m) {
+      return '<option value="' + m.value + '">' + m.label + '</option>';
+    }).join('');
+  }
+
+  function aichatQuick(text) {
+    document.getElementById('aichat-input').value = text;
+    aichatSend();
+  }
+
+  function aichatClear() {
+    _aichatHistory = [];
+    _aichatPendingImage = null;
+    document.getElementById('aichat-messages').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:40px 20px;"><div style="font-size:32px;margin-bottom:12px;">✨</div><div style="font-weight:600;margin-bottom:6px;">Ask me anything</div><div style="font-size:12px;">Add a restaurant, update data, ask questions, post a menu — type or speak</div></div>';
+    document.getElementById('aichat-image-preview').style.display = 'none';
+    document.getElementById('aichat-image-preview').innerHTML = '';
+  }
+
+  function aichatAppend(role, html) {
+    var el = document.getElementById('aichat-messages');
+    var div = document.createElement('div');
+    if (role === 'user') {
+      div.style.cssText = 'align-self:flex-end;background:#0b7a75;color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;font-size:14px;line-height:1.5;';
+    } else {
+      div.style.cssText = 'align-self:flex-start;background:var(--card-border);color:var(--text);padding:12px 16px;border-radius:12px 12px 12px 2px;max-width:90%;font-size:14px;line-height:1.6;';
+    }
+    div.innerHTML = html;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+    return div;
+  }
+
+  async function aichatSend() {
+    var input = document.getElementById('aichat-input');
+    var msg = input.value.trim();
+    var pendingImg = _aichatPendingImage;
+    if (!msg && !pendingImg) return;
+    input.value = '';
+    input.style.height = 'auto';
+
+    var userHtml = msg ? msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
+    if (pendingImg) {
+      userHtml += (userHtml ? '<br>' : '') + '<img src="' + pendingImg + '" style="max-width:160px;max-height:100px;border-radius:6px;margin-top:6px;object-fit:cover;display:block;">';
+      _aichatPendingImage = null;
+      document.getElementById('aichat-image-preview').style.display = 'none';
+      document.getElementById('aichat-image-preview').innerHTML = '';
+    }
+    aichatAppend('user', userHtml);
+    _aichatHistory.push({ role: 'user', content: (msg || '') + (pendingImg ? '\n[Image: ' + pendingImg + ']' : '') });
+
+    var statusDiv = aichatAppend('assistant', '<span style="color:#94a3b8;font-size:12px;">🤖 thinking…</span>');
+
+    try {
+      var prov = (document.getElementById('aichat-provider') || {}).value || 'anthropic';
+      var model = (document.getElementById('aichat-model') || {}).value || 'claude-sonnet-4-6';
+      var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg || 'I uploaded an image.',
+          image_url: pendingImg || undefined,
+          history: _aichatHistory.slice(-10),
+          provider: prov,
+          model: model,
+        })
+      });
+      var d = await res.json();
+      var reply = d.reply || d.error || 'No response';
+      _aichatHistory.push({ role: 'assistant', content: reply });
+      var formatted = reply
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g,'<em>$1</em>')
+        .replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+      statusDiv.innerHTML = formatted;
+      if (_aichatVoiceReply) grokSpeak(reply);
+    } catch(e) {
+      statusDiv.innerHTML = '<span style="color:#fca5a5;">Error: ' + e.message + '</span>';
+    }
+  }
+
+  async function aichatImagePick(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    input.value = '';
+    var prev = document.getElementById('aichat-image-preview');
+    prev.style.display = 'flex';
+    prev.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Uploading…</span>';
+    try {
+      var fd = new FormData();
+      fd.append('file', file);
+      var res = await fetch(API_BASE + '/api/admin/gcr/upload-image', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + getAuthToken() }, body: fd
+      });
+      var d = await res.json();
+      if (!d.url) throw new Error('Upload failed');
+      _aichatPendingImage = d.url;
+      prev.innerHTML = '<img src="' + d.url + '" style="height:60px;border-radius:6px;object-fit:cover;"> <span style="font-size:11px;color:#86efac;align-self:center;">✓ Ready</span>';
+    } catch(e) {
+      prev.innerHTML = '<span style="font-size:12px;color:#fca5a5;">Upload failed</span>';
+    }
+  }
+
+  function toggleAichatVoiceReply() {
+    _aichatVoiceReply = !_aichatVoiceReply;
+    var btn = document.getElementById('aichat-voice-btn');
+    if (btn) { btn.textContent = _aichatVoiceReply ? '🔊' : '🔇'; btn.style.background = _aichatVoiceReply ? '#1a3a2a' : 'var(--card-border)'; btn.style.color = _aichatVoiceReply ? '#86efac' : 'var(--text-muted)'; }
+    if (!_aichatVoiceReply) speechSynthesis && speechSynthesis.cancel();
+  }
+
+  function startAichatPTT() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('Voice not supported. Try Chrome or Safari.'); return; }
+    if (!_aichatPTTRecog) {
+      _aichatPTTRecog = new SR();
+      _aichatPTTRecog.continuous = false; _aichatPTTRecog.lang = 'en-US';
+      _aichatPTTRecog.onresult = function(e) {
+        document.getElementById('aichat-input').value = e.results[0][0].transcript;
+        aichatSend();
+      };
+      _aichatPTTRecog.onend = function() {
+        var btn = document.getElementById('aichat-mic-btn');
+        if (btn) { btn.textContent = '🎤'; btn.style.background = 'var(--card-border)'; btn.style.color = 'var(--text-muted)'; }
+      };
+    }
+    try {
+      _aichatPTTRecog.start();
+      var btn = document.getElementById('aichat-mic-btn');
+      if (btn) { btn.textContent = '🔴'; btn.style.background = '#7f1d1d'; btn.style.color = '#fca5a5'; }
+    } catch(e) {}
+  }
+
+  function stopAichatPTT() { if (_aichatPTTRecog) try { _aichatPTTRecog.stop(); } catch(e) {} }
+
+  function toggleAichatWakeWord() { _aichatWakeActive ? stopAichatWakeWord() : startAichatWakeWord(); }
+
+  function startAichatWakeWord() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('Voice not supported. Try Chrome or Safari.'); return; }
+    _aichatWakeActive = true;
+    var btn = document.getElementById('aichat-wake-btn');
+    var bar = document.getElementById('aichat-wake-bar');
+    if (btn) { btn.style.background = '#1e3a5f'; btn.style.color = '#38bdf8'; }
+    if (bar) bar.style.display = 'block';
+    _aichatWakeLoop();
+  }
+
+  function stopAichatWakeWord() {
+    _aichatWakeActive = false; _aichatWakeListening = false;
+    if (_aichatWakeRecog) try { _aichatWakeRecog.stop(); } catch(e) {}
+    if (_aichatWakeCmdRecog) try { _aichatWakeCmdRecog.stop(); } catch(e) {}
+    var btn = document.getElementById('aichat-wake-btn');
+    var bar = document.getElementById('aichat-wake-bar');
+    if (btn) { btn.style.background = 'var(--card-border)'; btn.style.color = 'var(--text-muted)'; }
+    if (bar) bar.style.display = 'none';
+  }
+
+  function _aichatWakeLoop() {
+    if (!_aichatWakeActive) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    _aichatWakeRecog = new SR();
+    _aichatWakeRecog.continuous = false; _aichatWakeRecog.lang = 'en-US';
+    _aichatWakeRecog.onresult = function(e) {
+      var txt = (e.results[0][0].transcript || '').toLowerCase();
+      if (txt.startsWith('hey') || txt.includes('hey ')) {
+        _aichatWakeListening = true;
+        var ack = new SpeechSynthesisUtterance('Yes?');
+        ack.rate = 1.2;
+        if (_grokSelectedVoice) ack.voice = _grokSelectedVoice;
+        ack.onend = function() { _aichatWakeCmd(); };
+        speechSynthesis.speak(ack);
+      }
+    };
+    _aichatWakeRecog.onend = function() { if (_aichatWakeActive && !_aichatWakeListening) setTimeout(_aichatWakeLoop, 200); };
+    _aichatWakeRecog.onerror = function() { if (_aichatWakeActive && !_aichatWakeListening) setTimeout(_aichatWakeLoop, 500); };
+    try { _aichatWakeRecog.start(); } catch(e) {}
+  }
+
+  function _aichatWakeCmd() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    _aichatWakeCmdRecog = new SR();
+    _aichatWakeCmdRecog.continuous = false; _aichatWakeCmdRecog.lang = 'en-US';
+    _aichatWakeCmdRecog.onresult = function(e) {
+      _aichatWakeListening = false;
+      document.getElementById('aichat-input').value = e.results[0][0].transcript;
+      if (!_aichatVoiceReply) toggleAichatVoiceReply();
+      aichatSend();
+    };
+    _aichatWakeCmdRecog.onend = function() { _aichatWakeListening = false; if (_aichatWakeActive) setTimeout(_aichatWakeLoop, 300); };
+    _aichatWakeCmdRecog.onerror = function() { _aichatWakeListening = false; if (_aichatWakeActive) setTimeout(_aichatWakeLoop, 500); };
+    try { _aichatWakeCmdRecog.start(); } catch(e) {}
+  }
+  // ── End Standalone AI Chat ────────────────────────────────────
   </script>
 
 </body>
