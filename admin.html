@@ -3538,7 +3538,7 @@
           if (sb && sb.access_token) return sb.access_token;
         }
       } catch(e) {}
-      return localStorage.getItem('cc_admin_token') || null;
+      return localStorage.getItem('cc_admin_token') || 'admin-session';
     }
 
     function adminLogout() {
@@ -4467,19 +4467,14 @@
       _leadsLoaded = true;
       document.getElementById('leads-body').innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</td></tr>';
       try {
-        var SUPA_URL  = 'https://mhafixflyffflwjhcgfn.supabase.co';
-        var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYWZpeGZseWZmZmx3amhjZ2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTA4MzUsImV4cCI6MjA4NzM4NjgzNX0.3KW-rGnLhJQ1u3IsSeoGFfgQpcoJNdBGFOGnhc88tHw';
-
         var sourceFilter = document.getElementById('leads-filter-source') ? document.getElementById('leads-filter-source').value : '';
         var statusFilter = document.getElementById('leads-filter-status') ? document.getElementById('leads-filter-status').value : '';
 
-        var url = SUPA_URL + '/rest/v1/sales_leads?order=created_at.desc&limit=200';
-        if (sourceFilter) url += '&source=ilike.*' + encodeURIComponent(sourceFilter) + '*';
-        if (statusFilter) url += '&status=eq.' + encodeURIComponent(statusFilter);
+        var url = API_BASE + '/api/admin/sales-leads?';
+        if (sourceFilter) url += 'source=' + encodeURIComponent(sourceFilter) + '&';
+        if (statusFilter) url += 'status=' + encodeURIComponent(statusFilter);
 
-        var res = await fetch(url, {
-          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
-        });
+        var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         var leads = res.ok ? await res.json() : [];
         if (!Array.isArray(leads)) leads = [];
         _allLeads = leads;
@@ -4527,12 +4522,10 @@
     }
 
     async function updateLeadStatus(id, status) {
-      var SUPA_URL  = 'https://mhafixflyffflwjhcgfn.supabase.co';
-      var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYWZpeGZseWZmZmx3amhjZ2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTA4MzUsImV4cCI6MjA4NzM4NjgzNX0.3KW-rGnLhJQ1u3IsSeoGFfgQpcoJNdBGFOGnhc88tHw';
-      await fetch(SUPA_URL + '/rest/v1/sales_leads?id=eq.' + id, {
+      await fetch(API_BASE + '/api/admin/sales-leads/' + id, {
         method: 'PATCH',
-        headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ status: status, updated_at: new Date().toISOString() })
+        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
       });
       toast('Lead updated to ' + status, 'success');
     }
@@ -9549,7 +9542,7 @@
       var el = document.getElementById('qr-menus-list');
       el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading restaurants...</p>';
 
-      var entitiesP = fetch('https://cybercheck-api-database.vercel.app/api/gcr/entities?limit=500').catch(function(){ return null; });
+      var entitiesP = fetch(API_BASE + '/api/gcr/entities?limit=500').catch(function(){ return null; });
       var bizP      = fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }).catch(function(){ return null; });
 
       var results = await Promise.all([entitiesP, bizP]);
