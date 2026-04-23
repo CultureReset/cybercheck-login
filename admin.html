@@ -1873,9 +1873,14 @@
         <div class="card" style="padding:16px 20px;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
             <label style="font-size:13px;color:var(--text-muted);white-space:nowrap;">Managing:</label>
-            <select id="mb-biz-select" onchange="mbLoadBusiness()" style="flex:1;min-width:220px;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-              <option value="">— Select a business —</option>
-            </select>
+            <div style="flex:1;min-width:220px;position:relative;">
+              <input type="text" id="mb-biz-search" placeholder="🔍 Search businesses..." autocomplete="off"
+                style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
+                oninput="mbFilterBiz(this.value)" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},180)">
+              <div id="mb-biz-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:240px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
+              <!-- hidden select kept for value/slug lookup -->
+              <select id="mb-biz-select" style="display:none"></select>
+            </div>
             <button class="btn btn-primary" style="font-size:13px;padding:8px 16px;white-space:nowrap;" onclick="mbOpenCreateBusiness()">+ New Business</button>
           </div>
         </div>
@@ -10154,14 +10159,16 @@
     }
   }
 
-  // Load businesses into selector
+  var _mbBizList = [];
+
   async function mbLoadBusinessSelector() {
-    var sel = document.getElementById('mb-biz-select');
-    if (!sel) return;
-    if (sel.options.length > 1) return; // already populated
+    if (_mbBizList.length) return;
     try {
       var res = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
       var list = res.ok ? await res.json() : [];
+      _mbBizList = list;
+      // keep hidden select in sync for legacy code
+      var sel = document.getElementById('mb-biz-select');
       list.forEach(function(b) {
         var o = document.createElement('option');
         o.value = b.site_id || b.id;
@@ -10169,8 +10176,48 @@
         o.dataset.slug = b.entity_slug || b.slug || '';
         sel.appendChild(o);
       });
-      if (window.CC && CC.attachSelectSearch) CC.attachSelectSearch(sel, 'Search businesses...');
     } catch(e) {}
+  }
+
+  function mbShowBizDropdown() {
+    mbLoadBusinessSelector().then(function() { mbFilterBiz(document.getElementById('mb-biz-search').value || ''); });
+  }
+
+  function mbFilterBiz(q) {
+    var dd = document.getElementById('mb-biz-dropdown');
+    var term = q.trim().toLowerCase();
+    var matches = term ? _mbBizList.filter(function(b) {
+      var name = (b.name || b.business_name || '').toLowerCase();
+      return name.includes(term);
+    }) : _mbBizList;
+    if (!matches.length) {
+      dd.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:13px;">No businesses found</div>';
+    } else {
+      dd.innerHTML = matches.map(function(b) {
+        var name = b.name || b.business_name || b.site_id;
+        var slug = b.entity_slug || b.slug || '';
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);" ' +
+          'onmousedown="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
+          '<span>' + escHtml(name) + '</span>' +
+          (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
+          '</div>';
+      }).join('');
+    }
+    dd.style.display = '';
+  }
+
+  function mbSelectBiz(siteId, name, slug) {
+    document.getElementById('mb-biz-search').value = name;
+    document.getElementById('mb-biz-dropdown').style.display = 'none';
+    // sync hidden select
+    var sel = document.getElementById('mb-biz-select');
+    sel.value = siteId;
+    if (!sel.value) { // option might not exist yet
+      var o = document.createElement('option');
+      o.value = siteId; o.textContent = name; o.dataset.slug = slug;
+      sel.appendChild(o); sel.value = siteId;
+    }
+    mbLoadBusiness();
   }
 
   function mbPrintQR() {
