@@ -12620,14 +12620,14 @@
         '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
       try {
         var r = await fetch(API_BASE + '/api/admin/tourists', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
-        var tourists = r.ok ? await r.json() : [];
-        if (!Array.isArray(tourists)) tourists = [];
+        var d = r.ok ? await r.json() : {};
+        var tourists = d.tourists || [];
 
         // Stats
         var now = new Date();
         var weekAgo = new Date(now - 7*24*3600*1000);
-        var thisWeek = tourists.filter(function(t){ return t.profile && new Date(t.profile.created_at) > weekAgo; }).length;
-        var withItinerary = tourists.filter(function(t){ return t.itinerary_count > 0; }).length;
+        var thisWeek = tourists.filter(function(t){ return t.created_at && new Date(t.created_at) > weekAgo; }).length;
+        var withItinerary = tourists.filter(function(t){ return (t.itineraries_count || 0) > 0; }).length;
         document.getElementById('ts-tourist-total').textContent = tourists.length;
         document.getElementById('ts-tourist-week').textContent = thisWeek;
         document.getElementById('ts-tourist-itineraries').textContent = withItinerary;
@@ -12639,18 +12639,16 @@
         }
 
         document.getElementById('ts-tourists-body').innerHTML = tourists.map(function(t) {
-          var p = t.profile || {};
-          var saves = t.save_count || 0;
-          var swipes = t.swipe_count || 0;
+          var saves = t.saves_count || 0;
           var email = t.email || '—';
-          var name = p.name || email.split('@')[0];
-          var dest = p.destination || '—';
-          var arrival = p.arrival ? p.arrival.slice(0,10) : '';
-          var departure = p.departure ? p.departure.slice(0,10) : '';
+          var name = t.name || email.split('@')[0];
+          var dest = t.destination || '—';
+          var arrival = t.arrival ? t.arrival.slice(0,10) : '';
+          var departure = t.departure ? t.departure.slice(0,10) : '';
           var dates = arrival ? arrival + (departure ? ' → ' + departure : '') : '—';
-          var interests = (p.interests || []).slice(0,3).join(', ') || '—';
-          var source = saves > 0 && swipes === 0 ? '<span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">GCR Saves</span>'
-            : swipes > 0 ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">Trip Swipe</span>'
+          var interests = (t.interests || []).slice(0,3).join(', ') || '—';
+          var source = t.setup_complete
+            ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">✓ Setup Done</span>'
             : '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">Signed Up</span>';
           return '<tr style="border-bottom:1px solid var(--card-border);">' +
             '<td style="padding:12px 16px;">' +
@@ -12660,9 +12658,9 @@
             '<td style="padding:12px 16px;">' + source + '</td>' +
             '<td style="padding:12px 16px;font-size:13px;">' + escHtml(dest) + '</td>' +
             '<td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">' + escHtml(dates) + '</td>' +
-            '<td style="padding:12px 16px;text-align:center;font-weight:700;">' + swipes + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;font-weight:700;">—</td>' +
             '<td style="padding:12px 16px;text-align:center;">' + (saves > 0 ? '<span style="color:#e11d48;font-weight:700;">❤️ ' + saves + '</span>' : '0') + '</td>' +
-            '<td style="padding:12px 16px;text-align:center;">' + (t.itinerary_count > 0 ? '✅' : '—') + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' + ((t.itineraries_count || 0) > 0 ? '✅' : '—') + '</td>' +
             '<td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">' + escHtml(interests) + '</td>' +
           '</tr>';
         }).join('');
