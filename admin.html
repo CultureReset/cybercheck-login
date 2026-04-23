@@ -5669,15 +5669,24 @@
       statusEl.style.display = ''; statusEl.textContent = 'Saving...';
       var saved = [], errors = [];
       try {
-        // Save menu items
-        var items = _aoResult.menu_items || [];
-        for (var i = 0; i < items.length; i++) {
-          var item = items[i];
+        // Build full item list — food from menu_items, drinks from bar_menu
+        var allItems = [];
+        (_aoResult.menu_items || []).forEach(function(item) {
+          allItems.push({ name: item.item_name || item.name, price: parseFloat(item.price)||0, description: item.description||'', category: item.category||'Menu Items', item_type: item.item_type || 'food', tags: [], modifiers: [] });
+        });
+        // bar_menu → flatten into drink items
+        (_aoResult.bar_menu || []).forEach(function(sec) {
+          (sec.items || []).forEach(function(item) {
+            allItems.push({ name: item.item_name || item.name, price: parseFloat(item.price)||0, description: item.desc || item.description || '', category: sec.category || 'Drinks', item_type: 'drink', tags: [], modifiers: [] });
+          });
+        });
+        for (var i = 0; i < allItems.length; i++) {
+          var item = allItems[i];
           var r = await fetch(API_BASE + '/api/dashboard/menu-items', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-            body: JSON.stringify({ name: item.name || item.item_name, price: parseFloat(item.price)||0, description: item.description||'', category: item.category||'Menu Items', item_type: item.item_type||'food', tags: item.tags||[], modifiers: item.modifiers||[], site_id: siteId })
+            body: JSON.stringify({ ...item, site_id: siteId })
           });
-          if (r.ok) saved.push('menu item'); else errors.push('menu item');
+          if (r.ok) saved.push(item.item_type === 'drink' ? 'drink' : 'menu item'); else errors.push('menu item');
         }
         // Save specials
         var specials = _aoResult.specials || [];
@@ -5699,7 +5708,9 @@
           });
           if (r3.ok) saved.push('event'); else errors.push('event');
         }
-        var msg = '✅ Saved ' + saved.length + ' items (' + (items.length ? items.length + ' menu, ' : '') + (specials.length ? specials.length + ' specials, ' : '') + (events.length ? events.length + ' events' : '') + ')';
+        var foodCount = saved.filter(function(s){return s==='menu item';}).length;
+        var drinkCount = saved.filter(function(s){return s==='drink';}).length;
+        var msg = '✅ Saved: ' + (foodCount ? foodCount + ' food ' : '') + (drinkCount ? drinkCount + ' drinks ' : '') + (specials.length ? specials.length + ' specials ' : '') + (events.length ? events.length + ' events' : '');
         if (errors.length) msg += ' — ' + errors.length + ' failed';
         statusEl.style.color = errors.length ? '#f59e0b' : '#4ade80';
         statusEl.textContent = msg;
