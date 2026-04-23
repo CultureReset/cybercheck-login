@@ -2675,7 +2675,48 @@
       <div id="page-ai-organize" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>AI Data Organizer</h1>
-          <div style="font-size:13px;color:var(--text-muted);">Paste any business info — website copy, menu text, PDFs — and AI structures it into database fields for you to review and approve.</div>
+          <div style="font-size:13px;color:var(--text-muted);">Chat with AI to add any restaurant data — menus, specials, events, happy hour. AI asks questions when needed and saves directly to the right place.</div>
+        </div>
+
+        <!-- ── AI Chat Organizer ── -->
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <label style="font-size:13px;color:var(--text-muted);white-space:nowrap;">Business:</label>
+            <div style="flex:1;min-width:200px;position:relative;">
+              <input type="text" id="aoc-biz-search" placeholder="🔍 Search business..." autocomplete="off"
+                style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
+                oninput="aocFilterBiz(this.value)" onfocus="aocShowDrop()" onblur="setTimeout(function(){var d=document.getElementById('aoc-biz-drop');if(d)d.style.display='none'},180)">
+              <div id="aoc-biz-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
+              <input type="hidden" id="aoc-site-id">
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="aocClear()">Clear Chat</button>
+          </div>
+
+          <!-- Messages -->
+          <div id="aoc-messages" style="min-height:200px;max-height:420px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:24px 0;">
+              Select a business above, then paste any info — menu, specials, happy hour, events, website copy — and I'll organize and save it for you. I'll ask if anything is unclear.
+            </div>
+          </div>
+
+          <!-- Image upload -->
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('aoc-img-input').click()" style="white-space:nowrap;">📷 Add Menu Photo</button>
+            <span id="aoc-img-status" style="font-size:12px;color:var(--text-muted);"></span>
+            <input type="file" id="aoc-img-input" accept="image/*" style="display:none" onchange="aocHandleImage(this)">
+          </div>
+
+          <!-- Input -->
+          <div style="display:flex;gap:8px;">
+            <textarea id="aoc-input" placeholder="Paste menu text, type specials, describe events... or upload a photo above. Ctrl+Enter to send." rows="3"
+              style="flex:1;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"
+              onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){aocSend();}"></textarea>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button class="btn btn-primary" onclick="aocSend()" style="height:50px;padding:0 20px;" id="aoc-send-btn">Send</button>
+              <div style="font-size:11px;color:var(--text-muted);text-align:center;">Ctrl+Enter</div>
+            </div>
+          </div>
+          <div id="aoc-saved-log" style="margin-top:10px;font-size:12px;color:#4ade80;display:none;"></div>
         </div>
 
         <!-- ALWAYS VISIBLE SAVE BUTTON -->
@@ -2706,13 +2747,15 @@
               <button class="btn btn-primary" style="width:100%;" onclick="runAIOrganize()">Organize with AI</button>
             </div>
           </div>
-          <!-- URL Scrape option -->
-          <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-end;">
-            <div style="flex:1;">
+          <!-- URL Scrape + Photo Upload -->
+          <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-end;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
               <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Or — Scrape a URL directly</label>
               <input id="ao-url" type="url" placeholder="https://www.businesswebsite.com or Google Maps URL..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
             </div>
             <button class="btn btn-outline" style="white-space:nowrap;" onclick="scrapeURL()">Scrape URL</button>
+            <button class="btn btn-outline" style="white-space:nowrap;" onclick="document.getElementById('ao-img-upload').click()">📷 Upload Menu Photo</button>
+            <input type="file" id="ao-img-upload" accept="image/*" style="display:none" onchange="aoScanMenuPhoto(this)">
           </div>
           <div id="ao-scrape-status" style="display:none;font-size:12px;color:var(--text-muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px;"></div>
 
@@ -5360,6 +5403,207 @@
     }
 
     // ── AI DATA ORGANIZER ─────────────────────────────
+
+    // ── AI Chat Organizer ──────────────────────────────────────────
+    var _aocMessages  = [];
+    var _aocSiteId    = null;
+    var _aocBizList   = [];
+    var _aocPending   = null; // structured data waiting for user approval
+
+    async function aocLoadBiz() {
+      if (_aocBizList.length) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        _aocBizList = r.ok ? await r.json() : [];
+      } catch(e) {}
+    }
+
+    function aocShowDrop() {
+      aocLoadBiz().then(function() { aocFilterBiz(document.getElementById('aoc-biz-search').value || ''); });
+    }
+
+    function aocFilterBiz(q) {
+      var dd = document.getElementById('aoc-biz-drop');
+      var term = q.trim().toLowerCase();
+      var matches = term ? _aocBizList.filter(function(b){ return (b.name||'').toLowerCase().includes(term); }) : _aocBizList.slice(0,20);
+      dd.innerHTML = matches.length ? matches.map(function(b) {
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);" onmousedown="aocSelectBiz('+JSON.stringify(b.site_id||b.id)+','+JSON.stringify(b.name||'')+')">' + escHtml(b.name||b.site_id) + '</div>';
+      }).join('') : '<div style="padding:12px;color:var(--text-muted);font-size:13px;">No businesses found</div>';
+      dd.style.display = '';
+    }
+
+    function aocSelectBiz(siteId, name) {
+      _aocSiteId = siteId;
+      document.getElementById('aoc-biz-search').value = name;
+      document.getElementById('aoc-site-id').value = siteId;
+      document.getElementById('aoc-biz-drop').style.display = 'none';
+      aocAddMessage('system', '✅ Switched to <strong>' + escHtml(name) + '</strong>. Paste any menu, specials, events or business info.');
+    }
+
+    function aocClear() {
+      _aocMessages = []; _aocPending = null;
+      document.getElementById('aoc-messages').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:24px 0;">Select a business above, then paste any info — menu, specials, happy hour, events, website copy — and I\'ll organize and save it for you.</div>';
+      document.getElementById('aoc-saved-log').style.display = 'none';
+    }
+
+    function aocAddMessage(role, html, data) {
+      var wrap = document.getElementById('aoc-messages');
+      // Clear placeholder
+      if (wrap.querySelector('[style*="Select a business"]')) wrap.innerHTML = '';
+
+      var isUser = role === 'user';
+      var isSystem = role === 'system';
+      var div = document.createElement('div');
+      div.style.cssText = isSystem
+        ? 'font-size:12px;color:var(--text-muted);text-align:center;padding:4px 0;'
+        : 'max-width:85%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.5;' +
+          (isUser ? 'align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px;'
+                  : 'align-self:flex-start;background:var(--surface);border:1px solid var(--card-border);border-bottom-left-radius:4px;');
+      div.innerHTML = html;
+
+      // If AI returned structured preview data, add a verify+save card
+      if (data && (data.menu_items||data.specials||data.events)) {
+        _aocPending = { data, site_id: _aocSiteId };
+        var preview = document.createElement('div');
+        preview.style.cssText = 'margin-top:10px;padding:12px;background:var(--bg);border:1px solid var(--primary);border-radius:8px;font-size:13px;';
+        var lines = [];
+        if (data.menu_items && data.menu_items.length) {
+          lines.push('<strong>Menu Items (' + data.menu_items.length + '):</strong>');
+          data.menu_items.slice(0,5).forEach(function(i){ lines.push('&nbsp;&nbsp;• ' + escHtml(i.name) + (i.price ? ' — $' + i.price : '') + (i.item_type && i.item_type!=='food' ? ' <em>(' + i.item_type + ')</em>' : '')); });
+          if (data.menu_items.length > 5) lines.push('&nbsp;&nbsp;+ ' + (data.menu_items.length-5) + ' more...');
+        }
+        if (data.specials && data.specials.length) {
+          lines.push('<strong>Specials (' + data.specials.length + '):</strong>');
+          data.specials.forEach(function(s){ lines.push('&nbsp;&nbsp;• ' + escHtml(s.special_name) + (s.discount_text ? ' — ' + escHtml(s.discount_text) : '')); });
+        }
+        if (data.events && data.events.length) {
+          lines.push('<strong>Events (' + data.events.length + '):</strong>');
+          data.events.forEach(function(e){ lines.push('&nbsp;&nbsp;• ' + escHtml(e.name) + (e.event_date ? ' — ' + escHtml(e.event_date) : '')); });
+        }
+        preview.innerHTML = lines.join('<br>') + '<br><br>' +
+          '<button class="btn btn-primary btn-sm" onclick="aocSaveNow()" style="margin-right:8px;">✅ Save to Database</button>' +
+          '<button class="btn btn-outline btn-sm" onclick="aocRejectPreview()">✕ Don\'t Save</button>';
+        div.appendChild(preview);
+      }
+
+      wrap.appendChild(div);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    async function aocSend() {
+      if (!_aocSiteId) { toast('Select a business first', 'error'); return; }
+      var input = document.getElementById('aoc-input');
+      var text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      aocAddMessage('user', escHtml(text));
+      _aocMessages.push({ role: 'user', content: text });
+
+      var btn = document.getElementById('aoc-send-btn');
+      btn.disabled = true; btn.textContent = '...';
+
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-chat-organizer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ messages: _aocMessages, site_id: _aocSiteId })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed');
+
+        var reply = d.reply || '';
+        _aocMessages.push({ role: 'assistant', content: reply });
+
+        // Extract any structured data the AI might have included in reply
+        var structured = null;
+        try {
+          var jsonMatch = reply.match(/```json([\s\S]*?)```/);
+          if (jsonMatch) structured = JSON.parse(jsonMatch[1]);
+        } catch(e) {}
+
+        aocAddMessage('assistant', reply.replace(/```json[\s\S]*?```/g,'').replace(/\n/g,'<br>'), structured);
+
+        // Log what was actually saved
+        if (d.saved && d.saved.length) {
+          var log = document.getElementById('aoc-saved-log');
+          log.style.display = '';
+          log.innerHTML = '✅ Saved: ' + d.saved.map(function(s){
+            return s.count ? s.count + ' ' + s.type : s.type;
+          }).join(', ');
+        }
+      } catch(e) {
+        aocAddMessage('assistant', '❌ Error: ' + e.message);
+      }
+      btn.disabled = false; btn.textContent = 'Send';
+    }
+
+    async function aocSaveNow() {
+      if (!_aocPending) return;
+      var btn = document.querySelector('[onclick="aocSaveNow()"]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-chat-organizer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ messages: _aocMessages, site_id: _aocSiteId, force_save: true })
+        });
+        var d = await r.json();
+        aocAddMessage('system', '✅ Saved successfully!');
+        if (d.saved && d.saved.length) {
+          var log = document.getElementById('aoc-saved-log');
+          log.style.display = '';
+          log.innerHTML = '✅ Saved: ' + d.saved.map(function(s){ return (s.count||1) + ' ' + s.type; }).join(', ');
+        }
+        _aocPending = null;
+        toast('Saved to database!', 'success');
+      } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+    }
+
+    function aocRejectPreview() {
+      _aocPending = null;
+      aocAddMessage('system', 'Not saved. Let me know what to change.');
+    }
+
+    // Scan a menu photo and dump extracted text into the raw text box
+    async function aoScanMenuPhoto(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var statusEl = document.getElementById('ao-scrape-status');
+      statusEl.style.display = '';
+      statusEl.style.color = 'var(--text-muted)';
+      statusEl.textContent = '📷 Reading menu photo with AI...';
+      try {
+        var c = await CC.compressImage(file, 1280, 0.75);
+        var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ image_base64: c.dataUrl, mime_type: c.mimeType })
+        });
+        var d = await res.json();
+        if (!res.ok) throw new Error(d.error || 'Scan failed');
+        // Convert extracted JSON to readable text and append to raw box
+        var lines = [];
+        (d.categories || []).forEach(function(cat) {
+          lines.push('\n== ' + cat.name + ' (' + (cat.item_type||'food') + ') ==');
+          (cat.items || []).forEach(function(item) {
+            var line = item.name + ' — $' + item.price;
+            if (item.description) line += '\n  ' + item.description;
+            if ((item.modifiers||[]).length) line += '\n  Add-ons: ' + item.modifiers.map(function(m){return m.name+' $'+m.price;}).join(', ');
+            lines.push(line);
+          });
+        });
+        var raw = document.getElementById('ao-raw');
+        raw.value = (raw.value ? raw.value + '\n\n' : '') + 'MENU PHOTO SCAN:\n' + lines.join('\n');
+        var total = (d.categories||[]).reduce(function(n,c){return n+(c.items||[]).length;},0);
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = '✅ Photo scanned — found ' + total + ' items across ' + (d.categories||[]).length + ' sections. Review text below then click "Organize with AI".';
+      } catch(e) {
+        statusEl.style.color = '#ef4444';
+        statusEl.textContent = '❌ ' + e.message;
+      }
+      input.value = '';
+    }
 
     var _aoResult = null;
     var _aoSavedSlug = null;
