@@ -41,40 +41,68 @@
         <div class="biz-type">Platform Admin</div>
       </div>
       <nav class="sidebar-nav">
-        <div class="nav-section-label">Platform</div>
+
+        <!-- ── OVERVIEW ── -->
         <div class="nav-item active" data-page="overview" onclick="showPage('overview')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Overview</span>
         </div>
-        <div class="nav-item" data-page="businesses" onclick="showPage('businesses')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-          <span>Businesses</span>
+
+        <!-- ── MENU & QR ── -->
+        <div class="nav-section-label">🍽️ Menu & QR</div>
+        <div class="nav-item" data-page="menu-builder" onclick="showPage('menu-builder')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h18v4H3z"/></svg>
+          <span>Menu Builder 🤖</span>
+        </div>
+        <div class="nav-item" data-page="qr-menus" onclick="showPage('qr-menus')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>QR Menus</span>
+        </div>
+        <div class="nav-item" data-page="qr-tracker" onclick="showPage('qr-tracker')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>QR Tracker</span>
+        </div>
+        <div class="nav-item" data-page="daily-update-links" onclick="showPage('daily-update-links')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/></svg>
+          <span>Daily SMS Links</span>
         </div>
 
-        <div class="nav-section-label">Gulf Coast Radar</div>
+        <!-- ── GCR DIRECTORY ── -->
+        <div class="nav-section-label">🗺️ GCR Directory</div>
         <div class="nav-item" data-page="gcr-businesses" onclick="showPage('gcr-businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span>GCR Businesses</span>
         </div>
-        <div class="nav-item" data-page="gcr-claims" onclick="showPage('gcr-claims')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
-          <span>Claim Requests <span id="gcr-claims-badge" style="display:none;background:#e74c3c;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:4px;">0</span></span>
-        </div>
         <div class="nav-item" data-page="gcr-entity-editor" onclick="showPage('gcr-entity-editor')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <span>Entity Editor</span>
+          <span>Entity Editor 🤖</span>
         </div>
         <div class="nav-item" data-page="gcr-site-editor" onclick="showPage('gcr-site-editor')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
           <span>Site Editor</span>
         </div>
+        <div class="nav-item" data-page="gcr-claims" onclick="showPage('gcr-claims')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+          <span>Claim Requests <span id="gcr-claims-badge" style="display:none;background:#e74c3c;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:4px;">0</span></span>
+        </div>
+
+        <!-- ── CONTENT ── -->
+        <div class="nav-section-label">📋 Content</div>
         <div class="nav-item" data-page="gcr-events" onclick="showPage('gcr-events')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>Events</span>
+          <span>Events 🤖</span>
         </div>
         <div class="nav-item" data-page="gcr-specials" onclick="showPage('gcr-specials')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <span>Specials</span>
+          <span>Specials 🤖</span>
+        </div>
+        <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span>Coupons 🤖</span>
+        </div>
+        <div class="nav-item" data-page="gcr-seo" onclick="showPage('gcr-seo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Tags & SEO 🤖</span>
         </div>
         <div class="nav-item" data-page="bulk-upload" onclick="showPage('bulk-upload')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
@@ -84,6 +112,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <span>Bulk Events</span>
         </div>
+
+        <!-- ── AI TOOLS ── -->
+        <div class="nav-section-label">🤖 AI Tools</div>
         <div class="nav-item" data-page="ai-organize" onclick="showPage('ai-organize')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
           <span>AI Data Organizer</span>
@@ -93,15 +124,12 @@
           <span>AI Index / RAG</span>
         </div>
         <div class="nav-item" data-page="ai-settings" onclick="showPage('ai-settings')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 8v4l3 3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           <span>AI Settings</span>
         </div>
 
-        <div class="nav-section-label">Business Tools</div>
-        <div class="nav-item" data-page="bookings" onclick="showPage('bookings')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>Bookings</span>
-        </div>
+        <!-- ── ENGAGEMENT ── -->
+        <div class="nav-section-label">📊 Engagement</div>
         <div class="nav-item" data-page="gcr-analytics" onclick="showPage('gcr-analytics')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
           <span>Analytics</span>
@@ -114,62 +142,27 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           <span>Customers</span>
         </div>
-        <div class="nav-item" data-page="gcr-social" onclick="showPage('gcr-social')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-          <span>Social & Connections</span>
-        </div>
         <div class="nav-item" data-page="gcr-messaging" onclick="showPage('gcr-messaging')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span>SMS / Messaging</span>
         </div>
-        <div class="nav-item" data-page="sales-pages" onclick="showPage('sales-pages')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-          <span>Sales Pages</span>
-        </div>
-        <div class="nav-item" data-page="daily-update-links" onclick="showPage('daily-update-links')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
-          <span>Daily Update Links</span>
-        </div>
-        <div class="nav-item" data-page="qr-menus" onclick="showPage('qr-menus')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="5" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m4.24-4.24l4.24 4.24M4.22 19.78l4.24-4.24m8.48 0l4.24 4.24"/></svg>
-          <span>QR Menus</span>
-        </div>
-        <div class="nav-item" data-page="trip-swipe-questions" onclick="showPage('trip-swipe-questions')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span>Trip-Swipe Questions</span>
-        </div>
-        <div class="nav-item" data-page="menu-builder" onclick="showPage('menu-builder')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h18v4H3z"/><line x1="7" y1="5" x2="7" y2="5.01"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="7" y1="19" x2="7" y2="19.01"/></svg>
-          <span>Menu Builder</span>
-        </div>
-        <div class="nav-item" data-page="qr-tracker" onclick="showPage('qr-tracker')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
-          <span>QR Tracker</span>
-        </div>
-        <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-          <span>Coupons</span>
-        </div>
-        <div class="nav-item" data-page="gcr-seo" onclick="showPage('gcr-seo')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span>SEO</span>
-        </div>
-        <div class="nav-item" data-page="integrations" onclick="showPage('integrations')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6M6 9v10a2 2 0 002 2h8a2 2 0 002-2V9"/></svg>
-          <span>Integrations</span>
+        <div class="nav-item" data-page="gcr-social" onclick="showPage('gcr-social')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>Social & Connections</span>
         </div>
 
-        <div class="nav-section-label">Trip Swipe</div>
+        <!-- ── TRIP SWIPE ── -->
+        <div class="nav-section-label">❤️ Trip Swipe</div>
         <div class="nav-item" data-page="tripswipe-overview" onclick="showPage('tripswipe-overview')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
           <span>Overview</span>
         </div>
         <div class="nav-item" data-page="tripswipe-businesses" onclick="showPage('tripswipe-businesses')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/></svg>
           <span>Businesses</span>
         </div>
         <div class="nav-item" data-page="tripswipe-tourists" onclick="showPage('tripswipe-tourists')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           <span>Tourists</span>
         </div>
         <div class="nav-item" data-page="tripswipe-analytics" onclick="showPage('tripswipe-analytics')">
@@ -177,21 +170,42 @@
           <span>Swipe Analytics</span>
         </div>
         <div class="nav-item" data-page="tripswipe-ai" onclick="showPage('tripswipe-ai')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M19.07 19.07l-1.41-1.41M5.34 5.34L3.93 3.93M21 12h-2M5 12H3M12 21v-2M12 5V3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
           <span>AI Feedback</span>
         </div>
+        <div class="nav-item" data-page="trip-swipe-questions" onclick="showPage('trip-swipe-questions')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/></svg>
+          <span>Swipe Questions 🤖</span>
+        </div>
 
-        <div class="nav-section-label">Platform</div>
+        <!-- ── PLATFORM ── -->
+        <div class="nav-section-label">⚙️ Platform</div>
+        <div class="nav-item" data-page="businesses" onclick="showPage('businesses')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span>Businesses</span>
+        </div>
         <div class="nav-item" data-page="leads" onclick="showPage('leads')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <span>Leads</span>
         </div>
+        <div class="nav-item" data-page="bookings" onclick="showPage('bookings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Bookings</span>
+        </div>
+        <div class="nav-item" data-page="sales-pages" onclick="showPage('sales-pages')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span>Sales Pages</span>
+        </div>
         <div class="nav-item" data-page="ar-hunts" onclick="showPage('ar-hunts')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
           <span>AR Hunts</span>
         </div>
+        <div class="nav-item" data-page="integrations" onclick="showPage('integrations')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6M6 9v10a2 2 0 002 2h8a2 2 0 002-2V9"/></svg>
+          <span>Integrations</span>
+        </div>
         <div class="nav-item" data-page="users" onclick="showPage('users')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           <span>Users</span>
         </div>
         <div class="nav-item" data-page="api-keys" onclick="showPage('api-keys')">
@@ -1059,7 +1073,27 @@
       <div id="page-gcr-events" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>GCR Events</h1>
-          <button class="btn btn-primary" onclick="openAddEventModal()">+ Add Event</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" onclick="openAIEventExtract()">🤖 AI Extract from Photo/Text</button>
+            <button class="btn btn-primary" onclick="openAddEventModal()">+ Add Event</button>
+          </div>
+        </div>
+        <!-- AI Event Extract Panel -->
+        <div id="ai-event-extract-panel" style="display:none;margin-bottom:16px;" class="card">
+          <div style="padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="margin:0;font-size:15px;">🤖 AI Event Extractor</h3>
+              <button onclick="document.getElementById('ai-event-extract-panel').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Upload a flyer, poster, or paste event text — AI extracts all events automatically.</p>
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('ai-event-img-input').click()">📷 Upload Flyer/Photo</button>
+              <input type="file" id="ai-event-img-input" accept="image/*" style="display:none" onchange="aiExtractEvents(this)">
+            </div>
+            <textarea id="ai-event-raw-text" placeholder="Or paste event text here — dates, times, descriptions, venue..." rows="4" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
+            <button class="btn btn-primary" onclick="aiExtractEventsFromText()" style="width:100%;">Extract Events with AI</button>
+            <div id="ai-event-status" style="margin-top:8px;font-size:13px;color:var(--text-muted);"></div>
+          </div>
         </div>
         <div class="card" style="padding:24px;">
           <div style="overflow-x:auto;">
@@ -1190,7 +1224,27 @@
       <div id="page-gcr-specials" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>GCR Specials</h1>
-          <button class="btn btn-primary" onclick="openAddSpecialModal()">+ Add Special</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" onclick="openAISpecialExtract()">🤖 AI Extract from Photo/Text</button>
+            <button class="btn btn-primary" onclick="openAddSpecialModal()">+ Add Special</button>
+          </div>
+        </div>
+        <!-- AI Special Extract Panel -->
+        <div id="ai-special-extract-panel" style="display:none;margin-bottom:16px;" class="card">
+          <div style="padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="margin:0;font-size:15px;">🤖 AI Specials Extractor</h3>
+              <button onclick="document.getElementById('ai-special-extract-panel').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Upload a specials board photo, happy hour sign, or paste the text — AI extracts everything.</p>
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('ai-special-img-input').click()">📷 Upload Photo</button>
+              <input type="file" id="ai-special-img-input" accept="image/*" style="display:none" onchange="aiExtractSpecials(this)">
+            </div>
+            <textarea id="ai-special-raw-text" placeholder="Or paste specials text — deals, happy hour times, descriptions..." rows="4" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
+            <button class="btn btn-primary" onclick="aiExtractSpecialsFromText()" style="width:100%;">Extract Specials with AI</button>
+            <div id="ai-special-status" style="margin-top:8px;font-size:13px;color:var(--text-muted);"></div>
+          </div>
         </div>
         <div class="card" style="padding:24px;">
           <div style="overflow-x:auto;">
@@ -4203,6 +4257,111 @@
     }
 
     // ── GCR EVENTS ────────────────────────────────────
+    // ── AI Event & Special Extraction ────────────────────────────
+    function openAIEventExtract() {
+      var p = document.getElementById('ai-event-extract-panel');
+      p.style.display = p.style.display === 'none' ? '' : 'none';
+    }
+    function openAISpecialExtract() {
+      var p = document.getElementById('ai-special-extract-panel');
+      p.style.display = p.style.display === 'none' ? '' : 'none';
+    }
+
+    async function aiExtractEvents(input) {
+      var file = input.files[0]; if (!file) return;
+      var statusEl = document.getElementById('ai-event-status');
+      statusEl.textContent = '📷 Reading photo with AI...';
+      try {
+        var c = await CC.compressImage(file, 1280, 0.75);
+        var r = await fetch(API_BASE + '/api/dashboard/events/extract', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ image_base64: c.dataUrl, mime_type: c.mimeType })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        document.getElementById('ai-event-raw-text').value = (d.items || []).map(function(i){ return i.name + (i.date ? ' — ' + i.date : '') + (i.time ? ' at ' + i.time : '') + (i.description ? '\n' + i.description : ''); }).join('\n\n');
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = '✅ Found ' + (d.items||[]).length + ' events — review text above then click Extract.';
+      } catch(e) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
+      input.value = '';
+    }
+
+    async function aiExtractEventsFromText() {
+      var raw = document.getElementById('ai-event-raw-text').value.trim();
+      if (!raw) { toast('Enter some event text first', 'error'); return; }
+      var statusEl = document.getElementById('ai-event-status');
+      statusEl.textContent = '🤖 Structuring events...';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-organize', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ raw_text: raw, business_type: 'events' })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        var events = d.structured && d.structured.events || [];
+        if (!events.length) { statusEl.textContent = '⚠️ No events found — try more detail'; return; }
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = '✅ Found ' + events.length + ' events — opening form for each...';
+        // Pre-fill the add modal with first event and offer sequential entry
+        events.forEach(function(ev, i) {
+          setTimeout(function() {
+            openAddEventModal();
+            var nm = document.getElementById('event-name'); if (nm) nm.value = ev.event_name || ev.name || '';
+            var ds = document.getElementById('event-description'); if (ds) ds.value = ev.description || '';
+            var dt = document.getElementById('event-date'); if (dt) dt.value = ev.event_date || '';
+            var st = document.getElementById('event-start-time'); if (st) st.value = ev.start_time || '';
+          }, i * 100);
+        });
+      } catch(e) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
+    }
+
+    async function aiExtractSpecials(input) {
+      var file = input.files[0]; if (!file) return;
+      var statusEl = document.getElementById('ai-special-status');
+      statusEl.textContent = '📷 Reading photo with AI...';
+      try {
+        var c = await CC.compressImage(file, 1280, 0.75);
+        var r = await fetch(API_BASE + '/api/dashboard/events/extract', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ image_base64: c.dataUrl, mime_type: c.mimeType, extract_type: 'specials' })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        document.getElementById('ai-special-raw-text').value = (d.items || []).map(function(i){ return i.name + (i.price_text ? ' — ' + i.price_text : '') + (i.days ? ' · ' + i.days : '') + (i.description ? '\n' + i.description : ''); }).join('\n\n');
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = '✅ Found ' + (d.items||[]).length + ' specials — review text above then click Extract.';
+      } catch(e) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
+      input.value = '';
+    }
+
+    async function aiExtractSpecialsFromText() {
+      var raw = document.getElementById('ai-special-raw-text').value.trim();
+      if (!raw) { toast('Enter some specials text first', 'error'); return; }
+      var statusEl = document.getElementById('ai-special-status');
+      statusEl.textContent = '🤖 Structuring specials...';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-organize', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ raw_text: raw, business_type: 'specials' })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        var specials = d.structured && d.structured.specials || [];
+        if (!specials.length) { statusEl.textContent = '⚠️ No specials found — try more detail'; return; }
+        statusEl.style.color = '#4ade80';
+        statusEl.textContent = '✅ Found ' + specials.length + ' specials — opening form...';
+        specials.forEach(function(sp, i) {
+          setTimeout(function() {
+            openAddSpecialModal();
+            var nm = document.getElementById('special-name'); if (nm) nm.value = sp.special_name || sp.name || '';
+            var dc = document.getElementById('special-discount'); if (dc) dc.value = sp.discount_text || '';
+            var ds = document.getElementById('special-description'); if (ds) ds.value = sp.description || '';
+            var dy = document.getElementById('special-days'); if (dy) dy.value = sp.days || '';
+          }, i * 100);
+        });
+      } catch(e) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
+    }
+
     var _eventsLoaded = false;
 
     async function loadGCREvents() {
