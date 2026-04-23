@@ -11256,8 +11256,9 @@
   </div>
 
   <!-- Create Business Modal -->
-  <div id="mb-modal-create-biz" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;">
-    <div style="background:var(--surface);border-radius:14px;padding:24px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+  <div id="mb-modal-create-biz" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:24px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.6);">
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Create New Business</h3><button onclick="mbCloseModal('mb-modal-create-biz')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button></div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div><label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Business Name *</label>
@@ -11421,19 +11422,35 @@
   function mbFilterBiz(q) {
     var dd = document.getElementById('mb-biz-dropdown');
     var term = q.trim().toLowerCase();
+    if (!_mbBizList.length) {
+      dd.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:13px;">Loading…</div>';
+      dd.style.display = '';
+      return;
+    }
     var matches = term ? _mbBizList.filter(function(b) {
       var name = (b.name || b.business_name || '').toLowerCase();
       return name.includes(term);
-    }) : _mbBizList;
+    }) : _mbBizList.slice(0, 60);
     if (!matches.length) {
       dd.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:13px;">No businesses found</div>';
     } else {
       dd.innerHTML = matches.map(function(b) {
         var name = b.name || b.business_name || b.site_id;
         var slug = b.entity_slug || b.slug || '';
-        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);" ' +
+        // Highlight matching text
+        var displayName = escHtml(name);
+        if (term) {
+          var idx = name.toLowerCase().indexOf(term);
+          if (idx >= 0) {
+            displayName = escHtml(name.slice(0, idx)) +
+              '<strong style="color:var(--primary);">' + escHtml(name.slice(idx, idx + term.length)) + '</strong>' +
+              escHtml(name.slice(idx + term.length));
+          }
+        }
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);transition:.1s;" ' +
+          'onmouseover="this.style.background=\'var(--card-border)\'" onmouseout="this.style.background=\'\'" ' +
           'onmousedown="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
-          '<span>' + escHtml(name) + '</span>' +
+          '<span>' + displayName + '</span>' +
           (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
           '</div>';
       }).join('');
