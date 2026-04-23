@@ -12970,7 +12970,7 @@
     ],
   };
 
-  function aichatProviderChanged() {
+  function aichatProviderChanged(keepModel) {
     var prov = document.getElementById('aichat-provider').value;
     var modSel = document.getElementById('aichat-model');
     var models = _aichatProviderModels[prov] || [];
@@ -13230,6 +13230,8 @@
     _aichatWakeCmdRecog.onerror = function() { _aichatWakeListening = false; if (_aichatWakeActive) setTimeout(_aichatWakeLoop, 500); };
     try { _aichatWakeCmdRecog.start(); } catch(e) {}
   }
+  // Init model dropdown to match selected provider on page load
+  document.addEventListener('DOMContentLoaded', function() { aichatProviderChanged(); });
   // ── End Standalone AI Chat ────────────────────────────────────
   </script>
 
