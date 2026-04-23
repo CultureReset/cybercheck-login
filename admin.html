@@ -2031,6 +2031,7 @@
           <button class="mb-tab active" onclick="mbSwitchTab('menu')" id="mb-tab-menu" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">Menu Items</button>
           <button class="mb-tab" onclick="mbSwitchTab('events')" id="mb-tab-events" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">Events & Specials</button>
           <button class="mb-tab" onclick="mbSwitchTab('theme')" id="mb-tab-theme" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">Theme Designer</button>
+          <button class="mb-tab" onclick="mbSwitchTab('ai-design')" id="mb-tab-ai-design" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">🤖 AI Design</button>
         </div>
 
         <!-- TAB: Menu Items -->
@@ -2091,6 +2092,48 @@
               <button class="btn btn-primary" style="font-size:13px;padding:8px 14px;" onclick="mbOpenSpecialItem()">+ Add Special</button>
             </div>
             <div id="mb-specials-list" style="color:var(--text-muted);font-size:13px;">Select a business to load specials.</div>
+          </div>
+        </div>
+
+        <!-- TAB: AI Design -->
+        <div id="mb-panel-ai-design" style="display:none;">
+          <div class="card" style="padding:28px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+              <div style="font-size:40px;">🤖</div>
+              <div>
+                <h3 style="margin:0 0 4px;font-size:18px;">AI Menu Designer</h3>
+                <p style="margin:0;font-size:13px;color:var(--text-muted);">Describe how you want your menu to look. The AI reads your actual menu data and creates a custom design — colors, layout, which sections show first.</p>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:16px;">
+              <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Describe your ideal menu design</label>
+              <textarea id="ai-design-desc" rows="4" placeholder="Examples:
+• 'Beachy and tropical — ocean blues and greens, put the catch of the day first'
+• 'Dark and upscale — black background, gold accents, like a fine dining experience'
+• 'Bright and fun beach bar — happy hour is our biggest thing, show that first'
+• 'Christmas week — festive reds and greens, highlight our holiday specials'
+• 'Simple and clean — white background, just the menu, no extras'"
+              style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;line-height:1.6;" rows="5"></textarea>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">💡 You can style each section differently — e.g. "dark dramatic top for catch of day and live music, then bright clean white for the regular menu section, warm gold for happy hour"</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:20px;">
+              <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Occasion / Season <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
+              <input type="text" id="ai-design-occasion" placeholder="e.g. Summer, Christmas week, Valentine's Day, Mardi Gras, Football season..." style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+            </div>
+
+            <button class="btn btn-primary" onclick="mbGenerateAIDesign()" id="ai-design-btn" style="width:100%;padding:14px;font-size:16px;font-weight:700;">
+              🎨 Generate My Custom Design
+            </button>
+
+            <div id="ai-design-status" style="display:none;margin-top:16px;padding:16px;border-radius:10px;font-size:14px;"></div>
+          </div>
+
+          <!-- Design History -->
+          <div class="card" style="padding:20px;" id="ai-design-history-card" style="display:none;">
+            <h3 style="margin:0 0 16px;font-size:15px;">Recent Designs</h3>
+            <div id="ai-design-history"></div>
           </div>
         </div>
 
@@ -11633,6 +11676,101 @@
     mbCloseModal('mb-modal-extract');
     if (type === 'events') mbRenderEvents(); else mbRenderSpecials();
     toast('✅ ' + total + ' ' + type + ' imported!', 'success');
+  }
+
+  // ── AI Design Generator ──────────────────────────────────────
+  async function mbGenerateAIDesign() {
+    if (!_mbSiteId) { toast('Select a business first', 'error'); return; }
+    var desc = document.getElementById('ai-design-desc').value.trim();
+    if (!desc) { toast('Describe how you want the menu to look', 'error'); return; }
+    var occasion = document.getElementById('ai-design-occasion').value.trim();
+
+    var btn = document.getElementById('ai-design-btn');
+    var status = document.getElementById('ai-design-status');
+    btn.disabled = true;
+    btn.textContent = '🎨 Designing...';
+    status.style.display = '';
+    status.style.background = 'var(--bg)';
+    status.style.border = '1px solid var(--card-border)';
+    status.style.color = 'var(--text-muted)';
+    status.textContent = 'Claude is reading your menu data and creating your custom design...';
+
+    try {
+      var r = await fetch(API_BASE + '/api/dashboard/menu/generate-design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: JSON.stringify({ site_id: _mbSiteId, description: desc, occasion: occasion || undefined })
+      });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Design failed');
+
+      // Show success
+      status.style.background = 'rgba(34,197,94,.08)';
+      status.style.border = '1px solid rgba(34,197,94,.3)';
+      status.style.color = 'var(--text)';
+
+      var design = d.design;
+      var previewUrl = d.preview_url;
+      var previewQr = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(previewUrl);
+
+      status.innerHTML =
+        '<div style="font-weight:700;font-size:15px;margin-bottom:8px;">✅ ' + escHtml(d.message) + '</div>' +
+        '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Template: <strong>' + escHtml(design.template || 'custom') + '</strong> · ' +
+        'Modules: ' + Object.entries(design.modules || {}).filter(function(e){return e[1];}).map(function(e){return e[0].replace(/_/g,' ');}).join(', ') + '</div>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+          '<a href="' + previewUrl + '" target="_blank" class="btn btn-primary btn-sm">👁 Preview Live Menu</a>' +
+          '<img src="' + previewQr + '" style="width:60px;height:60px;border-radius:6px;" title="Scan to preview">' +
+        '</div>';
+
+      // Show color palette
+      var colors = ['bg','surface','primary','accent','text'];
+      var swatches = colors.map(function(k) {
+        if (!design[k]) return '';
+        return '<div style="display:flex;align-items:center;gap:6px;font-size:12px;">' +
+          '<div style="width:20px;height:20px;border-radius:4px;background:' + design[k] + ';border:1px solid rgba(0,0,0,.1);flex-shrink:0;"></div>' +
+          '<span style="color:var(--text-muted);">' + k + '</span>' +
+          '</div>';
+      }).join('');
+      if (swatches) {
+        status.innerHTML += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">' + swatches + '</div>';
+      }
+
+      // Save to history in localStorage
+      var history = JSON.parse(localStorage.getItem('ai_design_history_' + _mbSiteId) || '[]');
+      history.unshift({ desc: desc, occasion: occasion, template: design.template, note: d.message, ts: Date.now() });
+      history = history.slice(0, 5);
+      localStorage.setItem('ai_design_history_' + _mbSiteId, JSON.stringify(history));
+      mbShowDesignHistory();
+
+      toast('✅ Custom design live on your QR menu!', 'success');
+    } catch(e) {
+      status.style.background = 'rgba(239,68,68,.08)';
+      status.style.border = '1px solid rgba(239,68,68,.3)';
+      status.style.color = 'var(--danger)';
+      status.textContent = '❌ ' + e.message;
+    }
+    btn.disabled = false;
+    btn.textContent = '🎨 Generate My Custom Design';
+  }
+
+  function mbShowDesignHistory() {
+    if (!_mbSiteId) return;
+    var history = JSON.parse(localStorage.getItem('ai_design_history_' + _mbSiteId) || '[]');
+    var card = document.getElementById('ai-design-history-card');
+    var el = document.getElementById('ai-design-history');
+    if (!history.length) { if (card) card.style.display = 'none'; return; }
+    if (card) card.style.display = '';
+    el.innerHTML = history.map(function(h, i) {
+      var ago = Math.round((Date.now() - h.ts) / 60000);
+      var agoStr = ago < 60 ? ago + 'm ago' : Math.round(ago/60) + 'h ago';
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--card-border);display:flex;justify-content:space-between;align-items:center;">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:600;">' + escHtml(h.template || 'custom') + (h.occasion ? ' · ' + escHtml(h.occasion) : '') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">"' + escHtml((h.desc||'').slice(0,60)) + (h.desc && h.desc.length > 60 ? '...' : '') + '"</div>' +
+        '</div>' +
+        '<span style="font-size:11px;color:var(--text-muted);">' + agoStr + '</span>' +
+      '</div>';
+    }).join('');
   }
 
   // ── Theme Designer ──
