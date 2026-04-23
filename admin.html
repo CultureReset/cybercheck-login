@@ -259,7 +259,10 @@
 
       <!-- ── CYBERCHECK BUSINESSES ──────────────────── -->
       <div id="page-businesses" class="page-content" style="display:none;">
-        <div class="page-header"><h1>Businesses</h1></div>
+        <div class="page-header">
+          <h1>Businesses</h1>
+          <button class="btn btn-outline" onclick="linkAllToGCR()" id="link-all-gcr-btn">🔗 Link All to GCR</button>
+        </div>
         <div class="card" style="padding:24px;">
           <div id="businesses-list"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
         </div>
@@ -1904,7 +1907,10 @@
               <p style="color:var(--text-muted);font-size:13px;margin:0;">Upload any menu photo — AI extracts all items automatically.</p>
             </div>
             <div class="card" style="margin:0;padding:20px;">
-              <h3 style="margin:0 0 12px;font-size:15px;">Table QR Code</h3>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;font-size:15px;">Table QR Code</h3>
+                <button class="btn btn-outline btn-sm" id="mb-link-gcr-btn" onclick="mbLinkGCR()" style="display:none;font-size:12px;">🔗 Link to GCR</button>
+              </div>
               <div id="mb-qr-card" style="text-align:center;color:var(--text-muted);font-size:13px;">Select a business to generate QR code.</div>
             </div>
           </div>
@@ -3690,6 +3696,19 @@
       } catch(e) {
         document.getElementById('recent-businesses').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Could not load data.</div>';
       }
+    }
+
+    async function linkAllToGCR() {
+      var btn = document.getElementById('link-all-gcr-btn');
+      btn.textContent = 'Linking...'; btn.disabled = true;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/businesses/link-gcr-all', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        var d = await r.json();
+        toast('Linked ' + d.linked + ' existing, created ' + d.created + ' new GCR entities, ' + d.skipped + ' already linked', 'success');
+        btn.textContent = '✅ All Linked';
+      } catch(e) { toast('Failed: ' + e.message, 'error'); btn.textContent = '🔗 Link All to GCR'; btn.disabled = false; }
     }
 
     function escHtml(str) {
@@ -10464,6 +10483,20 @@
     mbLoadBusiness();
   }
 
+  async function mbLinkGCR() {
+    if (!_mbSiteId) return;
+    var btn = document.getElementById('mb-link-gcr-btn');
+    btn.textContent = 'Linking...'; btn.disabled = true;
+    try {
+      var r = await fetch(API_BASE + '/api/admin/businesses/' + _mbSiteId + '/link-gcr', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+      });
+      var d = await r.json();
+      toast(d.message || 'Linked to GCR!', 'success');
+      btn.textContent = '✅ Linked to GCR';
+    } catch(e) { toast('Link failed: ' + e.message, 'error'); btn.textContent = '🔗 Link to GCR'; btn.disabled = false; }
+  }
+
   function mbPrintQR() {
     if (!_mbSiteId) return;
     var sel = document.getElementById('mb-biz-select');
@@ -10524,7 +10557,13 @@
 
   function mbRenderQR() {
     var card = document.getElementById('mb-qr-card');
-    if (!_mbSiteId) { card.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Select a business to generate QR code.</p>'; return; }
+    var linkBtn = document.getElementById('mb-link-gcr-btn');
+    if (!_mbSiteId) {
+      card.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Select a business to generate QR code.</p>';
+      if (linkBtn) linkBtn.style.display = 'none';
+      return;
+    }
+    if (linkBtn) { linkBtn.style.display = ''; linkBtn.textContent = '🔗 Link to GCR'; linkBtn.disabled = false; }
     var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(_mbSiteId);
     var qrUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(menuUrl);
     card.innerHTML = '<img src="' + qrUrl + '" style="width:130px;height:130px;border-radius:8px;" alt="QR"><br>' +
