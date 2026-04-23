@@ -2017,8 +2017,8 @@
             <div style="flex:1;min-width:220px;position:relative;">
               <input type="text" id="mb-biz-search" placeholder="🔍 Search businesses..." autocomplete="off"
                 style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
-                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},180)">
-              <div id="mb-biz-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;max-height:240px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5);margin-top:4px;"></div>
+                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},400)">
+              <div id="mb-biz-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;max-height:240px;overflow-y:auto;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);margin-top:4px;"></div>
               <!-- hidden select kept for value/slug lookup -->
               <select id="mb-biz-select" style="display:none"></select>
             </div>
@@ -11447,9 +11447,9 @@
               escHtml(name.slice(idx + term.length));
           }
         }
-        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);transition:.1s;" ' +
-          'onmouseover="this.style.background=\'var(--card-border)\'" onmouseout="this.style.background=\'\'" ' +
-          'onmousedown="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #334155;background:#1e293b;transition:.1s;" ' +
+          'onmouseover="this.style.background=\'#273548\'" onmouseout="this.style.background=\'#1e293b\'" ' +
+          'onmousedown="event.preventDefault();mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
           '<span>' + displayName + '</span>' +
           (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
           '</div>';
