@@ -6312,7 +6312,7 @@
       document.getElementById('ao-saved').style.display   = 'none';
 
       try {
-        var r = await fetch(API_BASE + '/api/admin/ai-scrape-url', {
+        var r = await fetch(_aichatApiBase + '/api/admin/ai-scrape-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ url })
@@ -9021,7 +9021,7 @@
 
         if (!isMerge) {
           // Use the new ai-scrape-approve endpoint — handles all tables in one shot
-          var approveRes = await fetch(API_BASE + '/api/admin/ai-scrape-approve', {
+          var approveRes = await fetch(_aichatApiBase + '/api/admin/ai-scrape-approve', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ structured: d })
@@ -12945,6 +12945,14 @@
 
   <script>
   // ── Standalone AI Chat page ───────────────────────────────────
+  var _aichatApiBase = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+  function _aichatGetToken() {
+    try {
+      var sbKey = Object.keys(localStorage).find(function(k){ return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+      if (sbKey) { var sb = JSON.parse(localStorage.getItem(sbKey)); if (sb && sb.access_token) return sb.access_token; }
+    } catch(e) {}
+    return localStorage.getItem('cc_admin_token') || '';
+  }
   var _aichatHistory = [];
   var _aichatPendingImage = null;
   var _aichatPendingImageBase64 = null;
@@ -13042,9 +13050,9 @@
     try {
       var prov = (document.getElementById('aichat-provider') || {}).value || 'anthropic';
       var model = (document.getElementById('aichat-model') || {}).value || 'claude-sonnet-4-6';
-      var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
+      var res = await fetch(_aichatApiBase + '/api/admin/gcr/grok-chat', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+        headers: { 'Authorization': 'Bearer ' + _aichatGetToken(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: msg || 'I uploaded an image.',
           image_url: pendingImg || undefined,
@@ -13073,9 +13081,9 @@
   async function aichatScrapeUrl(url) {
     var statusDiv = aichatAppend('assistant', '<span style="color:#94a3b8;font-size:12px;">🔍 Fetching and extracting data from ' + url.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '…</span>');
     try {
-      var res = await fetch(API_BASE + '/api/admin/ai-scrape-url', {
+      var res = await fetch(_aichatApiBase + '/api/admin/ai-scrape-url', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+        headers: { 'Authorization': 'Bearer ' + _aichatGetToken(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url })
       });
       var d = await res.json();
@@ -13110,9 +13118,9 @@
     try { structured = JSON.parse(structuredJson); } catch(e) { return; }
     var statusDiv = aichatAppend('assistant', '<span style="color:#94a3b8;font-size:12px;">💾 Saving…</span>');
     try {
-      var res = await fetch(API_BASE + '/api/admin/ai-scrape-approve', {
+      var res = await fetch(_aichatApiBase + '/api/admin/ai-scrape-approve', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+        headers: { 'Authorization': 'Bearer ' + _aichatGetToken(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ structured: structured })
       });
       var d = await res.json();
