@@ -62,6 +62,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
           <span>QR Tracker</span>
         </div>
+        <div class="nav-item" data-page="referral-partners" onclick="showPage('referral-partners')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span>Referral Partners 💰</span>
+        </div>
         <div class="nav-item" data-page="daily-update-links" onclick="showPage('daily-update-links')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/></svg>
           <span>Daily SMS Links</span>
@@ -279,6 +283,86 @@
         </div>
         <div class="card" style="padding:24px;">
           <div id="businesses-list"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── REFERRAL PARTNERS ─────────────────────────── -->
+      <div id="page-referral-partners" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Referral Partners 💰</h1>
+          <button class="btn btn-primary" onclick="openAddPartnerModal()">+ Add Partner</button>
+        </div>
+
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:var(--primary);" id="rp-stat-partners">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Active Partners</div>
+          </div>
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#22c55e;" id="rp-stat-signups">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Total Signups Referred</div>
+          </div>
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#f59e0b;" id="rp-stat-bookings">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Total Bookings</div>
+          </div>
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#a78bfa;" id="rp-stat-earned">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Total Commissions Owed</div>
+          </div>
+        </div>
+
+        <!-- Partners table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:var(--bg);border-bottom:1px solid var(--card-border);">
+                <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Partner</th>
+                <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Type</th>
+                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Signups</th>
+                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Bookings</th>
+                <th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Earned</th>
+                <th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Rate</th>
+                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">QR Code</th>
+                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rp-partners-body">
+              <tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add Partner Modal -->
+        <div id="rp-add-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;">
+          <div style="background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <h3 style="margin:0;">Add Referral Partner</h3>
+              <button onclick="document.getElementById('rp-add-modal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button>
+            </div>
+            <div class="form-group"><label>Business / Property Name *</label><input type="text" id="rp-name" placeholder="Sunset Cove Rentals"></div>
+            <div class="form-group"><label>Type</label>
+              <select id="rp-type" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+                <option value="rental">Vacation Rental / Airbnb</option>
+                <option value="hotel">Hotel / Resort</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="activity">Activity / Charter</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Contact Email</label><input type="email" id="rp-email" placeholder="owner@example.com"></div>
+              <div class="form-group"><label>Contact Phone</label><input type="tel" id="rp-phone" placeholder="(850) 555-0000"></div>
+            </div>
+            <div class="form-group"><label>Referral Rate (%)</label><input type="number" id="rp-rate" value="5" min="0" max="50" step="0.5" placeholder="5"></div>
+            <div class="form-group"><label>Welcome Incentive Message</label><textarea id="rp-incentive" rows="2" placeholder="Welcome! Get $10 off your first activity booking."></textarea></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+              <button class="btn btn-outline" onclick="document.getElementById('rp-add-modal').style.display='none'">Cancel</button>
+              <button class="btn btn-primary" onclick="rpCreatePartner()">Create Partner + Generate QR</button>
+            </div>
+            <div id="rp-add-error" style="display:none;color:var(--danger);font-size:13px;margin-top:8px;"></div>
+          </div>
         </div>
       </div>
 
@@ -3700,6 +3784,8 @@
       if (page === 'qr-menus' && !_qrMenusLoaded) { _qrMenusLoaded = true; loadQRMenus(); }
       if (page === 'trip-swipe-questions' && !_tsqLoaded) { _tsqLoaded = true; tsqLoad(); }
       if (page === 'qr-tracker') loadQRCodes();
+      if (page === 'referral-partners') loadReferralPartners();
+      if (page === 'tripswipe-tourists' && !_rpLoaded) loadTSTourists();
       if (page === 'tripswipe-overview' && !_tsOverviewLoaded) { _tsOverviewLoaded = true; loadTSOverview(); }
       if (page === 'tripswipe-businesses' && !_tsBusinessesLoaded) { _tsBusinessesLoaded = true; loadTSBusinesses(); }
       if (page === 'tripswipe-tourists') loadTSTourists();
@@ -4259,6 +4345,109 @@
 
     // ── GCR EVENTS ────────────────────────────────────
     // ── AI Event & Special Extraction ────────────────────────────
+    // ── Referral Partners ─────────────────────────────────────────
+    var _rpLoaded = false;
+    async function loadReferralPartners() {
+      if (_rpLoaded) return;
+      _rpLoaded = true;
+      try {
+        var r = await fetch(API_BASE + '/api/qr/partners', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var partners = r.ok ? await r.json() : [];
+        var totalSignups = partners.reduce(function(n,p){ return n + (p.total_signups||0); }, 0);
+        var totalBookings = partners.reduce(function(n,p){ return n + (p.total_bookings||0); }, 0);
+        var totalEarned = partners.reduce(function(n,p){ return n + parseFloat(p.total_earned||0); }, 0);
+        document.getElementById('rp-stat-partners').textContent = partners.filter(function(p){return p.active;}).length;
+        document.getElementById('rp-stat-signups').textContent = totalSignups;
+        document.getElementById('rp-stat-bookings').textContent = totalBookings;
+        document.getElementById('rp-stat-earned').textContent = '$' + totalEarned.toFixed(2);
+
+        if (!partners.length) {
+          document.getElementById('rp-partners-body').innerHTML = '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text-muted);">No referral partners yet — click "+ Add Partner" to create your first one.</td></tr>';
+          return;
+        }
+
+        var qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=';
+        var portalBase = 'https://cybercheck-api-database.vercel.app/api/qr/partner-portal/';
+        var scanBase = 'https://cybercheck-links.vercel.app/q.html?c=';
+
+        document.getElementById('rp-partners-body').innerHTML = partners.map(function(p) {
+          var typeLabel = { rental:'🏠 Rental', hotel:'🏨 Hotel', restaurant:'🍽️ Restaurant', activity:'⚓ Activity', other:'📍 Other' }[p.type] || p.type;
+          var earned = parseFloat(p.total_earned||0);
+          var paid = parseFloat(p.total_paid||0);
+          var owed = earned - paid;
+          return '<tr style="border-bottom:1px solid var(--card-border);">' +
+            '<td style="padding:12px 16px;">' +
+              '<div style="font-weight:700;font-size:14px;">' + escHtml(p.name) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(p.email||p.phone||'') + '</div>' +
+            '</td>' +
+            '<td style="padding:12px 16px;font-size:13px;">' + typeLabel + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;font-weight:700;color:#22c55e;">' + (p.total_signups||0) + '</td>' +
+            '<td style="padding:12px 16px;text-align:center;font-weight:700;">' + (p.total_bookings||0) + '</td>' +
+            '<td style="padding:12px 16px;text-align:right;">' +
+              '<div style="font-weight:700;color:#a78bfa;">$' + earned.toFixed(2) + '</div>' +
+              (owed > 0 ? '<div style="font-size:11px;color:#f59e0b;">$' + owed.toFixed(2) + ' owed</div>' : '') +
+            '</td>' +
+            '<td style="padding:12px 16px;text-align:right;font-size:13px;">' + Math.round((parseFloat(p.referral_rate)||0.05)*100) + '%</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' +
+              '<a href="' + scanBase + p.qr_code + '" target="_blank">' +
+              '<img src="' + qrBase + encodeURIComponent(scanBase + p.qr_code) + '" style="width:60px;height:60px;border-radius:4px;"></a>' +
+            '</td>' +
+            '<td style="padding:12px 16px;text-align:center;">' +
+              '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">' +
+              '<a href="' + portalBase + p.qr_code + '" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px;">📊 Portal</a>' +
+              '<button onclick="rpMarkPaid(\'' + p.id + '\',' + owed.toFixed(2) + ')" class="btn btn-outline btn-sm" style="font-size:11px;' + (owed > 0 ? 'color:#22c55e;' : 'opacity:.4;') + '"' + (owed <= 0 ? 'disabled' : '') + '>✓ Mark Paid</button>' +
+              '</div>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('rp-partners-body').innerHTML = '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--danger);">Error: ' + escHtml(e.message) + '</td></tr>';
+      }
+    }
+
+    function openAddPartnerModal() {
+      document.getElementById('rp-add-modal').style.display = 'flex';
+      document.getElementById('rp-add-error').style.display = 'none';
+    }
+
+    async function rpCreatePartner() {
+      var name = document.getElementById('rp-name').value.trim();
+      if (!name) { document.getElementById('rp-add-error').textContent = 'Name required'; document.getElementById('rp-add-error').style.display = ''; return; }
+      var payload = {
+        name, type: document.getElementById('rp-type').value,
+        email: document.getElementById('rp-email').value.trim(),
+        phone: document.getElementById('rp-phone').value.trim(),
+        referral_rate: (parseFloat(document.getElementById('rp-rate').value)||5) / 100,
+        incentive_text: document.getElementById('rp-incentive').value.trim() || undefined,
+      };
+      try {
+        var r = await fetch(API_BASE + '/api/qr/partners', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify(payload)
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed');
+        document.getElementById('rp-add-modal').style.display = 'none';
+        toast('✅ Partner created! QR code: ' + d.qr_code, 'success');
+        _rpLoaded = false;
+        loadReferralPartners();
+      } catch(e) {
+        document.getElementById('rp-add-error').textContent = e.message;
+        document.getElementById('rp-add-error').style.display = '';
+      }
+    }
+
+    async function rpMarkPaid(partnerId, amount) {
+      if (!confirm('Mark $' + parseFloat(amount).toFixed(2) + ' as paid to this partner?')) return;
+      try {
+        var r = await fetch(API_BASE + '/api/qr/partners/' + partnerId, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ total_paid: amount })
+        });
+        if (r.ok) { toast('Payment recorded', 'success'); _rpLoaded = false; loadReferralPartners(); }
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
     function openAIEventExtract() {
       var p = document.getElementById('ai-event-extract-panel');
       p.style.display = p.style.display === 'none' ? '' : 'none';
