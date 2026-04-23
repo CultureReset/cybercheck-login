@@ -2032,6 +2032,7 @@
           <button class="mb-tab" onclick="mbSwitchTab('events')" id="mb-tab-events" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">Events & Specials</button>
           <button class="mb-tab" onclick="mbSwitchTab('theme')" id="mb-tab-theme" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">Theme Designer</button>
           <button class="mb-tab" onclick="mbSwitchTab('ai-design')" id="mb-tab-ai-design" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">🤖 AI Design</button>
+          <button class="mb-tab" onclick="mbSwitchTab('promotions')" id="mb-tab-promotions" style="padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;">🎁 Promotions</button>
         </div>
 
         <!-- TAB: Menu Items -->
@@ -2092,6 +2093,51 @@
               <button class="btn btn-primary" style="font-size:13px;padding:8px 14px;" onclick="mbOpenSpecialItem()">+ Add Special</button>
             </div>
             <div id="mb-specials-list" style="color:var(--text-muted);font-size:13px;">Select a business to load specials.</div>
+          </div>
+        </div>
+
+        <!-- TAB: Promotions -->
+        <div id="mb-panel-promotions" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0 0 4px;font-size:16px;">QR Menu Promotions</h3>
+              <p style="margin:0;font-size:13px;color:var(--text-muted);">Promotions appear automatically on your QR menu based on triggers. Customer enters phone → gets coupon by text → tied to their loyalty account.</p>
+            </div>
+            <button class="btn btn-primary" onclick="mbOpenAddPromo()">+ Add Promotion</button>
+          </div>
+          <div id="mb-promos-list" style="color:var(--text-muted);font-size:13px;">Select a business to load promotions.</div>
+
+          <!-- Add Promotion Modal -->
+          <div id="mb-promo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;">
+            <div style="background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Add Promotion</h3>
+                <button onclick="document.getElementById('mb-promo-modal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button>
+              </div>
+              <div class="form-group"><label>Promotion Title *</label><input type="text" id="mp-title" placeholder="🚢 Boat Rental Deal — $20 Off"></div>
+              <div class="form-group"><label>Description</label><textarea id="mp-desc" rows="2" placeholder="Show this offer and get $20 off your next boat rental."></textarea></div>
+              <div class="form-group"><label>Discount / Offer Text</label><input type="text" id="mp-discount" placeholder="$20 off · Use code at checkout"></div>
+              <div class="form-group"><label>Button Text</label><input type="text" id="mp-cta" placeholder="Claim Offer" value="Claim Offer"></div>
+              <div class="form-group"><label>Link (optional)</label><input type="url" id="mp-url" placeholder="https://booking link..."></div>
+              <div class="form-group"><label>Trigger Type</label>
+                <select id="mp-type" onchange="mbUpdatePromoTrigger()" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);">
+                  <option value="random">Random — shows to X% of tables</option>
+                  <option value="spend_threshold">Spend Threshold — fires when bill hits $X</option>
+                  <option value="time_based">Time Based — fires at a specific time</option>
+                  <option value="on_scan">On Every Scan — shows to everyone</option>
+                </select>
+              </div>
+              <div id="mp-trigger-config" style="margin-bottom:14px;">
+                <div class="form-group"><label>Show to what % of tables</label><input type="number" id="mp-pct" value="40" min="1" max="100" step="1"> <span style="font-size:12px;color:var(--text-muted);">% of tables will see this</span></div>
+                <div class="form-group"><label>Delay (seconds before showing)</label><input type="number" id="mp-delay" value="25" min="5" max="120"></div>
+              </div>
+              <div class="form-group"><label>Coupon Code Prefix</label><input type="text" id="mp-prefix" placeholder="BOAT" value="PROMO" style="text-transform:uppercase;"></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+                <button class="btn btn-outline" onclick="document.getElementById('mb-promo-modal').style.display='none'">Cancel</button>
+                <button class="btn btn-primary" onclick="mbSavePromo()">Save Promotion</button>
+              </div>
+              <div id="mp-error" style="display:none;color:var(--danger);font-size:13px;margin-top:8px;"></div>
+            </div>
           </div>
         </div>
 
@@ -3828,6 +3874,7 @@
       if (page === 'trip-swipe-questions' && !_tsqLoaded) { _tsqLoaded = true; tsqLoad(); }
       if (page === 'qr-tracker') loadQRCodes();
       if (page === 'referral-partners') loadReferralPartners();
+      if (page === 'menu-builder' && document.getElementById('mb-tab-promotions')?.classList.contains('active')) mbLoadPromos();
       if (page === 'tripswipe-tourists' && !_rpLoaded) loadTSTourists();
       if (page === 'tripswipe-overview' && !_tsOverviewLoaded) { _tsOverviewLoaded = true; loadTSOverview(); }
       if (page === 'tripswipe-businesses' && !_tsBusinessesLoaded) { _tsBusinessesLoaded = true; loadTSBusinesses(); }
@@ -11470,7 +11517,7 @@
 
   // ── Tab switching ──
   function mbSwitchTab(tab) {
-    ['menu','events','theme'].forEach(function(t) {
+    ['menu','events','theme','ai-design','promotions'].forEach(function(t) {
       var panel = document.getElementById('mb-panel-' + t);
       var btn   = document.getElementById('mb-tab-' + t);
       if (!panel || !btn) return;
@@ -11479,8 +11526,10 @@
         btn.style.borderBottomColor = 'var(--primary)';
         btn.style.color = 'var(--primary)';
         btn.style.fontWeight = '600';
-        if (t === 'events' && _mbSiteId) mbLoadEventsSpecials();
-        if (t === 'theme'  && _mbSiteId) mbLoadTheme();
+        if (t === 'events'     && _mbSiteId) mbLoadEventsSpecials();
+        if (t === 'theme'      && _mbSiteId) mbLoadTheme();
+        if (t === 'promotions' && _mbSiteId) mbLoadPromos();
+        if (t === 'ai-design'  && _mbSiteId) mbShowDesignHistory();
       } else {
         panel.style.display = 'none';
         btn.style.borderBottomColor = 'transparent';
@@ -11676,6 +11725,101 @@
     mbCloseModal('mb-modal-extract');
     if (type === 'events') mbRenderEvents(); else mbRenderSpecials();
     toast('✅ ' + total + ' ' + type + ' imported!', 'success');
+  }
+
+  // ── Promotions ───────────────────────────────────────────────
+  async function mbLoadPromos() {
+    if (!_mbSiteId) return;
+    var el = document.getElementById('mb-promos-list');
+    el.innerHTML = '<span style="color:var(--text-muted);">Loading...</span>';
+    try {
+      var r = await fetch(API_BASE + '/api/dashboard/promotions?site_id=' + encodeURIComponent(_mbSiteId), { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+      var promos = r.ok ? await r.json() : [];
+      if (!promos.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No promotions yet. Add one to start engaging customers and building loyalty.</div>'; return; }
+      var typeLabels = { random:'🎲 Random', spend_threshold:'💰 Spend Trigger', time_based:'🕐 Time-Based', on_scan:'👁 On Every Scan' };
+      el.innerHTML = promos.map(function(p) {
+        var cfg = p.trigger_config || {};
+        var triggerDesc = p.type === 'random' ? (cfg.probability || 40) + '% of tables, after ' + (cfg.delay_seconds || 25) + 's'
+          : p.type === 'spend_threshold' ? 'When bill hits $' + (cfg.spend || 50)
+          : p.type === 'time_based' ? 'At ' + (cfg.time || '4:00pm')
+          : 'Every scan';
+        return '<div style="border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:start;gap:12px;">' +
+          '<div style="flex:1;">' +
+            '<div style="font-weight:700;font-size:14px;margin-bottom:4px;">' + escHtml(p.title) + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + (typeLabels[p.type]||p.type) + ' · ' + triggerDesc + '</div>' +
+            (p.discount_text ? '<div style="font-size:12px;color:#22c55e;">' + escHtml(p.discount_text) + '</div>' : '') +
+            '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Shown: ' + (p.total_shown||0) + ' · Claimed: ' + (p.total_claimed||0) + (p.total_shown > 0 ? ' (' + Math.round((p.total_claimed||0)/(p.total_shown||1)*100) + '%)' : '') + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+            '<button onclick="mbTogglePromo(\'' + p.id + '\',' + !p.active + ')" class="btn btn-outline btn-sm" style="font-size:11px;">' + (p.active ? '⏸ Pause' : '▶ Activate') + '</button>' +
+            '<button onclick="mbDeletePromo(\'' + p.id + '\')" class="btn btn-outline btn-sm" style="font-size:11px;color:var(--danger);">✕</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    } catch(e) { el.innerHTML = '<span style="color:var(--danger);">' + escHtml(e.message) + '</span>'; }
+  }
+
+  function mbOpenAddPromo() {
+    if (!_mbSiteId) { toast('Select a business first', 'error'); return; }
+    document.getElementById('mb-promo-modal').style.display = 'flex';
+    document.getElementById('mp-error').style.display = 'none';
+    mbUpdatePromoTrigger();
+  }
+
+  function mbUpdatePromoTrigger() {
+    var type = document.getElementById('mp-type').value;
+    var cfg = document.getElementById('mp-trigger-config');
+    cfg.innerHTML = type === 'random'
+      ? '<div class="form-row"><div class="form-group"><label>Show to % of tables</label><input type="number" id="mp-pct" value="40" min="1" max="100"> <span style="font-size:12px;color:var(--text-muted);">%</span></div><div class="form-group"><label>Delay (seconds)</label><input type="number" id="mp-delay" value="25" min="5"></div></div>'
+      : type === 'spend_threshold'
+      ? '<div class="form-group"><label>Fire when bill reaches</label><input type="number" id="mp-spend" value="50" min="1" placeholder="50"> <span style="font-size:12px;color:var(--text-muted);">dollars</span></div>'
+      : type === 'time_based'
+      ? '<div class="form-group"><label>Time to show (24hr)</label><input type="time" id="mp-time" value="16:00"> <span style="font-size:12px;color:var(--text-muted);">Shows 1hr around this time</span></div>'
+      : '<div style="font-size:13px;color:var(--text-muted);padding:4px 0;">Shows to every customer who scans the QR menu.</div>';
+  }
+
+  async function mbSavePromo() {
+    var title = document.getElementById('mp-title').value.trim();
+    if (!title) { document.getElementById('mp-error').textContent = 'Title required'; document.getElementById('mp-error').style.display = ''; return; }
+    var type = document.getElementById('mp-type').value;
+    var cfg = {};
+    if (type === 'random') { cfg.probability = (parseFloat((document.getElementById('mp-pct')||{}).value)||40)/100; cfg.delay_seconds = parseInt((document.getElementById('mp-delay')||{}).value)||25; }
+    else if (type === 'spend_threshold') { cfg.spend = parseFloat((document.getElementById('mp-spend')||{}).value)||50; }
+    else if (type === 'time_based') { cfg.time = (document.getElementById('mp-time')||{}).value||'16:00'; cfg.window_minutes = 60; }
+    var payload = {
+      site_id: _mbSiteId, title, type,
+      description: document.getElementById('mp-desc').value.trim() || null,
+      discount_text: document.getElementById('mp-discount').value.trim() || null,
+      cta_text: document.getElementById('mp-cta').value.trim() || 'Claim Offer',
+      cta_url: document.getElementById('mp-url').value.trim() || null,
+      coupon_prefix: (document.getElementById('mp-prefix').value.trim() || 'PROMO').toUpperCase(),
+      trigger_config: cfg,
+    };
+    try {
+      var r = await fetch(API_BASE + '/api/dashboard/promotions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: JSON.stringify(payload)
+      });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      document.getElementById('mb-promo-modal').style.display = 'none';
+      toast('✅ Promotion live on your QR menu!', 'success');
+      mbLoadPromos();
+    } catch(e) { document.getElementById('mp-error').textContent = e.message; document.getElementById('mp-error').style.display = ''; }
+  }
+
+  async function mbTogglePromo(id, active) {
+    await fetch(API_BASE + '/api/dashboard/promotions/' + id, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+      body: JSON.stringify({ active })
+    });
+    mbLoadPromos();
+  }
+
+  async function mbDeletePromo(id) {
+    if (!confirm('Delete this promotion?')) return;
+    await fetch(API_BASE + '/api/dashboard/promotions/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+    mbLoadPromos();
   }
 
   // ── AI Design Generator ──────────────────────────────────────
