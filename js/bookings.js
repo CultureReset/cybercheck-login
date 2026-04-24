@@ -36,7 +36,8 @@ function startBookingPolling() {
   stopBookingPolling();
   _bookingPollInterval = setInterval(async function() {
     var prevPending = _bookings.filter(function(b) { return b.status === 'pending'; }).length;
-    var prevIds = _bookings.map(function(b) { return b.id; }).join(',');
+    var prevIdSet = _bookings.map(function(b) { return String(b.id); });
+    var prevIds = prevIdSet.join(',');
     await loadBookingsQuiet();
     var newPending = _bookings.filter(function(b) { return b.status === 'pending'; }).length;
     var newIds = _bookings.map(function(b) { return b.id; }).join(',');
@@ -46,6 +47,14 @@ function startBookingPolling() {
         showBookingBadge(newPending);
         toast('🔔 ' + diff + ' new booking' + (diff > 1 ? 's' : '') + ' received!', 'success');
         playNotificationSound();
+        var newBookings = _bookings.filter(function(b) {
+          return b.status === 'pending' && prevIdSet.indexOf(String(b.id)) === -1;
+        });
+        if (typeof sendOwnerWhatsApp === 'function' && newBookings.length > 0) {
+          newBookings.forEach(function(b) {
+            sendOwnerWhatsApp(typeof formatWhatsAppBookingMsg === 'function' ? formatWhatsAppBookingMsg(b) : 'NEW BOOKING from ' + (b.customerName || 'customer') + ' on ' + (b.date || ''));
+          });
+        }
       }
     }
     updateRefreshIndicator();
@@ -457,12 +466,15 @@ async function confirmBooking(id) {
   if (!b) return;
   b.status = 'confirmed';
   saveBookings();
-  // Push to API
   var apiId = b._apiId || id;
   await CC.dashboard.updateBooking(apiId, { status: 'confirmed' });
   renderBookingsStats();
   renderBookingsTable();
   toast('Booking ' + id + ' confirmed! SMS sent to ' + b.customerName);
+  if (typeof sendOwnerWhatsApp === 'function') {
+    var boats = (b.boats || []).map(function(bt) { return bt.qty + 'x ' + bt.type; }).join(', ') || 'Boat';
+    sendOwnerWhatsApp('BOOKING CONFIRMED\nCustomer: ' + b.customerName + '\nPhone: ' + (b.customerPhone || '') + '\nDate: ' + b.date + '\nTime: ' + (b.timeSlot || '') + '\nBoats: ' + boats + '\nTotal: $' + (b.total || '0'));
+  }
 }
 
 async function completeBooking(id) {
@@ -545,6 +557,11 @@ async function cancelBooking(id) {
     toast('Booking cancelled. Stripe refund of ' + refLabel + ' initiated!', 'success');
   } else {
     toast('Booking cancelled.' + (hasPaid ? ' Issue refund manually in Stripe dashboard.' : ''));
+  }
+  if (typeof sendOwnerWhatsApp === 'function') {
+    var waMsg = 'BOOKING CANCELLED\nCustomer: ' + b.customerName + '\nPhone: ' + (b.customerPhone || '') + '\nDate: ' + b.date;
+    if (hasPaid) waMsg += '\nRefund initiated via Square';
+    sendOwnerWhatsApp(waMsg);
   }
 }
 
@@ -691,6 +708,10 @@ async function resendConfirmation(id) {
     var data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Failed');
     toast('Confirmation resent to customer!', 'success');
+    var rb = _bookings.find(function(x) { return (x._apiId || x.id) === id || x.id === 'b-' + id; });
+    if (rb && typeof sendOwnerWhatsApp === 'function') {
+      sendOwnerWhatsApp('CONFIRMATION RESENT\nCustomer: ' + rb.customerName + '\nPhone: ' + (rb.customerPhone || '') + '\nDate: ' + rb.date + '\nEmail + SMS resent to customer.');
+    }
   } catch(e) {
     toast(e.message || 'Resend failed', 'error');
   }

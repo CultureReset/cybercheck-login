@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberCheck — The Complete Platform for Gulf Coast Businesses</title>
+  <style>
+    :root {
+      --primary: #00ada8;
+      --primary-dark: #008f8a;
+      --primary-glow: rgba(0, 173, 168, 0.15);
+      --bg: #0a0f1a;
+      --surface: #111827;
+      --card: #1a2235;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #64748b;
+      --gold: #f59e0b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 64px;
+      background: rgba(10, 15, 26, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .nav-logo .dot { color: var(--text); }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--primary);
+      color: #fff;
+      padding: 9px 22px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--primary-dark); }
+
+    /* ---- HERO ---- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(0,173,168,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-glow);
+      border: 1px solid rgba(0,173,168,0.3);
+      color: var(--primary);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      max-width: 800px;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 span { color: var(--primary); }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 48px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: background 0.2s, transform 0.15s;
+      display: inline-block;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      padding: 14px 32px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+      display: inline-block;
+    }
+
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 64px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat { text-align: center; }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ---- SECTIONS ---- */
+    section { padding: 96px 24px; }
+
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 560px;
+    }
+
+    .section-header { margin-bottom: 56px; }
+
+    /* ---- THREE PRODUCTS ---- */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .product-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--primary);
+    }
+
+    .product-icon {
+      font-size: 2.4rem;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .product-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .product-tagline {
+      font-size: 0.85rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .product-desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .product-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .product-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .product-features li::before {
+      content: '✓';
+      color: var(--primary);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ---- HOW IT WORKS ---- */
+    #how { background: var(--surface); }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      position: relative;
+    }
+
+    .step {
+      text-align: center;
+      padding: 32px 24px;
+    }
+
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--primary-glow);
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      font-size: 1.3rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .step h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    /* ---- FEATURES GRID ---- */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+
+    .feature-card:hover { border-color: rgba(0,173,168,0.4); }
+
+    .feature-icon {
+      font-size: 1.6rem;
+      margin-bottom: 14px;
+    }
+
+    .feature-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ---- PRICING ---- */
+    #pricing { background: var(--surface); }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    .pricing-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, #0d2035 0%, #0f2a2a 100%);
+    }
+
+    .pricing-card.featured::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: -13px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 16px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .plan-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .plan-price .amount {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .plan-price .per {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .plan-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .plan-features li .check {
+      color: var(--primary);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .plan-features li .cross {
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    .plan-features li .cross ~ span { color: var(--dim); }
+
+    .plan-btn {
+      display: block;
+      text-align: center;
+      padding: 13px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .plan-btn-outline {
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .plan-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    .plan-btn-solid {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .plan-btn-solid:hover { background: var(--primary-dark); }
+
+    /* ---- TESTIMONIALS ---- */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .testimonial {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+
+    .testimonial-text {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .author-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--primary-glow);
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.85rem;
+    }
+
+    .author-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .author-biz {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ---- CTA ---- */
+    .cta-section {
+      text-align: center;
+      padding: 96px 24px;
+    }
+
+    .cta-box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #0d2035 0%, #0a1f1f 100%);
+      border: 1px solid rgba(0,173,168,0.3);
+      border-radius: 24px;
+      padding: 64px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 400px; height: 300px;
+      background: radial-gradient(circle, rgba(0,173,168,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-box h2 {
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-box p {
+      color: var(--muted);
+      margin-bottom: 36px;
+      font-size: 1rem;
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    footer p {
+      font-size: 0.85rem;
+      color: var(--dim);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero h1 { font-size: 2rem; }
+      .hero-stats { gap: 28px; }
+      .cta-box { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">
+      Cyber<span class="dot">Check</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#platform">Platform</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <a href="#pricing" class="nav-cta">Get Started</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">Gulf Coast's #1 Business Platform</div>
+    <h1>One Platform.<br><span>Every Tool Your Business Needs.</span></h1>
+    <p>CyberCheck puts your business in front of every tourist and local searching Orange Beach &amp; Gulf Shores — with the dashboard to manage it all.</p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">See Plans &amp; Pricing</a>
+      <a href="#platform" class="btn-secondary">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-number">3</span>
+        <span class="stat-label">Interconnected Products</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">1</span>
+        <span class="stat-label">Dashboard to Run It All</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">24/7</span>
+        <span class="stat-label">Visibility for Your Business</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">0</span>
+        <span class="stat-label">Tech Skills Required</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- THREE PRODUCTS -->
+  <section id="platform">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">The Platform</div>
+        <h2 class="section-title">Three products. One ecosystem.</h2>
+        <p class="section-subtitle">Your business gets listed and promoted across all three — driving discovery, bookings, and repeat customers.</p>
+      </div>
+      <div class="products-grid">
+
+        <div class="product-card">
+          <span class="product-icon">🗺️</span>
+          <div class="product-name">Gulf Coast Radar</div>
+          <div class="product-tagline">Discovery Directory</div>
+          <p class="product-desc">The go-to local directory for Orange Beach &amp; Gulf Shores. Tourists and locals browse restaurants, rentals, events, happy hours, and deals — and your business shows up front and center.</p>
+          <ul class="product-features">
+            <li>Business profile with photos, hours &amp; menu</li>
+            <li>Category pages: restaurants, rentals, nightlife &amp; more</li>
+            <li>Happy hours, deals &amp; events listings</li>
+            <li>Map-based search &amp; filtering</li>
+          </ul>
+        </div>
+
+        <div class="product-card">
+          <span class="product-icon">📱</span>
+          <div class="product-name">Trip Swipe</div>
+          <div class="product-tagline">Mobile Discovery App</div>
+          <p class="product-desc">A swipe-based app where tourists discover businesses like flipping through a deck — fast, fun, and addictive. Your business gets seen by people actively planning their trip.</p>
+          <ul class="product-features">
+            <li>Tinder-style business discovery</li>
+            <li>Group trip planning &amp; itinerary builder</li>
+            <li>Save favorites &amp; share recommendations</li>
+            <li>Category browsing &amp; instant booking</li>
+          </ul>
+        </div>
+
+        <div class="product-card">
+          <span class="product-icon">⚙️</span>
+          <div class="product-name">CyberCheck Dashboard</div>
+          <div class="product-tagline">Business Command Center</div>
+          <p class="product-desc">Your all-in-one backend to manage your listing, handle bookings, track analytics, respond to reviews, and grow — without needing a marketing team.</p>
+          <ul class="product-features">
+            <li>Booking &amp; reservation management</li>
+            <li>Analytics, SEO &amp; social media tools</li>
+            <li>CRM, messaging &amp; review management</li>
+            <li>Coupons, loyalty &amp; deals builder</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">How It Works</div>
+        <h2 class="section-title">You're live in under 10 minutes.</h2>
+        <p class="section-subtitle">We do the setup. You just show up and get customers.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Sign Up &amp; Pick a Plan</h3>
+          <p>Choose the tier that fits your business. No contracts, cancel anytime.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>We Build Your Profile</h3>
+          <p>Tell us about your business and we'll create your listings across all three platforms.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Tourists Start Finding You</h3>
+          <p>Your business appears in searches, swipe feeds, and category pages immediately.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Manage Everything in One Place</h3>
+          <p>Log into your dashboard to handle bookings, reviews, deals, and analytics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Features</div>
+        <h2 class="section-title">Everything you need to compete online.</h2>
+        <p class="section-subtitle">Built specifically for Gulf Coast hospitality, rentals, restaurants, and services.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Analytics &amp; Insights</div>
+          <p class="feature-desc">See who's viewing your profile, where traffic comes from, and what's driving conversions — all in plain English.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗓️</div>
+          <div class="feature-title">Booking Management</div>
+          <p class="feature-desc">Accept reservations, manage availability, block dates, and sync with your calendar. Works for rentals, restaurants, and services.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⭐</div>
+          <div class="feature-title">Review Management</div>
+          <p class="feature-desc">Monitor, respond to, and showcase reviews from one place. Protect your reputation and build trust with new customers.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-title">Deals &amp; Promotions</div>
+          <p class="feature-desc">Push happy hours, coupons, and limited-time deals directly into the app feed — timed to hit when tourists are deciding where to go.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <div class="feature-title">Messaging &amp; CRM</div>
+          <p class="feature-desc">Chat with customers, follow up on inquiries, and keep a full history of every interaction in one clean inbox.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📣</div>
+          <div class="feature-title">SEO &amp; Social Tools</div>
+          <p class="feature-desc">Your listing is SEO-optimized out of the box. Schedule and manage social posts without leaving the dashboard.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎁</div>
+          <div class="feature-title">Loyalty Program</div>
+          <p class="feature-desc">Reward repeat customers and keep them coming back with a built-in points and rewards system.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📍</div>
+          <div class="feature-title">Multi-Platform Presence</div>
+          <p class="feature-desc">One update pushes to your Gulf Coast Radar listing, Trip Swipe profile, and CyberCheck page simultaneously.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Pricing</div>
+        <h2 class="section-title">Simple pricing. No surprises.</h2>
+        <p class="section-subtitle">Every plan includes listings on Gulf Coast Radar, Trip Swipe, and your CyberCheck dashboard.</p>
+      </div>
+      <div class="pricing-grid">
+
+        <div class="pricing-card">
+          <div class="plan-name">Starter</div>
+          <div class="plan-price">
+            <span class="amount">$49</span>
+            <span class="per">/month</span>
+          </div>
+          <p class="plan-desc">Perfect for small shops, service providers, and businesses just getting started online.</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Gulf Coast Radar listing</li>
+            <li><span class="check">✓</span> Trip Swipe profile</li>
+            <li><span class="check">✓</span> Basic dashboard access</li>
+            <li><span class="check">✓</span> Booking management</li>
+            <li><span class="check">✓</span> Review monitoring</li>
+            <li><span class="cross">✗</span> <span>Deals &amp; promotions</span></li>
+            <li><span class="cross">✗</span> <span>Analytics &amp; SEO tools</span></li>
+          </ul>
+          <a href="login.html" class="plan-btn plan-btn-outline">Get Started</a>
+        </div>
+
+        <div class="pricing-card featured">
+          <div class="plan-name">Growth</div>
+          <div class="plan-price">
+            <span class="amount">$129</span>
+            <span class="per">/month</span>
+          </div>
+          <p class="plan-desc">For restaurants, rentals, and businesses ready to actively grow their tourist traffic.</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Everything in Starter</li>
+            <li><span class="check">✓</span> Deals, happy hours &amp; coupons</li>
+            <li><span class="check">✓</span> Full analytics &amp; SEO tools</li>
+            <li><span class="check">✓</span> Social media management</li>
+            <li><span class="check">✓</span> CRM &amp; messaging inbox</li>
+            <li><span class="check">✓</span> Priority listing placement</li>
+            <li><span class="cross">✗</span> <span>Loyalty program</span></li>
+          </ul>
+          <a href="login.html" class="plan-btn plan-btn-solid">Get Started</a>
+        </div>
+
+        <div class="pricing-card">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">
+            <span class="amount">$249</span>
+            <span class="per">/month</span>
+          </div>
+          <p class="plan-desc">For high-volume operations that want every tool, every feature, and top placement everywhere.</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Everything in Growth</li>
+            <li><span class="check">✓</span> Loyalty program</li>
+            <li><span class="check">✓</span> AI-powered insights</li>
+            <li><span class="check">✓</span> Featured homepage placement</li>
+            <li><span class="check">✓</span> Dedicated onboarding support</li>
+            <li><span class="check">✓</span> Multi-location management</li>
+            <li><span class="check">✓</span> Custom integrations</li>
+          </ul>
+          <a href="login.html" class="plan-btn plan-btn-outline">Get Started</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Why Businesses Choose Us</div>
+        <h2 class="section-title">Built for the Gulf Coast. By people who know it.</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial">
+          <p class="testimonial-text">"Before CyberCheck we were invisible online. Now tourists find us before they even land at the airport. Our bookings are up and we barely touch the dashboard — it just runs."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">MK</div>
+            <div>
+              <div class="author-name">Maria K.</div>
+              <div class="author-biz">Boat Rental, Orange Beach</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <p class="testimonial-text">"The deals feature alone paid for the whole subscription in the first week. We pushed a happy hour special and had people walking in saying they saw it on the app."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">TJ</div>
+            <div>
+              <div class="author-name">T. Johnson</div>
+              <div class="author-biz">Restaurant, Gulf Shores</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <p class="testimonial-text">"I manage everything from my phone. Bookings, reviews, posting deals — it all lives in one place. I don't need a marketing person anymore, the platform does it."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">SR</div>
+            <div>
+              <div class="author-name">S. Roberts</div>
+              <div class="author-biz">Vacation Services, Perdido Key</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-box">
+      <h2>Ready to get more tourists through your door?</h2>
+      <p>Join the businesses already using CyberCheck to dominate local search and drive real customers.</p>
+      <div class="cta-actions">
+        <a href="login.html" class="btn-primary">Start Your Free Trial</a>
+        <a href="mailto:info@cybercheckinc.com" class="btn-secondary">Talk to Us First</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2026 CyberCheck Inc. &nbsp;·&nbsp; <a href="privacy.html">Privacy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="mailto:info@cybercheckinc.com">info@cybercheckinc.com</a></p>
+  </footer>
+
+</body>
+</html>

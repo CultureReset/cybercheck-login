@@ -69,6 +69,9 @@ var _manualKeyStatus = { saved: false, mode: '' };
 // ─── Google Business state ────────────────────────────────────────────────
 var _googleBusiness = { connected: false, account_email: '', account_name: '', account_id: '', locations: [] };
 
+// ─── WhatsApp Business state ──────────────────────────────────────────────
+var _whatsappBusiness = { connected: false, phone_number: '', waba_id: '' };
+
 function loadConnections() {
   // Check URL for OAuth callback first (after Stripe / Google redirect)
   checkStripeCallback();
@@ -138,6 +141,7 @@ function loadConnections() {
 
   renderPaymentConnections();
   loadGoogleBusinessStatus();   // fetches real status from API, then renders
+  loadWhatsAppBusinessStatus(); // fetches real status from API, then renders
   renderSocialConnections();
 }
 
@@ -688,6 +692,137 @@ function syncGoogleReviews() {
 }
 
 // ---- Social Media OAuth ----
+
+// ─── WhatsApp Business OAuth ──────────────────────────────────────────────
+
+function loadWhatsAppBusinessStatus() {
+  var apiBase = window.CC_API_BASE || '';
+  getSupabaseBusiness().then(function() {
+    var siteId = getSiteId() || window.CC_SITE_ID || '';
+    if (!siteId) { renderWhatsAppCard(); return; }
+    fetch(apiBase + '/api/whatsapp/status?site_id=' + encodeURIComponent(siteId))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        _whatsappBusiness.connected    = !!data.connected;
+        _whatsappBusiness.phone_number = data.phone_number || '';
+        _whatsappBusiness.waba_id      = data.waba_id || '';
+        renderWhatsAppCard();
+      })
+      .catch(function() { renderWhatsAppCard(); });
+  });
+}
+
+function renderWhatsAppCard() {
+  var container = document.getElementById('whatsapp-oauth-card');
+  if (!container) return;
+  var html = '<div class="oauth-card">';
+  html += '<div class="provider-icon" style="background:#25d366;color:white;font-weight:700;font-size:16px;">W</div>';
+  html += '<div class="provider-info">';
+  html += '<h4>WhatsApp Business</h4>';
+
+  if (_whatsappBusiness.connected) {
+    html += '<p style="color:var(--success,#22c55e);">✓ Connected — booking alerts active</p>';
+    if (_whatsappBusiness.phone_number) {
+      html += '<p style="font-size:12px;color:var(--text-muted);">Business number: ' + escHtml(_whatsappBusiness.phone_number) + '</p>';
+    }
+    html += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button class="btn btn-outline btn-sm" onclick="disconnectWhatsAppBusiness()">Disconnect</button>';
+    html += '</div>';
+  } else {
+    html += '<p>Connect your WhatsApp Business account to receive booking notifications on WhatsApp while SMS is pending approval.</p>';
+    html += '<div style="margin-top:8px;">';
+    html += '<button class="btn btn-primary btn-sm" onclick="startWhatsAppBusinessConnect()" style="display:inline-flex;align-items:center;gap:8px;">';
+    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.99.58 3.842 1.573 5.403L2 22l4.761-1.546C8.15 21.41 10.012 22 12 22c5.523 0 10-4.477 10-10S17.522 2 12 2z"/></svg>';
+    html += 'Connect WhatsApp Business</button>';
+    html += '</div>';
+    html += '<div style="margin-top:8px;font-size:11px;color:var(--text-dim);">You\'ll be redirected to Meta/Facebook to authorize your WhatsApp Business account.</div>';
+  }
+
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function loadFbSdk(callback) {
+  if (window.FB) { callback(); return; }
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId: window.META_APP_ID || '',
+      cookie: true,
+      xfbml: false,
+      version: 'v21.0'
+    });
+    callback();
+  };
+  if (!document.getElementById('facebook-jssdk')) {
+    var js = document.createElement('script');
+    js.id = 'facebook-jssdk';
+    js.src = 'https://connect.facebook.net/en_US/sdk.js';
+    document.head.appendChild(js);
+  }
+}
+
+function startWhatsAppBusinessConnect() {
+  var siteId = getSiteId() || window.CC_SITE_ID || '';
+  var apiBase = window.CC_API_BASE || '';
+  if (!siteId) { toast('Session error — please refresh and try again.', 'error'); return; }
+  if (!window.META_APP_ID) { toast('WhatsApp Business not yet configured on this platform. Contact support.', 'error'); return; }
+
+  loadFbSdk(function() {
+    var loginOptions = {
+      response_type: 'code',
+      override_default_response_type: true,
+      scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management'
+    };
+    // Use Embedded Signup config if provided
+    if (window.META_WHATSAPP_CONFIG_ID) {
+      loginOptions.config_id = window.META_WHATSAPP_CONFIG_ID;
+      loginOptions.extras = { setup: {}, featureType: '', sessionInfoVersion: '2' };
+    }
+
+    FB.login(function(response) {
+      if (!response.authResponse || !response.authResponse.code) {
+        toast('WhatsApp authorization cancelled.', 'error');
+        return;
+      }
+      toast('Connecting WhatsApp Business...', 'success');
+      fetch(apiBase + '/api/whatsapp/exchange-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: response.authResponse.code, site_id: siteId })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { toast('Connection failed: ' + data.error, 'error'); return; }
+        _whatsappBusiness.connected    = true;
+        _whatsappBusiness.phone_number = data.phone_number || '';
+        _whatsappBusiness.waba_id      = data.waba_id || '';
+        renderWhatsAppCard();
+        // Also update the messaging section if visible
+        if (typeof renderWhatsAppSection === 'function') renderWhatsAppSection();
+        toast('WhatsApp Business connected! Booking alerts are active.', 'success');
+      })
+      .catch(function(err) { toast('Error: ' + err.message, 'error'); });
+    }, loginOptions);
+  });
+}
+
+function disconnectWhatsAppBusiness() {
+  if (!confirm('Disconnect WhatsApp Business? Booking alerts will stop until you reconnect.')) return;
+  var siteId  = getSiteId() || window.CC_SITE_ID || '';
+  var apiBase = window.CC_API_BASE || '';
+  fetch(apiBase + '/api/whatsapp/disconnect', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ site_id: siteId })
+  })
+  .then(function() {
+    _whatsappBusiness = { connected: false, phone_number: '', waba_id: '' };
+    renderWhatsAppCard();
+    if (typeof renderWhatsAppSection === 'function') renderWhatsAppSection();
+    toast('WhatsApp Business disconnected.');
+  })
+  .catch(function(err) { toast('Error: ' + err.message, 'error'); });
+}
 
 function renderSocialConnections() {
   var container = document.getElementById('social-connections');
