@@ -187,6 +187,15 @@
         </div>
 
         <!-- ── PLATFORM ── -->
+        <div class="nav-section-label">🛍️ App Store</div>
+        <div class="nav-item" data-page="app-manager" onclick="showPage('app-manager')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M3 9l2.45-4.9A2 2 0 017.24 3h9.52a2 2 0 011.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+          <span>App Manager</span>
+        </div>
+        <div class="nav-item" data-page="biz-apps" onclick="showPage('biz-apps')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span>Business Apps</span>
+        </div>
         <div class="nav-section-label">⚙️ Platform</div>
         <div class="nav-item" data-page="businesses" onclick="showPage('businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
@@ -276,6 +285,39 @@
         <div class="card" style="padding:24px;">
           <h3 style="margin:0 0 16px;">Recent Businesses</h3>
           <div id="recent-businesses"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── APP MANAGER ──────────────────────────── -->
+      <div id="page-app-manager" class="page-content" style="display:none;">
+        <div class="page-header" style="display:flex;align-items:center;gap:12px;">
+          <h1>App Manager</h1>
+          <div style="flex:1;"></div>
+          <button onclick="adminOpenAppModal(null)" class="btn btn-primary">+ New App</button>
+          <label class="btn btn-outline" style="cursor:pointer;">
+            📁 Upload Module
+            <input type="file" accept=".js" onchange="adminUploadModule(this)" style="display:none;">
+          </label>
+        </div>
+
+        <div class="card">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;" id="admin-apps-grid">
+            <div style="color:var(--text-muted);padding:40px;grid-column:1/-1;text-align:center;">Loading apps...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BUSINESS APPS ─────────────────────────── -->
+      <div id="page-biz-apps" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Business Apps</h1>
+          <p class="page-subtitle">See what each business has installed. Add or remove apps.</p>
+        </div>
+        <div class="card">
+          <div style="margin-bottom:16px;">
+            <input type="text" id="biz-apps-search" placeholder="Search businesses..." oninput="adminFilterBizApps()" style="padding:9px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;width:280px;">
+          </div>
+          <div id="admin-biz-apps-list"></div>
         </div>
       </div>
 
@@ -13256,6 +13298,232 @@
   // Init model dropdown to match selected provider on page load
   document.addEventListener('DOMContentLoaded', function() { aichatProviderChanged(); });
   // ── End Standalone AI Chat ────────────────────────────────────
+
+  // ── APP MANAGER ──────────────────────────────────────────────
+  var _adminApps = [];
+  var _adminBizApps = [];
+
+  async function adminLoadApps() {
+    var token = getAuthToken();
+    try {
+      var r = await fetch(API_BASE + '/apps', { headers: { 'Authorization': 'Bearer ' + token } });
+      _adminApps = r.ok ? await r.json() : [];
+      adminRenderApps();
+    } catch(e) { console.warn('Failed to load apps:', e); }
+  }
+
+  function adminRenderApps() {
+    var grid = document.getElementById('admin-apps-grid');
+    if (!grid) return;
+    if (!_adminApps.length) { grid.innerHTML = '<div style="color:var(--text-muted);padding:40px;grid-column:1/-1;text-align:center;">No apps yet. Click + New App to add one.</div>'; return; }
+    grid.innerHTML = _adminApps.map(function(a) {
+      var typeColor = a.type === 'automation' ? '#f59e0b' : a.type === 'full' ? '#10b981' : '#667eea';
+      return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;">' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">' +
+          '<span style="font-size:28px;">' + (a.icon||'📦') + '</span>' +
+          '<div style="flex:1;">' +
+            '<div style="font-size:14px;font-weight:700;">' + escHtml(a.name) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-muted);">' + escHtml(a.app_id) + '</div>' +
+          '</div>' +
+          '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + typeColor + '20;color:' + typeColor + ';">' + (a.type||'dashboard') + '</span>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.4;">' + escHtml(a.description||'') + '</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+          '<span style="font-size:12px;color:var(--text-muted);">' + escHtml(a.category||'') + ' · ' + (a.monthly_price > 0 ? '$' + Number(a.monthly_price).toFixed(0) + '/mo' : 'Free') + '</span>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button onclick="adminOpenAppModal(\'' + a.app_id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+            '<button onclick="adminDeleteApp(\'' + a.app_id + '\')" class="btn btn-sm" style="color:var(--danger);border-color:var(--danger);background:transparent;">Delete</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function adminOpenAppModal(appId) {
+    var a = appId ? _adminApps.find(function(x){ return x.app_id === appId; }) : null;
+    var html =
+      '<div style="display:grid;gap:14px;">' +
+      '<div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+        '<div><label class="form-label">App ID</label><input id="am-id" class="form-control" value="' + escHtml(a?a.app_id:'') + '" placeholder="e.g. fishing-charter" ' + (a?'readonly':'') + '></div>' +
+        '<div><label class="form-label">Icon (emoji)</label><input id="am-icon" class="form-control" value="' + escHtml(a?a.icon||'':'') + '" placeholder="🎣"></div>' +
+      '</div>' +
+      '<div><label class="form-label">Name</label><input id="am-name" class="form-control" value="' + escHtml(a?a.name:'') + '" placeholder="Fishing Charter Booking"></div>' +
+      '<div><label class="form-label">Description</label><textarea id="am-desc" class="form-control" rows="2">' + escHtml(a?a.description||'':'') + '</textarea></div>' +
+      '<div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">' +
+        '<div><label class="form-label">Category</label>' +
+          '<select id="am-cat" class="form-control"><option value="menu">Menu</option><option value="booking">Booking</option><option value="ordering">Ordering</option><option value="crm">CRM</option><option value="marketing">Marketing</option><option value="analytics">Analytics</option><option value="media">Media</option></select>' +
+        '</div>' +
+        '<div><label class="form-label">Type</label>' +
+          '<select id="am-type" class="form-control"><option value="full">Full (dashboard + public)</option><option value="dashboard">Dashboard only</option><option value="automation">Automation (no UI)</option></select>' +
+        '</div>' +
+        '<div><label class="form-label">Price ($/mo)</label><input id="am-price" type="number" class="form-control" value="' + (a?a.monthly_price||0:0) + '"></div>' +
+      '</div>' +
+      '<div><label class="form-label">Business Types (JSON array)</label><input id="am-types" class="form-control" value=\'' + (a?JSON.stringify(a.business_types||[]):'[]') + '\' placeholder=\'["rental","charter"]\'></div>' +
+      '<div><label class="form-label">Module Script URL (optional)</label><input id="am-script" class="form-control" value="' + escHtml(a?a.script_url||'':'') + '" placeholder="https://...js"></div>' +
+      '<button onclick="adminSaveApp(\'' + (appId||'') + '\')" class="btn btn-primary" style="width:100%;">Save App</button>' +
+      '</div>';
+
+    showModal('App', a ? 'Edit App' : 'Add New App', html);
+    if (a) {
+      document.getElementById('am-cat').value = a.category || 'booking';
+      document.getElementById('am-type').value = a.type || 'dashboard';
+    }
+  }
+
+  async function adminSaveApp(appId) {
+    var d = {
+      app_id: document.getElementById('am-id').value.trim(),
+      name: document.getElementById('am-name').value.trim(),
+      description: document.getElementById('am-desc').value.trim(),
+      category: document.getElementById('am-cat').value,
+      type: document.getElementById('am-type').value,
+      monthly_price: parseFloat(document.getElementById('am-price').value) || 0,
+      icon: document.getElementById('am-icon').value.trim(),
+      script_url: document.getElementById('am-script').value.trim(),
+      active: true
+    };
+    try { d.business_types = JSON.parse(document.getElementById('am-types').value || '[]'); } catch(e) { d.business_types = []; }
+    if (!d.app_id || !d.name) { toast('App ID and Name required', 'error'); return; }
+
+    var token = getAuthToken();
+    var url = API_BASE + '/admin/apps' + (appId ? '/' + appId : '');
+    var r = await fetch(url, { method: appId ? 'PUT' : 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+    var res = await r.json();
+    if (res.error) { toast(res.error, 'error'); return; }
+    closeAllModals();
+    toast('App saved', 'success');
+    adminLoadApps();
+  }
+
+  async function adminDeleteApp(appId) {
+    if (!confirm('Delete app "' + appId + '"? This will uninstall it from all businesses.')) return;
+    var token = getAuthToken();
+    var r = await fetch(API_BASE + '/admin/apps/' + appId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    var d = await r.json();
+    if (d.error) { toast(d.error, 'error'); return; }
+    toast('App deleted', 'success');
+    adminLoadApps();
+  }
+
+  // Drop in a JS module file — reads metadata from the file and creates the app
+  async function adminUploadModule(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var content = e.target.result;
+      // Extract metadata from CC.modules.register({...}) call
+      var idMatch = content.match(/id:\s*['"]([^'"]+)['"]/);
+      var nameMatch = content.match(/name:\s*['"]([^'"]+)['"]/);
+      var iconMatch = content.match(/icon:\s*['"]([^'"]+)['"]/);
+      var typeMatch = content.match(/type:\s*['"]([^'"]+)['"]/);
+      var catMatch = content.match(/category:\s*['"]([^'"]+)['"]/);
+
+      if (!idMatch) { toast('Could not find app ID in module file. Make sure it calls CC.modules.register({id: ...})', 'error'); return; }
+
+      // Pre-fill the modal with extracted metadata
+      adminOpenAppModal(null);
+      setTimeout(function() {
+        if (idMatch) document.getElementById('am-id').value = idMatch[1];
+        if (nameMatch) document.getElementById('am-name').value = nameMatch[1];
+        if (iconMatch) document.getElementById('am-icon').value = iconMatch[1];
+        if (typeMatch) document.getElementById('am-type').value = typeMatch[1];
+        if (catMatch) document.getElementById('am-cat').value = catMatch[1];
+        toast('Module parsed — review details and save', 'success');
+      }, 100);
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  // Business Apps view
+  async function adminLoadBizApps() {
+    var token = getAuthToken();
+    try {
+      var r = await fetch(API_BASE + '/admin/businesses?include_apps=true', { headers: { 'Authorization': 'Bearer ' + token } });
+      _adminBizApps = r.ok ? await r.json() : [];
+      adminRenderBizApps();
+    } catch(e) { console.warn('Failed to load biz apps:', e); }
+  }
+
+  function adminFilterBizApps() {
+    adminRenderBizApps();
+  }
+
+  function adminRenderBizApps() {
+    var el = document.getElementById('admin-biz-apps-list');
+    if (!el) return;
+    var search = (document.getElementById('biz-apps-search').value || '').toLowerCase();
+    var list = _adminBizApps.filter(function(b){ return !search || (b.name||'').toLowerCase().includes(search); });
+    if (!list.length) { el.innerHTML = '<div style="color:var(--text-muted);padding:40px;text-align:center;">No businesses found.</div>'; return; }
+    el.innerHTML = list.map(function(b) {
+      var apps = b.installed_apps || [];
+      return '<div style="padding:16px 0;border-bottom:1px solid var(--card-border);">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">' +
+          '<div style="font-weight:600;">' + escHtml(b.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);">@' + escHtml(b.subdomain||'') + ' · ' + escHtml(b.type||'') + '</div>' +
+          '<div style="flex:1;"></div>' +
+          '<button onclick="adminManageBizApps(\'' + b.site_id + '\')" class="btn btn-outline btn-sm">Manage Apps</button>' +
+        '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+          (apps.length ? apps.map(function(a){ return '<span style="padding:3px 10px;background:var(--card-bg);border:1px solid var(--primary);border-radius:20px;font-size:11px;color:var(--primary);">' + escHtml(a.app_id) + '</span>'; }).join('') : '<span style="font-size:12px;color:var(--text-muted);">No apps installed</span>') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function adminManageBizApps(siteId) {
+    var biz = _adminBizApps.find(function(b){ return b.site_id === siteId; });
+    if (!biz) return;
+    var token = getAuthToken();
+    var html = '<div>' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:14px;">' + escHtml(biz.name) + '</div>' +
+      '<div style="display:grid;gap:8px;">' +
+      _adminApps.map(function(a) {
+        var installed = (biz.installed_apps||[]).some(function(x){ return x.app_id === a.app_id; });
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border:1px solid ' + (installed?'var(--primary)':'var(--card-border)') + ';border-radius:8px;">' +
+          '<span style="font-size:20px;">' + (a.icon||'📦') + '</span>' +
+          '<span style="flex:1;font-size:13px;font-weight:600;">' + escHtml(a.name) + '</span>' +
+          (installed
+            ? '<button onclick="adminRemoveBizApp(\'' + siteId + '\',\'' + a.app_id + '\')" class="btn btn-sm" style="color:var(--danger);border:1px solid var(--danger);background:transparent;">Remove</button>'
+            : '<button onclick="adminAddBizApp(\'' + siteId + '\',\'' + a.app_id + '\')" class="btn btn-primary btn-sm">Add</button>') +
+        '</div>';
+      }).join('') +
+      '</div></div>';
+    showModal('BizApps', 'Manage Apps — ' + escHtml(biz.name), html);
+  }
+
+  async function adminAddBizApp(siteId, appId) {
+    var token = getAuthToken();
+    var r = await fetch(API_BASE + '/admin/site-apps', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteId, app_id: appId }) });
+    var d = await r.json();
+    if (d.error) { toast(d.error, 'error'); return; }
+    toast('App added', 'success');
+    closeAllModals();
+    adminLoadBizApps();
+  }
+
+  async function adminRemoveBizApp(siteId, appId) {
+    var token = getAuthToken();
+    var r = await fetch(API_BASE + '/admin/site-apps', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteId, app_id: appId }) });
+    var d = await r.json();
+    if (d.error) { toast(d.error, 'error'); return; }
+    toast('App removed', 'success');
+    closeAllModals();
+    adminLoadBizApps();
+  }
+
+  // Load when pages are shown
+  var _origShowPage = typeof showPage === 'function' ? showPage : null;
+  document.addEventListener('DOMContentLoaded', function() {
+    var orig = window.showPage;
+    window.showPage = function(page) {
+      orig(page);
+      if (page === 'app-manager') adminLoadApps();
+      if (page === 'biz-apps') adminLoadBizApps();
+    };
+  });
+  // ── End App Manager ───────────────────────────────────────────
   </script>
 
 </body>

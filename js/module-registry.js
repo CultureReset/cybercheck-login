@@ -70,10 +70,19 @@
   }
 
   // Each module file calls this to register itself
+  // config.type:
+  //   'full'       — dashboard panel + public page block (booking, menu, gallery)
+  //   'dashboard'  — dashboard only, nothing on public page (CRM, analytics, staff)
+  //   'automation' — no UI, runs in background (SMS, review requests, webhooks)
   function register(config) {
     if (!config || !config.id) return;
     if (_modules.find(function(m){ return m.id === config.id; })) return;
+    config.type = config.type || 'dashboard';
     _modules.push(config);
+    // Automations init immediately — no UI needed
+    if (config.type === 'automation' && typeof config.init === 'function') {
+      try { config.init(); } catch(e) { console.warn('Automation init error:', config.id, e); }
+    }
   }
 
   // Build nav + panels from everything that registered
@@ -82,9 +91,10 @@
     var panelsEl = document.getElementById('module-panels');
     if (!navEl || !panelsEl) return;
 
-    // Group modules by section
+    // Group modules by section — skip automation-only modules (no UI)
     var sections = {};
     _modules.forEach(function(m) {
+      if (m.type === 'automation') return;
       var sec = m.section || 'Tools';
       if (!sections[sec]) sections[sec] = [];
       sections[sec].push(m);
