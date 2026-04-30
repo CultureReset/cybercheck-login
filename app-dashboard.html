@@ -1917,27 +1917,35 @@
   </script>
 
 <!-- AI Assistant -->
+<input type="file" id="ai-file-input" accept="image/*" style="display:none"
+  onchange="if(this.files[0]) window.dashboardAI.handleFileSelect(this.files[0])">
+
 <button id="ai-toggle-btn" onclick="window.dashboardAI.toggle()">🤖</button>
-<div id="ai-assistant">
+<div id="ai-assistant"
+  ondragover="event.preventDefault()"
+  ondrop="event.preventDefault();const f=event.dataTransfer.files[0];if(f)window.dashboardAI.handleFileSelect(f)">
   <div class="ai-assistant-header">
     <div class="ai-assistant-title">
       <span class="ai-icon">🤖</span>
-      <span>Business Assistant</span>
+      <span>AI Assistant</span>
     </div>
     <div class="ai-assistant-controls">
-      <button class="ai-control-btn" onclick="window.dashboardAI.clearChat()">🗑</button>
+      <button class="ai-control-btn" title="Clear chat" onclick="window.dashboardAI.clearChat()">🗑</button>
       <button class="ai-control-btn" onclick="window.dashboardAI.toggle()">✕</button>
     </div>
   </div>
   <div class="ai-chat-container" id="ai-chat-messages"></div>
+  <div id="ai-image-preview"></div>
   <div class="ai-input-container">
+    <button id="ai-attach-btn" class="ai-input-btn" title="Attach image" onclick="window.dashboardAI.attachImage()">📎</button>
     <div class="ai-input-wrapper">
-      <textarea id="ai-input" placeholder="Ask anything or paste a full menu, specials list, events schedule…&#10;Enter to send · Shift+Enter for new line"
+      <textarea id="ai-input"
+        placeholder="Ask anything, paste a URL, or attach an image…&#10;Enter to send · Shift+Enter for new line"
         rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.dashboardAI.handleTextInput();}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,160)+'px'"></textarea>
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
     </div>
-    <button id="ai-mic-btn" class="ai-input-btn" onclick="window.dashboardAI.toggleVoice()">🎤</button>
+    <button id="ai-mic-btn"  class="ai-input-btn" onclick="window.dashboardAI.toggleVoice()">🎤</button>
     <button id="ai-send-btn" class="ai-input-btn" onclick="window.dashboardAI.handleTextInput()">➤</button>
   </div>
 </div>
