@@ -181,6 +181,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
           <span>AI Feedback</span>
         </div>
+        <div class="nav-item" data-page="tripswipe-concierge-test" onclick="showPage('tripswipe-concierge-test')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>Concierge Test 🧪</span>
+        </div>
         <div class="nav-item" data-page="trip-swipe-questions" onclick="showPage('trip-swipe-questions')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/></svg>
           <span>Swipe Questions 🤖</span>
@@ -1976,6 +1980,213 @@
           </div>
           <div id="qr-menus-list" style="font-size:14px;color:var(--text-muted);">Loading restaurants...</div>
         </div>
+      </div>
+
+      <!-- ── CONCIERGE TEST (admin only — not live to tourists yet) ── -->
+      <div id="page-tripswipe-concierge-test" class="page-content" style="display:none;">
+        <div class="content-section">
+          <h1>🧪 Concierge Test</h1>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:14px;">
+            Test the tourist AI concierge as any real user. Not yet live to tourists.
+            Pick a tourist → chat as them → AI uses their profile, saves, and GCR live data.
+          </p>
+
+          <!-- Tourist picker -->
+          <div class="card" style="padding:20px;margin:20px 0;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">TEST AS TOURIST</label>
+              <select id="ct-tourist-select" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="">— select a tourist —</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="ctLoadTourist()" style="padding:9px 20px;">Load →</button>
+            <button onclick="ctNewChat()" style="padding:9px 16px;background:transparent;border:1px solid var(--card-border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;">✏️ New chat</button>
+          </div>
+
+          <!-- Tourist context card (shown after loading) -->
+          <div id="ct-context" style="display:none;background:var(--surface);border:1px solid var(--card-border);border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;color:var(--text-muted);line-height:1.6;"></div>
+
+          <!-- Chat window -->
+          <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;" id="ct-card">
+            <div id="ct-messages" style="flex:1;min-height:320px;max-height:520px;overflow-y:auto;padding:16px;background:var(--bg);display:flex;flex-direction:column;gap:12px;">
+              <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:32px 0;">Select a tourist above and click Load to start testing the concierge.</div>
+            </div>
+            <div style="padding:12px 16px;border-top:1px solid var(--card-border);display:flex;gap:8px;align-items:flex-end;background:var(--surface);">
+              <textarea id="ct-input" rows="1" placeholder="Chat as the tourist…" disabled
+                style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;color:var(--text);font-size:14px;resize:none;max-height:100px;overflow-y:auto;font-family:inherit;"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ctSend()}"
+                oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+              <button onclick="ctSend()" id="ct-send-btn" disabled
+                style="padding:9px 16px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:10px;cursor:pointer;font-size:18px;flex-shrink:0;">➤</button>
+            </div>
+          </div>
+        </div>
+
+        <script>
+        (function(){
+          var _ctTouristId = null, _ctConvId = null, _ctHistory = [];
+          var CTAPI = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+
+          function ctToken() { return localStorage.getItem('cc_admin_token') || ''; }
+
+          // Load tourist list into dropdown
+          async function ctInit() {
+            try {
+              var r = await fetch(CTAPI + '/api/admin/tourists', { headers: { 'Authorization': 'Bearer ' + ctToken() } });
+              if (!r.ok) return;
+              var { tourists = [] } = await r.json();
+              var sel = document.getElementById('ct-tourist-select');
+              sel.innerHTML = '<option value="">— select a tourist —</option>';
+              tourists.forEach(function(t) {
+                var opt = document.createElement('option');
+                opt.value = t.user_id || t.id;
+                opt.textContent = (t.name || t.email || 'Unknown') + (t.destination ? ' · ' + t.destination : '');
+                sel.appendChild(opt);
+              });
+            } catch(e) { console.warn('ct init', e); }
+          }
+
+          window.ctLoadTourist = async function() {
+            var sel = document.getElementById('ct-tourist-select');
+            var uid = sel.value;
+            if (!uid) return;
+            _ctTouristId = uid;
+            _ctConvId = null;
+            _ctHistory = [];
+
+            // Show profile context
+            try {
+              var r = await fetch(CTAPI + '/api/admin/tourists/' + uid, { headers: { 'Authorization': 'Bearer ' + ctToken() } });
+              if (r.ok) {
+                var { tourist = {} } = await r.json();
+                var ctx = document.getElementById('ct-context');
+                var p = tourist.profile || {};
+                var lines = [
+                  '👤 ' + (p.name || tourist.email || uid),
+                  p.destination ? '📍 ' + p.destination : null,
+                  (p.arrival && p.departure) ? '📅 ' + p.arrival + ' → ' + p.departure : null,
+                  p.group_type ? '👥 ' + p.group_type + (p.budget ? ' · ' + p.budget : '') : null,
+                  p.hotel_name ? '🏨 ' + p.hotel_name : null,
+                  tourist.saves?.length ? '❤️ ' + tourist.saves.length + ' saved places' : null,
+                  p.interests?.length ? '🎯 ' + p.interests.slice(0,5).join(', ') : null,
+                ].filter(Boolean);
+                ctx.innerHTML = lines.join(' &nbsp;·&nbsp; ');
+                ctx.style.display = 'block';
+              }
+            } catch(e) {}
+
+            var msgs = document.getElementById('ct-messages');
+            msgs.innerHTML = '';
+            document.getElementById('ct-input').disabled = false;
+            document.getElementById('ct-send-btn').disabled = false;
+            ctAppendMsg('system', '✅ Loaded tourist. Start chatting as them — the AI will use their real profile, saves, and interests from GCR live data.');
+            document.getElementById('ct-input').focus();
+          };
+
+          window.ctNewChat = function() {
+            _ctConvId = null;
+            _ctHistory = [];
+            var msgs = document.getElementById('ct-messages');
+            msgs.innerHTML = '';
+            if (_ctTouristId) ctAppendMsg('system', '✏️ New chat started. Still testing as the same tourist.');
+          };
+
+          window.ctSend = async function() {
+            var inp = document.getElementById('ct-input');
+            var msg = inp.value.trim();
+            if (!msg || !_ctTouristId) return;
+            inp.value = ''; inp.style.height = 'auto';
+
+            _ctHistory.push({ role: 'user', content: msg });
+            ctAppendMsg('user', msg);
+
+            // Typing indicator
+            var typingId = 'ct-typing-' + Date.now();
+            ctAppendMsg('system', '⏳ Thinking…', typingId);
+
+            try {
+              var body = { message: msg, history: _ctHistory.slice(-10), as_tourist: _ctTouristId };
+              if (_ctConvId) body.conversation_id = _ctConvId;
+
+              var r = await fetch(CTAPI + '/api/tourist/ai-chat?as_tourist=' + encodeURIComponent(_ctTouristId), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ctToken() },
+                body: JSON.stringify(body)
+              });
+              var data = await r.json();
+
+              var el = document.getElementById(typingId);
+              if (el) el.remove();
+
+              if (data.conversation_id && !_ctConvId) _ctConvId = data.conversation_id;
+
+              var reply = data.reply || 'Done!';
+              _ctHistory.push({ role: 'assistant', content: reply });
+              ctAppendMsg('assistant', reply);
+
+              if (data.tool_results && data.tool_results.length) {
+                var badges = data.tool_results.map(function(r) {
+                  if (r.saved_key)   return '🧠 Remembered: ' + r.category + '/' + r.saved_key;
+                  if (r.updated_key) return '🧠 Updated: ' + r.updated_key;
+                  if (r.deleted_key) return '🗑 Forgot: ' + r.deleted_key;
+                  return '';
+                }).filter(Boolean).join(' · ');
+                if (badges) ctAppendMsg('system', badges);
+              }
+            } catch(e) {
+              var el = document.getElementById(typingId);
+              if (el) el.remove();
+              ctAppendMsg('system', '❌ Error: ' + e.message);
+            }
+          };
+
+          function ctAppendMsg(role, text, id) {
+            var msgs = document.getElementById('ct-messages');
+            var div = document.createElement('div');
+            if (id) div.id = id;
+            var isUser = role === 'user', isSystem = role === 'system';
+            div.style.cssText = isSystem
+              ? 'font-size:12px;color:var(--text-muted);text-align:center;padding:2px 0;'
+              : 'display:flex;gap:10px;align-items:flex-start;' + (isUser ? 'flex-direction:row-reverse;' : '');
+
+            if (!isSystem) {
+              var icon = document.createElement('div');
+              icon.style.cssText = 'width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;background:' + (isUser ? 'linear-gradient(135deg,#0ea5e9,#6366f1)' : 'linear-gradient(135deg,#f0abfc,#818cf8)');
+              icon.textContent = isUser ? '👤' : '🤖';
+              var bubble = document.createElement('div');
+              bubble.style.cssText = 'max-width:75%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.55;word-break:break-word;' + (isUser ? 'background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;' : 'background:var(--surface);color:var(--text);border:1px solid var(--card-border);');
+              bubble.innerHTML = ctMarkdown(text);
+              div.appendChild(icon);
+              div.appendChild(bubble);
+            } else {
+              div.textContent = text;
+            }
+
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+
+          function ctMarkdown(t) {
+            return String(t||'')
+              .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+              .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+              .replace(/\*([^*\n]+?)\*/g,'<em>$1</em>')
+              .replace(/`([^`]+)`/g,'<code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>')
+              .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+              .replace(/(<li>[\s\S]*<\/li>)/,'<ul style="padding-left:18px;margin:6px 0;">$1</ul>')
+              .replace(/\n/g,'<br>');
+          }
+
+          // Auto-init when page is shown
+          document.addEventListener('DOMContentLoaded', function() {
+            var orig = window.showPage;
+            window.showPage = function(page) {
+              orig && orig(page);
+              if (page === 'tripswipe-concierge-test') ctInit();
+            };
+          });
+        })();
+        </script>
       </div>
 
       <!-- ── Trip-Swipe Questions Page ── -->
