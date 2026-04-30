@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Marketplace - Build Your Perfect AI-Powered Workspace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
+
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span>✨</span> No bloat. No lock-in. Just the tools you need.
+            </div>
+            <h1 class="hero-title">
+                Your Workspace.<br/>
+                Your Tools.<br/>
+                <span class="gradient-text">Your Voice.</span>
+            </h1>
+            <p class="hero-subtitle">
+                The first AI-powered app marketplace where you choose only the tools you need,
+                build your own apps in plain English, and control everything with your voice.
+            </p>
+            <div class="hero-actions">
+                <button class="btn-hero-primary" onclick="window.location.href='signup.html'">
+                    Start Building Free
+                    <span class="arrow">→</span>
+                </button>
+                <button class="btn-hero-secondary" onclick="document.getElementById('demo-video').scrollIntoView({behavior: 'smooth'})">
+                    <span class="play-icon">▶</span>
+                    Watch Demo
+                </button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Apps & Integrations</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">12K+</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Voice Controlled</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Problem Section -->
+    <section class="problem-section">
+        <div class="container">
+            <div class="section-header centered">
+                <div class="section-badge">❌ The Old Way</div>
+                <h2>Tired of Bloated Dashboards?</h2>
+                <p>Traditional platforms lock you into complicated interfaces filled with features you'll never use.</p>
+            </div>
+            <div class="problems-grid">
+                <div class="problem-card">
+                    <div class="problem-icon">🔒</div>
+                    <h3>Vendor Lock-In</h3>
+                    <p>Forced to use their tools, even if they don't fit your workflow</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">💸</div>
+                    <h3>Pay for Bloat</h3>
+                    <p>Expensive plans with 50 features when you only need 5</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">🤯</div>
+                    <h3>Complex Interfaces</h3>
+                    <p>Spend hours clicking through menus instead of working</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">⚙️</div>
+                    <h3>No Customization</h3>
+                    <p>Can't build exactly what you need for your business</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution-section">
+        <div class="container">
+            <div class="section-header centered">
+                <div class="section-badge gradient">✨ The Ghost Way</div>
+                <h2>Welcome to the Future</h2>
+                <p>Choose only what you need. Build what you want. Control it all with your voice.</p>
+            </div>
+            <div class="solution-content">
+                <div class="solution-feature">
+                    <div class="feature-visual">
+                        <div class="app-tiles">
+                            <div class="mini-app-card">📊 CRM</div>
+                            <div class="mini-app-card">💬 SMS</div>
+                            <div class="mini-app-card">📧 Email</div>
+                            <div class="mini-app-card">📅 Calendar</div>
+                            <div class="mini-app-card">💳 Stripe</div>
+                            <div class="mini-app-card">📮 Gmail</div>
+                        </div>
+                    </div>
+                    <div class="feature-text">
+                        <div class="feature-number">01</div>
+                        <h3>Pick Your Tools</h3>
+                        <p>Browse our marketplace of 50+ apps. Install only what you need. CRM, SMS, payments, analytics - each tool is separate. No bloat. No forced bundles.</p>
+                        <ul class="feature-list">
+                            <li>✓ White-labeled CyberCheck apps</li>
+                            <li>✓ Popular third-party integrations</li>
+                            <li>✓ Community-built apps</li>
+                            <li>✓ Connect in seconds with OAuth</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="solution-feature reverse">
+                    <div class="feature-visual">
+                        <div class="chat-demo">
+                            <div class="chat-bubble user">Build me an app that sends daily sales via SMS</div>
+                            <div class="chat-bubble ai">✓ Creating your app... Done! Ready to test.</div>
+                            <div class="code-snippet">
+                                <div class="code-header">
+                                    <span>app.js</span>
+                                    <span class="code-status">✓ Generated</span>
+                                </div>
+                                <div class="code-content">
+                                    <span class="code-line">schedule: "daily at 5pm"</span>
+                                    <span class="code-line">action: send_sms(sales_total)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-text">
+                        <div class="feature-number">02</div>
+                        <h3>Build Anything</h3>
+                        <p>No code? No problem. Just tell our AI what you want in plain English. It builds the app, you test it, deploy it, and optionally sell it.</p>
+                        <ul class="feature-list">
+                            <li>✓ Text-to-app builder powered by AI</li>
+                            <li>✓ Live code preview and testing</li>
+                            <li>✓ Deploy to your workspace instantly</li>
+                            <li>✓ Publish to marketplace and earn</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="solution-feature">
+                    <div class="feature-visual">
+                        <div class="voice-demo">
+                            <div class="waveform">
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                                <div class="wave"></div>
+                            </div>
+                            <div class="voice-command">"Show me my leads from today"</div>
+                            <div class="voice-result">
+                                <div class="result-card">
+                                    <div class="result-icon">👥</div>
+                                    <div class="result-text">Showing 12 leads from today</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-text">
+                        <div class="feature-number">03</div>
+                        <h3>Control with Voice</h3>
+                        <p>Ghost AI understands natural language. Talk to your workspace through the app or phone. "Send SMS to hot leads." "Show my calendar." "Run my sales report." Done.</p>
+                        <ul class="feature-list">
+                            <li>✓ Natural language understanding</li>
+                            <li>✓ In-app or phone call support</li>
+                            <li>✓ Automates across all your tools</li>
+                            <li>✓ Works with every connected app</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header centered">
+                <h2>Everything You Need, Nothing You Don't</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏪</div>
+                    <h3>App Marketplace</h3>
+                    <p>Browse 50+ professional apps. CRM, communication, payments, analytics - all separate, all optional.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3>No-Code Builder</h3>
+                    <p>Describe your idea in plain English. AI builds it. You deploy it. That simple.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎤</div>
+                    <h3>Voice Control</h3>
+                    <p>Talk to your workspace. Ghost AI automates everything. In-app or by phone.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💻</div>
+                    <h3>Developer Platform</h3>
+                    <p>Build apps, publish to marketplace, earn 70% revenue. Full API access.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>Real Integrations</h3>
+                    <p>Connect Stripe, Gmail, Slack, Shopify, and more. Real OAuth, real data.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🪙</div>
+                    <h3>Token System</h3>
+                    <p>Pay only for what you use. Fair, transparent, usage-based pricing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header centered">
+                <h2>How It Works</h2>
+                <p>Get started in 3 simple steps</p>
+            </div>
+            <div class="steps-timeline">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Browse & Install</h3>
+                        <p>Explore the marketplace. Install only the apps you need. Connect via OAuth or API key. Takes seconds.</p>
+                    </div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Build Custom Apps</h3>
+                        <p>Need something specific? Go to Sandbox. Tell AI what you want. It builds it. Test, deploy, done.</p>
+                    </div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Automate Everything</h3>
+                        <p>Use Ghost AI to control your workspace with voice. In-app or phone. Natural language. Total automation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="use-cases">
+        <div class="container">
+            <div class="section-header centered">
+                <h2>Built for Real Businesses</h2>
+            </div>
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <div class="use-case-icon">🏢</div>
+                    <h3>Solo Entrepreneurs</h3>
+                    <p>"I only need CRM, SMS, and Stripe. Why pay for 50 features I'll never use?"</p>
+                    <div class="use-case-apps">
+                        <span class="app-chip">CRM</span>
+                        <span class="app-chip">SMS</span>
+                        <span class="app-chip">Stripe</span>
+                    </div>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">🚀</div>
+                    <h3>Agencies</h3>
+                    <p>"We need different tools for each client. Ghost lets us white-label and customize."</p>
+                    <div class="use-case-apps">
+                        <span class="app-chip">All Tools</span>
+                        <span class="app-chip">White Label</span>
+                        <span class="app-chip">Multi-Client</span>
+                    </div>
+                </div>
+                <div class="use-case-card">
+                    <div class="use-case-icon">💡</div>
+                    <h3>Developers</h3>
+                    <p>"I built a custom app in the Sandbox. Published it. Now earning passive income."</p>
+                    <div class="use-case-apps">
+                        <span class="app-chip">Build</span>
+                        <span class="app-chip">Publish</span>
+                        <span class="app-chip">Earn</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sandbox Section -->
+    <section id="sandbox" class="sandbox-showcase">
+        <div class="container">
+            <div class="showcase-content">
+                <div class="showcase-text">
+                    <div class="section-badge gradient">🛠️ Sandbox</div>
+                    <h2>Build Apps Without Code</h2>
+                    <p>The most advanced no-code builder ever created. Powered by AI. Deployed in seconds.</p>
+                    <div class="showcase-features">
+                        <div class="showcase-feature">
+                            <span class="check">✓</span>
+                            <span>Describe your app in plain English</span>
+                        </div>
+                        <div class="showcase-feature">
+                            <span class="check">✓</span>
+                            <span>AI generates production-ready code</span>
+                        </div>
+                        <div class="showcase-feature">
+                            <span class="check">✓</span>
+                            <span>Test in sandbox environment</span>
+                        </div>
+                        <div class="showcase-feature">
+                            <span class="check">✓</span>
+                            <span>Deploy to your workspace</span>
+                        </div>
+                        <div class="showcase-feature">
+                            <span class="check">✓</span>
+                            <span>Publish to marketplace (optional)</span>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="window.location.href='signup.html'">
+                        Try Sandbox Free
+                    </button>
+                </div>
+                <div class="showcase-visual">
+                    <div class="sandbox-preview">
+                        <div class="preview-header">
+                            <span class="preview-dot red"></span>
+                            <span class="preview-dot yellow"></span>
+                            <span class="preview-dot green"></span>
+                            <span class="preview-title">Sandbox Builder</span>
+                        </div>
+                        <div class="preview-content">
+                            <div class="chat-example">
+                                <div class="chat-msg ai">What would you like to build?</div>
+                                <div class="chat-msg user">An app that texts me when I get a Stripe payment over $500</div>
+                                <div class="chat-msg ai">Perfect! Building that now...</div>
+                                <div class="building-animation">
+                                    <div class="building-step done">✓ Connected to Stripe API</div>
+                                    <div class="building-step done">✓ Set up payment webhook</div>
+                                    <div class="building-step done">✓ Added SMS notification</div>
+                                    <div class="building-step current">→ Testing app...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Developer Section -->
+    <section id="developers" class="developer-section">
+        <div class="container">
+            <div class="developer-content">
+                <div class="developer-visual">
+                    <div class="revenue-card">
+                        <div class="revenue-header">Your Revenue</div>
+                        <div class="revenue-amount">$1,234.56</div>
+                        <div class="revenue-label">This Month</div>
+                        <div class="revenue-stats">
+                            <div class="revenue-stat">
+                                <div class="stat-num">247</div>
+                                <div class="stat-text">Installs</div>
+                            </div>
+                            <div class="revenue-stat">
+                                <div class="stat-num">4.8⭐</div>
+                                <div class="stat-text">Rating</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="developer-text">
+                    <div class="section-badge gradient">💻 For Developers</div>
+                    <h2>Build. Publish. Earn.</h2>
+                    <p>Create apps for the Ghost Marketplace. Reach 12K+ users. Earn 70% revenue share.</p>
+                    <div class="developer-features">
+                        <div class="dev-feature">
+                            <div class="dev-icon">🎨</div>
+                            <div>
+                                <h4>Full Creative Control</h4>
+                                <p>Build whatever you want. We handle hosting, billing, and distribution.</p>
+                            </div>
+                        </div>
+                        <div class="dev-feature">
+                            <div class="dev-icon">💰</div>
+                            <div>
+                                <h4>70% Revenue Share</h4>
+                                <p>Keep most of what you earn. We handle payments, you get paid monthly.</p>
+                            </div>
+                        </div>
+                        <div class="dev-feature">
+                            <div class="dev-icon">🚀</div>
+                            <div>
+                                <h4>Instant Distribution</h4>
+                                <p>Publish once, reach thousands. Built-in marketplace with active users.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="window.location.href='signup.html'">
+                        Start Building
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing-section">
+        <div class="container">
+            <div class="section-header centered">
+                <h2>Simple, Transparent Pricing</h2>
+                <p>No hidden fees. No surprises. Pay only for what you use.</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Free</h3>
+                        <div class="price">$0<span>/month</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ 5 app connections</li>
+                        <li>✓ Sandbox builder access</li>
+                        <li>✓ 100 tokens/month</li>
+                        <li>✓ Voice control (in-app)</li>
+                        <li>✓ Community support</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="window.location.href='signup.html'">Get Started</button>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="pricing-header">
+                        <h3>Pro</h3>
+                        <div class="price">$29<span>/month</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ Unlimited app connections</li>
+                        <li>✓ Advanced sandbox features</li>
+                        <li>✓ 1,000 tokens/month</li>
+                        <li>✓ Voice control (app + phone)</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Custom automations</li>
+                        <li>✓ White-label options</li>
+                    </ul>
+                    <button class="btn-pricing-primary" onclick="window.location.href='signup.html'">Start Free Trial</button>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Enterprise</h3>
+                        <div class="price">Custom</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✓ Everything in Pro</li>
+                        <li>✓ Unlimited tokens</li>
+                        <li>✓ Dedicated infrastructure</li>
+                        <li>✓ Custom integrations</li>
+                        <li>✓ SLA guarantee</li>
+                        <li>✓ Dedicated support</li>
+                        <li>✓ Multi-tenant management</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="alert('Contact us at enterprise@ghost.market')">Contact Sales</button>
+                </div>
+            </div>
+            <div class="pricing-note">
+                💡 Additional token packs available: 1,000 tokens for $10
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Video Section -->
+    <section id="demo-video" class="demo-section">
+        <div class="container">
+            <div class="section-header centered">
+                <h2>See It In Action</h2>
+                <p>Watch how Ghost Marketplace transforms the way you work</p>
+            </div>
+            <div class="video-container">
+                <div class="video-placeholder">
+                    <div class="play-button">▶</div>
+                    <p>Product Demo Video</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Build Your Perfect Workspace?</h2>
+                <p>Join 12,000+ users who've ditched bloated platforms for Ghost Marketplace</p>
+                <div class="cta-actions">
+                    <button class="btn-cta-primary" onclick="window.location.href='signup.html'">
+                        Get Started Free
+                        <span class="arrow">→</span>
+                    </button>
+                    <button class="btn-cta-secondary" onclick="alert('Schedule a demo at demo@ghost.market')">
+                        Schedule Demo
+                    </button>
+                </div>
+                <div class="cta-trust">
+                    <span>✓ No credit card required</span>
+                    <span>✓ Free forever plan</span>
+                    <span>✓ Cancel anytime</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <div class="footer-brand">
+                        <span class="ghost-icon">👻</span>
+                        <span>Ghost Marketplace</span>
+                    </div>
+                    <p>The AI-powered app store for your voice-first workspace.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="#features">Features</a>
+                    <a href="#sandbox">Sandbox</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="index.html">Marketplace</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Developers</h4>
+                    <a href="#developers">Developer Portal</a>
+                    <a href="#">API Docs</a>
+                    <a href="#">Community</a>
+                    <a href="#">GitHub</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Ghost Marketplace. Built for the future of work.</p>
+            </div>
+        </div>
+    </footer>
+
+<script src="js/navbar.js"></script>
+</body>
+</html>

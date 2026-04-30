@@ -1,0 +1,102 @@
+<!--
+  COMPONENT: Castopod - Podcast Player
+  GitHub: ad-aures/castopod
+  For: Artists, restaurants, bars — embed podcast/audio content
+  Use cases: Artist music previews, bar/venue podcast, chef storytelling
+
+  Requires: shared.html on the page
+  Trigger: openComponent('castopod')
+  Render: renderCastopod(config)
+  config: { podcastUrl, embedUrl, episodeUrl }
+  Back end: store castopod_url on entity in Supabase
+
+  Setup:
+  1. Self-host: github.com/ad-aures/castopod
+  2. Create podcast, publish episodes
+  3. Get embed URL from Castopod dashboard
+  4. Admin stores embed URL in entity data
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('castopod')">🎙 Listen</button>
+-->
+
+<style>
+.comp-cast-player {
+    padding: 0;
+}
+.comp-cast-iframe {
+    width: 100%;
+    height: 220px;
+    border: none;
+    display: block;
+    border-radius: 0 0 16px 16px;
+}
+.comp-cast-episodes {
+    max-height: 340px;
+    overflow-y: auto;
+}
+.comp-cast-episode {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.comp-cast-episode:hover { background: #f9f9f9; }
+.comp-cast-episode:last-child { border-bottom: none; }
+.comp-cast-ep-num {
+    width: 32px; height: 32px;
+    background: #f0f0f0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    flex-shrink: 0;
+}
+.comp-cast-ep-info { flex: 1; }
+.comp-cast-ep-title { font-size: 0.88rem; font-weight: 600; color: #111; }
+.comp-cast-ep-date { font-size: 0.75rem; color: #999; margin-top: 2px; }
+.comp-cast-ep-dur { font-size: 0.75rem; color: #999; white-space: nowrap; }
+.comp-cast-play {
+    width: 32px; height: 32px;
+    background: #111;
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+</style>
+
+<div class="comp-overlay" id="comp-castopod">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>🎙 Listen</h2>
+            <button class="comp-close" onclick="closeComponent('comp-castopod')">✕</button>
+        </div>
+        <div id="comp-castopod-body"></div>
+    </div>
+</div>
+
+<script>
+function renderCastopod(config) {
+    const body = document.getElementById('comp-castopod-body');
+    if (!config || !config.embedUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">Podcast not set up yet.</div>';
+        return;
+    }
+    body.innerHTML = `
+        <div class="comp-cast-player">
+            <iframe class="comp-cast-iframe" src="${escapeAttr(config.embedUrl)}" loading="lazy"
+                title="Podcast Player" allow="autoplay"></iframe>
+        </div>`;
+}
+window.renderCastopod = renderCastopod;
+</script>

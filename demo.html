@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberCheck Demo Access</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 3em;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 1.1em;
+      margin-bottom: 40px;
+      padding-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .demo-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .demo-btn {
+      padding: 20px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.1em;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .demo-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn-icon {
+      font-size: 1.5em;
+    }
+
+    .btn-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .btn-subtitle {
+      font-size: 0.8em;
+      opacity: 0.9;
+      font-weight: 400;
+    }
+
+    .note {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f5f7fa;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+    }
+
+    .note-title {
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    .note-text {
+      color: #666;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="container">
+    <div class="logo">🔐</div>
+    <h1>CyberCheck Demo</h1>
+    <p class="subtitle">Choose a demo dashboard with pre-filled data</p>
+
+    <div class="demo-buttons">
+      <a href="dashboard-restaurant.html" class="demo-btn" id="restaurant-demo">
+        <span class="btn-icon">🍽️</span>
+        <div class="btn-text">
+          <div>Restaurant Dashboard</div>
+          <div class="btn-subtitle">Pre-loaded with Joe's Pizza data</div>
+        </div>
+      </a>
+
+      <a href="dashboard-charter.html" class="demo-btn" id="charter-demo">
+        <span class="btn-icon">⛵</span>
+        <div class="btn-text">
+          <div>Charter Dashboard</div>
+          <div class="btn-subtitle">Pre-loaded with Gulf Breeze Charters data</div>
+        </div>
+      </a>
+
+      <a href="automation-builder.html" class="demo-btn">
+        <span class="btn-icon">🔧</span>
+        <div class="btn-text">
+          <div>Automation Builder</div>
+          <div class="btn-subtitle">Create custom workflows</div>
+        </div>
+      </a>
+
+      <a href="automation-templates.html" class="demo-btn">
+        <span class="btn-icon">📦</span>
+        <div class="btn-text">
+          <div>Marketplace</div>
+          <div class="btn-subtitle">Browse automation templates</div>
+        </div>
+      </a>
+
+      <a href="ai-chat.html" class="demo-btn">
+        <span class="btn-icon">🤖</span>
+        <div class="btn-text">
+          <div>AI Chat</div>
+          <div class="btn-subtitle">Business intelligence assistant</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="note">
+      <div class="note-title">ℹ️ Demo Mode</div>
+      <div class="note-text">
+        All dashboards are pre-filled with realistic demo data. No login required. Changes are stored in browser localStorage.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set demo mode and sample data in localStorage before navigating
+    document.getElementById('restaurant-demo').addEventListener('click', function(e) {
+      e.preventDefault();
+
+      // Set demo business data
+      const restaurantData = {
+        businessId: 'demo-restaurant-001',
+        businessName: "Joe's Pizza",
+        businessType: 'restaurant',
+        phone: '(251) 555-1234',
+        email: 'joe@joespizza.com',
+        address: '123 Beach Blvd, Orange Beach, AL 36561',
+        website: 'https://joespizza.com',
+        demoMode: true
+      };
+
+      // Set sample analytics data
+      const analyticsData = {
+        revenue: 45620,
+        customers: 1247,
+        orders: 892,
+        avgOrderValue: 51.15,
+        topItems: [
+          { name: 'Margherita Pizza', sales: 234, revenue: 3276 },
+          { name: 'Pepperoni Pizza', sales: 198, revenue: 2772 },
+          { name: 'Hawaiian Pizza', sales: 156, revenue: 2184 }
+        ],
+        recentOrders: [
+          { id: 'ORD-1234', customer: 'John Smith', amount: 45.99, time: '2 min ago' },
+          { id: 'ORD-1235', customer: 'Sarah Johnson', amount: 62.50, time: '5 min ago' },
+          { id: 'ORD-1236', customer: 'Mike Williams', amount: 38.75, time: '12 min ago' }
+        ]
+      };
+
+      localStorage.setItem('cybercheck_business', JSON.stringify(restaurantData));
+      localStorage.setItem('cybercheck_analytics', JSON.stringify(analyticsData));
+      localStorage.setItem('cybercheck_demo_mode', 'true');
+
+      window.location.href = 'dashboard-restaurant.html';
+    });
+
+    document.getElementById('charter-demo').addEventListener('click', function(e) {
+      e.preventDefault();
+
+      const charterData = {
+        businessId: 'demo-charter-001',
+        businessName: 'Gulf Breeze Charters',
+        businessType: 'charter',
+        phone: '(251) 555-5678',
+        email: 'info@gulfbreezecharters.com',
+        address: '456 Marina Dr, Orange Beach, AL 36561',
+        website: 'https://gulfbreezecharters.com',
+        demoMode: true
+      };
+
+      const analyticsData = {
+        revenue: 78940,
+        bookings: 156,
+        customers: 624,
+        avgBookingValue: 506.03,
+        upcomingTrips: [
+          { id: 'TRIP-501', customer: 'Anderson Family', date: 'Today, 2:00 PM', type: 'Deep Sea Fishing' },
+          { id: 'TRIP-502', customer: 'Roberts Group', date: 'Tomorrow, 9:00 AM', type: 'Sunset Cruise' },
+          { id: 'TRIP-503', customer: 'Wilson Party', date: 'Tomorrow, 3:00 PM', type: 'Dolphin Tour' }
+        ],
+        popularTrips: [
+          { name: 'Deep Sea Fishing', bookings: 89, revenue: 53400 },
+          { name: 'Sunset Cruise', bookings: 45, revenue: 15750 },
+          { name: 'Dolphin Tour', bookings: 22, revenue: 9790 }
+        ]
+      };
+
+      localStorage.setItem('cybercheck_business', JSON.stringify(charterData));
+      localStorage.setItem('cybercheck_analytics', JSON.stringify(analyticsData));
+      localStorage.setItem('cybercheck_demo_mode', 'true');
+
+      window.location.href = 'dashboard-charter.html';
+    });
+
+    console.log('%c🔐 CyberCheck Demo Access', 'font-size: 20px; font-weight: bold; color: #667eea;');
+    console.log('Demo mode enabled - all data is pre-filled');
+  </script>
+</body>
+</html>

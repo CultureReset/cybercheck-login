@@ -1,0 +1,169 @@
+<!--
+  COMPONENT: Alf.io - Event Ticketing
+  GitHub: alfio-event/alf.io
+  For: Bars, venues, artists — sell tickets to events
+  Use cases: Live music, special dinners, comedy nights, festivals
+
+  Requires: shared.html on the page
+  Trigger: openComponent('alfio')
+  Render: renderAlfio(config)
+  config: { url, apiKey, eventSlug }
+  Back end: store alfio_url + alfio_event_slug on entity in Supabase
+
+  Setup:
+  1. Self-host: github.com/alfio-event/alf.io (Java app)
+  2. Or use hosted: alf.io
+  3. Create event, get event slug/URL
+  4. Admin stores in entity data
+
+  API endpoints used:
+  - GET /api/v1/events/{slug} — event details
+  - GET /api/v1/events/{slug}/ticket-categories — ticket types + prices
+  - Checkout via iframe embed
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('alfio')">🎟 Get Tickets</button>
+-->
+
+<style>
+.comp-alfio-event-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #fff;
+}
+.comp-alfio-event-name { font-size: 1.1rem; font-weight: 700; }
+.comp-alfio-event-date { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
+.comp-alfio-event-venue { font-size: 0.82rem; opacity: 0.7; margin-top: 2px; }
+
+.comp-alfio-tickets { padding: 0; }
+.comp-alfio-ticket {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.comp-alfio-ticket:last-child { border-bottom: none; }
+.comp-alfio-ticket-info { flex: 1; }
+.comp-alfio-ticket-name { font-size: 0.95rem; font-weight: 700; color: #111; }
+.comp-alfio-ticket-desc { font-size: 0.8rem; color: #888; margin-top: 2px; }
+.comp-alfio-ticket-avail { font-size: 0.75rem; color: #2d8a4e; margin-top: 2px; font-weight: 600; }
+.comp-alfio-ticket-sold { font-size: 0.75rem; color: #e55; margin-top: 2px; font-weight: 600; }
+
+.comp-alfio-price { font-size: 1rem; font-weight: 800; color: #111; white-space: nowrap; }
+.comp-alfio-buy {
+    padding: 9px 18px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-block;
+}
+.comp-alfio-buy:hover { background: #333; }
+.comp-alfio-buy.sold-out { background: #ccc; cursor: not-allowed; }
+
+.comp-alfio-iframe {
+    width: 100%;
+    height: 540px;
+    border: none;
+    display: block;
+}
+</style>
+
+<div class="comp-overlay" id="comp-alfio">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>🎟 Get Tickets</h2>
+            <button class="comp-close" onclick="closeComponent('comp-alfio')">✕</button>
+        </div>
+        <div id="comp-alfio-body"><div class="comp-ea-loading">Loading...</div></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _alfioConfig = {};
+
+    function renderAlfio(config) {
+        _alfioConfig = config || {};
+        const body = document.getElementById('comp-alfio-body');
+
+        if (!config || !config.url) {
+            body.innerHTML = '<div class="comp-ea-no-url">Ticketing not set up yet.</div>';
+            return;
+        }
+
+        // If event slug + API key provided, fetch ticket categories
+        if (config.eventSlug && config.apiKey) {
+            _fetchAlfioEvent(config, body);
+        } else {
+            // Fallback: embed the event page
+            const embedUrl = config.url.replace(/\/$/, '') + (config.eventSlug ? '/event/' + config.eventSlug : '');
+            body.innerHTML = `<iframe class="comp-alfio-iframe" src="${escapeAttr(embedUrl)}" loading="lazy"></iframe>`;
+        }
+    }
+
+    function _fetchAlfioEvent(config, body) {
+        const base = config.url.replace(/\/$/, '');
+        fetch(`${base}/api/v1/events/${config.eventSlug}`, {
+            headers: { 'Authorization': 'ApiKey ' + config.apiKey }
+        })
+        .then(r => r.json())
+        .then(event => {
+            return fetch(`${base}/api/v1/events/${config.eventSlug}/ticket-categories`, {
+                headers: { 'Authorization': 'ApiKey ' + config.apiKey }
+            })
+            .then(r => r.json())
+            .then(cats => ({ event, cats }));
+        })
+        .then(({ event, cats }) => {
+            let html = '';
+            if (event.begin) {
+                html += `<div class="comp-alfio-event-header">`;
+                html += `<div class="comp-alfio-event-name">${escapeHtml(event.displayName || event.shortName)}</div>`;
+                const d = new Date(event.begin);
+                html += `<div class="comp-alfio-event-date">📅 ${d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>`;
+                if (event.location) html += `<div class="comp-alfio-event-venue">📍 ${escapeHtml(event.location)}</div>`;
+                html += `</div>`;
+            }
+            html += `<div class="comp-alfio-tickets">`;
+            (cats || []).forEach(cat => {
+                const price = cat.formattedFinalPrice || (cat.price > 0 ? `$${parseFloat(cat.price).toFixed(2)}` : 'Free');
+                const available = cat.availableTickets > 0;
+                const buyUrl = `${base}/event/${config.eventSlug}/reservation/new`;
+                html += `<div class="comp-alfio-ticket">`;
+                html += `<div class="comp-alfio-ticket-info">`;
+                html += `<div class="comp-alfio-ticket-name">${escapeHtml(cat.name)}</div>`;
+                if (cat.description) html += `<div class="comp-alfio-ticket-desc">${escapeHtml(cat.description)}</div>`;
+                if (available) html += `<div class="comp-alfio-ticket-avail">✓ Available</div>`;
+                else html += `<div class="comp-alfio-ticket-sold">Sold Out</div>`;
+                html += `</div>`;
+                html += `<div style="display:flex;align-items:center;gap:10px;">`;
+                html += `<div class="comp-alfio-price">${escapeHtml(String(price))}</div>`;
+                if (available) {
+                    html += `<a href="${escapeAttr(buyUrl)}" target="_blank" class="comp-alfio-buy">Buy</a>`;
+                } else {
+                    html += `<span class="comp-alfio-buy sold-out">Sold Out</span>`;
+                }
+                html += `</div></div>`;
+            });
+            html += `</div>`;
+            body.innerHTML = html;
+        })
+        .catch(() => {
+            const embedUrl = config.url.replace(/\/$/, '') + '/event/' + config.eventSlug;
+            body.innerHTML = `<iframe class="comp-alfio-iframe" src="${escapeAttr(embedUrl)}" loading="lazy"></iframe>`;
+        });
+    }
+
+    window.renderAlfio = renderAlfio;
+})();
+</script>

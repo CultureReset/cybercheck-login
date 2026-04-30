@@ -1,0 +1,104 @@
+<!--
+  COMPONENT: Frappe Restaurant Management
+  GitHub: frappe/frappe + frappe/erpnext (Restaurant module)
+  For: Full restaurant management — orders, reservations, POS, inventory
+
+  Requires: shared.html on the page
+  Trigger: openComponent('frappe-res')
+  Render: renderFrappe(config)
+  config: { url, apiKey, type } type = 'reservation' | 'order' | 'menu'
+  Back end: store frappe_url + frappe_api_key on entity in Supabase
+
+  Setup:
+  1. Self-host ERPNext: github.com/frappe/erpnext
+  2. Enable Restaurant module
+  3. Create API key in ERPNext settings
+  4. Admin stores URL + API key in entity data
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('frappe-res')">🍽 Reserve / Order</button>
+-->
+
+<style>
+.comp-frappe-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+}
+.comp-frappe-tab {
+    flex: 1;
+    padding: 13px 10px;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+.comp-frappe-tab.active { color: #111; border-bottom-color: #111; background: #fff; }
+.comp-frappe-iframe {
+    width: 100%;
+    height: 540px;
+    border: none;
+    display: block;
+}
+</style>
+
+<div class="comp-overlay" id="comp-frappe-res">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>🍽 Restaurant</h2>
+            <button class="comp-close" onclick="closeComponent('comp-frappe-res')">✕</button>
+        </div>
+        <div id="comp-frappe-tabs-wrap"></div>
+        <div id="comp-frappe-body"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _frappeConfig = {};
+
+    function renderFrappe(config) {
+        _frappeConfig = config || {};
+        const body = document.getElementById('comp-frappe-body');
+        const tabsWrap = document.getElementById('comp-frappe-tabs-wrap');
+
+        if (!config || !config.url) {
+            tabsWrap.innerHTML = '';
+            body.innerHTML = '<div class="comp-ea-no-url">Restaurant system not configured yet.</div>';
+            return;
+        }
+
+        tabsWrap.innerHTML = `
+            <div class="comp-frappe-tabs">
+                <div class="comp-frappe-tab active" onclick="_frappeSwitchTab('reservation', this)">🍽 Reserve</div>
+                <div class="comp-frappe-tab" onclick="_frappeSwitchTab('order', this)">🛒 Order</div>
+                <div class="comp-frappe-tab" onclick="_frappeSwitchTab('menu', this)">📋 Menu</div>
+            </div>`;
+
+        _loadFrappeTab('reservation', body);
+    }
+
+    function _loadFrappeTab(type, body) {
+        const base = _frappeConfig.url.replace(/\/$/, '');
+        const paths = {
+            reservation: base + '/restaurant/reservation',
+            order: base + '/restaurant/order',
+            menu: base + '/restaurant/menu'
+        };
+        const url = paths[type] || base;
+        body.innerHTML = `<iframe class="comp-frappe-iframe" src="${escapeAttr(url)}" loading="lazy"></iframe>`;
+    }
+
+    window._frappeSwitchTab = function(type, el) {
+        document.querySelectorAll('.comp-frappe-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        _loadFrappeTab(type, document.getElementById('comp-frappe-body'));
+    };
+
+    window.renderFrappe = renderFrappe;
+})();
+</script>

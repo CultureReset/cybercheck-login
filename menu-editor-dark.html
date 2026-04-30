@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Daily Update</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh;padding-bottom:80px;}
+.header{background:linear-gradient(135deg,#0b7a75,#065f5b);padding:20px 16px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.header .icon{font-size:32px;}
+.header h1{font-size:18px;font-weight:700;line-height:1.2;}
+.header .sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;}
+.tabs{display:flex;overflow-x:auto;background:#1e293b;border-bottom:1px solid #334155;position:sticky;top:72px;z-index:9;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:12px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.tab.active{color:#38bdf8;border-bottom-color:#38bdf8;}
+.panel{display:none;padding:16px;}
+.panel.active{display:block;}
+.section-label{font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;}
+.item-row{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.item-row:active{background:#263548;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-meta{font-size:12px;color:#94a3b8;margin-top:2px;}
+.item-img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.item-img-placeholder{width:44px;height:44px;border-radius:8px;background:#334155;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.chevron{color:#475569;font-size:16px;flex-shrink:0;}
+.btn-add{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;background:transparent;border:1px dashed #334155;border-radius:10px;color:#38bdf8;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.btn-add:active{background:#1e293b;}
+
+/* Modal / drawer */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;}
+.overlay.open{display:flex;align-items:flex-end;}
+.drawer{background:#1e293b;border-radius:18px 18px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:24px 16px 32px;}
+.drawer-handle{width:40px;height:4px;background:#475569;border-radius:2px;margin:0 auto 20px;}
+.drawer h2{font-size:17px;font-weight:700;margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:#94a3b8;margin-bottom:5px;font-weight:600;}
+.field input,.field textarea,.field select{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:15px;}
+.field input:focus,.field textarea:focus{outline:none;border-color:#0b7a75;}
+.field textarea{resize:none;height:72px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.toggle-row{display:flex;align-items:center;gap:10px;font-size:14px;}
+.toggle-row input[type=checkbox]{width:20px;height:20px;accent-color:#0b7a75;}
+
+/* Image upload */
+.img-upload-area{border:2px dashed #334155;border-radius:10px;padding:16px;text-align:center;cursor:pointer;margin-bottom:14px;}
+.img-upload-area:active{background:#263548;}
+.img-upload-area img{max-height:120px;border-radius:8px;margin-bottom:8px;}
+.img-upload-area p{font-size:13px;color:#94a3b8;}
+.img-upload-area .cam-icon{font-size:32px;margin-bottom:6px;}
+
+/* Buttons */
+.btn-save{width:100%;padding:14px;background:#0b7a75;color:#fff;font-size:16px;font-weight:700;border:none;border-radius:10px;cursor:pointer;margin-bottom:10px;}
+.btn-save:active{background:#065f5b;}
+.btn-delete{width:100%;padding:12px;background:transparent;color:#f87171;font-size:14px;border:1px solid #7f1d1d;border-radius:10px;cursor:pointer;}
+.btn-delete:active{background:#450a0a;}
+.btn-cancel{width:100%;padding:12px;background:#334155;color:#f1f5f9;font-size:14px;border:none;border-radius:10px;cursor:pointer;margin-bottom:10px;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0b7a75;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* Loading spinner */
+.spinner-wrap{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:150;align-items:center;justify-content:center;}
+.spinner-wrap.show{display:flex;}
+.spinner{width:44px;height:44px;border:4px solid #334155;border-top-color:#0b7a75;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.empty{text-align:center;padding:32px 16px;color:#475569;font-size:14px;}
+.market-price-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.market-badge{background:#1e3a5f;color:#93c5fd;font-size:12px;padding:4px 10px;border-radius:20px;font-weight:600;}
+.sold-out-btn{font-size:11px;padding:5px 10px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:20px;cursor:pointer;flex-shrink:0;font-weight:700;white-space:nowrap;}
+.sold-out-btn.is-avail{background:#064e3b;color:#6ee7b7;}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+.gallery-thumb{position:relative;aspect-ratio:1;}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;border-radius:7px;}
+.gallery-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#f87171;border:none;border-radius:50%;width:20px;height:20px;font-size:13px;cursor:pointer;line-height:1;padding:0;}
+.photo-section-label{font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="icon" id="biz-icon">🍽️</div>
+  <div>
+    <h1 id="biz-name">Loading...</h1>
+    <div class="sub">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('specials')">Specials</div>
+  <div class="tab" onclick="switchTab('menu')">Menu</div>
+  <div class="tab" onclick="switchTab('drinks')">Drinks</div>
+  <div class="tab" onclick="switchTab('happyhour')">Happy Hour</div>
+  <div class="tab" onclick="switchTab('events')">Events</div>
+  <div class="tab" onclick="switchTab('photos')">Photos</div>
+</div>
+
+<!-- SPECIALS -->
+<div class="panel active" id="panel-specials">
+  <div class="section-label">Today's Specials</div>
+  <button class="btn-add" onclick="openDrawer('special',null)">＋ Add Special</button>
+  <div id="list-specials"></div>
+</div>
+
+<!-- MENU -->
+<div class="panel" id="panel-menu">
+  <!-- AI Scan button -->
+  <button class="btn-add" style="border-color:#7c3aed;color:#a78bfa;margin-bottom:4px;" onclick="openScanOverlay()">
+    📸 Scan Menu with AI — Take a photo &amp; we build it instantly
+  </button>
+  <div id="list-menu"></div>
+  <button class="btn-add" style="margin-top:8px;" onclick="addMenuSection()">＋ Add Section</button>
+</div>
+
+<!-- AI SCAN OVERLAY -->
+<div id="scan-overlay" style="display:none;position:fixed;inset:0;background:#0f172a;z-index:300;overflow-y:auto;padding:20px 16px 40px;">
+  <!-- Step A: Take photo -->
+  <div id="scan-step-a">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <button onclick="closeScanOverlay()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;padding:0;">✕</button>
+      <div style="font-size:17px;font-weight:700;">📸 Scan Menu with AI</div>
+    </div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;">Take a clear photo of your printed menu, chalkboard, or screenshot — AI will read it and build all sections and items automatically.</div>
+    <div id="scan-photo-preview" style="display:none;margin-bottom:14px;border-radius:10px;overflow:hidden;border:1px solid #334155;">
+      <img id="scan-preview-img" src="" style="width:100%;display:block;">
+    </div>
+    <div onclick="document.getElementById('scan-file-input').click()" style="border:2px dashed #7c3aed;border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:14px;" id="scan-drop-area">
+      <div style="font-size:40px;margin-bottom:8px;">📷</div>
+      <div style="font-size:15px;color:#a78bfa;font-weight:600;">Tap to take photo or choose from gallery</div>
+    </div>
+    <input type="file" id="scan-file-input" accept="image/*" capture="environment" style="display:none;" onchange="previewScanPhoto(this)">
+    <button onclick="runMenuScan()" style="width:100%;padding:15px;background:#7c3aed;color:#fff;font-size:16px;font-weight:700;border:none;border-radius:11px;cursor:pointer;margin-bottom:10px;" id="scan-run-btn" disabled>🤖 Build My Menu with AI</button>
+    <button onclick="closeScanOverlay()" style="width:100%;padding:13px;background:transparent;color:#94a3b8;font-size:14px;border:1px solid #334155;border-radius:11px;cursor:pointer;">Cancel</button>
+  </div>
+
+  <!-- Step B: Preview AI results -->
+  <div id="scan-step-b" style="display:none;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <button onclick="showScanStep('a')" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;padding:0;">←</button>
+      <div style="font-size:17px;font-weight:700;">Review — Does this look right?</div>
+    </div>
+    <div id="scan-summary" style="background:#1e1b4b;border:1px solid #4c1d95;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#c4b5fd;line-height:1.6;"></div>
+    <div id="scan-preview-sections"></div>
+    <button onclick="confirmScanCreate()" style="width:100%;padding:15px;background:#059669;color:#fff;font-size:16px;font-weight:700;border:none;border-radius:11px;cursor:pointer;margin-bottom:10px;">✅ Create My Menu!</button>
+    <button onclick="showScanStep('a')" style="width:100%;padding:13px;background:transparent;color:#94a3b8;font-size:14px;border:1px solid #334155;border-radius:11px;cursor:pointer;">← Try Again</button>
+  </div>
+
+  <!-- Step C: Done -->
+  <div id="scan-step-c" style="display:none;text-align:center;padding:60px 16px;">
+    <div style="font-size:64px;margin-bottom:16px;">🎉</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:10px;">Menu Created!</div>
+    <div style="font-size:14px;color:#94a3b8;line-height:1.6;margin-bottom:24px;">All sections and items have been added. Review and edit anything below.</div>
+    <button onclick="closeScanOverlay()" style="width:100%;max-width:320px;padding:15px;background:#7c3aed;color:#fff;font-size:16px;font-weight:700;border:none;border-radius:11px;cursor:pointer;">✏️ Edit My Menu Now</button>
+  </div>
+</div>
+
+<!-- DRINKS -->
+<div class="panel" id="panel-drinks">
+  <div class="section-label">Drink Menu</div>
+  <button class="btn-add" onclick="openDrawer('drink',null)">＋ Add Drink</button>
+  <div id="list-drinks"></div>
+</div>
+
+<!-- HAPPY HOUR -->
+<div class="panel" id="panel-happyhour">
+  <div class="section-label">Happy Hour Schedule</div>
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:12px;">
+    <div class="field"><label>Days</label><input id="hh-days" type="text" placeholder="e.g. Monday,Tuesday,Wednesday,Thursday,Friday"></div>
+    <div class="field-row">
+      <div class="field"><label>Start Time</label><input id="hh-start" type="text" placeholder="4:00 PM"></div>
+      <div class="field"><label>End Time</label><input id="hh-end" type="text" placeholder="7:00 PM"></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="hh-desc" placeholder="What's included in happy hour..."></textarea></div>
+    <button class="btn-save" onclick="saveHH()">Save Schedule</button>
+  </div>
+  <div class="section-label">Happy Hour Items</div>
+  <button class="btn-add" onclick="openDrawer('hh',null)">＋ Add HH Item</button>
+  <div id="list-hh"></div>
+</div>
+
+<!-- EVENTS -->
+<div class="panel" id="panel-events">
+  <div class="section-label">Events</div>
+  <button class="btn-add" onclick="openDrawer('event',null)">＋ Add Event</button>
+  <div id="list-events"></div>
+</div>
+
+<!-- PHOTOS -->
+<div class="panel" id="panel-photos">
+  <div class="section-label">Business Photos</div>
+  <div class="img-upload-area" onclick="document.getElementById('photo-file').click()">
+    <div class="cam-icon">📷</div>
+    <p>Tap to upload a photo from your camera or gallery</p>
+  </div>
+  <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none;" onchange="uploadStandalonePhoto(this)">
+  <div id="list-photos" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"></div>
+</div>
+
+<!-- DRAWER OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDrawer()">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="drawer-handle"></div>
+    <div id="drawer-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="spinner-wrap" id="spinner"><div class="spinner"></div></div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+const BASE = 'https://cybercheck-api-database.vercel.app/update/' + token;
+let _data = {};
+let _currentTab = 'specials';
+
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+  showSpinner(true);
+  try {
+    const r = await fetch(BASE + '/data');
+    _data = await r.json();
+    renderAll();
+  } catch(e) { toast('Failed to load data', true); }
+  showSpinner(false);
+}
+
+function renderAll() {
+  var ent = _data.entity || {};
+  if (ent.name) document.getElementById('biz-name').textContent = ent.name;
+  if (ent.icon) document.getElementById('biz-icon').textContent = ent.icon;
+  renderSpecials();
+  renderMenu();
+  renderDrinks();
+  renderHH();
+  renderEvents();
+  renderPhotos();
+}
+
+// ── Tabs ─────────────────────────────────────────────────────
+function switchTab(tab) {
+  _currentTab = tab;
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    var tabs = ['specials','menu','drinks','happyhour','events','photos'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.panel').forEach(function(p){
+    p.classList.remove('active');
+  });
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ── Render lists ─────────────────────────────────────────────
+function renderSpecials() {
+  var el = document.getElementById('list-specials');
+  if (!_data.specials || !_data.specials.length) { el.innerHTML = '<div class="empty">No specials yet. Tap + Add Special to create one.</div>'; return; }
+  el.innerHTML = _data.specials.map(function(s) {
+    return '<div class="item-row" onclick="openDrawer(\\'special\\',\\''+s.id+'\\')">' +
+      '<div class="item-img-placeholder">🏷️</div>' +
+      '<div class="item-info"><div class="item-name">'+esc(s.special_name)+'</div><div class="item-meta">'+(s.discount_text||'')+(s.days?' · '+s.days:'')+'</div></div>' +
+      '<div class="chevron">›</div></div>';
+  }).join('');
+}
+
+function renderMenu() {
+  var el = document.getElementById('list-menu');
+  var sections = _data.menu_sections || [];
+  var items = _data.menu_items || [];
+  if (!sections.length && !items.length) { el.innerHTML = '<div class="empty">No menu items yet.</div>'; return; }
+  // Group items by section
+  var html = '';
+  var noSection = items.filter(function(i){ return !i.menu_section_id; });
+  sections.forEach(function(sec) {
+    var secItems = items.filter(function(i){ return i.menu_section_id === sec.id; });
+    var meta = [sec.available_days, sec.available_start ? (sec.available_start + (sec.available_end ? ' – ' + sec.available_end : '')) : ''].filter(Boolean).join(' · ');
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;">' +
+      '<div>' +
+        '<div class="section-label" style="margin:0;">'+esc(sec.section_name)+'</div>' +
+        (meta ? '<div style="font-size:11px;color:#475569;margin-top:2px;">'+esc(meta)+'</div>' : '') +
+      '</div>' +
+      '<button onclick="openDrawer(\\'section\\',\\''+sec.id+'\\')" style="background:none;border:none;color:#475569;font-size:13px;cursor:pointer;padding:4px 8px;">Edit ✏️</button>' +
+      '</div>';
+    html += '<button class="btn-add" onclick="openDrawer(\\'menu\\',null,\\''+sec.id+'\\')">＋ Add Item</button>';
+    html += secItems.map(function(item) { return menuItemRow(item); }).join('');
+  });
+  if (noSection.length) {
+    html += '<div class="section-label">Other Items</div>';
+    html += noSection.map(function(item){ return menuItemRow(item); }).join('');
+  }
+  el.innerHTML = html;
+}
+
+function menuItemRow(item) {
+  var soldOut = item.is_available === false;
+  var price = item.price != null ? '$'+item.price : (item.price_text || '');
+  var img = item.image_url ? '<img class="item-img" src="'+item.image_url+'">' : '<div class="item-img-placeholder">🍽️</div>';
+  return '<div class="item-row" onclick="openDrawer(\\'menu\\',\\''+item.id+'\\')">'+img+
+    '<div class="item-info"><div class="item-name">'+esc(item.item_name)+(soldOut?' <span style="color:#f87171;font-size:11px;font-weight:700;">SOLD OUT</span>':'')+'</div>'+
+    '<div class="item-meta">'+(price||'No price set')+'</div></div>'+
+    '<button class="sold-out-btn'+(soldOut?' is-avail':'')+'" onclick="event.stopPropagation();toggleSoldOut(\\''+item.id+'\\',\\'menu\\')">'+(soldOut?'Mark Available':'Sold Out')+'</button>'+
+    '</div>';
+}
+
+function renderDrinks() {
+  var el = document.getElementById('list-drinks');
+  var items = _data.drink_items || [];
+  if (!items.length) { el.innerHTML = '<div class="empty">No drinks yet.</div>'; return; }
+  el.innerHTML = items.map(function(item) {
+    var soldOut = item.is_available === false;
+    var price = item.price != null ? '$'+item.price : (item.price_text || '');
+    var img = item.image_url ? '<img class="item-img" src="'+item.image_url+'">' : '<div class="item-img-placeholder">🍺</div>';
+    return '<div class="item-row" onclick="openDrawer(\\'drink\\',\\''+item.id+'\\')">'+img+
+      '<div class="item-info"><div class="item-name">'+esc(item.item_name)+(soldOut?' <span style="color:#f87171;font-size:11px;font-weight:700;">SOLD OUT</span>':'')+'</div>'+
+      '<div class="item-meta">'+(price||'')+'</div></div>'+
+      '<button class="sold-out-btn'+(soldOut?' is-avail':'')+'" onclick="event.stopPropagation();toggleSoldOut(\\''+item.id+'\\',\\'drink\\')">'+(soldOut?'Mark Available':'Sold Out')+'</button>'+
+      '</div>';
+  }).join('');
+}
+
+function renderHH() {
+  var ent = _data.entity || {};
+  document.getElementById('hh-days').value = ent.hh_days || '';
+  document.getElementById('hh-start').value = ent.hh_start || '';
+  document.getElementById('hh-end').value = ent.hh_end || '';
+  document.getElementById('hh-desc').value = ent.hh_description || '';
+  var el = document.getElementById('list-hh');
+  var items = _data.hh_items || [];
+  if (!items.length) { el.innerHTML = '<div class="empty">No happy hour items yet.</div>'; return; }
+  el.innerHTML = items.map(function(item) {
+    var soldOut = item.is_available === false;
+    var price = item.hh_price != null ? 'HH: $'+item.hh_price : (item.price_text || '');
+    var img = item.image_url ? '<img class="item-img" src="'+item.image_url+'">' : '<div class="item-img-placeholder">🍻</div>';
+    return '<div class="item-row" onclick="openDrawer(\\'hh\\',\\''+item.id+'\\')">'+img+
+      '<div class="item-info"><div class="item-name">'+esc(item.item_name)+(soldOut?' <span style="color:#f87171;font-size:11px;font-weight:700;">SOLD OUT</span>':'')+'</div>'+
+      '<div class="item-meta">'+price+'</div></div>'+
+      '<button class="sold-out-btn'+(soldOut?' is-avail':'')+'" onclick="event.stopPropagation();toggleSoldOut(\\''+item.id+'\\',\\'hh\\')">'+(soldOut?'Mark Available':'Sold Out')+'</button>'+
+      '</div>';
+  }).join('');
+}
+
+function renderEvents() {
+  var el = document.getElementById('list-events');
+  var items = _data.events || [];
+  if (!items.length) { el.innerHTML = '<div class="empty">No events yet.</div>'; return; }
+  el.innerHTML = items.map(function(ev) {
+    var when = ev.event_date ? ev.event_date + (ev.start_time ? ' · '+ev.start_time : '') : (ev.start_time || '');
+    var img = ev.image_url ? '<img class="item-img" src="'+ev.image_url+'">' : '<div class="item-img-placeholder">🎉</div>';
+    return '<div class="item-row" onclick="openDrawer(\\'event\\',\\''+ev.id+'\\')">'+img+
+      '<div class="item-info"><div class="item-name">'+esc(ev.event_name)+'</div><div class="item-meta">'+esc(when)+'</div></div>'+
+      '<div class="chevron">›</div></div>';
+  }).join('');
+}
+
+function renderPhotos() {
+  var el = document.getElementById('list-photos');
+  var photos = _data.photos || [];
+  el.innerHTML = photos.map(function(p){
+    return '<div style="position:relative;">' +
+      '<img src="'+p.image_url+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">' +
+      '<button onclick="deletePhoto(\''+p.id+'\')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#f87171;border:none;border-radius:50%;width:24px;height:24px;font-size:14px;cursor:pointer;line-height:1;">×</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function deletePhoto(id) {
+  if (!confirm('Remove this photo?')) return;
+  showSpinner(true);
+  var r = await fetch(BASE + '/photos/' + id, { method: 'DELETE' });
+  var res = await r.json();
+  if (res.success) { _data.photos = (_data.photos||[]).filter(function(p){ return p.id !== id; }); renderPhotos(); toast('Photo removed'); }
+  else toast(res.error || 'Delete failed', true);
+  showSpinner(false);
+}
+
+// ── Drawer ────────────────────────────────────────────────────
+function openDrawer(type, id, sectionId) {
+  var item = null;
+  if (id) {
+    var lists = { special: _data.specials, menu: _data.menu_items, drink: _data.drink_items, hh: _data.hh_items, event: _data.events, section: _data.menu_sections };
+    item = (lists[type] || []).find(function(i){ return i.id === id; });
+  }
+  document.getElementById('drawer-content').innerHTML = buildDrawer(type, item, sectionId);
+  if (type === 'menu' || type === 'drink' || type === 'hh') initGallery(item);
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function buildDrawer(type, item, sectionId) {
+  var isNew = !item;
+  var title = isNew ? 'Add' : 'Edit';
+
+  var uploadField = function(field, label) {
+    var current = item && item[field] ? '<img src="'+item[field]+'" style="max-height:100px;border-radius:8px;margin-bottom:8px;display:block;">' : '';
+    return '<div class="img-upload-area" onclick="triggerUpload(\\''+field+'\\')">' +
+      current +
+      '<input type="file" id="file-'+field+'" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(this,\\''+field+'\\')">' +
+      '<div class="cam-icon">📷</div><p>'+(current?'Tap to change photo':'Tap to add photo')+'</p></div>';
+  };
+
+  var saveBtn = '<button class="btn-save" onclick="saveDrawer(\\''+type+'\\')">Save</button>';
+  var deleteBtn = !isNew ? '<button class="btn-delete" onclick="deleteItem(\\''+type+'\\',\\''+item.id+'\\')">Delete</button>' : '';
+  var cancelBtn = '<button class="btn-cancel" onclick="closeDrawer()">Cancel</button>';
+
+  var idField = '<input type="hidden" id="d-id" value="'+(item ? item.id : '')+'">';
+  var sectionField = sectionId ? '<input type="hidden" id="d-section-id" value="'+sectionId+'">' : '';
+
+  if (type === 'special') {
+    return '<h2>'+title+' Special</h2>'+idField+
+      '<div class="field"><label>Special Name</label><input id="d-name" type="text" value="'+esc(item ? item.special_name : '')+'" placeholder="e.g. $5 Long Islands"></div>'+
+      '<div class="field"><label>Price / Deal</label><input id="d-price-text" type="text" value="'+esc(item ? item.discount_text||'' : '')+'" placeholder="e.g. $5 or 2-for-1"></div>'+
+      '<div class="field"><label>Description</label><textarea id="d-desc" placeholder="Any details...">'+esc(item ? item.description||'' : '')+'</textarea></div>'+
+      '<div class="field"><label>Days</label><input id="d-days" type="text" value="'+esc(item ? item.days||'' : '')+'" placeholder="e.g. Monday,Tuesday or Everyday"></div>'+
+      '<div class="field-row"><div class="field"><label>Start Time</label><input id="d-start" type="text" value="'+esc(item ? item.start_time||'' : '')+'" placeholder="4:00 PM"></div>'+
+      '<div class="field"><label>End Time</label><input id="d-end" type="text" value="'+esc(item ? item.end_time||'' : '')+'" placeholder="7:00 PM"></div></div>'+
+      uploadField('image_url','Photo')+
+      '<label class="toggle-row" style="margin-bottom:14px;"><input type="checkbox" id="d-active" '+(item && item.is_active!==false?'checked':'')+'> Active today</label>'+
+      saveBtn+cancelBtn+deleteBtn;
+  }
+
+  var gallerySection =
+    '<div class="photo-section-label">More Photos <span style="color:#475569;font-weight:400;font-size:10px;">optional</span></div>'+
+    '<div class="gallery-grid" id="d-gallery-grid"></div>'+
+    '<button class="btn-add" style="margin-bottom:14px;" onclick="addGalleryPhoto()">📷 Add Another Photo</button>'+
+    '<input type="file" id="gallery-input" accept="image/*" capture="environment" style="display:none;" onchange="uploadGalleryPhoto(this)">';
+
+  if (type === 'menu') {
+    var marketChecked = item && !item.price && item.price_text === 'Market Price' ? 'checked' : '';
+    var sections = (_data.menu_sections || []).map(function(s){
+      return '<option value="'+s.id+'"'+(item && item.menu_section_id===s.id?' selected':'')+(sectionId===s.id?' selected':'')+'>'+(s.section_name)+'</option>';
+    }).join('');
+    return '<h2>'+title+' Menu Item</h2>'+idField+sectionField+
+      '<div class="field"><label>Section</label><select id="d-section"><option value="">— No section —</option>'+sections+'</select></div>'+
+      '<div class="field"><label>Item Name</label><input id="d-name" type="text" value="'+esc(item ? item.item_name : '')+'" placeholder="e.g. Grilled Grouper"></div>'+
+      '<div class="field"><label>Description</label><textarea id="d-desc" placeholder="Ingredients, prep style...">'+esc(item ? item.description||'' : '')+'</textarea></div>'+
+      '<div class="market-price-row"><label class="toggle-row"><input type="checkbox" id="d-market" onchange="toggleMarket(this)" '+marketChecked+'> Market Price</label></div>'+
+      '<div id="price-field" class="field" style="'+(marketChecked?'display:none':'')+'"><label>Price ($)</label><input id="d-price" type="number" step="0.01" value="'+(item && item.price!=null ? item.price : '')+'" placeholder="0.00"></div>'+
+      '<div class="photo-section-label">Main Photo</div>'+
+      uploadField('image_url','')+
+      gallerySection+
+      '<label class="toggle-row" style="margin-bottom:14px;"><input type="checkbox" id="d-active" '+(item && item.is_available!==false?'checked':'')+'> Available</label>'+
+      saveBtn+cancelBtn+deleteBtn;
+  }
+
+  if (type === 'drink') {
+    return '<h2>'+title+' Drink</h2>'+idField+
+      '<div class="field"><label>Drink Name</label><input id="d-name" type="text" value="'+esc(item ? item.item_name : '')+'" placeholder="e.g. Craft IPA"></div>'+
+      '<div class="field"><label>Description</label><textarea id="d-desc" placeholder="Style, ABV, brewery...">'+esc(item ? item.description||'' : '')+'</textarea></div>'+
+      '<div class="field-row"><div class="field"><label>Price ($)</label><input id="d-price" type="number" step="0.01" value="'+(item && item.price!=null ? item.price : '')+'" placeholder="0.00"></div>'+
+      '<div class="field"><label>Price Text</label><input id="d-price-text" type="text" value="'+esc(item ? item.price_text||'' : '')+'" placeholder="e.g. $6 pint"></div></div>'+
+      '<div class="photo-section-label">Main Photo</div>'+
+      uploadField('image_url','')+
+      gallerySection+
+      '<label class="toggle-row" style="margin-bottom:14px;"><input type="checkbox" id="d-active" '+(item && item.is_available!==false?'checked':'')+'> Available</label>'+
+      saveBtn+cancelBtn+deleteBtn;
+  }
+
+  if (type === 'hh') {
+    return '<h2>'+title+' HH Item</h2>'+idField+
+      '<div class="field"><label>Item Name</label><input id="d-name" type="text" value="'+esc(item ? item.item_name : '')+'" placeholder="e.g. Draft Beer"></div>'+
+      '<div class="field"><label>Description</label><textarea id="d-desc">'+esc(item ? item.description||'' : '')+'</textarea></div>'+
+      '<div class="field-row"><div class="field"><label>Regular Price ($)</label><input id="d-reg-price" type="number" step="0.01" value="'+(item && item.regular_price!=null ? item.regular_price : '')+'" placeholder="0.00"></div>'+
+      '<div class="field"><label>HH Price ($)</label><input id="d-price" type="number" step="0.01" value="'+(item && item.hh_price!=null ? item.hh_price : '')+'" placeholder="0.00"></div></div>'+
+      '<div class="field"><label>Price Text</label><input id="d-price-text" type="text" value="'+esc(item ? item.price_text||'' : '')+'" placeholder="e.g. $3 draft beers"></div>'+
+      '<div class="photo-section-label">Main Photo</div>'+
+      uploadField('image_url','')+
+      gallerySection+
+      saveBtn+cancelBtn+deleteBtn;
+  }
+
+  if (type === 'section') {
+    return '<h2>'+(isNew?'Add':'Edit')+' Menu Section</h2>'+idField+
+      '<div class="field"><label>Section Name</label><input id="d-name" type="text" value="'+esc(item ? item.section_name : '')+'" placeholder="e.g. Breakfast, Lunch, Dinner, Happy Hour"></div>'+
+      '<div class="field"><label>Days Available <span style="color:#64748b;font-weight:400;">(optional)</span></label><input id="d-days" type="text" value="'+esc(item ? item.available_days||'' : '')+'" placeholder="e.g. Monday-Friday, Weekends, Everyday"></div>'+
+      '<div class="field-row">'+
+        '<div class="field"><label>Start Time</label><input id="d-start" type="text" value="'+esc(item ? item.available_start||'' : '')+'" placeholder="7:00 AM"></div>'+
+        '<div class="field"><label>End Time</label><input id="d-end" type="text" value="'+esc(item ? item.available_end||'' : '')+'" placeholder="11:00 AM"></div>'+
+      '</div>'+
+      saveBtn+cancelBtn+(!isNew ? '<button class="btn-delete" onclick="deleteSection(\''+item.id+'\')">Delete Section</button>' : '');
+  }
+
+  if (type === 'event') {
+    return '<h2>'+title+' Event</h2>'+idField+
+      '<div class="field"><label>Event Name</label><input id="d-name" type="text" value="'+esc(item ? item.event_name : '')+'" placeholder="e.g. Live Music Night"></div>'+
+      '<div class="field"><label>Description</label><textarea id="d-desc">'+esc(item ? item.description||'' : '')+'</textarea></div>'+
+      '<div class="field"><label>Date</label><input id="d-date" type="date" value="'+esc(item ? item.event_date||'' : '')+'"></div>'+
+      '<div class="field-row"><div class="field"><label>Start Time</label><input id="d-start" type="text" value="'+esc(item ? item.start_time||'' : '')+'" placeholder="8:00 PM"></div>'+
+      '<div class="field"><label>End Time</label><input id="d-end" type="text" value="'+esc(item ? item.end_time||'' : '')+'" placeholder="11:00 PM"></div></div>'+
+      '<div class="field"><label>Cover Charge</label><input id="d-cover" type="text" value="'+esc(item ? item.cover_charge||'' : '')+'" placeholder="e.g. $10 or Free"></div>'+
+      uploadField('image_url','Event Photo')+
+      '<label class="toggle-row" style="margin-bottom:14px;"><input type="checkbox" id="d-active" '+(item && item.is_active!==false?'checked':'')+'> Active</label>'+
+      saveBtn+cancelBtn+deleteBtn;
+  }
+  return '';
+}
+
+// ── Image upload ──────────────────────────────────────────────
+function triggerUpload(field) { document.getElementById('file-'+field).click(); }
+
+var _pendingImageField = null;
+async function handleImageUpload(input, field) {
+  if (!input.files[0]) return;
+  showSpinner(true);
+  var fd = new FormData();
+  fd.append('image', input.files[0]);
+  try {
+    var r = await fetch(BASE + '/upload', { method: 'POST', body: fd });
+    var res = await r.json();
+    if (res.url) {
+      // Update preview in drawer
+      var area = input.closest('.img-upload-area');
+      var existing = area.querySelector('img');
+      if (existing) existing.src = res.url;
+      else { var img = document.createElement('img'); img.src = res.url; img.style.cssText = 'max-height:100px;border-radius:8px;margin-bottom:8px;display:block;'; area.insertBefore(img, area.querySelector('.cam-icon')); }
+      input.dataset.url = res.url;
+      toast('Photo uploaded!');
+    } else toast('Upload failed: '+(res.error||'unknown'), true);
+  } catch(e) { toast('Upload error', true); }
+  showSpinner(false);
+}
+
+async function uploadStandalonePhoto(input) {
+  if (!input.files[0]) return;
+  showSpinner(true);
+  var fd = new FormData();
+  fd.append('image', input.files[0]);
+  var r = await fetch(BASE + '/upload?save_photo=1', { method: 'POST', body: fd });
+  var res = await r.json();
+  if (res.url) {
+    if (res.photo) {
+      if (!_data.photos) _data.photos = [];
+      _data.photos.unshift(res.photo);
+    }
+    renderPhotos();
+    toast('Photo saved!');
+  } else toast(res.error || 'Upload failed', true);
+  showSpinner(false);
+  input.value = '';
+}
+
+// ── Save drawer ───────────────────────────────────────────────
+async function saveDrawer(type) {
+  var id = document.getElementById('d-id').value || null;
+  var payload = { id };
+  var imageField = document.querySelector('#drawer-content input[type=file]');
+  var imageUrl = imageField && imageField.dataset.url ? imageField.dataset.url : (document.querySelector('#drawer-content img:not(.item-img)') ? document.querySelector('#drawer-content img:not(.item-img)').src : null);
+  if (imageUrl) payload.image_url = imageUrl;
+
+  // Sections have their own save path (PUT vs POST depending on new/edit)
+  if (type === 'section') {
+    var secName = v('d-name');
+    if (!secName) { toast('Section name is required', true); return; }
+    var secPayload = { section_name: secName, available_days: v('d-days') || null, available_start: v('d-start') || null, available_end: v('d-end') || null };
+    showSpinner(true);
+    try {
+      var secMethod = id ? 'PUT' : 'POST';
+      var secUrl = id ? BASE + '/menu-sections/' + id : BASE + '/menu-sections';
+      var sr = await fetch(secUrl, { method: secMethod, headers: {'Content-Type':'application/json'}, body: JSON.stringify(secPayload) });
+      var sres = await sr.json();
+      if (sres.item) {
+        if (id) { var si = (_data.menu_sections||[]).findIndex(function(s){ return s.id === sres.item.id; }); if (si >= 0) _data.menu_sections[si] = sres.item; }
+        else { if (!_data.menu_sections) _data.menu_sections = []; _data.menu_sections.push(sres.item); }
+        renderMenu(); closeDrawer(); toast('Section saved!');
+      } else toast(sres.error || 'Save failed', true);
+    } catch(e) { toast('Error saving', true); }
+    showSpinner(false);
+    return;
+  }
+
+  var endpoints = { special: '/specials', menu: '/menu-items', drink: '/drink-items', hh: '/hh-items', event: '/events' };
+
+  if (type === 'special') {
+    payload.special_name = v('d-name'); payload.discount_text = v('d-price-text');
+    payload.description = v('d-desc'); payload.days = v('d-days');
+    payload.start_time = v('d-start'); payload.end_time = v('d-end');
+    payload.is_active = document.getElementById('d-active').checked;
+  } else if (type === 'menu') {
+    var isMarket = document.getElementById('d-market') && document.getElementById('d-market').checked;
+    payload.item_name = v('d-name'); payload.description = v('d-desc');
+    payload.price = isMarket ? null : v('d-price');
+    payload.price_text = isMarket ? 'Market Price' : null;
+    payload.menu_section_id = v('d-section') || (document.getElementById('d-section-id') ? document.getElementById('d-section-id').value : null);
+    payload.is_available = document.getElementById('d-active').checked;
+  } else if (type === 'drink') {
+    payload.item_name = v('d-name'); payload.description = v('d-desc');
+    payload.price = v('d-price'); payload.price_text = v('d-price-text');
+    payload.is_available = document.getElementById('d-active').checked;
+  } else if (type === 'hh') {
+    payload.item_name = v('d-name'); payload.description = v('d-desc');
+    payload.regular_price = v('d-reg-price'); payload.hh_price = v('d-price');
+    payload.price_text = v('d-price-text');
+  } else if (type === 'event') {
+    payload.event_name = v('d-name'); payload.description = v('d-desc');
+    payload.event_date = v('d-date'); payload.start_time = v('d-start');
+    payload.end_time = v('d-end'); payload.cover_charge = v('d-cover');
+    payload.is_active = document.getElementById('d-active').checked;
+  }
+
+  showSpinner(true);
+  try {
+    var r = await fetch(BASE + endpoints[type], { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    var res = await r.json();
+    if (res.item) {
+      // Update local data
+      var lists = { special: 'specials', menu: 'menu_items', drink: 'drink_items', hh: 'hh_items', event: 'events' };
+      var key = lists[type];
+      var idx = (_data[key] || []).findIndex(function(i){ return i.id === res.item.id; });
+      if (idx >= 0) _data[key][idx] = res.item;
+      else { if (!_data[key]) _data[key] = []; _data[key].push(res.item); }
+      renderAll();
+      closeDrawer();
+      toast('Saved!');
+    } else toast(res.error || 'Save failed', true);
+  } catch(e) { toast('Error saving', true); }
+  showSpinner(false);
+}
+
+async function deleteItem(type, id) {
+  if (!confirm('Delete this item?')) return;
+  var endpoints = { special: '/specials/', menu: '/menu-items/', drink: '/drink-items/', hh: '/hh-items/', event: '/events/' };
+  showSpinner(true);
+  var r = await fetch(BASE + endpoints[type] + id, { method: 'DELETE' });
+  var res = await r.json();
+  if (res.success) {
+    var lists = { special: 'specials', menu: 'menu_items', drink: 'drink_items', hh: 'hh_items', event: 'events' };
+    _data[lists[type]] = (_data[lists[type]] || []).filter(function(i){ return i.id !== id; });
+    renderAll(); closeDrawer(); toast('Deleted');
+  } else toast(res.error || 'Delete failed', true);
+  showSpinner(false);
+}
+
+async function saveHH() {
+  var payload = { hh_days: v('hh-days'), hh_start: v('hh-start'), hh_end: v('hh-end'), hh_description: v('hh-desc') };
+  showSpinner(true);
+  var r = await fetch(BASE + '/happy-hour', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  var res = await r.json();
+  if (res.success) { if (_data.entity) Object.assign(_data.entity, payload); toast('Happy hour saved!'); }
+  else toast(res.error || 'Save failed', true);
+  showSpinner(false);
+}
+
+function addMenuSection() {
+  openDrawer('section', null);
+}
+
+async function deleteSection(id) {
+  if (!confirm('Delete this section? Items in it will become unsectioned.')) return;
+  showSpinner(true);
+  var r = await fetch(BASE + '/menu-sections/' + id, { method: 'DELETE' });
+  var res = await r.json();
+  if (res.success) {
+    _data.menu_sections = (_data.menu_sections||[]).filter(function(s){ return s.id !== id; });
+    // Clear section reference on items
+    (_data.menu_items||[]).forEach(function(i){ if (i.menu_section_id === id) i.menu_section_id = null; });
+    renderMenu(); closeDrawer(); toast('Section deleted');
+  } else toast(res.error || 'Delete failed', true);
+  showSpinner(false);
+}
+
+function toggleMarket(cb) {
+  document.getElementById('price-field').style.display = cb.checked ? 'none' : 'block';
+}
+
+// ── Gallery (extra photos per item) ──────────────────────────
+function initGallery(item) {
+  var grid = document.getElementById('d-gallery-grid');
+  if (!grid) return;
+  grid.innerHTML = ''; // Future: load item-level gallery photos here
+}
+
+function addGalleryPhoto() {
+  var inp = document.getElementById('gallery-input');
+  if (inp) inp.click();
+}
+
+async function uploadGalleryPhoto(input) {
+  if (!input.files[0]) return;
+  showSpinner(true);
+  var fd = new FormData();
+  fd.append('image', input.files[0]);
+  try {
+    var r = await fetch(BASE + '/upload', { method: 'POST', body: fd });
+    var res = await r.json();
+    if (res.url) {
+      var grid = document.getElementById('d-gallery-grid');
+      if (grid) {
+        var thumb = document.createElement('div');
+        thumb.className = 'gallery-thumb';
+        thumb.innerHTML = '<img src="'+res.url+'"><button class="gallery-del" onclick="this.parentNode.remove()">×</button>';
+        grid.appendChild(thumb);
+      }
+      toast('Photo added!');
+    } else toast(res.error || 'Upload failed', true);
+  } catch(e) { toast('Upload error', true); }
+  showSpinner(false);
+  input.value = '';
+}
+
+// ── Toggle sold out / available ───────────────────────────────
+async function toggleSoldOut(id, type) {
+  var listKey  = { menu: 'menu_items', drink: 'drink_items', hh: 'hh_items' }[type];
+  var endpoint = { menu: '/menu-items', drink: '/drink-items', hh: '/hh-items' }[type];
+  var nameKey  = type === 'menu' ? 'item_name' : 'item_name';
+  var items = _data[listKey] || [];
+  var item  = items.find(function(i){ return i.id === id; });
+  if (!item || !endpoint) return;
+  var newAvail = item.is_available !== false ? false : true;
+  var payload  = { id: id };
+  payload[nameKey] = item.item_name;
+  if (type !== 'hh') payload.is_available = newAvail; // hh_items has no is_available column
+  showSpinner(true);
+  try {
+    var r = await fetch(BASE + endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    var res = await r.json();
+    if (res.item) {
+      var idx = items.findIndex(function(i){ return i.id === id; });
+      if (idx >= 0) items[idx] = res.item;
+      renderAll();
+      toast(newAvail ? 'Marked available' : 'Marked sold out');
+    } else toast(res.error || 'Update failed', true);
+  } catch(e) { toast('Error', true); }
+  showSpinner(false);
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+function toast(msg, isErr) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = isErr ? '#dc2626' : '#0b7a75';
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2500);
+}
+
+function showSpinner(show) {
+  document.getElementById('spinner').classList.toggle('show', show);
+}
+
+// ── AI Menu Scan ──────────────────────────────────────────────
+var _scanFile = null;
+var _scanAIResult = null;
+
+function openScanOverlay() {
+  _scanFile = null;
+  _scanAIResult = null;
+  document.getElementById('scan-file-input').value = '';
+  document.getElementById('scan-photo-preview').style.display = 'none';
+  document.getElementById('scan-run-btn').disabled = true;
+  document.getElementById('scan-drop-area').style.display = 'block';
+  showScanStep('a');
+  document.getElementById('scan-overlay').style.display = 'block';
+}
+
+function closeScanOverlay() {
+  document.getElementById('scan-overlay').style.display = 'none';
+}
+
+function showScanStep(step) {
+  ['a','b','c'].forEach(function(s){ document.getElementById('scan-step-'+s).style.display = s===step ? 'block' : 'none'; });
+}
+
+function previewScanPhoto(input) {
+  if (!input.files[0]) return;
+  _scanFile = input.files[0];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('scan-preview-img').src = e.target.result;
+    document.getElementById('scan-photo-preview').style.display = 'block';
+    document.getElementById('scan-drop-area').style.display = 'none';
+  };
+  reader.readAsDataURL(_scanFile);
+  document.getElementById('scan-run-btn').disabled = false;
+}
+
+async function runMenuScan() {
+  if (!_scanFile) { toast('Pick a photo first', true); return; }
+  showSpinner(true);
+  document.getElementById('spinner').querySelector('.spinner').style.borderTopColor = '#7c3aed';
+  try {
+    var fd = new FormData();
+    fd.append('image', _scanFile);
+    var r = await fetch(BASE + '/setup/parse-image', { method: 'POST', body: fd });
+    var res = await r.json();
+    if (!res.ok || !res.result) { toast(res.error || 'AI could not read the menu. Try a clearer photo.', true); showSpinner(false); return; }
+    _scanAIResult = res.result;
+    renderScanPreview(res.result);
+    showScanStep('b');
+  } catch(e) { toast('Error scanning menu', true); }
+  showSpinner(false);
+}
+
+function renderScanPreview(result) {
+  var sections = result.sections || [];
+  var totalItems = sections.reduce(function(n, s){ return n + (s.items||[]).length; }, 0);
+  document.getElementById('scan-summary').innerHTML =
+    '✅ Found <strong>' + sections.length + ' sections</strong> and <strong>' + totalItems + ' items</strong>. Review below, then tap Create.';
+
+  document.getElementById('scan-preview-sections').innerHTML = sections.map(function(sec, si) {
+    var items = (sec.items || []).map(function(item, ii) {
+      var price = item.price != null ? '$'+item.price : (item.price_text || '—');
+      return '<div style="padding:9px 16px;border-top:1px solid #334155;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:600;">'+esc(item.item_name)+'</div>' +
+          (item.description ? '<div style="font-size:11px;color:#64748b;margin-top:2px;">'+esc(item.description.substring(0,80))+'</div>' : '') +
+        '</div>' +
+        '<div style="font-size:13px;font-weight:700;color:#a78bfa;flex-shrink:0;">'+price+'</div>' +
+        '</div>';
+    }).join('');
+    return '<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;margin-bottom:10px;overflow:hidden;">' +
+      '<div style="padding:11px 16px;background:#172036;font-size:14px;font-weight:700;">'+esc(sec.section_name)+'</div>' +
+      items +
+      '</div>';
+  }).join('');
+}
+
+async function confirmScanCreate() {
+  if (!_scanAIResult) return;
+  showSpinner(true);
+  try {
+    var r = await fetch(BASE + '/setup/create', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sections: _scanAIResult.sections || [] })
+    });
+    var res = await r.json();
+    if (res.ok) {
+      showScanStep('c');
+      // Reload data in background so menu tab shows new items
+      fetch(BASE + '/data').then(function(r){ return r.json(); }).then(function(d){ _data = d; });
+    } else toast(res.error || 'Create failed', true);
+  } catch(e) { toast('Error creating menu', true); }
+  showSpinner(false);
+}
+
+init();
+</script>
+</body>
+</html>

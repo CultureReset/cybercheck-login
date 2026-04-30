@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automations - CyberCheck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .business-name {
+      font-size: 18px;
+      color: #1a1a1a;
+      font-weight: 600;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #666;
+      text-decoration: none;
+    }
+    .nav-item:hover {
+      background: #f5f7fa;
+      color: #667eea;
+    }
+    .nav-item.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 32px;
+      color: #1a1a1a;
+    }
+    .btn-primary {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .automations-list {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .automation-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.2s;
+    }
+    .automation-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .automation-card.active {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    .automation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .automation-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .automation-schedule {
+      font-size: 14px;
+      color: #666;
+    }
+    .automation-toggle {
+      width: 50px;
+      height: 28px;
+      background: #e0e0e0;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .automation-toggle.active {
+      background: #10b981;
+    }
+    .automation-toggle::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.2s;
+    }
+    .automation-toggle.active::after {
+      left: 24px;
+    }
+    .workflow {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .workflow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .step-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .step-trigger {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .step-condition {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .step-action {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .step-content {
+      flex: 1;
+      padding: 12px 16px;
+      background: #f5f7fa;
+      border-radius: 8px;
+    }
+    .step-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .step-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .new-automation {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 32px;
+    }
+    .form-section {
+      margin-bottom: 24px;
+    }
+    .form-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .form-select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .btn-save {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="sidebar">
+    <div class="logo">🔐 CyberCheck</div>
+    <div class="business-name">🍕 Joe's Pizza</div>
+
+    <a href="dashboard-restaurant.html" class="nav-item">
+      <span>📊</span> Dashboard
+    </a>
+    <a href="ai-chat.html" class="nav-item">
+      <span>🤖</span> AI Assistant
+    </a>
+    <a href="#" class="nav-item active">
+      <span>⚡</span> Automations
+    </a>
+    <a href="connection-manager.html" class="nav-item">
+      <span>🔌</span> Connections
+    </a>
+    <a href="settings.html" class="nav-item">
+      <span>⚙️</span> Settings
+    </a>
+
+    <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+      <a href="#" class="nav-item">
+        <span>👤</span> John Doe
+      </a>
+      <a href="login.html" class="nav-item">
+        <span>🚪</span> Logout
+      </a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>⚡ Automations</h1>
+        <p style="color: #666;">Create workflows to automate your business tasks</p>
+      </div>
+      <button class="btn-primary" onclick="window.location.href='automation-setup.html'">
+        + Create Automation
+      </button>
+    </div>
+
+    <!-- Existing Automations -->
+    <div class="automations-list">
+      <!-- Automation 1 -->
+      <div class="automation-card active">
+        <div class="automation-header">
+          <div>
+            <div class="automation-title">Daily Sales Report</div>
+            <div class="automation-schedule">⏰ Runs daily at 9:00 AM</div>
+          </div>
+          <div class="automation-toggle active" onclick="toggleAutomation(this)"></div>
+        </div>
+        <div class="workflow">
+          <div class="workflow-step">
+            <div class="step-icon step-trigger">🔔</div>
+            <div class="step-content">
+              <div class="step-label">TRIGGER</div>
+              <div class="step-text">Every day at 9:00 AM</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">📊</div>
+            <div class="step-content">
+              <div class="step-label">ACTION 1</div>
+              <div class="step-text">Pull sales data from Stripe</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">⬛</div>
+            <div class="step-content">
+              <div class="step-label">ACTION 2</div>
+              <div class="step-text">Pull orders from Square POS</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">📧</div>
+            <div class="step-content">
+              <div class="step-label">ACTION 3</div>
+              <div class="step-text">Email me the report</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Automation 2 -->
+      <div class="automation-card active">
+        <div class="automation-header">
+          <div>
+            <div class="automation-title">High-Value Customer Alert</div>
+            <div class="automation-schedule">⚡ Runs in real-time</div>
+          </div>
+          <div class="automation-toggle active" onclick="toggleAutomation(this)"></div>
+        </div>
+        <div class="workflow">
+          <div class="workflow-step">
+            <div class="step-icon step-trigger">🔔</div>
+            <div class="step-content">
+              <div class="step-label">TRIGGER</div>
+              <div class="step-text">New Stripe payment received</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-condition">❓</div>
+            <div class="step-content">
+              <div class="step-label">CONDITION</div>
+              <div class="step-text">If payment amount > $100</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">📧</div>
+            <div class="step-content">
+              <div class="step-label">ACTION (IF TRUE)</div>
+              <div class="step-text">Send thank you email via Mailchimp</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">📸</div>
+            <div class="step-content">
+              <div class="step-label">ACTION (IF TRUE)</div>
+              <div class="step-text">Post thank you on Instagram</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">💬</div>
+            <div class="step-content">
+              <div class="step-label">ACTION (IF FALSE)</div>
+              <div class="step-text">Send SMS receipt via Twilio</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Automation 3 -->
+      <div class="automation-card">
+        <div class="automation-header">
+          <div>
+            <div class="automation-title">Instagram to Facebook Sync</div>
+            <div class="automation-schedule">⚡ Runs in real-time</div>
+          </div>
+          <div class="automation-toggle" onclick="toggleAutomation(this)"></div>
+        </div>
+        <div class="workflow">
+          <div class="workflow-step">
+            <div class="step-icon step-trigger">🔔</div>
+            <div class="step-content">
+              <div class="step-label">TRIGGER</div>
+              <div class="step-text">New post on Instagram</div>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="step-icon step-action">📘</div>
+            <div class="step-content">
+              <div class="step-label">ACTION</div>
+              <div class="step-text">Cross-post to Facebook page</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Automation Builder -->
+    <div class="new-automation" id="newAutomation" style="display: none;">
+      <h2 style="margin-bottom: 24px;">Create New Automation</h2>
+
+      <div class="form-section">
+        <label class="form-label">1. Choose Trigger</label>
+        <select class="form-select">
+          <option>Select a trigger...</option>
+          <option>New Stripe payment</option>
+          <option>New Square order</option>
+          <option>New Instagram post</option>
+          <option>New Facebook post</option>
+          <option>New Google Calendar event</option>
+          <option>Daily at specific time</option>
+          <option>Weekly on specific day</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">2. Add Condition (Optional)</label>
+        <select class="form-select">
+          <option>No condition</option>
+          <option>If amount > specific value</option>
+          <option>If text contains keyword</option>
+          <option>If time is between hours</option>
+          <option>If day is weekend</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">3. Choose Action</label>
+        <select class="form-select">
+          <option>Select an action...</option>
+          <option>Send email via Mailchimp</option>
+          <option>Send SMS via Twilio</option>
+          <option>Post to Instagram</option>
+          <option>Post to Facebook</option>
+          <option>Create Google Calendar event</option>
+          <option>Email me a report</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">4. Schedule</label>
+        <select class="form-select">
+          <option>Real-time (instant)</option>
+          <option>Daily at 9:00 AM</option>
+          <option>Weekly on Monday</option>
+          <option>Monthly on 1st</option>
+        </select>
+      </div>
+
+      <button class="btn-save" onclick="saveAutomation()">
+        Save Automation
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function toggleNewAutomation() {
+      const section = document.getElementById('newAutomation');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleAutomation(toggle) {
+      toggle.classList.toggle('active');
+      toggle.closest('.automation-card').classList.toggle('active');
+    }
+
+    function saveAutomation() {
+      alert('Automation saved! (Demo mode)\n\nIn production, this would connect to your backend API to save the automation.');
+      document.getElementById('newAutomation').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

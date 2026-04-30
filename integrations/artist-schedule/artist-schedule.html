@@ -1,0 +1,252 @@
+<!--
+  COMPONENT: Artist Schedule - Calendar + Gig List
+  For: Musicians, DJs, performers — shows when & where they're playing
+  Requires: shared.html included on the page
+  Trigger: openComponent('artist-schedule')
+  Render: renderArtistSchedule(events, artistName)
+  Pass: data.events from GCR API /api/gcr/entity/{slug}
+  Each event should have: name, start_date, venue, location/city, description, image_url
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('artist-schedule')">🎵 Show Schedule</button>
+-->
+
+<style>
+/* Artist header */
+.comp-artist-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #fff;
+    text-align: center;
+    border-bottom: 1px solid #333;
+}
+.comp-artist-header h3 { font-size: 1.1rem; font-weight: 700; }
+.comp-artist-header p { font-size: 0.8rem; opacity: 0.7; margin-top: 4px; }
+
+/* Gig item */
+.comp-gig {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+.comp-gig:last-child { border-bottom: none; }
+
+.comp-gig-date {
+    flex-shrink: 0;
+    width: 52px;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+    padding: 8px 4px;
+    color: #fff;
+}
+.comp-gig-date .month { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.85; }
+.comp-gig-date .day { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.comp-gig-date .dow { font-size: 0.65rem; opacity: 0.75; margin-top: 2px; }
+
+.comp-gig-info { flex: 1; min-width: 0; }
+.comp-gig-venue { font-size: 0.95rem; font-weight: 700; color: #111; }
+.comp-gig-time { font-size: 0.8rem; color: #667eea; font-weight: 600; margin-top: 3px; }
+.comp-gig-location { font-size: 0.8rem; color: #888; margin-top: 2px; }
+.comp-gig-desc { font-size: 0.8rem; color: #999; margin-top: 4px; line-height: 1.4; }
+.comp-gig-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.comp-gig-tag {
+    font-size: 0.72rem;
+    background: #f0f0f0;
+    color: #555;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.comp-gig-tag.tickets { background: #e8f4fd; color: #0077b6; }
+
+.comp-gig-thumb {
+    width: 60px; height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* Month divider */
+.comp-month-divider {
+    padding: 8px 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
+}
+
+.comp-no-gigs {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+}
+</style>
+
+<!-- POPUP -->
+<div class="comp-overlay" id="comp-artist-schedule">
+    <div class="comp-modal">
+        <div class="comp-modal-header" style="background:#1a1a2e;">
+            <h2 style="color:#fff;">🎵 Schedule</h2>
+            <button class="comp-close" onclick="closeComponent('comp-artist-schedule')" style="background:rgba(255,255,255,0.15);color:#fff;">✕</button>
+        </div>
+        <div id="comp-artist-header-wrap"></div>
+        <div id="comp-artist-cal"></div>
+        <div id="comp-artist-body"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _gigData = [];
+    let _calYear, _calMonth, _selectedDate = null;
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    const DAYS_FULL = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    function renderArtistSchedule(events, artistName) {
+        _gigData = (events || []).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+        const now = new Date();
+        _calYear = now.getFullYear();
+        _calMonth = now.getMonth();
+        _selectedDate = null;
+
+        // Artist header
+        const headerWrap = document.getElementById('comp-artist-header-wrap');
+        if (artistName) {
+            headerWrap.innerHTML = `
+                <div class="comp-artist-header">
+                    <h3>${escapeHtml(artistName)}</h3>
+                    <p>${_gigData.length} upcoming show${_gigData.length !== 1 ? 's' : ''}</p>
+                </div>`;
+        } else {
+            headerWrap.innerHTML = '';
+        }
+
+        _buildArtistCal();
+        _buildGigList();
+    }
+
+    function _buildArtistCal() {
+        const el = document.getElementById('comp-artist-cal');
+        const now = new Date();
+
+        const eventDays = new Set();
+        _gigData.forEach(ev => {
+            if (!ev.start_date) return;
+            const d = new Date(ev.start_date);
+            if (d.getFullYear() === _calYear && d.getMonth() === _calMonth) {
+                eventDays.add(d.getDate());
+            }
+        });
+
+        const firstDay = new Date(_calYear, _calMonth, 1).getDay();
+        const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+
+        let html = `<div class="comp-cal" style="background:#1a1a2e;">`;
+        html += `<div class="comp-cal-nav">`;
+        html += `<button onclick="_artistNavMonth(-1)" style="background:rgba(255,255,255,0.1);color:#fff;">‹</button>`;
+        html += `<h3 style="color:#fff;">${MONTHS[_calMonth]} ${_calYear}</h3>`;
+        html += `<button onclick="_artistNavMonth(1)" style="background:rgba(255,255,255,0.1);color:#fff;">›</button>`;
+        html += `</div>`;
+        html += `<div class="comp-cal-grid">`;
+        DAYS.forEach(d => html += `<div class="comp-cal-day-label" style="color:rgba(255,255,255,0.5);">${d}</div>`);
+        for (let i = 0; i < firstDay; i++) html += `<div class="comp-cal-day empty"></div>`;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const isToday = d === now.getDate() && _calMonth === now.getMonth() && _calYear === now.getFullYear();
+            const hasEvent = eventDays.has(d);
+            const isSelected = _selectedDate === d;
+            let style = 'color:rgba(255,255,255,0.7);';
+            if (isToday) style = 'background:#fff;color:#1a1a2e;border-radius:50%;';
+            if (hasEvent && !isToday) style = 'color:#fff;font-weight:700;';
+            if (isSelected) style = 'background:#667eea;color:#fff;border-radius:50%;';
+            const dot = hasEvent ? `<div style="width:4px;height:4px;background:${isToday || isSelected ? (isToday?'#1a1a2e':'#fff') : '#667eea'};border-radius:50%;margin:2px auto 0;"></div>` : '';
+            html += `<div class="comp-cal-day" style="${style}" onclick="_artistSelectDay(${d})">${d}${dot}</div>`;
+        }
+        html += `</div></div>`;
+        el.innerHTML = html;
+    }
+
+    function _buildGigList(filterDay) {
+        const body = document.getElementById('comp-artist-body');
+        const filtered = filterDay
+            ? _gigData.filter(ev => {
+                if (!ev.start_date) return false;
+                const d = new Date(ev.start_date);
+                return d.getDate() === filterDay && d.getMonth() === _calMonth && d.getFullYear() === _calYear;
+              })
+            : _gigData;
+
+        if (!filtered.length) {
+            body.innerHTML = `<div class="comp-no-gigs">${filterDay ? 'No shows on this date.' : 'No upcoming shows.'}</div>`;
+            return;
+        }
+
+        let html = '';
+        let lastMonth = null;
+
+        filtered.forEach(ev => {
+            const img = ev.image_url || ev.photo_url || '';
+            let monthStr = '', dayNum = '', dowStr = '', timeStr = '';
+            if (ev.start_date) {
+                const d = new Date(ev.start_date);
+                monthStr = MONTHS_SHORT[d.getMonth()];
+                dayNum = d.getDate();
+                dowStr = DAYS_FULL[d.getDay()];
+                timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                const thisMonth = `${d.getMonth()}-${d.getFullYear()}`;
+                if (thisMonth !== lastMonth && !filterDay) {
+                    html += `<div class="comp-month-divider">${MONTHS[d.getMonth()]} ${d.getFullYear()}</div>`;
+                    lastMonth = thisMonth;
+                }
+            }
+
+            html += `<div class="comp-gig">`;
+            if (dayNum) {
+                html += `<div class="comp-gig-date"><div class="month">${escapeHtml(monthStr)}</div><div class="day">${dayNum}</div><div class="dow">${dowStr}</div></div>`;
+            }
+            html += `<div class="comp-gig-info">`;
+            html += `<div class="comp-gig-venue">${escapeHtml(ev.venue || ev.name)}</div>`;
+            if (timeStr) html += `<div class="comp-gig-time">🕐 ${timeStr}</div>`;
+            if (ev.location || ev.city) html += `<div class="comp-gig-location">📍 ${escapeHtml(ev.location || ev.city)}</div>`;
+            if (ev.description) html += `<div class="comp-gig-desc">${escapeHtml(ev.description)}</div>`;
+            const tags = [];
+            if (ev.ticket_url) tags.push(`<a href="${escapeAttr(ev.ticket_url)}" target="_blank" class="comp-gig-tag tickets">🎟 Tickets</a>`);
+            if (ev.price_label) tags.push(`<span class="comp-gig-tag">${escapeHtml(ev.price_label)}</span>`);
+            if (ev.genre) tags.push(`<span class="comp-gig-tag">${escapeHtml(ev.genre)}</span>`);
+            if (tags.length) html += `<div class="comp-gig-tags">${tags.join('')}</div>`;
+            html += `</div>`;
+            if (img) html += `<img class="comp-gig-thumb" src="${escapeAttr(img)}" alt="${escapeHtml(ev.name)}">`;
+            html += `</div>`;
+        });
+
+        body.innerHTML = html;
+    }
+
+    window._artistNavMonth = function(dir) {
+        _calMonth += dir;
+        if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+        if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+        _selectedDate = null;
+        _buildArtistCal();
+        _buildGigList();
+    };
+
+    window._artistSelectDay = function(day) {
+        _selectedDate = _selectedDate === day ? null : day;
+        _buildArtistCal();
+        _buildGigList(_selectedDate);
+    };
+
+    window.renderArtistSchedule = renderArtistSchedule;
+})();
+</script>

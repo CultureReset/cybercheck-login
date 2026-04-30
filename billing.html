@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing & Tokens - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
+
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Dashboard</h3>
+                <a href="dashboard.html" class="sidebar-link">
+                    <span class="link-icon">📊</span><span>Overview</span>
+                </a>
+                <a href="index.html#my-apps" class="sidebar-link">
+                    <span class="link-icon">📱</span><span>My Apps</span>
+                </a>
+                <a href="analytics.html" class="sidebar-link">
+                    <span class="link-icon">📈</span><span>Analytics</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Build</h3>
+                <a href="sandbox-projects.html" class="sidebar-link">
+                    <span class="link-icon">🔨</span><span>My Projects</span>
+                </a>
+                <a href="sandbox-editor.html" class="sidebar-link">
+                    <span class="link-icon">💻</span><span>Editor</span>
+                </a>
+                <a href="sandbox-deploy.html" class="sidebar-link">
+                    <span class="link-icon">🚀</span><span>Deployments</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Account</h3>
+                <a href="profile.html" class="sidebar-link">
+                    <span class="link-icon">👤</span><span>Profile</span>
+                </a>
+                <a href="billing.html" class="sidebar-link active">
+                    <span class="link-icon">💳</span><span>Billing & Tokens</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Developer</h3>
+                <a href="developer-dashboard.html" class="sidebar-link">
+                    <span class="link-icon">🏗️</span><span>Developer Portal</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            <div class="dashboard-header">
+                <div>
+                    <h1 class="dashboard-title">Billing & Tokens</h1>
+                    <p class="dashboard-subtitle">Manage your subscription and token usage</p>
+                </div>
+                <button class="btn-primary" onclick="location.href='pricing.html'">
+                    <span>⚡</span>
+                    Buy Tokens
+                </button>
+            </div>
+
+            <!-- Current Plan -->
+            <div class="plan-card current-plan">
+                <div class="plan-header">
+                    <div>
+                        <h2>Pro Plan</h2>
+                        <p>For growing teams and businesses</p>
+                    </div>
+                    <div class="plan-price">
+                        <span class="price-amount">$29</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                </div>
+                <div class="plan-features">
+                    <div class="feature-item">✓ 5,000 tokens/month included</div>
+                    <div class="feature-item">✓ Unlimited connected apps</div>
+                    <div class="feature-item">✓ Voice & phone support</div>
+                    <div class="feature-item">✓ Priority support</div>
+                </div>
+                <div class="plan-actions">
+                    <button class="btn-outline">Change Plan</button>
+                    <button class="btn-outline">Cancel Subscription</button>
+                </div>
+            </div>
+
+            <!-- Token Balance -->
+            <div class="section-header">
+                <h2 class="section-title">Token Balance</h2>
+            </div>
+            <div class="token-cards">
+                <div class="token-card">
+                    <div class="token-card-icon">⚡</div>
+                    <div class="token-card-content">
+                        <div class="token-balance-amount">2,450</div>
+                        <div class="token-balance-label">Tokens Remaining</div>
+                    </div>
+                    <div class="token-progress">
+                        <div class="token-progress-bar" style="width: 49%"></div>
+                    </div>
+                    <div class="token-meta">49% of monthly allowance</div>
+                </div>
+
+                <div class="token-card">
+                    <div class="token-card-icon">📊</div>
+                    <div class="token-card-content">
+                        <div class="token-balance-amount">2,550</div>
+                        <div class="token-balance-label">Tokens Used This Month</div>
+                    </div>
+                    <div class="token-breakdown">
+                        <div class="breakdown-item">
+                            <span>AI Generation</span>
+                            <span>1,200</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>API Calls</span>
+                            <span>850</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span>Voice Processing</span>
+                            <span>500</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buy Tokens -->
+            <div class="section-header">
+                <h2 class="section-title">Buy Additional Tokens</h2>
+                <span class="section-subtitle">One-time token purchases never expire</span>
+            </div>
+            <div class="token-packages">
+                <div class="package-card">
+                    <div class="package-header">
+                        <div class="package-amount">1,000</div>
+                        <div class="package-label">Tokens</div>
+                    </div>
+                    <div class="package-price">$9</div>
+                    <button class="btn-secondary">Purchase</button>
+                </div>
+
+                <div class="package-card popular">
+                    <div class="package-badge">Most Popular</div>
+                    <div class="package-header">
+                        <div class="package-amount">5,000</div>
+                        <div class="package-label">Tokens</div>
+                    </div>
+                    <div class="package-price">$39</div>
+                    <div class="package-save">Save $6</div>
+                    <button class="btn-primary">Purchase</button>
+                </div>
+
+                <div class="package-card">
+                    <div class="package-header">
+                        <div class="package-amount">10,000</div>
+                        <div class="package-label">Tokens</div>
+                    </div>
+                    <div class="package-price">$69</div>
+                    <div class="package-save">Save $21</div>
+                    <button class="btn-secondary">Purchase</button>
+                </div>
+
+                <div class="package-card">
+                    <div class="package-header">
+                        <div class="package-amount">25,000</div>
+                        <div class="package-label">Tokens</div>
+                    </div>
+                    <div class="package-price">$149</div>
+                    <div class="package-save">Save $76</div>
+                    <button class="btn-secondary">Purchase</button>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="section-header">
+                <h2 class="section-title">Payment Method</h2>
+            </div>
+            <div class="payment-card">
+                <div class="card-info">
+                    <div class="card-icon">💳</div>
+                    <div class="card-details">
+                        <div class="card-type">Visa ending in 4242</div>
+                        <div class="card-expiry">Expires 12/2025</div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-outline">Update</button>
+                    <button class="btn-outline">Remove</button>
+                </div>
+            </div>
+
+            <!-- Billing History -->
+            <div class="section-header">
+                <h2 class="section-title">Billing History</h2>
+            </div>
+            <div class="billing-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Invoice</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Jan 1, 2026</td>
+                            <td>Pro Plan - Monthly</td>
+                            <td>$29.00</td>
+                            <td><span class="status-badge success">Paid</span></td>
+                            <td><a href="#" class="link-text">Download</a></td>
+                        </tr>
+                        <tr>
+                            <td>Dec 15, 2025</td>
+                            <td>5,000 Tokens</td>
+                            <td>$39.00</td>
+                            <td><span class="status-badge success">Paid</span></td>
+                            <td><a href="#" class="link-text">Download</a></td>
+                        </tr>
+                        <tr>
+                            <td>Dec 1, 2025</td>
+                            <td>Pro Plan - Monthly</td>
+                            <td>$29.00</td>
+                            <td><span class="status-badge success">Paid</span></td>
+                            <td><a href="#" class="link-text">Download</a></td>
+                        </tr>
+                        <tr>
+                            <td>Nov 1, 2025</td>
+                            <td>Pro Plan - Monthly</td>
+                            <td>$29.00</td>
+                            <td><span class="status-badge success">Paid</span></td>
+                            <td><a href="#" class="link-text">Download</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .current-plan {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2.5rem;
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .plan-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-header p {
+            opacity: 0.9;
+        }
+
+        .plan-price {
+            text-align: right;
+        }
+
+        .price-amount {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .price-period {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .plan-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .plan-actions .btn-outline {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .plan-actions .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .token-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .token-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .token-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .token-balance-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .token-balance-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .token-progress {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .token-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .token-meta {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .token-breakdown {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .breakdown-item span:last-child {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .token-packages {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .package-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        .package-card.popular {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        }
+
+        .package-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .package-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .package-label {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .package-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .package-save {
+            color: #22c55e;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .card-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+        }
+
+        .card-type {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .card-expiry {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .billing-table {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .billing-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .billing-table th {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            text-align: left;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .billing-table td {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+    </style>
+
+    <script src="js/app-data.js"></script>
+    <script src="js/dashboard.js"></script>
+<script src="js/navbar.js"></script>
+</body>
+</html>

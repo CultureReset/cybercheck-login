@@ -1,0 +1,97 @@
+<!--
+  COMPONENT: Specials / After 8 - WITH IMAGES + WITHOUT IMAGES
+  Requires: shared.html included on the page
+  Trigger with images:    openComponent('specials')
+  Trigger without images: openComponent('specials-list')
+  Render with images:     renderSpecials(sections, sectionKey)
+  Render without images:  renderSpecialsList(sections, sectionKey)
+  Pass: data.sections from GCR API, sectionKey defaults to 'after_8'
+  Works for ANY section key — just pass different sectionKey to reuse for any specials
+-->
+
+<!-- TRIGGER BUTTONS (copy to page) -->
+<!--
+<button class="link-btn" onclick="openComponent('specials')">🌙 Tonight's Specials</button>
+<button class="link-btn" onclick="openComponent('specials-list')">🌙 Tonight's Specials</button>
+-->
+
+<!-- WITH IMAGES POPUP -->
+<div class="comp-overlay" id="comp-specials">
+    <div class="comp-modal">
+        <div class="comp-modal-header" style="background:#1a1a2e;">
+            <h2 style="color:#fff;" id="comp-specials-title">🌙 Specials</h2>
+            <button class="comp-close" onclick="closeComponent('comp-specials')" style="background:rgba(255,255,255,0.15);color:#fff;">✕</button>
+        </div>
+        <div id="comp-specials-body"></div>
+    </div>
+</div>
+
+<!-- NO IMAGES POPUP -->
+<div class="comp-overlay" id="comp-specials-list">
+    <div class="comp-modal">
+        <div class="comp-modal-header" style="background:#1a1a2e;">
+            <h2 style="color:#fff;" id="comp-specials-list-title">🌙 Specials</h2>
+            <button class="comp-close" onclick="closeComponent('comp-specials-list')" style="background:rgba(255,255,255,0.15);color:#fff;">✕</button>
+        </div>
+        <div id="comp-specials-list-body"></div>
+    </div>
+</div>
+
+<script>
+function renderSpecials(sections, sectionKey, title) {
+    const key = sectionKey || 'after_8';
+    const matched = sections.filter(s => s.section_key === key);
+    const body = document.getElementById('comp-specials-body');
+    if (title) document.getElementById('comp-specials-title').textContent = title;
+
+    if (!matched.length) {
+        body.innerHTML = '<p style="padding:20px;color:#999">No specials right now.</p>';
+        return;
+    }
+    let html = '';
+    matched.forEach(sec => {
+        (sec.ungrouped_items || []).forEach(item => {
+            const price = item.price_numeric || 0;
+            const img = item.photo_url || item.image_url || '';
+            html += `<div class="comp-item-img">`;
+            html += img
+                ? `<img class="comp-item-thumb" src="${escapeAttr(img)}" alt="${escapeHtml(item.item_name)}">`
+                : `<div class="comp-item-thumb-placeholder"></div>`;
+            html += `<div class="comp-item-body">`;
+            html += `<div class="comp-item-row">`;
+            html += `<div class="comp-item-name">${escapeHtml(item.item_name)}</div>`;
+            if (price > 0) html += `<div class="comp-item-price">$${price.toFixed(2)}</div>`;
+            html += `</div>`;
+            if (item.item_description) html += `<div class="comp-item-desc">${escapeHtml(item.item_description)}</div>`;
+            html += `</div></div>`;
+        });
+    });
+    body.innerHTML = html;
+}
+
+function renderSpecialsList(sections, sectionKey, title) {
+    const key = sectionKey || 'after_8';
+    const matched = sections.filter(s => s.section_key === key);
+    const body = document.getElementById('comp-specials-list-body');
+    if (title) document.getElementById('comp-specials-list-title').textContent = title;
+
+    if (!matched.length) {
+        body.innerHTML = '<p style="padding:20px;color:#999">No specials right now.</p>';
+        return;
+    }
+    let html = '';
+    matched.forEach(sec => {
+        (sec.ungrouped_items || []).forEach(item => {
+            const price = item.price_numeric || 0;
+            html += `<div class="comp-item-list">`;
+            html += `<div class="comp-item-row">`;
+            html += `<div class="comp-item-name">${escapeHtml(item.item_name)}</div>`;
+            if (price > 0) html += `<div class="comp-item-price">$${price.toFixed(2)}</div>`;
+            html += `</div>`;
+            if (item.item_description) html += `<div class="comp-item-desc">${escapeHtml(item.item_description)}</div>`;
+            html += `</div>`;
+        });
+    });
+    body.innerHTML = html;
+}
+</script>

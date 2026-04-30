@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Automation - CyberCheck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .business-name {
+      font-size: 18px;
+      color: #1a1a1a;
+      font-weight: 600;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #666;
+      text-decoration: none;
+    }
+    .nav-item:hover {
+      background: #f5f7fa;
+      color: #667eea;
+    }
+    .nav-item.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 32px;
+      color: #1a1a1a;
+    }
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 32px;
+      max-width: 800px;
+    }
+    .progress-step {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .step-circle.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .step-circle.completed {
+      background: #10b981;
+      color: white;
+    }
+    .step-line {
+      flex: 1;
+      height: 3px;
+      background: #e0e0e0;
+      margin: 0 8px;
+    }
+    .step-line.completed {
+      background: #10b981;
+    }
+    .step-label {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      color: #666;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .builder-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 800px;
+      margin-bottom: 24px;
+      border: 2px solid #e0e0e0;
+    }
+    .builder-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .builder-subtitle {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .tool-card {
+      padding: 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .tool-card:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .tool-card.selected {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .tool-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .tool-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .tool-desc {
+      font-size: 13px;
+      color: #666;
+    }
+    .event-list {
+      display: grid;
+      gap: 12px;
+    }
+    .event-item {
+      padding: 16px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .event-item:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .event-item.selected {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .event-icon {
+      font-size: 24px;
+    }
+    .event-text {
+      flex: 1;
+    }
+    .event-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 2px;
+    }
+    .event-subtitle {
+      font-size: 13px;
+      color: #666;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .btn {
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #666;
+    }
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    .workflow-preview {
+      background: #f5f7fa;
+      padding: 24px;
+      border-radius: 8px;
+      margin-top: 32px;
+    }
+    .workflow-preview-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .workflow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .step-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .step-trigger {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .step-condition {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .step-action {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .step-content {
+      flex: 1;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 8px;
+    }
+    .step-label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .step-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .hidden {
+      display: none;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+      }
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="sidebar">
+    <div class="logo">🔐 CyberCheck</div>
+    <div class="business-name">🍕 Joe's Pizza</div>
+
+    <a href="dashboard-restaurant.html" class="nav-item">
+      <span>📊</span> Dashboard
+    </a>
+    <a href="ai-chat.html" class="nav-item">
+      <span>🤖</span> AI Assistant
+    </a>
+    <a href="automation-builder.html" class="nav-item active">
+      <span>⚡</span> Automations
+    </a>
+    <a href="connection-manager.html" class="nav-item">
+      <span>🔌</span> Connections
+    </a>
+    <a href="settings.html" class="nav-item">
+      <span>⚙️</span> Settings
+    </a>
+
+    <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+      <a href="#" class="nav-item">
+        <span>👤</span> John Doe
+      </a>
+      <a href="login.html" class="nav-item">
+        <span>🚪</span> Logout
+      </a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>⚡ Create New Automation</h1>
+        <p style="color: #666;">Describe what you want or build it step-by-step</p>
+      </div>
+      <button class="btn btn-secondary" onclick="window.location.href='automation-builder.html'">
+        ← Back to Automations
+      </button>
+    </div>
+
+    <!-- AI Input Section -->
+    <div class="builder-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+      <div class="builder-title" style="color: white;">🤖 Describe Your Automation</div>
+      <div class="builder-subtitle" style="color: rgba(255,255,255,0.9);">
+        Tell me what you want to automate using text or voice
+      </div>
+
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+        <textarea
+          id="aiInput"
+          placeholder="Example: When I get a Stripe payment over $100, send a thank you email via Mailchimp and post to Instagram..."
+          style="flex: 1; padding: 16px; border: none; border-radius: 8px; font-size: 15px; min-height: 100px; font-family: inherit; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn" style="background: white; color: #667eea; flex: 1;" onclick="processAIInput()">
+          ✨ Generate Automation
+        </button>
+        <button class="btn" style="background: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(10px); width: 60px;" onclick="startVoiceInput()">
+          🎤
+        </button>
+      </div>
+
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center;">
+        <button class="btn" style="background: transparent; color: rgba(255,255,255,0.9); padding: 8px; text-decoration: underline;" onclick="toggleManualMode()">
+          Or build manually step-by-step →
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar hidden" id="progressBar">
+      <div class="progress-step">
+        <div class="step-circle active" id="step1Circle">1</div>
+        <div class="step-label">Choose Trigger</div>
+        <div class="step-line" id="line1"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle" id="step2Circle">2</div>
+        <div class="step-label">Select Event</div>
+        <div class="step-line" id="line2"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle" id="step3Circle">3</div>
+        <div class="step-label">Add Condition</div>
+        <div class="step-line" id="line3"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle" id="step4Circle">4</div>
+        <div class="step-label">Choose Action</div>
+        <div class="step-line" id="line4"></div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle" id="step5Circle">5</div>
+        <div class="step-label">Review & Save</div>
+      </div>
+    </div>
+
+    <!-- Step 1: Choose Trigger Tool -->
+    <div class="builder-card hidden" id="step1">
+      <div class="builder-title">Step 1: Choose a Trigger</div>
+      <div class="builder-subtitle">Select which tool will start this automation</div>
+
+      <div class="tool-grid">
+        <div class="tool-card" onclick="selectTrigger('stripe')">
+          <div class="tool-icon">💳</div>
+          <div class="tool-name">Stripe</div>
+          <div class="tool-desc">Payment events</div>
+        </div>
+        <div class="tool-card" onclick="selectTrigger('square')">
+          <div class="tool-icon">⬛</div>
+          <div class="tool-name">Square</div>
+          <div class="tool-desc">POS transactions</div>
+        </div>
+        <div class="tool-card" onclick="selectTrigger('instagram')">
+          <div class="tool-icon">📸</div>
+          <div class="tool-name">Instagram</div>
+          <div class="tool-desc">New posts</div>
+        </div>
+        <div class="tool-card" onclick="selectTrigger('facebook')">
+          <div class="tool-icon">📘</div>
+          <div class="tool-name">Facebook</div>
+          <div class="tool-desc">Page activity</div>
+        </div>
+        <div class="tool-card" onclick="selectTrigger('calendar')">
+          <div class="tool-icon">📅</div>
+          <div class="tool-name">Google Calendar</div>
+          <div class="tool-desc">Events & bookings</div>
+        </div>
+        <div class="tool-card" onclick="selectTrigger('schedule')">
+          <div class="tool-icon">⏰</div>
+          <div class="tool-name">Schedule</div>
+          <div class="tool-desc">Time-based trigger</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Select Event -->
+    <div class="builder-card hidden" id="step2">
+      <div class="builder-title">Step 2: Select an Event</div>
+      <div class="builder-subtitle">What should trigger this automation?</div>
+
+      <div class="event-list" id="eventList">
+        <!-- Will be populated based on selected trigger -->
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goToStep(3)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Add Condition (Optional) -->
+    <div class="builder-card hidden" id="step3">
+      <div class="builder-title">Step 3: Add a Condition (Optional)</div>
+      <div class="builder-subtitle">Only run this automation when specific criteria are met</div>
+
+      <div class="event-list">
+        <div class="event-item" onclick="selectCondition('none')">
+          <div class="event-icon">✅</div>
+          <div class="event-text">
+            <div class="event-title">No condition</div>
+            <div class="event-subtitle">Run every time the trigger fires</div>
+          </div>
+        </div>
+        <div class="event-item" onclick="selectCondition('amount')">
+          <div class="event-icon">💰</div>
+          <div class="event-text">
+            <div class="event-title">If amount is greater than...</div>
+            <div class="event-subtitle">Check transaction value</div>
+          </div>
+        </div>
+        <div class="event-item" onclick="selectCondition('text')">
+          <div class="event-icon">📝</div>
+          <div class="event-text">
+            <div class="event-title">If text contains...</div>
+            <div class="event-subtitle">Check for keywords</div>
+          </div>
+        </div>
+        <div class="event-item" onclick="selectCondition('time')">
+          <div class="event-icon">🕐</div>
+          <div class="event-text">
+            <div class="event-title">If time is between...</div>
+            <div class="event-subtitle">Check business hours</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="conditionConfig" class="hidden" style="margin-top: 24px;">
+        <div class="form-group">
+          <label class="form-label">Condition Value</label>
+          <input type="text" class="form-input" id="conditionValue" placeholder="Enter value...">
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goToStep(4)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Choose Action -->
+    <div class="builder-card hidden" id="step4">
+      <div class="builder-title">Step 4: Choose an Action</div>
+      <div class="builder-subtitle">What should happen when the trigger fires?</div>
+
+      <div class="tool-grid">
+        <div class="tool-card" onclick="selectAction('email')">
+          <div class="tool-icon">📧</div>
+          <div class="tool-name">Mailchimp</div>
+          <div class="tool-desc">Send email</div>
+        </div>
+        <div class="tool-card" onclick="selectAction('sms')">
+          <div class="tool-icon">💬</div>
+          <div class="tool-name">Twilio</div>
+          <div class="tool-desc">Send SMS</div>
+        </div>
+        <div class="tool-card" onclick="selectAction('instagram')">
+          <div class="tool-icon">📸</div>
+          <div class="tool-name">Instagram</div>
+          <div class="tool-desc">Create post</div>
+        </div>
+        <div class="tool-card" onclick="selectAction('facebook')">
+          <div class="tool-icon">📘</div>
+          <div class="tool-name">Facebook</div>
+          <div class="tool-desc">Create post</div>
+        </div>
+        <div class="tool-card" onclick="selectAction('calendar')">
+          <div class="tool-icon">📅</div>
+          <div class="tool-name">Google Calendar</div>
+          <div class="tool-desc">Create event</div>
+        </div>
+        <div class="tool-card" onclick="selectAction('notification')">
+          <div class="tool-icon">🔔</div>
+          <div class="tool-name">Notification</div>
+          <div class="tool-desc">Send me alert</div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+        <button class="btn btn-primary" onclick="goToStep(5)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Review & Save -->
+    <div class="builder-card hidden" id="step5">
+      <div class="builder-title">Step 5: Review Your Automation</div>
+      <div class="builder-subtitle">Check your workflow and save it</div>
+
+      <div class="workflow-preview">
+        <div class="workflow-preview-title">Workflow Preview</div>
+
+        <div class="workflow-step">
+          <div class="step-icon step-trigger">🔔</div>
+          <div class="step-content">
+            <div class="step-label">TRIGGER</div>
+            <div class="step-text" id="reviewTrigger">When...</div>
+          </div>
+        </div>
+
+        <div class="workflow-step" id="reviewConditionStep">
+          <div class="step-icon step-condition">❓</div>
+          <div class="step-content">
+            <div class="step-label">CONDITION</div>
+            <div class="step-text" id="reviewCondition">If...</div>
+          </div>
+        </div>
+
+        <div class="workflow-step">
+          <div class="step-icon step-action">⚡</div>
+          <div class="step-content">
+            <div class="step-label">ACTION</div>
+            <div class="step-text" id="reviewAction">Then...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 32px;">
+        <label class="form-label">Automation Name</label>
+        <input type="text" class="form-input" id="automationName" placeholder="Give your automation a name...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Schedule</label>
+        <select class="form-select">
+          <option>Real-time (run immediately)</option>
+          <option>Daily at specific time</option>
+          <option>Weekly on specific day</option>
+          <option>Monthly on specific date</option>
+        </select>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+        <button class="btn btn-primary" onclick="saveAutomation()">Save Automation</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let automationData = {
+      trigger: null,
+      event: null,
+      condition: null,
+      conditionValue: null,
+      action: null
+    };
+
+    let isManualMode = false;
+
+    function toggleManualMode() {
+      isManualMode = true;
+      document.getElementById('progressBar').classList.remove('hidden');
+      goToStep(1);
+    }
+
+    function processAIInput() {
+      const input = document.getElementById('aiInput').value.trim();
+
+      if (!input) {
+        alert('Please describe what you want to automate');
+        return;
+      }
+
+      // Show "processing" animation
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = '🤖 Analyzing...';
+      btn.disabled = true;
+
+      // Simulate AI processing
+      setTimeout(() => {
+        // Parse the input (in production, this would call an AI API)
+        const result = parseAutomationRequest(input);
+
+        // Populate automation data
+        automationData = result;
+
+        // Show success message
+        alert(`Got it! I've created an automation:\n\n"${result.name}"\n\nTrigger: ${result.event}\nCondition: ${result.condition || 'None'}\nAction: ${result.action}\n\n(Demo mode - AI parsing would happen in production)`);
+
+        // Pre-fill the review step
+        document.getElementById('automationName').value = result.name;
+        document.getElementById('reviewTrigger').textContent = result.event;
+        document.getElementById('reviewAction').textContent = result.action;
+
+        if (result.condition) {
+          document.getElementById('reviewConditionStep').classList.remove('hidden');
+          document.getElementById('reviewCondition').textContent = result.condition;
+        } else {
+          document.getElementById('reviewConditionStep').classList.add('hidden');
+        }
+
+        // Show progress bar and go to review
+        document.getElementById('progressBar').classList.remove('hidden');
+        goToStep(5);
+
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }, 2000);
+    }
+
+    function parseAutomationRequest(text) {
+      // Simple keyword-based parsing (in production, use GPT-4 or similar)
+      const lower = text.toLowerCase();
+
+      let name = 'AI Generated Automation';
+      let event = 'Trigger detected';
+      let condition = null;
+      let action = 'Action configured';
+
+      // Detect trigger
+      if (lower.includes('stripe payment') || lower.includes('payment')) {
+        event = 'New Stripe payment received';
+      } else if (lower.includes('instagram post') || lower.includes('instagram')) {
+        event = 'New Instagram post published';
+      } else if (lower.includes('square') || lower.includes('pos')) {
+        event = 'New Square POS transaction';
+      } else if (lower.includes('calendar') || lower.includes('booking')) {
+        event = 'New Google Calendar event';
+      }
+
+      // Detect condition
+      if (lower.match(/over \$?(\d+)/i) || lower.match(/more than \$?(\d+)/i) || lower.match(/greater than \$?(\d+)/i)) {
+        const match = lower.match(/\$?(\d+)/);
+        condition = `If amount > $${match[1]}`;
+      }
+
+      // Detect action
+      if (lower.includes('email') || lower.includes('mailchimp')) {
+        action = 'Send email via Mailchimp';
+      } else if (lower.includes('sms') || lower.includes('text')) {
+        action = 'Send SMS via Twilio';
+      } else if (lower.includes('post to instagram')) {
+        action = 'Post to Instagram';
+      } else if (lower.includes('post to facebook')) {
+        action = 'Post to Facebook';
+      }
+
+      // Generate name
+      if (lower.includes('thank')) {
+        name = 'High-Value Customer Thank You';
+      } else if (lower.includes('report')) {
+        name = 'Daily Report Automation';
+      } else if (lower.includes('alert') || lower.includes('notify')) {
+        name = 'Alert Notification';
+      }
+
+      return { name, event, condition, action };
+    }
+
+    function startVoiceInput() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.');
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      const btn = event.target;
+      btn.textContent = '🔴';
+      btn.style.animation = 'pulse 1s infinite';
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('aiInput').value = transcript;
+        btn.textContent = '🎤';
+        btn.style.animation = 'none';
+      };
+
+      recognition.onerror = function() {
+        alert('Voice input failed. Please try again or type your request.');
+        btn.textContent = '🎤';
+        btn.style.animation = 'none';
+      };
+
+      recognition.onend = function() {
+        btn.textContent = '🎤';
+        btn.style.animation = 'none';
+      };
+
+      recognition.start();
+    }
+
+    const events = {
+      stripe: [
+        { id: 'payment', icon: '💳', title: 'New payment received', desc: 'Triggers when customer pays' },
+        { id: 'refund', icon: '↩️', title: 'Refund processed', desc: 'Triggers on refund' },
+        { id: 'subscription', icon: '🔄', title: 'Subscription created', desc: 'New recurring payment' }
+      ],
+      square: [
+        { id: 'sale', icon: '⬛', title: 'New sale', desc: 'Triggers on POS transaction' },
+        { id: 'order', icon: '🍕', title: 'New order', desc: 'Online or in-store order' }
+      ],
+      instagram: [
+        { id: 'post', icon: '📸', title: 'New post published', desc: 'You publish a new post' },
+        { id: 'comment', icon: '💬', title: 'New comment', desc: 'Someone comments on your post' }
+      ],
+      facebook: [
+        { id: 'post', icon: '📘', title: 'New post on page', desc: 'Post to your business page' },
+        { id: 'message', icon: '💬', title: 'New message', desc: 'Customer sends message' }
+      ],
+      calendar: [
+        { id: 'event', icon: '📅', title: 'New event created', desc: 'Booking or appointment added' },
+        { id: 'reminder', icon: '⏰', title: 'Event starts soon', desc: '15 min before event' }
+      ],
+      schedule: [
+        { id: 'daily', icon: '🌅', title: 'Daily at specific time', desc: 'Every day at 9:00 AM' },
+        { id: 'weekly', icon: '📆', title: 'Weekly on specific day', desc: 'Every Monday' },
+        { id: 'monthly', icon: '📊', title: 'Monthly report', desc: 'First day of month' }
+      ]
+    };
+
+    function selectTrigger(tool) {
+      automationData.trigger = tool;
+
+      // Update event list
+      const eventList = document.getElementById('eventList');
+      eventList.innerHTML = '';
+
+      events[tool].forEach(event => {
+        eventList.innerHTML += `
+          <div class="event-item" onclick="selectEvent('${event.id}', '${event.title}')">
+            <div class="event-icon">${event.icon}</div>
+            <div class="event-text">
+              <div class="event-title">${event.title}</div>
+              <div class="event-subtitle">${event.desc}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      goToStep(2);
+    }
+
+    function selectEvent(eventId, eventTitle) {
+      automationData.event = eventTitle;
+      document.querySelectorAll('#step2 .event-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      event.target.closest('.event-item').classList.add('selected');
+    }
+
+    function selectCondition(type) {
+      automationData.condition = type;
+      document.querySelectorAll('#step3 .event-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      event.target.closest('.event-item').classList.add('selected');
+
+      if (type !== 'none') {
+        document.getElementById('conditionConfig').classList.remove('hidden');
+      } else {
+        document.getElementById('conditionConfig').classList.add('hidden');
+      }
+    }
+
+    function selectAction(action) {
+      automationData.action = action;
+      document.querySelectorAll('#step4 .tool-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.target.closest('.tool-card').classList.add('selected');
+    }
+
+    function goToStep(step) {
+      // Hide all steps
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`step${i}`).classList.add('hidden');
+      }
+
+      // Show current step
+      document.getElementById(`step${step}`).classList.remove('hidden');
+
+      // Update progress circles
+      for (let i = 1; i <= 5; i++) {
+        const circle = document.getElementById(`step${i}Circle`);
+        if (i < step) {
+          circle.classList.add('completed');
+          circle.classList.remove('active');
+          circle.textContent = '✓';
+        } else if (i === step) {
+          circle.classList.add('active');
+          circle.classList.remove('completed');
+          circle.textContent = i;
+        } else {
+          circle.classList.remove('active', 'completed');
+          circle.textContent = i;
+        }
+      }
+
+      // Update progress lines
+      for (let i = 1; i <= 4; i++) {
+        const line = document.getElementById(`line${i}`);
+        if (i < step) {
+          line.classList.add('completed');
+        } else {
+          line.classList.remove('completed');
+        }
+      }
+
+      // Update review if on step 5
+      if (step === 5) {
+        updateReview();
+      }
+    }
+
+    function updateReview() {
+      document.getElementById('reviewTrigger').textContent =
+        automationData.event || 'Not selected';
+
+      if (automationData.condition && automationData.condition !== 'none') {
+        document.getElementById('reviewConditionStep').classList.remove('hidden');
+        const conditionValue = document.getElementById('conditionValue').value;
+        document.getElementById('reviewCondition').textContent =
+          `If ${automationData.condition}${conditionValue ? ': ' + conditionValue : ''}`;
+      } else {
+        document.getElementById('reviewConditionStep').classList.add('hidden');
+      }
+
+      const actionNames = {
+        email: 'Send email via Mailchimp',
+        sms: 'Send SMS via Twilio',
+        instagram: 'Post to Instagram',
+        facebook: 'Post to Facebook',
+        calendar: 'Create Google Calendar event',
+        notification: 'Send me a notification'
+      };
+
+      document.getElementById('reviewAction').textContent =
+        actionNames[automationData.action] || 'Not selected';
+    }
+
+    function saveAutomation() {
+      const name = document.getElementById('automationName').value;
+
+      if (!name) {
+        alert('Please give your automation a name');
+        return;
+      }
+
+      alert(`Automation "${name}" has been saved! 🎉\n\n(Demo mode - In production, this would save to database)`);
+      window.location.href = 'automation-builder.html';
+    }
+  </script>
+</body>
+</html>

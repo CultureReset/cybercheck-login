@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All-in-One Platform - Replace Monday, Zapier & Custom Dashboards | CyberCheck</title>
+  <meta name="description" content="Stop paying for 5+ tools. CyberCheck replaces Monday.com, Zapier, custom dashboards, and more. One platform, one price.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e0e0e0;
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #666;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #667eea;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+      font-size: 15px;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Hero */
+    .hero {
+      margin-top: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .hero p {
+      font-size: 24px;
+      opacity: 0.95;
+      max-width: 800px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Section */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      font-size: 20px;
+      color: #666;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Cost Comparison */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .comparison-side {
+      padding: 40px;
+      border-radius: 16px;
+    }
+
+    .comparison-side.old {
+      background: #fee;
+      border: 2px solid #f87171;
+    }
+
+    .comparison-side.new {
+      background: #eff6ff;
+      border: 2px solid #667eea;
+      position: relative;
+    }
+
+    .comparison-side.new::before {
+      content: '✨ Better';
+      position: absolute;
+      top: -12px;
+      right: 24px;
+      background: #667eea;
+      color: white;
+      padding: 4px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .comparison-side h3 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .comparison-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: white;
+      border-radius: 8px;
+    }
+
+    .comparison-item .icon {
+      font-size: 24px;
+    }
+
+    .comparison-item .details {
+      flex: 1;
+    }
+
+    .comparison-item .name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .comparison-item .price {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .comparison-total {
+      margin-top: 24px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .old .comparison-total {
+      color: #dc2626;
+    }
+
+    .new .comparison-total {
+      color: #10b981;
+    }
+
+    .savings-callout {
+      text-align: center;
+      padding: 32px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border-radius: 16px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    /* Feature Comparison Table */
+    .feature-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 2px solid #e0e0e0;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .feature-table thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .feature-table th {
+      padding: 20px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .feature-table td {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .feature-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .feature-table tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .check {
+      color: #10b981;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .cross {
+      color: #dc2626;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    /* Benefits Grid */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+    }
+
+    .benefit-card {
+      padding: 32px;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .benefit-card:hover {
+      border-color: #667eea;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+    }
+
+    .benefit-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .benefit-card h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .benefit-card p {
+      color: #666;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Testimonial */
+    .testimonial {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 48px;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .testimonial-quote {
+      font-size: 24px;
+      font-style: italic;
+      color: #333;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .testimonial-author {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .testimonial-role {
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      padding: 80px 24px;
+    }
+
+    .cta-section h2 {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .cta-section p {
+      font-size: 20px;
+      margin-bottom: 40px;
+      opacity: 0.95;
+    }
+
+    @media (max-width: 968px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .section-header h2 {
+        font-size: 32px;
+      }
+
+      .feature-table {
+        font-size: 14px;
+      }
+
+      .feature-table th,
+      .feature-table td {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        🔐 CyberCheck
+      </a>
+      <div class="nav-links">
+        <a href="index.html#features">Features</a>
+        <a href="integrations.html">Integrations</a>
+        <a href="demos/">Demos</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html" class="btn btn-primary">Start Free</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-badge">💰 Save $300+/month</div>
+    <h1>One Platform to Replace Them All</h1>
+    <p>
+      Stop paying for Monday, Zapier, custom dashboards, and analytics tools. CyberCheck does it all—for one simple price.
+    </p>
+  </section>
+
+  <!-- Cost Comparison -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-badge">💸 Cost Comparison</div>
+      <h2>What You're Paying Now vs. CyberCheck</h2>
+      <p>Most businesses spend $300-500/month on separate tools. Here's what you can replace.</p>
+    </div>
+
+    <div class="comparison">
+      <!-- Old Way -->
+      <div class="comparison-side old">
+        <h3>❌ Multiple Tools</h3>
+
+        <div class="comparison-item">
+          <div class="icon">📊</div>
+          <div class="details">
+            <div class="name">Monday.com</div>
+            <div style="font-size: 13px; color: #666;">Project management & dashboards</div>
+          </div>
+          <div class="price">$39/mo</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">⚡</div>
+          <div class="details">
+            <div class="name">Zapier</div>
+            <div style="font-size: 13px; color: #666;">Workflow automation</div>
+          </div>
+          <div class="price">$49/mo</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">📈</div>
+          <div class="details">
+            <div class="name">Custom Dashboard</div>
+            <div style="font-size: 13px; color: #666;">Developer to build & maintain</div>
+          </div>
+          <div class="price">$150/mo</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">🔔</div>
+          <div class="details">
+            <div class="name">Notification Tools</div>
+            <div style="font-size: 13px; color: #666;">SMS, email, alerts</div>
+          </div>
+          <div class="price">$29/mo</div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">📊</div>
+          <div class="details">
+            <div class="name">Analytics Platform</div>
+            <div style="font-size: 13px; color: #666;">Business intelligence</div>
+          </div>
+          <div class="price">$79/mo</div>
+        </div>
+
+        <div class="comparison-total">
+          $346/month
+          <div style="font-size: 16px; font-weight: 500; margin-top: 8px;">
+            Plus setup time & maintenance
+          </div>
+        </div>
+      </div>
+
+      <!-- New Way -->
+      <div class="comparison-side new">
+        <h3>✅ CyberCheck All-in-One</h3>
+
+        <div class="comparison-item">
+          <div class="icon">🎨</div>
+          <div class="details">
+            <div class="name">Custom Dashboards</div>
+            <div style="font-size: 13px; color: #666;">AI-generated, unlimited views</div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">🤖</div>
+          <div class="details">
+            <div class="name">Voice Automation</div>
+            <div style="font-size: 13px; color: #666;">Unlimited workflows, no code</div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">🔌</div>
+          <div class="details">
+            <div class="name">8+ Integrations</div>
+            <div style="font-size: 13px; color: #666;">All tools connected, real-time sync</div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">💬</div>
+          <div class="details">
+            <div class="name">AI Chat Assistant</div>
+            <div style="font-size: 13px; color: #666;">Ask questions, get insights</div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="icon">📊</div>
+          <div class="details">
+            <div class="name">Real-Time Analytics</div>
+            <div style="font-size: 13px; color: #666;">All your data in one place</div>
+          </div>
+        </div>
+
+        <div class="comparison-total">
+          $49/month
+          <div style="font-size: 16px; font-weight: 500; margin-top: 8px;">
+            Setup in 5 minutes. Zero maintenance.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="savings-callout">
+      💰 Save $297/month = $3,564/year with CyberCheck
+    </div>
+  </section>
+
+  <!-- Feature Comparison -->
+  <section class="section" style="background: #f5f7fa;">
+    <div class="section-header">
+      <div class="section-badge">⚖️ Feature Comparison</div>
+      <h2>How CyberCheck Stacks Up</h2>
+      <p>Everything you need, nothing you don't.</p>
+    </div>
+
+    <table class="feature-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th style="text-align: center;">Monday.com</th>
+          <th style="text-align: center;">Zapier</th>
+          <th style="text-align: center;">Custom Build</th>
+          <th style="text-align: center;">CyberCheck</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Custom Dashboards</strong></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Workflow Automation</strong></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Voice Control</strong></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>AI Assistant</strong></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Real-Time Data Sync</strong></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>No Code Required</strong></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>8+ Tool Integrations</strong></td>
+          <td style="text-align: center;"><span class="cross">✗</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+          <td style="text-align: center;"><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Setup Time</strong></td>
+          <td style="text-align: center;">2 hours</td>
+          <td style="text-align: center;">1 hour</td>
+          <td style="text-align: center;">2 weeks</td>
+          <td style="text-align: center;"><strong>5 minutes</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Monthly Cost</strong></td>
+          <td style="text-align: center;">$39+</td>
+          <td style="text-align: center;">$49+</td>
+          <td style="text-align: center;">$150+</td>
+          <td style="text-align: center;"><strong>$49</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Benefits -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-badge">✨ Benefits</div>
+      <h2>Why Businesses Choose CyberCheck</h2>
+      <p>More than just cost savings—it's about simplicity and power.</p>
+    </div>
+
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">💰</div>
+        <h3>Save $3,500+/year</h3>
+        <p>Replace 5+ expensive tools with one affordable platform. No hidden fees, no per-user pricing.</p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">⏱️</div>
+        <h3>Setup in Minutes</h3>
+        <p>No developers needed. No complex configuration. Connect tools and start using immediately.</p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">🧠</div>
+        <h3>AI-Powered</h3>
+        <p>Talk to your dashboard. Create automations with voice. Get insights from natural language questions.</p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">🔐</div>
+        <h3>Bank-Level Security</h3>
+        <p>Encrypted credentials, SOC 2 compliance, GDPR ready. Your data is safe and private.</p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">📱</div>
+        <h3>Works Everywhere</h3>
+        <p>Responsive design works on desktop, tablet, and mobile. Access your dashboard anywhere.</p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">⚡</div>
+        <h3>Zero Maintenance</h3>
+        <p>No servers to manage. No updates to install. We handle everything so you can focus on business.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial -->
+  <section class="section" style="background: #f5f7fa;">
+    <div class="section-header">
+      <div class="section-badge">💬 Testimonial</div>
+      <h2>What Business Owners Say</h2>
+    </div>
+
+    <div class="testimonial">
+      <div class="testimonial-quote">
+        "We were paying $320/month for Monday, Zapier, and a custom dashboard. CyberCheck does everything those tools did—plus AI automation—for $49/month. The ROI was immediate."
+      </div>
+      <div class="testimonial-author">Sarah Johnson</div>
+      <div class="testimonial-role">Owner, Joe's Pizza</div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <h2>Ready to Simplify & Save?</h2>
+    <p>Join 500+ businesses that switched to CyberCheck. Start free, no credit card required.</p>
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <a href="signup.html" class="btn btn-primary" style="background: white; color: #667eea;">Start Free Trial</a>
+      <a href="demos/" class="btn" style="background: transparent; color: white; border: 2px solid white;">View Live Demos</a>
+    </div>
+    <div style="margin-top: 24px; font-size: 16px; opacity: 0.9;">
+      💳 No credit card required • ⚡ Setup in 5 minutes • 🔒 Cancel anytime
+    </div>
+  </section>
+</body>
+</html>

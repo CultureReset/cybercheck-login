@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Your Tools - CyberCheck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 32px;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .header p {
+      color: #666;
+      font-size: 16px;
+    }
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .category-tab {
+      padding: 10px 20px;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 24px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .category-tab:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+    .category-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+    }
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .integration-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border: 2px solid #e0e0e0;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .integration-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      border-color: #667eea;
+    }
+    .integration-card.connected {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .icon {
+      font-size: 36px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .card-desc {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .feature-tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: #f5f7fa;
+      border-radius: 12px;
+      color: #666;
+    }
+    .btn-connect {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-connect:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-connected {
+      background: #10b981;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="navbar">
+    <div class="logo">🔐 CyberCheck</div>
+    <div style="color: #666; font-size: 14px;">Integrations</div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>Connect Your Tools</h1>
+      <p>Connect once, use everywhere. Auto-syncs across your dashboard.</p>
+    </div>
+
+    <div class="category-tabs" id="categoryTabs"></div>
+
+    <div class="integrations-grid" id="integrationsGrid">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading integrations...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Communication Buttons -->
+  <script src="../../packages/ui-kit/components/communication-buttons.html"></script>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api'; // Change to your API URL
+    let allIntegrations = [];
+    let activeCategory = 'all';
+
+    // Load integrations on page load
+    async function loadIntegrations() {
+      try {
+        const response = await fetch(`${API_BASE}/integrations/available`);
+        const data = await response.json();
+
+        if (data.success) {
+          allIntegrations = data.integrations;
+          renderCategories();
+          renderIntegrations();
+        } else {
+          showError('Failed to load integrations');
+        }
+      } catch (error) {
+        console.error('Error loading integrations:', error);
+        showError('Could not connect to server');
+      }
+    }
+
+    function renderCategories() {
+      const categories = ['all', ...new Set(allIntegrations.map(i => i.category))];
+      const tabsHtml = categories.map(cat => {
+        const count = cat === 'all' ? allIntegrations.length : allIntegrations.filter(i => i.category === cat).length;
+        return `
+          <div class="category-tab ${cat === activeCategory ? 'active' : ''}" onclick="filterByCategory('${cat}')">
+            ${cat.charAt(0).toUpperCase() + cat.slice(1)} (${count})
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('categoryTabs').innerHTML = tabsHtml;
+    }
+
+    function filterByCategory(category) {
+      activeCategory = category;
+      renderCategories();
+      renderIntegrations();
+    }
+
+    function renderIntegrations() {
+      const filtered = activeCategory === 'all'
+        ? allIntegrations
+        : allIntegrations.filter(i => i.category === activeCategory);
+
+      const gridHtml = filtered.map(integration => `
+        <div class="integration-card" data-id="${integration.id}">
+          <div class="card-header">
+            <div class="icon">${integration.icon}</div>
+            <div class="card-title">${integration.name}</div>
+          </div>
+          <div class="card-desc">${integration.description}</div>
+          <div class="features">
+            ${integration.features.slice(0, 3).map(f => `<span class="feature-tag">${f}</span>`).join('')}
+          </div>
+          <button class="btn-connect" onclick="connectIntegration('${integration.id}')">
+            ${integration.requiresOAuth ? '🔗 Connect with OAuth' : '⚙️ Configure'}
+          </button>
+        </div>
+      `).join('');
+
+      document.getElementById('integrationsGrid').innerHTML = gridHtml || '<p style="text-align:center;color:#666;">No integrations in this category</p>';
+    }
+
+    async function connectIntegration(id) {
+      // Get integration details
+      const integration = allIntegrations.find(i => i.id === id);
+
+      if (integration.requiresOAuth) {
+        // Start OAuth flow
+        window.location.href = `${API_BASE}/oauth/${id}/start`;
+      } else {
+        // Show config modal for API key auth
+        alert(`Configure ${integration.name}: Coming soon!`);
+      }
+    }
+
+    function showError(message) {
+      document.getElementById('integrationsGrid').innerHTML = `
+        <div style="text-align:center;padding:40px;color:#ef4444;">
+          <p style="font-size:48px;margin-bottom:16px;">⚠️</p>
+          <p style="font-size:18px;font-weight:600;margin-bottom:8px;">Error</p>
+          <p>${message}</p>
+        </div>
+      `;
+    }
+
+    // Load on page load
+    loadIntegrations();
+  </script>
+</body>
+</html>

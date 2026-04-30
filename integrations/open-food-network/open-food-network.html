@@ -1,0 +1,72 @@
+<!--
+  COMPONENT: Open Food Network - Online Ordering
+  GitHub: openfoodfoundation/openfoodnetwork
+  For: Restaurants, food businesses, farms — online ordering + delivery
+
+  Requires: shared.html on the page
+  Trigger: openComponent('food-order')
+  Render: renderFoodOrder(ofnUrl)
+  Back end: store food_order_url on entity in Supabase
+
+  Setup:
+  1. Self-host: github.com/openfoodfoundation/openfoodnetwork
+  2. Or use hosted instance at openfoodnetwork.org
+  3. Set up shop, copy shop URL
+  4. Admin stores URL in entity data
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('food-order')">🛒 Order Online</button>
+-->
+
+<style>
+.comp-order-iframe {
+    width: 100%;
+    height: 580px;
+    border: none;
+    display: block;
+}
+.comp-order-cta {
+    padding: 30px 20px;
+    text-align: center;
+}
+.comp-order-cta p { color: #666; font-size: 0.9rem; margin-bottom: 16px; }
+.comp-order-btn {
+    display: inline-block;
+    padding: 14px 28px;
+    background: #2d8a4e;
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+.comp-order-btn:hover { background: #236b3e; }
+</style>
+
+<div class="comp-overlay" id="comp-food-order">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>🛒 Order Online</h2>
+            <button class="comp-close" onclick="closeComponent('comp-food-order')">✕</button>
+        </div>
+        <div id="comp-food-order-body"></div>
+    </div>
+</div>
+
+<script>
+function renderFoodOrder(ofnUrl) {
+    const body = document.getElementById('comp-food-order-body');
+    if (!ofnUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">Online ordering not set up yet.</div>';
+        return;
+    }
+    body.innerHTML = `
+        <div class="comp-order-cta">
+            <p>Click below to place your order</p>
+            <a href="${escapeAttr(ofnUrl)}" target="_blank" class="comp-order-btn">🛒 Order Now</a>
+        </div>`;
+}
+window.renderFoodOrder = renderFoodOrder;
+</script>

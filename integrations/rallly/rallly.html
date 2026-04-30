@@ -1,0 +1,75 @@
+<!--
+  COMPONENT: Rallly - Group Scheduling & Event Polls
+  GitHub: lukevella/rallly
+  Self-hosted group scheduling — find the best time for events
+  For: Group events, staff scheduling, party planning, artist meet & greets
+
+  Requires: shared.html on the page
+  Trigger: openComponent('rallly')
+  Render: renderRallly(ralllyUrl)
+  Back end: store rallly_url on entity in Supabase (their self-hosted instance or rallly.co)
+
+  Setup:
+  1. Self-host: git clone https://github.com/lukevella/rallly
+  2. Or use hosted: rallly.co
+  3. Create a poll, copy the poll URL
+  4. Admin stores that URL in entity data
+  5. Component embeds it automatically
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('rallly')">📅 Find a Time</button>
+-->
+
+<style>
+.comp-rallly-iframe {
+    width: 100%;
+    height: 580px;
+    border: none;
+    display: block;
+}
+.comp-rallly-cta {
+    padding: 24px 20px;
+    text-align: center;
+}
+.comp-rallly-cta p { color: #666; font-size: 0.9rem; margin-bottom: 16px; }
+.comp-rallly-btn {
+    display: inline-block;
+    padding: 14px 28px;
+    background: #4f46e5;
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.comp-rallly-btn:hover { background: #4338ca; }
+</style>
+
+<div class="comp-overlay" id="comp-rallly">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>📅 Find a Time</h2>
+            <button class="comp-close" onclick="closeComponent('comp-rallly')">✕</button>
+        </div>
+        <div id="comp-rallly-body"><div class="comp-ea-loading">Loading...</div></div>
+    </div>
+</div>
+
+<script>
+function renderRallly(ralllyUrl) {
+    const body = document.getElementById('comp-rallly-body');
+    if (!ralllyUrl) {
+        body.innerHTML = '<div class="comp-ea-no-url">Group scheduling not set up yet.</div>';
+        return;
+    }
+    // Try iframe embed first, fallback to link button
+    body.innerHTML = `
+        <iframe class="comp-rallly-iframe" src="${escapeAttr(ralllyUrl)}" title="Schedule" loading="lazy"
+            onerror="this.parentNode.innerHTML='<div class=comp-rallly-cta><p>Click below to open the scheduling poll</p><a href=\\'${escapeAttr(ralllyUrl)}\\' target=\\'_blank\\' class=comp-rallly-btn>📅 Open Scheduler</a></div>'">
+        </iframe>`;
+}
+window.renderRallly = renderRallly;
+</script>

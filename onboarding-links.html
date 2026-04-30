@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberCheck — Pick Your Tools</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    .ob-header {
+      padding: 32px 24px 0;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .ob-header h1 { font-size: 26px; font-weight: 700; }
+    .ob-header p { color: #94a3b8; margin-top: 8px; font-size: 15px; }
+    .ob-steps {
+      display: flex;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .ob-step {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #334155;
+    }
+    .ob-step.active { background: #3b82f6; }
+
+    .ob-body {
+      max-width: 720px;
+      margin: 32px auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Step 1 — Industry */
+    .industry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .industry-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .industry-card:hover { border-color: #3b82f6; background: #1e3a5f; }
+    .industry-card.selected { border-color: #3b82f6; background: #1e3a5f; }
+    .industry-card .icon { font-size: 2rem; margin-bottom: 8px; }
+    .industry-card .label { font-size: 13px; font-weight: 600; }
+
+    /* Step 2 — Modules */
+    .module-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      margin: 24px 0 10px;
+    }
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .module-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .module-card:hover { border-color: #3b82f6; }
+    .module-card.selected { border-color: #3b82f6; background: #1e3a5f; }
+    .module-card .mod-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+    .module-card .mod-name { font-size: 13px; font-weight: 700; color: #e2e8f0; }
+    .module-card .mod-desc { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .module-check {
+      width: 18px; height: 18px;
+      border: 2px solid #334155;
+      border-radius: 4px;
+      margin-left: auto;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      color: #fff;
+    }
+    .module-card.selected .module-check {
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+
+    /* Bottom bar */
+    .ob-footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .ob-footer .count { font-size: 13px; color: #94a3b8; }
+    .ob-footer-btns { display: flex; gap: 10px; }
+    .btn-secondary {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary {
+      padding: 10px 24px;
+      background: #3b82f6;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .step-section { display: none; }
+    .step-section.active { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="ob-header">
+  <h1 id="ob-title">What kind of business are you?</h1>
+  <p id="ob-subtitle">We'll set up the right tools for you</p>
+  <div class="ob-steps">
+    <div class="ob-step active" id="step-dot-1"></div>
+    <div class="ob-step" id="step-dot-2"></div>
+  </div>
+</div>
+
+<div class="ob-body">
+
+  <!-- Step 1: Industry -->
+  <div class="step-section active" id="step-1">
+    <div class="industry-grid" id="industry-grid"></div>
+  </div>
+
+  <!-- Step 2: Modules -->
+  <div class="step-section" id="step-2">
+    <div id="module-grid-container"></div>
+  </div>
+
+</div>
+
+<div class="ob-footer">
+  <div class="count" id="footer-count"></div>
+  <div class="ob-footer-btns">
+    <button class="btn-secondary" id="btn-back" onclick="goBack()" style="display:none">Back</button>
+    <button class="btn-primary" id="btn-next" onclick="goNext()" disabled>Continue</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const GCR_URL = 'https://adpnhipmdefutkzzltbs.supabase.co';
+const GCR_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkcG5oaXBtZGVmdXRrenpsdGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NjAwNzQsImV4cCI6MjA5MDQzNjA3NH0.5VdM8XRTo793rgEOBwSDjE5bbLeLYXOCI2zB93a08j8';
+const gcr = supabase.createClient(GCR_URL, GCR_ANON_KEY);
+
+const INDUSTRIES = [
+  { id: 'restaurant', icon: '🍽', label: 'Restaurant' },
+  { id: 'bar', icon: '🍺', label: 'Bar / Nightlife' },
+  { id: 'charter', icon: '⛵', label: 'Boat / Charter' },
+  { id: 'artist', icon: '🎵', label: 'Musician / Artist' },
+  { id: 'salon', icon: '✂️', label: 'Salon / Spa' },
+  { id: 'fitness', icon: '💪', label: 'Fitness / Gym' },
+  { id: 'photographer', icon: '📷', label: 'Photographer' },
+  { id: 'rental', icon: '🔑', label: 'Rental Service' },
+  { id: 'retail', icon: '🛍', label: 'Retail / Shop' },
+  { id: 'venue', icon: '🏛', label: 'Venue / Events' },
+  { id: 'service', icon: '🔧', label: 'Service Business' },
+  { id: 'other', icon: '🏢', label: 'Other' },
+];
+
+const ALL_MODULES = [
+  // Core presence
+  { id: 'menu', icon: '🍽', name: 'Menu', desc: 'Showcase your food & drinks', category: 'Core Presence', industries: ['restaurant', 'bar', 'other'] },
+  { id: 'gallery', icon: '📸', name: 'Gallery / Photos', desc: 'Photo gallery of your work', category: 'Core Presence', industries: ['all'] },
+  { id: 'specials', icon: '⭐', name: 'Specials', desc: 'Daily/weekly specials', category: 'Core Presence', industries: ['restaurant', 'bar', 'other'] },
+  { id: 'happy_hour', icon: '🍹', name: 'Happy Hour', desc: 'Happy hour deals', category: 'Core Presence', industries: ['bar', 'restaurant'] },
+  // Bookings
+  { id: 'booking', icon: '📅', name: 'Booking / Reservations', desc: 'Let customers book online', category: 'Bookings', industries: ['all'] },
+  { id: 'events', icon: '🎟', name: 'Events & Tickets', desc: 'Sell tickets to events', category: 'Bookings', industries: ['bar', 'venue', 'artist', 'restaurant'] },
+  { id: 'scheduling', icon: '🗓', name: 'Scheduling', desc: 'Let customers pick a time', category: 'Bookings', industries: ['salon', 'fitness', 'photographer', 'service', 'other'] },
+  // Food & Orders
+  { id: 'ordering', icon: '🛒', name: 'Online Ordering', desc: 'Take food orders online', category: 'Food & Orders', industries: ['restaurant', 'bar'] },
+  // Engagement
+  { id: 'loyalty', icon: '💎', name: 'Loyalty / Points', desc: 'Reward your regulars', category: 'Engagement', industries: ['all'] },
+  { id: 'tip_jar', icon: '💸', name: 'Tip Jar', desc: 'Collect tips digitally', category: 'Engagement', industries: ['artist', 'service', 'bar', 'restaurant'] },
+  { id: 'song_requests', icon: '🎶', name: 'Song Requests', desc: 'Let fans request songs', category: 'Engagement', industries: ['artist', 'bar'] },
+  // Content
+  { id: 'podcast', icon: '🎙', name: 'Podcast / Audio', desc: 'Embed your podcast', category: 'Content', industries: ['artist', 'bar', 'restaurant', 'other'] },
+  // Business Ops
+  { id: 'rentals', icon: '🚤', name: 'Rentals', desc: 'Manage rental inventory', category: 'Business Ops', industries: ['charter', 'rental'] },
+  { id: 'fleet', icon: '⛵', name: 'Fleet / Inventory', desc: 'Show your fleet or inventory', category: 'Business Ops', industries: ['charter', 'rental'] },
+  // Marketing
+  { id: 'sms', icon: '📱', name: 'SMS Marketing', desc: 'Text blast your customers', category: 'Marketing', industries: ['all'] },
+  { id: 'reviews', icon: '⭐', name: 'Reviews', desc: 'Collect & display reviews', category: 'Marketing', industries: ['all'] },
+];
+
+const CATEGORY_ORDER = ['Core Presence', 'Bookings', 'Food & Orders', 'Engagement', 'Content', 'Business Ops', 'Marketing'];
+
+var selectedIndustry = null;
+var selectedModules = new Set();
+var currentStep = 1;
+var userId = null;
+
+(async function init() {
+  var { data } = await gcr.auth.getSession();
+  if (!data || !data.session) {
+    window.location.href = 'signup.html';
+    return;
+  }
+  userId = data.session.user.id;
+
+  // Check if profile has industry already (returning user)
+  var { data: profile } = await gcr.from('profiles').select('industry').eq('id', userId).single();
+  if (profile && profile.industry) {
+    selectedIndustry = profile.industry;
+  }
+
+  renderIndustries();
+})();
+
+function renderIndustries() {
+  var grid = document.getElementById('industry-grid');
+  grid.innerHTML = INDUSTRIES.map(ind => `
+    <div class="industry-card ${selectedIndustry === ind.id ? 'selected' : ''}"
+         onclick="selectIndustry('${ind.id}', this)">
+      <div class="icon">${ind.icon}</div>
+      <div class="label">${ind.label}</div>
+    </div>
+  `).join('');
+  if (selectedIndustry) document.getElementById('btn-next').disabled = false;
+}
+
+function selectIndustry(id, el) {
+  selectedIndustry = id;
+  document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-next').disabled = false;
+}
+
+function renderModules() {
+  var container = document.getElementById('module-grid-container');
+  // Filter to show modules relevant to industry (+ 'all')
+  var relevant = ALL_MODULES.filter(m => m.industries.includes('all') || m.industries.includes(selectedIndustry));
+
+  // Group by category
+  var byCategory = {};
+  relevant.forEach(m => {
+    if (!byCategory[m.category]) byCategory[m.category] = [];
+    byCategory[m.category].push(m);
+  });
+
+  var html = '';
+  CATEGORY_ORDER.forEach(cat => {
+    if (!byCategory[cat] || !byCategory[cat].length) return;
+    html += `<div class="module-section-label">${cat}</div>`;
+    html += `<div class="module-grid">`;
+    byCategory[cat].forEach(m => {
+      var sel = selectedModules.has(m.id);
+      html += `
+        <div class="module-card ${sel ? 'selected' : ''}" onclick="toggleModule('${m.id}', this)">
+          <div class="mod-icon">${m.icon}</div>
+          <div>
+            <div class="mod-name">${m.name}</div>
+            <div class="mod-desc">${m.desc}</div>
+          </div>
+          <div class="module-check">${sel ? '✓' : ''}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+  updateFooterCount();
+}
+
+function toggleModule(id, el) {
+  if (selectedModules.has(id)) {
+    selectedModules.delete(id);
+    el.classList.remove('selected');
+    el.querySelector('.module-check').textContent = '';
+  } else {
+    selectedModules.add(id);
+    el.classList.add('selected');
+    el.querySelector('.module-check').textContent = '✓';
+  }
+  updateFooterCount();
+  document.getElementById('btn-next').disabled = selectedModules.size === 0;
+}
+
+function updateFooterCount() {
+  if (currentStep === 2) {
+    document.getElementById('footer-count').textContent = selectedModules.size + ' tools selected';
+  } else {
+    document.getElementById('footer-count').textContent = '';
+  }
+}
+
+function goNext() {
+  if (currentStep === 1) {
+    currentStep = 2;
+    document.getElementById('step-1').classList.remove('active');
+    document.getElementById('step-2').classList.add('active');
+    document.getElementById('step-dot-2').classList.add('active');
+    document.getElementById('ob-title').textContent = 'Pick your tools';
+    document.getElementById('ob-subtitle').textContent = 'You can always add or remove these later';
+    document.getElementById('btn-back').style.display = 'inline-block';
+    document.getElementById('btn-next').textContent = 'Launch Dashboard';
+    document.getElementById('btn-next').disabled = true;
+    renderModules();
+  } else {
+    saveAndLaunch();
+  }
+}
+
+function goBack() {
+  if (currentStep === 2) {
+    currentStep = 1;
+    document.getElementById('step-2').classList.remove('active');
+    document.getElementById('step-1').classList.add('active');
+    document.getElementById('step-dot-2').classList.remove('active');
+    document.getElementById('ob-title').textContent = 'What kind of business are you?';
+    document.getElementById('ob-subtitle').textContent = 'We\'ll set up the right tools for you';
+    document.getElementById('btn-back').style.display = 'none';
+    document.getElementById('btn-next').textContent = 'Continue';
+    document.getElementById('btn-next').disabled = !selectedIndustry;
+    document.getElementById('footer-count').textContent = '';
+  }
+}
+
+async function saveAndLaunch() {
+  var btn = document.getElementById('btn-next');
+  btn.disabled = true;
+  btn.textContent = 'Setting up...';
+
+  try {
+    // Save industry to profile
+    await gcr.from('profiles').update({ industry: selectedIndustry }).eq('id', userId);
+
+    // Save selected modules as installed_modules rows
+    var rows = Array.from(selectedModules).map((modId, i) => ({
+      user_id: userId,
+      module_id: modId,
+      position: i,
+      visible: true,
+      config: {}
+    }));
+
+    if (rows.length > 0) {
+      await gcr.from('installed_modules').insert(rows);
+    }
+
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Launch Dashboard';
+    alert('Error saving: ' + err.message);
+  }
+}
+</script>
+</body>
+</html>

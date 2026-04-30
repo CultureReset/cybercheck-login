@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>aWavegent Business Page</title>
+  <link rel="stylesheet" href="./base.css">
+  <!-- Section modules — add/remove as needed -->
+  <script src="../sections/loader.js"></script>
+  <script src="../sections/profile.js"></script>
+  <script src="../sections/social-icons.js"></script>
+  <script src="../sections/specials-banner.js"></script>
+  <script src="../sections/links.js"></script>
+  <script src="../sections/booking-charter.js"></script>
+  <script src="../sections/booking-reservation.js"></script>
+  <script src="../sections/menu-text.js"></script>
+  <script src="../sections/menu-images.js"></script>
+  <script src="../sections/reviews-verified.js"></script>
+  <script src="../sections/gallery-grid.js"></script>
+  <script src="../sections/hours.js"></script>
+</head>
+<body>
+  <div class="wg-container" id="app"></div>
+
+  <!-- aWavegent footer watermark -->
+  <div class="wg-footer">
+    Powered by <a href="https://awavegent.com" target="_blank">aWavegent</a>
+  </div>
+
+  <script>
+    // Inline demo data — edit this object or replace with API fetch
+    // To use API instead: fetch('/api/dashboard/site-data?site_id=' + SITE_ID)
+    var CONFIG = {"theme":{"accent":"#1B3A5C","bg":"#ffffff"},"business":{"name":"Gulf Coast Outfitters","tagline":"Deep Sea & Nearshore Fishing · Orange Beach, AL","phone":"(251) 555-0147","rating":4.9,"review_count":52,"avatar_url":"","directions_url":"https://maps.google.com"},"sections":[{"type":"profile"},{"type":"social-icons"},{"type":"specials-banner"},{"type":"links"},{"type":"booking-charter"},{"type":"reviews-verified"},{"type":"gallery-grid"},{"type":"hours"}],"socials":[{"platform":"instagram","url":"#"},{"platform":"facebook","url":"#"},{"platform":"tiktok","url":"#"}],"specials":{"catch_of_day":"Mahi-Mahi running offshore"},"links":[{"icon":"🎣","label":"Trips & Pricing","sub":"Half day, full day, deep sea","action":"modal:modal-trips"},{"icon":"📅","label":"Book a Trip","sub":"Check availability & reserve your spot","action":"modal:modal-booking-charter"},{"icon":"📸","label":"Photos","sub":"From the water","action":"modal:modal-gallery"},{"icon":"⭐","label":"Verified Reviews","sub":"4.9 stars · 52 verified bookings","action":"modal:modal-reviews"},{"icon":"🕐","label":"Hours & Location","sub":"Open daily 5 AM – 9 PM","action":"modal:modal-hours"}],"booking":{"trips":[{"id":"halfday","name":"Half Day Nearshore","duration":"4 hrs","price":950,"max_guests":6,"description":"Perfect for families. Targeting snapper, flounder, and redfish within 10 miles."},{"id":"fullday","name":"Full Day Deep Sea","duration":"8 hrs","price":1400,"max_guests":6,"description":"Head offshore for mahi, tuna, wahoo, and amberjack. Our most popular trip."},{"id":"overnight","name":"Overnight Charter","duration":"24 hrs","price":2200,"max_guests":6,"description":"For the serious angler. Stay out overnight targeting swordfish and tilefish."}]},"reviews":[{"name":"James T.","visit_detail":"Full Day Deep Sea · 4 guests","date":"June 14, 2025","rating":5,"text":"Absolutely incredible trip. Captain knew exactly where to go and we limited out on mahi before noon. The boat is clean, the gear is top notch. Already booked our next trip for October."},{"name":"The Rodriguez Family","visit_detail":"Half Day Nearshore · 5 guests","date":"May 28, 2025","rating":5,"text":"This was our 8-year-old's first fishing trip and she caught the biggest fish of the day! Captain was so patient with the kids. Couldn't have asked for a better experience."},{"name":"Derek W.","visit_detail":"Full Day Deep Sea · 2 guests","date":"April 19, 2025","rating":5,"text":"Third time going out with Gulf Coast Outfitters and every trip is better than the last. We got into a huge wahoo school about 40 miles out. Don't book anyone else."},{"name":"Sarah M.","visit_detail":"Half Day Nearshore · 4 guests","date":"March 7, 2025","rating":5,"text":"Perfect way to spend a morning in Orange Beach. We caught limits of snapper and had an absolute blast. The SMS confirmation and morning briefing text were such a nice touch."}],"gallery":[{"url":"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=400&fit=crop","caption":"Offshore mahi-mahi"},{"url":"https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=400&h=400&fit=crop","caption":"Gulf waters"},{"url":"https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=400&fit=crop","caption":"Happy anglers"},{"url":"https://images.unsplash.com/photo-1571752726703-5e7d1f6a986d?w=400&h=400&fit=crop","caption":"Deep sea charter"},{"url":"https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&h=400&fit=crop","caption":"Sunset return"},{"url":"https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=400&h=400&fit=crop","caption":"Family trip"}],"hours":{"monday":{"open":"5:00 AM","close":"9:00 PM"},"tuesday":{"open":"5:00 AM","close":"9:00 PM"},"wednesday":{"open":"5:00 AM","close":"9:00 PM"},"thursday":{"open":"5:00 AM","close":"9:00 PM"},"friday":{"open":"5:00 AM","close":"9:00 PM"},"saturday":{"open":"5:00 AM","close":"9:00 PM"},"sunday":{"open":"5:00 AM","close":"9:00 PM"}}};
+    aWavegent.mount(CONFIG, document.getElementById('app'));
+  </script>
+</body>
+</html>

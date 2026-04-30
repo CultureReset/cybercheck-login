@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Logs - CyberCheck</title>
+  <link rel="stylesheet" href="../../packages/css/core.css">
+  <link rel="stylesheet" href="../../packages/css/dashboard-shell.css">
+  <style>
+    .logs-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #1a1a1a;
+    }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 10px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .refresh-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #e0e0e0;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-value.success { color: #10b981; }
+    .stat-value.running { color: #667eea; }
+    .stat-value.failed { color: #ef4444; }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .logs-table {
+      background: white;
+      border-radius: 12px;
+      border: 2px solid #e0e0e0;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 50px 1fr 150px 120px 120px 120px 100px;
+      gap: 16px;
+      padding: 16px 24px;
+      background: #f5f7fa;
+      font-weight: 600;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 150px 120px 120px 120px 100px;
+      gap: 16px;
+      padding: 20px 24px;
+      border-top: 1px solid #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s;
+      align-items: center;
+    }
+
+    .log-row:hover {
+      background: #f9fafb;
+    }
+
+    .workflow-icon {
+      font-size: 24px;
+    }
+
+    .workflow-name {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .workflow-trigger {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.running {
+      background: #e0e7ff;
+      color: #667eea;
+    }
+
+    .status-badge.completed {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-badge.failed {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-badge .spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .duration {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .steps-count {
+      font-size: 14px;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .view-btn {
+      padding: 8px 16px;
+      background: white;
+      border: 2px solid #667eea;
+      color: #667eea;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .view-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    /* Log Detail Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      color: #1a1a1a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 32px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .step-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-left: 4px solid #667eea;
+    }
+
+    .step-card.failed {
+      border-left-color: #ef4444;
+    }
+
+    .step-card.completed {
+      border-left-color: #10b981;
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .step-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .step-details {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .step-result {
+      margin-top: 12px;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="logs-container">
+    <div class="header">
+      <h1>📊 Workflow Execution Logs</h1>
+      <button class="refresh-btn" onclick="loadLogs()">
+        🔄 Refresh
+      </button>
+    </div>
+
+    <div class="filters">
+      <select class="filter-select" id="workflowFilter" onchange="loadLogs()">
+        <option value="">All Workflows</option>
+        <!-- Populated dynamically -->
+      </select>
+
+      <select class="filter-select" id="statusFilter" onchange="loadLogs()">
+        <option value="">All Statuses</option>
+        <option value="running">Running</option>
+        <option value="completed">Completed</option>
+        <option value="failed">Failed</option>
+      </select>
+
+      <select class="filter-select" id="limitFilter" onchange="loadLogs()">
+        <option value="50">Last 50</option>
+        <option value="100">Last 100</option>
+        <option value="200">Last 200</option>
+      </select>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-value running" id="runningCount">-</div>
+        <div class="stat-label">Running</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value success" id="completedCount">-</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value failed" id="failedCount">-</div>
+        <div class="stat-label">Failed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="successRate">-</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+
+    <div class="logs-table">
+      <div class="table-header">
+        <div></div>
+        <div>Workflow</div>
+        <div>Started</div>
+        <div>Status</div>
+        <div>Duration</div>
+        <div>Steps</div>
+        <div>Actions</div>
+      </div>
+      <div id="logsBody">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Loading logs...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Detail Modal -->
+  <div class="modal" id="logModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Workflow Execution Details</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Communication Buttons -->
+  <script src="../../packages/ui-kit/components/communication-buttons.html"></script>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    let allLogs = [];
+
+    // Auto-refresh every 5 seconds
+    setInterval(() => {
+      if (!document.getElementById('logModal').classList.contains('open')) {
+        loadLogs();
+      }
+    }, 5000);
+
+    async function loadLogs() {
+      try {
+        const workflowId = document.getElementById('workflowFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        const limit = document.getElementById('limitFilter').value;
+
+        let url = `${API_BASE}/workflows/runs/history?limit=${limit}`;
+        if (workflowId) url += `&workflow_id=${workflowId}`;
+        if (status) url += `&status=${status}`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+          allLogs = data.runs;
+          renderLogs();
+          updateStats();
+          await loadWorkflowsForFilter();
+        }
+      } catch (error) {
+        console.error('Error loading logs:', error);
+        showError('Failed to load logs');
+      }
+    }
+
+    function renderLogs() {
+      const tbody = document.getElementById('logsBody');
+
+      if (allLogs.length === 0) {
+        tbody.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No workflow runs yet</h3>
+            <p>Your workflow executions will appear here</p>
+          </div>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = allLogs.map(log => {
+        const startedAt = new Date(log.started_at);
+        const duration = log.duration_ms ? formatDuration(log.duration_ms) : '-';
+        const stepsText = `${log.steps_completed || 0}/${(log.workflows?.steps || []).length || 0}`;
+
+        return `
+          <div class="log-row" onclick="viewLogDetails('${log.id}')">
+            <div class="workflow-icon">${log.workflows?.icon || '⚡'}</div>
+            <div>
+              <div class="workflow-name">${log.workflows?.workflow_name || 'Unknown Workflow'}</div>
+              <div class="workflow-trigger">${log.trigger_source}</div>
+            </div>
+            <div>${formatTime(startedAt)}</div>
+            <div>
+              ${getStatusBadge(log.status)}
+            </div>
+            <div class="duration">${duration}</div>
+            <div class="steps-count">${stepsText}</div>
+            <div>
+              <button class="view-btn" onclick="event.stopPropagation(); viewLogDetails('${log.id}')">
+                View Details
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getStatusBadge(status) {
+      const icons = {
+        running: '<span class="spinner"></span>',
+        completed: '✓',
+        failed: '✗'
+      };
+
+      return `
+        <span class="status-badge ${status}">
+          ${icons[status] || ''}
+          ${status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+      `;
+    }
+
+    function formatTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      return `${days}d ago`;
+    }
+
+    function formatDuration(ms) {
+      if (ms < 1000) return `${ms}ms`;
+      const seconds = Math.floor(ms / 1000);
+      if (seconds < 60) return `${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      return `${minutes}m ${seconds % 60}s`;
+    }
+
+    function updateStats() {
+      const running = allLogs.filter(l => l.status === 'running').length;
+      const completed = allLogs.filter(l => l.status === 'completed').length;
+      const failed = allLogs.filter(l => l.status === 'failed').length;
+      const total = completed + failed;
+      const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      document.getElementById('runningCount').textContent = running;
+      document.getElementById('completedCount').textContent = completed;
+      document.getElementById('failedCount').textContent = failed;
+      document.getElementById('successRate').textContent = `${successRate}%`;
+    }
+
+    async function loadWorkflowsForFilter() {
+      try {
+        const response = await fetch(`${API_BASE}/workflows`);
+        const data = await response.json();
+
+        if (data.success) {
+          const select = document.getElementById('workflowFilter');
+          const currentValue = select.value;
+
+          select.innerHTML = '<option value="">All Workflows</option>' +
+            data.workflows.map(w =>
+              `<option value="${w.id}">${w.icon || '⚡'} ${w.workflow_name}</option>`
+            ).join('');
+
+          select.value = currentValue;
+        }
+      } catch (error) {
+        console.error('Error loading workflows:', error);
+      }
+    }
+
+    async function viewLogDetails(runId) {
+      try {
+        const response = await fetch(`${API_BASE}/workflows/runs/${runId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          displayLogDetails(data.run);
+        }
+      } catch (error) {
+        console.error('Error loading log details:', error);
+        alert('Failed to load log details');
+      }
+    }
+
+    function displayLogDetails(run) {
+      const modal = document.getElementById('logModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+
+      title.textContent = `${run.workflows?.icon || '⚡'} ${run.workflows?.workflow_name || 'Workflow'} Execution`;
+
+      let html = `
+        <div style="margin-bottom: 24px;">
+          <h3>Run Information</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+            <div>
+              <strong>Status:</strong> ${getStatusBadge(run.status)}
+            </div>
+            <div>
+              <strong>Started:</strong> ${new Date(run.started_at).toLocaleString()}
+            </div>
+            <div>
+              <strong>Duration:</strong> ${run.duration_ms ? formatDuration(run.duration_ms) : 'In progress'}
+            </div>
+            <div>
+              <strong>Trigger:</strong> ${run.trigger_source}
+            </div>
+          </div>
+        </div>
+
+        <h3>Step Execution</h3>
+      `;
+
+      if (run.execution_log?.steps) {
+        html += run.execution_log.steps.map((step, idx) => `
+          <div class="step-card ${step.status}">
+            <div class="step-header">
+              <div class="step-title">
+                Step ${idx + 1}: ${step.action}
+              </div>
+              ${getStatusBadge(step.status)}
+            </div>
+            <div class="step-details">
+              <strong>App:</strong> ${step.app_id}<br>
+              <strong>Duration:</strong> ${formatDuration(step.duration_ms)}<br>
+              ${step.error ? `<strong>Error:</strong> <span style="color: #ef4444;">${step.error}</span><br>` : ''}
+            </div>
+            ${step.result ? `
+              <div class="step-result">
+                <strong>Result:</strong><br>
+                ${JSON.stringify(step.result, null, 2)}
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } else {
+        html += '<p>No step execution data available</p>';
+      }
+
+      body.innerHTML = html;
+      modal.classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('logModal').classList.remove('open');
+    }
+
+    function showError(message) {
+      document.getElementById('logsBody').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon" style="color: #ef4444;">⚠️</div>
+          <h3>Error</h3>
+          <p>${message}</p>
+        </div>
+      `;
+    }
+
+    // Load logs on page load
+    loadLogs();
+  </script>
+</body>
+</html>

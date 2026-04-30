@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox Editor - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/sandbox.css">
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
+
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="editor-container">
+        <!-- Left Sidebar: Files & Blocks -->
+        <aside class="editor-sidebar">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-tab="files">Files</button>
+                <button class="sidebar-tab" data-tab="blocks">Blocks</button>
+            </div>
+
+            <!-- Files Tab -->
+            <div class="sidebar-content" id="files-tab">
+                <div class="file-tree">
+                    <div class="file-item active">
+                        <span class="file-icon">📄</span>
+                        <span>index.html</span>
+                    </div>
+                    <div class="file-item">
+                        <span class="file-icon">🎨</span>
+                        <span>styles.css</span>
+                    </div>
+                    <div class="file-item">
+                        <span class="file-icon">⚡</span>
+                        <span>app.js</span>
+                    </div>
+                    <button class="btn-secondary btn-sm" style="margin-top: 1rem; width: 100%;">
+                        + New File
+                    </button>
+                </div>
+            </div>
+
+            <!-- Blocks Tab -->
+            <div class="sidebar-content" id="blocks-tab" style="display: none;">
+                <div class="blocks-section">
+                    <h4 class="blocks-title">Connected Apps</h4>
+                    <div class="block-item" draggable="true" data-block="crm">
+                        <span class="block-icon">📊</span>
+                        <span class="block-name">CRM</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="stripe">
+                        <span class="block-icon">💳</span>
+                        <span class="block-name">Stripe</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="gmail">
+                        <span class="block-icon">✉️</span>
+                        <span class="block-name">Gmail</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="sms">
+                        <span class="block-icon">💬</span>
+                        <span class="block-name">SMS</span>
+                    </div>
+                </div>
+
+                <div class="blocks-section">
+                    <h4 class="blocks-title">Actions</h4>
+                    <div class="block-item" draggable="true" data-block="send-email">
+                        <span class="block-icon">📧</span>
+                        <span class="block-name">Send Email</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="add-contact">
+                        <span class="block-icon">👤</span>
+                        <span class="block-name">Add Contact</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="charge-card">
+                        <span class="block-icon">💰</span>
+                        <span class="block-name">Charge Card</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="send-sms">
+                        <span class="block-icon">📱</span>
+                        <span class="block-name">Send SMS</span>
+                    </div>
+                </div>
+
+                <div class="blocks-section">
+                    <h4 class="blocks-title">Triggers</h4>
+                    <div class="block-item" draggable="true" data-block="new-lead">
+                        <span class="block-icon">🎯</span>
+                        <span class="block-name">New Lead</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="payment">
+                        <span class="block-icon">💵</span>
+                        <span class="block-name">Payment Received</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="form-submit">
+                        <span class="block-icon">📋</span>
+                        <span class="block-name">Form Submit</span>
+                    </div>
+                    <div class="block-item" draggable="true" data-block="schedule">
+                        <span class="block-icon">⏰</span>
+                        <span class="block-name">Schedule</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center: AI Chat & Visual Builder Tabs -->
+        <main class="editor-main">
+            <div class="editor-mode-tabs">
+                <button class="mode-tab active" data-mode="ai">AI Builder</button>
+                <button class="mode-tab" data-mode="visual">Visual Builder</button>
+                <button class="mode-tab" data-mode="code">Code Editor</button>
+            </div>
+
+            <!-- AI Builder Mode -->
+            <div class="editor-mode" id="ai-mode">
+                <div class="ai-chat-container">
+                    <div class="chat-messages">
+                        <div class="chat-message ai">
+                            <div class="message-avatar">AI</div>
+                            <div class="message-content">
+                                <p>👋 Hi! I'm your AI builder assistant. Tell me what you want to create, and I'll generate the code for you.</p>
+                                <p style="margin-top: 0.5rem;">Try something like: "Build me an app that sends daily sales reports via SMS"</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <textarea class="chat-input" placeholder="Describe what you want to build..." rows="3"></textarea>
+                        <button class="btn-primary" onclick="sendAIMessage()">
+                            Generate Code
+                            <span style="margin-left: 0.5rem;">→</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Builder Mode -->
+            <div class="editor-mode" id="visual-mode" style="display: none;">
+                <div class="visual-builder-container">
+                    <div class="canvas-toolbar">
+                        <button class="toolbar-btn">Undo</button>
+                        <button class="toolbar-btn">Redo</button>
+                        <button class="toolbar-btn">Clear Canvas</button>
+                        <div style="flex: 1;"></div>
+                        <button class="toolbar-btn">Zoom In</button>
+                        <button class="toolbar-btn">Zoom Out</button>
+                    </div>
+                    <div class="visual-canvas" id="workflow-canvas">
+                        <div class="canvas-placeholder">
+                            <h3>Drag blocks from the left to start building</h3>
+                            <p>Connect triggers, actions, and apps to create your workflow</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Editor Mode -->
+            <div class="editor-mode" id="code-mode" style="display: none;">
+                <div class="code-editor-container">
+                    <div class="code-tabs">
+                        <button class="code-tab active">index.html</button>
+                        <button class="code-tab">styles.css</button>
+                        <button class="code-tab">app.js</button>
+                    </div>
+                    <div class="code-editor">
+                        <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;My App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Preview & Logs -->
+        <aside class="editor-right-panel">
+            <div class="panel-tabs">
+                <button class="panel-tab active" data-panel="preview">Preview</button>
+                <button class="panel-tab" data-panel="logs">Logs</button>
+                <button class="panel-tab" data-panel="config">Config</button>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="panel-content" id="preview-panel">
+                <div class="preview-toolbar">
+                    <button class="preview-device-btn active" data-device="desktop">💻</button>
+                    <button class="preview-device-btn" data-device="mobile">📱</button>
+                    <button class="btn-secondary btn-sm">Refresh</button>
+                </div>
+                <div class="preview-frame">
+                    <iframe src="about:blank" title="Preview"></iframe>
+                </div>
+            </div>
+
+            <!-- Logs Panel -->
+            <div class="panel-content" id="logs-panel" style="display: none;">
+                <div class="logs-container">
+                    <div class="log-entry info">
+                        <span class="log-time">14:32:01</span>
+                        <span class="log-message">App initialized</span>
+                    </div>
+                    <div class="log-entry success">
+                        <span class="log-time">14:32:02</span>
+                        <span class="log-message">Connected to CRM API</span>
+                    </div>
+                    <div class="log-entry info">
+                        <span class="log-time">14:32:03</span>
+                        <span class="log-message">Fetching leads...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config Panel -->
+            <div class="panel-content" id="config-panel" style="display: none;">
+                <div class="config-form">
+                    <div class="form-group">
+                        <label>App Name</label>
+                        <input type="text" value="My App" />
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea rows="3">App description...</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Environment Variables</label>
+                        <button class="btn-secondary btn-sm">+ Add Variable</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Bottom Toolbar -->
+    <div class="editor-bottom-toolbar">
+        <div class="toolbar-left">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Ready</span>
+            </div>
+            <span class="toolbar-divider">|</span>
+            <span class="token-counter">
+                Estimated cost: <strong>150 tokens</strong>
+            </span>
+        </div>
+        <div class="toolbar-actions">
+            <button class="btn-outline">Cancel</button>
+            <button class="btn-secondary" onclick="testApp()">
+                <span>🧪</span>
+                Test
+            </button>
+            <button class="btn-primary" onclick="deployApp()">
+                <span>🚀</span>
+                Deploy
+            </button>
+        </div>
+    </div>
+
+    <script src="js/app-data.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/sandbox-editor.js"></script>
+<script src="js/navbar.js"></script>
+</body>
+</html>

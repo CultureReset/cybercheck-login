@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build Your Card - CyberCheck</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+    }
+
+    .builder-container {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      height: 100vh;
+    }
+
+    /* Left Panel - Editor */
+    .editor-panel {
+      background: white;
+      overflow-y: auto;
+      padding: 32px;
+      box-shadow: 2px 0 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .panel-header {
+      margin-bottom: 32px;
+    }
+
+    .panel-title {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .panel-subtitle {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .step-indicator {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .step {
+      flex: 1;
+      height: 4px;
+      background: #e5e7eb;
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    .step.active {
+      background: #667eea;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Template Selection */
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .template-card {
+      padding: 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .template-card:hover {
+      border-color: #667eea;
+    }
+
+    .template-card.selected {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    .template-emoji {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .template-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Color Picker */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .color-option {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+
+    .color-option.selected {
+      border-color: #1a1a1a;
+    }
+
+    /* Link Manager */
+    .link-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .link-icon {
+      font-size: 24px;
+    }
+
+    .link-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+    }
+
+    .remove-link {
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .add-link-btn {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #d1d5db;
+      background: transparent;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .add-link-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    /* Voice Control */
+    .voice-control {
+      position: fixed;
+      bottom: 32px;
+      left: 32px;
+      right: 50%;
+      margin-right: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .voice-control:hover {
+      transform: translateY(-2px);
+    }
+
+    .voice-control.listening {
+      animation: pulse 1.5s infinite;
+    }
+
+    .voice-icon {
+      font-size: 24px;
+    }
+
+    .voice-text {
+      flex: 1;
+      font-weight: 600;
+    }
+
+    /* Right Panel - Preview */
+    .preview-panel {
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      position: relative;
+    }
+
+    .preview-device {
+      width: 375px;
+      height: 667px;
+      background: white;
+      border-radius: 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-content {
+      height: 100%;
+      overflow-y: auto;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+    }
+
+    .preview-profile {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .preview-image {
+      width: 100px;
+      height: 100px;
+      background: white;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .preview-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    .preview-tagline {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .preview-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-link {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .preview-link-icon {
+      font-size: 24px;
+    }
+
+    .preview-link-text {
+      flex: 1;
+      font-weight: 600;
+    }
+
+    /* AI Suggestions */
+    .ai-suggestions {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+      border: 2px solid #10b981;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .ai-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #10b981;
+      margin-bottom: 12px;
+    }
+
+    .ai-suggestion {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ai-text {
+      font-size: 14px;
+    }
+
+    .ai-action {
+      padding: 6px 12px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Save Button */
+    .save-bar {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-save {
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      transition: all 0.3s;
+    }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-preview {
+      padding: 16px 32px;
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-preview:hover {
+      background: #667eea;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="builder-container">
+    <!-- Left Panel - Editor -->
+    <div class="editor-panel">
+      <div class="panel-header">
+        <h1 class="panel-title">Build Your Card</h1>
+        <p class="panel-subtitle">Create a stunning digital business card in minutes</p>
+      </div>
+
+      <div class="step-indicator">
+        <div class="step active"></div>
+        <div class="step active"></div>
+        <div class="step"></div>
+        <div class="step"></div>
+      </div>
+
+      <!-- AI Suggestions -->
+      <div class="ai-suggestions">
+        <div class="ai-title">
+          <span>✨</span>
+          <span>AI Suggestions</span>
+        </div>
+        <div class="ai-suggestion">
+          <span class="ai-text">Add Instagram link to boost engagement</span>
+          <button class="ai-action" onclick="addLink('instagram')">Add</button>
+        </div>
+        <div class="ai-suggestion">
+          <span class="ai-text">Connect Stripe for payment tracking</span>
+          <button class="ai-action" onclick="alert('Opening integrations...')">Connect</button>
+        </div>
+      </div>
+
+      <!-- Template Selection -->
+      <div class="section">
+        <div class="section-title">1. Choose Industry Template</div>
+        <div class="template-grid">
+          <div class="template-card selected" onclick="selectTemplate('restaurant')">
+            <div class="template-emoji">🍕</div>
+            <div class="template-name">Restaurant</div>
+          </div>
+          <div class="template-card" onclick="selectTemplate('charter')">
+            <div class="template-emoji">⚓</div>
+            <div class="template-name">Charter</div>
+          </div>
+          <div class="template-card" onclick="selectTemplate('realtor')">
+            <div class="template-emoji">🏠</div>
+            <div class="template-name">Real Estate</div>
+          </div>
+          <div class="template-card" onclick="selectTemplate('fitness')">
+            <div class="template-emoji">💪</div>
+            <div class="template-name">Fitness</div>
+          </div>
+          <div class="template-card" onclick="selectTemplate('salon')">
+            <div class="template-emoji">💇</div>
+            <div class="template-name">Salon</div>
+          </div>
+          <div class="template-card" onclick="selectTemplate('contractor')">
+            <div class="template-emoji">🔨</div>
+            <div class="template-name">Contractor</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Info -->
+      <div class="section">
+        <div class="section-title">2. Basic Information</div>
+
+        <div class="form-group">
+          <label class="form-label">Business Name *</label>
+          <input type="text" class="form-input" id="businessName" value="Joe's Pizza" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tagline</label>
+          <input type="text" class="form-input" id="tagline" value="Authentic Italian Pizza Since 1985" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Choose Username *</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: #666; font-weight: 600;">cybercheck.io/</span>
+            <input type="text" class="form-input" id="username" value="joespizza" style="flex: 1;" oninput="checkUsername()">
+          </div>
+          <small id="usernameStatus" style="color: #10b981; font-size: 12px; margin-top: 4px; display: block;">✓ Available</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Profile Image/Logo</label>
+          <input type="file" class="form-input" accept="image/*,video/*" onchange="uploadMedia(this)">
+          <small style="color: #666; font-size: 12px;">Upload image or video (max 10MB)</small>
+        </div>
+      </div>
+
+      <!-- Theme/Colors -->
+      <div class="section">
+        <div class="section-title">3. Choose Theme</div>
+        <div class="color-grid">
+          <div class="color-option selected" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);" onclick="selectColor(this)"></div>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="section">
+        <div class="section-title">4. Add Your Links</div>
+
+        <div id="linksList">
+          <div class="link-item">
+            <div class="link-icon">📋</div>
+            <input type="text" class="link-input" placeholder="Menu" value="View Full Menu">
+            <span class="remove-link" onclick="removeLink(this)">×</span>
+          </div>
+          <div class="link-item">
+            <div class="link-icon">🛒</div>
+            <input type="text" class="link-input" placeholder="Order Online" value="Order Online">
+            <span class="remove-link" onclick="removeLink(this)">×</span>
+          </div>
+          <div class="link-item">
+            <div class="link-icon">📞</div>
+            <input type="text" class="link-input" placeholder="Phone" value="Call Us - (555) 123-4567">
+            <span class="remove-link" onclick="removeLink(this)">×</span>
+          </div>
+        </div>
+
+        <button class="add-link-btn" onclick="addNewLink()">+ Add Link</button>
+      </div>
+    </div>
+
+    <!-- Right Panel - Preview -->
+    <div class="preview-panel">
+      <div class="preview-device">
+        <div class="preview-content" id="previewContent">
+          <div class="preview-profile">
+            <div class="preview-image">🍕</div>
+            <div class="preview-name" id="previewName">Joe's Pizza</div>
+            <div class="preview-tagline" id="previewTagline">Authentic Italian Pizza Since 1985</div>
+          </div>
+
+          <div class="preview-links" id="previewLinks">
+            <div class="preview-link">
+              <span class="preview-link-icon">📋</span>
+              <span class="preview-link-text">View Full Menu</span>
+              <span>→</span>
+            </div>
+            <div class="preview-link">
+              <span class="preview-link-icon">🛒</span>
+              <span class="preview-link-text">Order Online</span>
+              <span>→</span>
+            </div>
+            <div class="preview-link">
+              <span class="preview-link-icon">📞</span>
+              <span class="preview-link-text">Call Us - (555) 123-4567</span>
+              <span>→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Control -->
+  <div class="voice-control" onclick="toggleVoice()">
+    <span class="voice-icon">🎤</span>
+    <span class="voice-text">Click to use voice commands</span>
+  </div>
+
+  <!-- Save Bar -->
+  <div class="save-bar">
+    <button class="btn-preview" onclick="previewCard()">👁️ Preview</button>
+    <button class="btn-save" onclick="saveCard()">💾 Save & Publish</button>
+  </div>
+
+  <script>
+    let voiceActive = false;
+    let recognition;
+
+    function updatePreview() {
+      const name = document.getElementById('businessName').value;
+      const tagline = document.getElementById('tagline').value;
+
+      document.getElementById('previewName').textContent = name;
+      document.getElementById('previewTagline').textContent = tagline;
+
+      // Update links
+      const linkItems = document.querySelectorAll('#linksList .link-item');
+      const previewLinks = document.getElementById('previewLinks');
+      previewLinks.innerHTML = '';
+
+      linkItems.forEach(item => {
+        const icon = item.querySelector('.link-icon').textContent;
+        const text = item.querySelector('.link-input').value;
+
+        if (text) {
+          const linkDiv = document.createElement('div');
+          linkDiv.className = 'preview-link';
+          linkDiv.innerHTML = `
+            <span class="preview-link-icon">${icon}</span>
+            <span class="preview-link-text">${text}</span>
+            <span>→</span>
+          `;
+          previewLinks.appendChild(linkDiv);
+        }
+      });
+    }
+
+    function selectTemplate(type) {
+      const cards = document.querySelectorAll('.template-card');
+      cards.forEach(card => card.classList.remove('selected'));
+      event.target.closest('.template-card').classList.add('selected');
+    }
+
+    function selectColor(element) {
+      document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+
+      const gradient = element.style.background;
+      document.getElementById('previewContent').style.background = gradient;
+    }
+
+    function addNewLink() {
+      const linksList = document.getElementById('linksList');
+      const newLink = document.createElement('div');
+      newLink.className = 'link-item';
+      newLink.innerHTML = `
+        <div class="link-icon">🔗</div>
+        <input type="text" class="link-input" placeholder="Link title" oninput="updatePreview()">
+        <span class="remove-link" onclick="removeLink(this)">×</span>
+      `;
+      linksList.appendChild(newLink);
+    }
+
+    function removeLink(element) {
+      element.closest('.link-item').remove();
+      updatePreview();
+    }
+
+    function addLink(type) {
+      const icons = {
+        instagram: '📸',
+        facebook: '📘',
+        twitter: '🐦',
+        linkedin: '💼'
+      };
+
+      const linksList = document.getElementById('linksList');
+      const newLink = document.createElement('div');
+      newLink.className = 'link-item';
+      newLink.innerHTML = `
+        <div class="link-icon">${icons[type]}</div>
+        <input type="text" class="link-input" placeholder="${type.charAt(0).toUpperCase() + type.slice(1)}" value="${type.charAt(0).toUpperCase() + type.slice(1)}" oninput="updatePreview()">
+        <span class="remove-link" onclick="removeLink(this)">×</span>
+      `;
+      linksList.appendChild(newLink);
+      updatePreview();
+    }
+
+    function checkUsername() {
+      const username = document.getElementById('username').value;
+      const status = document.getElementById('usernameStatus');
+
+      if (username.length < 3) {
+        status.textContent = '⚠ Too short';
+        status.style.color = '#f59e0b';
+      } else if (/[^a-z0-9-]/.test(username)) {
+        status.textContent = '⚠ Only lowercase letters, numbers, and dashes';
+        status.style.color = '#ef4444';
+      } else {
+        status.textContent = '✓ Available';
+        status.style.color = '#10b981';
+      }
+    }
+
+    function uploadMedia(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        alert('Uploading ' + file.name + '...\nThis will be your profile image/video.');
+      }
+    }
+
+    function toggleVoice() {
+      const btn = document.querySelector('.voice-control');
+
+      if (!voiceActive) {
+        startVoice();
+        btn.classList.add('listening');
+        btn.querySelector('.voice-text').textContent = 'Listening... Try "add instagram link"';
+      } else {
+        stopVoice();
+        btn.classList.remove('listening');
+        btn.querySelector('.voice-text').textContent = 'Click to use voice commands';
+      }
+    }
+
+    function startVoice() {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          console.log('Voice:', transcript);
+
+          if (transcript.includes('add') && transcript.includes('instagram')) {
+            addLink('instagram');
+          } else if (transcript.includes('change business name to')) {
+            const name = transcript.split('change business name to')[1].trim();
+            document.getElementById('businessName').value = name;
+            updatePreview();
+          } else if (transcript.includes('add link')) {
+            addNewLink();
+          }
+        };
+
+        recognition.start();
+        voiceActive = true;
+      } else {
+        alert('Voice recognition not supported');
+      }
+    }
+
+    function stopVoice() {
+      if (recognition) {
+        recognition.stop();
+        voiceActive = false;
+      }
+    }
+
+    function previewCard() {
+      alert('Opening live preview in new window...');
+    }
+
+    function saveCard() {
+      const cardData = {
+        businessName: document.getElementById('businessName').value,
+        tagline: document.getElementById('tagline').value,
+        username: document.getElementById('username').value,
+        links: []
+      };
+
+      document.querySelectorAll('#linksList .link-item').forEach(item => {
+        const icon = item.querySelector('.link-icon').textContent;
+        const text = item.querySelector('.link-input').value;
+        if (text) {
+          cardData.links.push({ icon, text });
+        }
+      });
+
+      console.log('Saving card:', cardData);
+      alert('Card saved! You can now share: cybercheck.io/' + cardData.username);
+    }
+
+    // Initialize
+    updatePreview();
+  </script>
+</body>
+</html>

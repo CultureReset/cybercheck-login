@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gulf Adventure Charters - Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      color: white;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .business-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    .nav-item.active {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 32px;
+      color: #1a1a1a;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #e0e0e0;
+    }
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .stat-change {
+      font-size: 14px;
+      color: #10b981;
+      font-weight: 600;
+    }
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .widget {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #e0e0e0;
+    }
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .widget-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .widget-source {
+      font-size: 12px;
+      color: #999;
+      background: #f0f0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .calendar-day.header {
+      color: #666;
+      font-size: 12px;
+      cursor: default;
+    }
+    .calendar-day.booked {
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      color: white;
+    }
+    .calendar-day:not(.header):not(.booked):hover {
+      background: #f0f0f0;
+    }
+    .weather-card {
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .weather-icon {
+      font-size: 64px;
+      margin-bottom: 12px;
+    }
+    .weather-temp {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .weather-desc {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    .booking-item {
+      padding: 16px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .booking-item:last-child {
+      border-bottom: none;
+    }
+    .booking-info {
+      flex: 1;
+    }
+    .booking-name {
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .booking-details {
+      font-size: 14px;
+      color: #666;
+    }
+    .booking-status {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-confirmed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    @media (max-width: 1200px) {
+      .widgets-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="sidebar">
+    <div class="logo">🔐 CyberCheck</div>
+    <div class="business-name">⚓ Gulf Adventure Charters</div>
+
+    <a href="#" class="nav-item active">
+      <span>📊</span> Dashboard
+    </a>
+    <a href="ai-chat.html" class="nav-item">
+      <span>🤖</span> AI Assistant
+    </a>
+    <a href="automation-builder.html" class="nav-item">
+      <span>⚡</span> Automations
+    </a>
+    <a href="connection-manager.html" class="nav-item">
+      <span>🔌</span> Connections
+    </a>
+    <a href="settings.html" class="nav-item">
+      <span>⚙️</span> Settings
+    </a>
+
+    <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.2);">
+      <a href="#" class="nav-item">
+        <span>👤</span> Captain Mike
+      </a>
+      <a href="login.html" class="nav-item">
+        <span>🚪</span> Logout
+      </a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>Dashboard</h1>
+        <p style="color: #666;">Welcome back, Captain! Here's today's overview.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="window.location.href='ai-chat.html'">
+          🤖 Ask AI
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">💳 Monthly Revenue (Stripe)</div>
+        <div class="stat-value">$18,450</div>
+        <div class="stat-change">↑ 18% from last month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📅 Bookings This Week</div>
+        <div class="stat-value">14</div>
+        <div class="stat-change">↑ 6 from last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">💬 Customer Messages</div>
+        <div class="stat-value">23</div>
+        <div class="stat-change">5 unread</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⭐ Average Rating</div>
+        <div class="stat-value">4.9</div>
+        <div class="stat-change">From 47 reviews</div>
+      </div>
+    </div>
+
+    <!-- Widgets -->
+    <div class="widgets-grid">
+      <!-- Calendar -->
+      <div class="widget">
+        <div class="widget-header">
+          <div class="widget-title">
+            📅 Booking Calendar - December 2024
+          </div>
+          <div class="widget-source">Google Calendar</div>
+        </div>
+        <div class="calendar">
+          <div class="calendar-day header">Sun</div>
+          <div class="calendar-day header">Mon</div>
+          <div class="calendar-day header">Tue</div>
+          <div class="calendar-day header">Wed</div>
+          <div class="calendar-day header">Thu</div>
+          <div class="calendar-day header">Fri</div>
+          <div class="calendar-day header">Sat</div>
+
+          <div class="calendar-day">1</div>
+          <div class="calendar-day booked">2</div>
+          <div class="calendar-day">3</div>
+          <div class="calendar-day booked">4</div>
+          <div class="calendar-day">5</div>
+          <div class="calendar-day booked">6</div>
+          <div class="calendar-day booked">7</div>
+
+          <div class="calendar-day">8</div>
+          <div class="calendar-day">9</div>
+          <div class="calendar-day booked">10</div>
+          <div class="calendar-day">11</div>
+          <div class="calendar-day booked">12</div>
+          <div class="calendar-day booked">13</div>
+          <div class="calendar-day booked">14</div>
+
+          <div class="calendar-day">15</div>
+          <div class="calendar-day booked">16</div>
+          <div class="calendar-day">17</div>
+          <div class="calendar-day">18</div>
+          <div class="calendar-day booked">19</div>
+          <div class="calendar-day booked">20</div>
+          <div class="calendar-day booked">21</div>
+        </div>
+      </div>
+
+      <!-- Weather -->
+      <div class="weather-card">
+        <div class="weather-icon">☀️</div>
+        <div class="weather-temp">78°F</div>
+        <div class="weather-desc">Sunny & Clear</div>
+        <div style="margin-top: 16px; opacity: 0.9;">
+          Perfect conditions for fishing!
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Bookings -->
+    <div class="widget" style="margin-bottom: 24px;">
+      <div class="widget-header">
+        <div class="widget-title">
+          🎣 Today's Charters
+        </div>
+        <div class="widget-source">Google Calendar</div>
+      </div>
+      <div>
+        <div class="booking-item">
+          <div class="booking-info">
+            <div class="booking-name">Johnson Family - Deep Sea Fishing</div>
+            <div class="booking-details">6:00 AM - 12:00 PM • 4 guests • $850</div>
+          </div>
+          <div class="booking-status status-confirmed">Confirmed</div>
+        </div>
+        <div class="booking-item">
+          <div class="booking-info">
+            <div class="booking-name">Mike & Sarah - Sunset Cruise</div>
+            <div class="booking-details">5:00 PM - 7:30 PM • 2 guests • $450</div>
+          </div>
+          <div class="booking-status status-confirmed">Confirmed</div>
+        </div>
+        <div class="booking-item">
+          <div class="booking-info">
+            <div class="booking-name">Bachelor Party - Half Day Charter</div>
+            <div class="booking-details">1:00 PM - 5:00 PM • 6 guests • $1,200</div>
+          </div>
+          <div class="booking-status status-pending">Pending Payment</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Messages -->
+    <div class="widget">
+      <div class="widget-header">
+        <div class="widget-title">
+          💬 Recent Customer Messages
+        </div>
+        <div class="widget-source">Twilio SMS</div>
+      </div>
+      <div>
+        <div class="booking-item">
+          <div class="booking-info">
+            <div class="booking-name">John Smith • (251) 555-0123</div>
+            <div class="booking-details">"Can we bring our own cooler?" • 15 min ago</div>
+          </div>
+          <button class="btn" style="background: #f0f0f0; padding: 8px 16px;">Reply</button>
+        </div>
+        <div class="booking-item">
+          <div class="booking-info">
+            <div class="booking-name">Emily Davis • (251) 555-0456</div>
+            <div class="booking-details">"What time should we arrive?" • 1 hour ago</div>
+          </div>
+          <button class="btn" style="background: #f0f0f0; padding: 8px 16px;">Reply</button>
+        </div>
+        <div class="booking-item">
+          <div class="booking-info">
+            <div class="booking-name">Mike Johnson • (251) 555-0789</div>
+            <div class="booking-details">"Thanks for the great trip!" • 3 hours ago</div>
+          </div>
+          <button class="btn" style="background: #f0f0f0; padding: 8px 16px;">Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

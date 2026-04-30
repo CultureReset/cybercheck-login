@@ -1,103 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy — CyberCheck</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.7; }
-    .header { background: #1e293b; border-bottom: 1px solid #334155; padding: 18px 24px; display: flex; align-items: center; gap: 12px; }
-    .header .logo { font-size: 20px; font-weight: 700; color: #3b82f6; letter-spacing: -0.5px; }
-    .header .logo span { color: #e2e8f0; }
-    .container { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
-    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-    .meta { color: #94a3b8; font-size: 14px; margin-bottom: 40px; }
-    h2 { font-size: 1.15rem; font-weight: 600; color: #93c5fd; margin: 36px 0 12px; }
-    p { color: #cbd5e1; margin-bottom: 14px; }
-    ul { color: #cbd5e1; padding-left: 20px; margin-bottom: 14px; }
-    ul li { margin-bottom: 6px; }
-    a { color: #3b82f6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .highlight { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px 24px; margin: 24px 0; }
-    .highlight p { margin: 0; }
-    footer { text-align: center; color: #475569; font-size: 13px; padding: 32px 24px; border-top: 1px solid #1e293b; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
 
-<div class="header">
-  <div class="logo">Cyber<span>Check</span></div>
-</div>
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
 
-<div class="container">
-  <h1>Privacy Policy</h1>
-  <p class="meta">Effective Date: March 23, 2026 &nbsp;·&nbsp; Last Updated: March 23, 2026</p>
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
 
-  <p>This Privacy Policy applies to CyberCheck and all businesses and platforms operating on the CyberCheck platform, including Gulf Coast Radar (GCR) and individual business websites powered by CyberCheck. It explains how we collect, use, and protect your information.</p>
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
 
-  <h2>1. Information We Collect</h2>
-  <ul>
-    <li>Name, email address, and phone number provided during booking, signup, or contact form submission</li>
-    <li>Booking details including date, time, and service selections</li>
-    <li>SMS opt-in consent status</li>
-    <li>Travel preferences and interests provided during GCR tourist registration</li>
-    <li>Device and usage data collected automatically (browser type, IP address, pages visited)</li>
-  </ul>
+    <div class="legal-container">
+        <div class="legal-sidebar">
+            <h3>Legal</h3>
+            <a href="terms.html">Terms of Service</a>
+            <a href="privacy.html" class="active">Privacy Policy</a>
+        </div>
 
-  <h2>2. How We Use Your Information</h2>
-  <ul>
-    <li>To process and confirm bookings made through CyberCheck-powered websites</li>
-    <li>To send transactional SMS messages including booking confirmations, reminders, and updates — only with your explicit consent</li>
-    <li>To send a welcome SMS and personalized local recommendations to tourists who register on Gulf Coast Radar</li>
-    <li>To notify business owners of new bookings and contact form submissions</li>
-    <li>To respond to inquiries submitted through contact forms</li>
-    <li>To improve platform services and user experience</li>
-  </ul>
+        <div class="legal-content">
+            <h1>Privacy Policy</h1>
+            <p class="last-updated">Last updated: January 24, 2024</p>
 
-  <h2>3. SMS Communications</h2>
-  <div class="highlight">
-    <p>By providing your phone number and checking the opt-in box during booking or registration, you consent to receive SMS messages. Message and data rates may apply. Message frequency varies. You may opt out at any time by replying <strong>STOP</strong>. For help, reply <strong>HELP</strong>.</p>
-  </div>
-  <p>SMS messages are sent via Twilio. We do not share your phone number with third parties for marketing or advertising purposes. Your phone number is used solely to deliver the messages you consented to receive.</p>
+            <section class="legal-section">
+                <h2>Our Commitment to Privacy</h2>
+                <p>At Ghost Marketplace, we believe in radical transparency. This includes how we handle your data. We collect only what we need, store it securely, and never sell your information.</p>
+                <p><strong>TL;DR:</strong> We're not in the data business. We're in the automation business. Your data stays yours.</p>
+            </section>
 
-  <h2>4. Third-Party Services</h2>
-  <p>We use trusted third-party services to operate the platform:</p>
-  <ul>
-    <li><strong>Twilio</strong> — SMS delivery</li>
-    <li><strong>Stripe</strong> — Payment processing</li>
-    <li><strong>Supabase</strong> — Secure data storage</li>
-  </ul>
-  <p>These providers access your data only as necessary to perform their services and are bound by their own privacy policies. We do not sell or share your personal information with any third party for marketing, advertising, or any other commercial purpose.</p>
+            <section class="legal-section">
+                <h2>1. Information We Collect</h2>
 
-  <h2>5. Data Retention</h2>
-  <p>We retain your personal information for as long as necessary to provide services, comply with legal obligations, and resolve disputes. You may request deletion of your data at any time by contacting us.</p>
+                <h3>Information You Provide:</h3>
+                <ul>
+                    <li><strong>Account Information:</strong> Name, email address, password</li>
+                    <li><strong>Payment Information:</strong> Processed by Stripe - we never store card numbers</li>
+                    <li><strong>Profile Data:</strong> Optional bio, company name, profile picture</li>
+                    <li><strong>Content You Create:</strong> Apps, workflows, code you build in the sandbox</li>
+                </ul>
 
-  <h2>6. Your Rights</h2>
-  <ul>
-    <li>Request access to the personal data we hold about you</li>
-    <li>Request correction or deletion of your data</li>
-    <li>Opt out of SMS communications at any time by replying STOP</li>
-    <li>Contact us with any privacy concerns</li>
-  </ul>
+                <h3>Automatically Collected:</h3>
+                <ul>
+                    <li><strong>Usage Data:</strong> Pages visited, features used, tokens consumed</li>
+                    <li><strong>Device Information:</strong> Browser type, IP address, device type</li>
+                    <li><strong>Log Data:</strong> API calls, errors, performance metrics</li>
+                    <li><strong>Cookies:</strong> Session management and preferences</li>
+                </ul>
+            </section>
 
-  <h2>7. Children's Privacy</h2>
-  <p>Our services are not directed to children under 13. We do not knowingly collect personal information from children under 13.</p>
+            <section class="legal-section">
+                <h2>2. How We Use Your Information</h2>
+                <p>We use your information to:</p>
+                <ul>
+                    <li><strong>Provide the Service:</strong> Process your requests, run your apps, calculate token usage</li>
+                    <li><strong>Billing:</strong> Charge for token usage and process payments</li>
+                    <li><strong>Communication:</strong> Send service updates, billing notifications, and support responses</li>
+                    <li><strong>Improve the Platform:</strong> Analyze usage patterns to make the service better</li>
+                    <li><strong>Security:</strong> Detect fraud, prevent abuse, protect user accounts</li>
+                    <li><strong>Legal Compliance:</strong> Comply with applicable laws and regulations</li>
+                </ul>
+                <p><strong>We do NOT:</strong></p>
+                <ul>
+                    <li>Sell your personal information to anyone</li>
+                    <li>Use your data to train AI models (your code stays yours)</li>
+                    <li>Share your information with advertisers</li>
+                    <li>Track you across other websites</li>
+                </ul>
+            </section>
 
-  <h2>8. Changes to This Policy</h2>
-  <p>We may update this policy from time to time. The effective date at the top of this page will reflect the most recent update. Continued use of our services after changes constitutes acceptance of the updated policy.</p>
+            <section class="legal-section">
+                <h2>3. Information Sharing</h2>
+                <p>We share your information only in these limited circumstances:</p>
 
-  <h2>9. Contact Us</h2>
-  <p>If you have questions about this Privacy Policy or your data, contact us at:</p>
-  <ul>
-    <li>Email: <a href="mailto:support@cybercheck.app">support@cybercheck.app</a></li>
-    <li>Website: <a href="https://cybercheck-login.vercel.app">cybercheck-login.vercel.app</a></li>
-  </ul>
-</div>
+                <h3>Service Providers:</h3>
+                <ul>
+                    <li><strong>Stripe:</strong> Payment processing</li>
+                    <li><strong>AWS:</strong> Cloud infrastructure and hosting</li>
+                    <li><strong>OpenAI/Anthropic:</strong> AI model API calls (only when you use AI features)</li>
+                    <li><strong>Twilio:</strong> Voice and SMS services</li>
+                </ul>
+                <p>These providers are contractually obligated to protect your data.</p>
 
-<footer>
-  &copy; 2026 CyberCheck. All rights reserved.
-</footer>
+                <h3>Legal Requirements:</h3>
+                <p>We may disclose information if required by law, subpoena, or to protect our rights or the safety of others.</p>
 
+                <h3>Business Transfers:</h3>
+                <p>If Ghost Marketplace is acquired, your data may transfer to the new owner. We'll notify you beforehand.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>4. Data Retention</h2>
+                <ul>
+                    <li><strong>Active Accounts:</strong> We retain your data as long as your account is active</li>
+                    <li><strong>Deleted Accounts:</strong> Data is permanently deleted 30 days after account deletion</li>
+                    <li><strong>Backups:</strong> Backup data is deleted within 90 days</li>
+                    <li><strong>Legal Requirements:</strong> Some data (billing records) may be retained longer for legal compliance</li>
+                </ul>
+            </section>
+
+            <section class="legal-section">
+                <h2>5. Your Rights</h2>
+                <p>You have the following rights regarding your data:</p>
+
+                <h3>Access:</h3>
+                <p>Request a copy of all data we have about you.</p>
+
+                <h3>Portability:</h3>
+                <p>Export your data in machine-readable format (JSON) at any time from your dashboard.</p>
+
+                <h3>Correction:</h3>
+                <p>Update or correct your personal information through your account settings.</p>
+
+                <h3>Deletion:</h3>
+                <p>Delete your account and all associated data. This is permanent and cannot be undone.</p>
+
+                <h3>Objection:</h3>
+                <p>Object to certain processing activities. Contact privacy@ghost.app.</p>
+
+                <h3>How to Exercise Your Rights:</h3>
+                <ul>
+                    <li><strong>Account Settings:</strong> <a href="profile.html">profile.html</a></li>
+                    <li><strong>Data Export:</strong> Available in account settings</li>
+                    <li><strong>Account Deletion:</strong> Available in account settings under "Danger Zone"</li>
+                    <li><strong>Email Us:</strong> privacy@ghost.app</li>
+                </ul>
+            </section>
+
+            <section class="legal-section">
+                <h2>6. Data Security</h2>
+                <p>We take security seriously:</p>
+                <ul>
+                    <li><strong>Encryption:</strong> Data encrypted in transit (TLS 1.3) and at rest (AES-256)</li>
+                    <li><strong>Access Controls:</strong> Strict employee access policies and two-factor authentication</li>
+                    <li><strong>Monitoring:</strong> 24/7 security monitoring and intrusion detection</li>
+                    <li><strong>Audits:</strong> Regular security audits and penetration testing</li>
+                    <li><strong>Compliance:</strong> SOC 2 Type II certified (in progress)</li>
+                </ul>
+                <p>However, no method of transmission over the internet is 100% secure. We cannot guarantee absolute security.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>7. Cookies & Tracking</h2>
+                <p>We use cookies for:</p>
+                <ul>
+                    <li><strong>Essential:</strong> Login sessions, security (required)</li>
+                    <li><strong>Preferences:</strong> Dark mode, language, dashboard settings</li>
+                    <li><strong>Analytics:</strong> Understand how you use the platform (can be disabled)</li>
+                </ul>
+                <p>You can disable non-essential cookies in your browser settings.</p>
+                <p><strong>We do NOT use:</strong></p>
+                <ul>
+                    <li>Third-party advertising cookies</li>
+                    <li>Cross-site tracking</li>
+                    <li>Social media pixels</li>
+                </ul>
+            </section>
+
+            <section class="legal-section">
+                <h2>8. Third-Party Services</h2>
+                <p>When you connect third-party apps (Stripe, Gmail, CRM, etc.), you're granting those services access to your data according to their privacy policies. We recommend reviewing their policies.</p>
+                <p>We only access third-party data with your explicit permission via OAuth.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>9. Children's Privacy</h2>
+                <p>Ghost Marketplace is not intended for users under 13 years old. We do not knowingly collect information from children. If you believe a child has provided us with personal information, contact privacy@ghost.app.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>10. International Data Transfers</h2>
+                <p>Your data is primarily stored in the United States (AWS us-east-1). If you're accessing from outside the US, your information may be transferred to and processed in the US.</p>
+                <p>For EU users: We comply with GDPR requirements for international data transfers.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>11. Changes to Privacy Policy</h2>
+                <p>We may update this policy from time to time. We'll notify you of material changes via:</p>
+                <ul>
+                    <li>Email notification</li>
+                    <li>In-app notification</li>
+                    <li>Notice on this page</li>
+                </ul>
+                <p>Continued use after changes constitutes acceptance.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>12. Contact Us</h2>
+                <p>Questions about this Privacy Policy? We're here to help:</p>
+                <ul>
+                    <li><strong>Privacy Team:</strong> privacy@ghost.app</li>
+                    <li><strong>Support:</strong> <a href="contact.html">Contact Page</a></li>
+                    <li><strong>Data Protection Officer:</strong> dpo@ghost.app</li>
+                </ul>
+            </section>
+
+            <section class="legal-section">
+                <h2>13. Specific Regional Rights</h2>
+
+                <h3>California Residents (CCPA):</h3>
+                <p>You have the right to know what personal information we collect, use, and share. You can request deletion and opt-out of sale (though we don't sell your data).</p>
+
+                <h3>EU/UK Residents (GDPR):</h3>
+                <p>You have additional rights including data portability, right to be forgotten, and the right to lodge a complaint with your supervisory authority.</p>
+
+                <h3>Other Jurisdictions:</h3>
+                <p>We respect privacy rights in all jurisdictions. Contact us to exercise your rights under local laws.</p>
+            </section>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <a href="pricing.html">Pricing</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="changelog.html">Changelog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Developers</h4>
+                <a href="developer-dashboard.html">Developer Portal</a>
+                <a href="api-documentation.html">API Docs</a>
+                <a href="help-center.html">Help Center</a>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="status.html">Status</a>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <a href="terms.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Ghost Marketplace. The Power Company of AI.</p>
+        </div>
+    </footer>
+
+    <style>
+        .legal-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            gap: 3rem;
+        }
+
+        .legal-sidebar {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .legal-sidebar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .legal-sidebar a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .legal-sidebar a:hover {
+            background: var(--bg-tertiary);
+            color: var(--text);
+        }
+
+        .legal-sidebar a.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .legal-content {
+            max-width: 900px;
+        }
+
+        .legal-content h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .last-updated {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .legal-section {
+            margin-bottom: 3rem;
+        }
+
+        .legal-section h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .legal-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .legal-section p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .legal-section ul {
+            list-style: disc;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+
+        .legal-section li {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .legal-section a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .legal-section a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .footer-section a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .legal-container {
+                grid-template-columns: 1fr;
+            }
+
+            .legal-sidebar {
+                position: static;
+            }
+
+            .legal-content h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+<script src="js/navbar.js"></script>
 </body>
 </html>

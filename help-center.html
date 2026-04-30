@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Center - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
+
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="help-hero">
+        <div class="container">
+            <h1>How can we help?</h1>
+            <div class="hero-search">
+                <input type="text" placeholder="Search for answers..." class="search-large">
+                <button class="btn-search">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="help-container">
+        <div class="container">
+            <!-- Popular Articles -->
+            <section class="help-section">
+                <h2>Popular Articles</h2>
+                <div class="articles-grid">
+                    <a href="#" class="article-card">
+                        <div class="article-icon">🚀</div>
+                        <h3>Getting Started Guide</h3>
+                        <p>Learn the basics of Ghost Marketplace and build your first automation</p>
+                    </a>
+                    <a href="#" class="article-card">
+                        <div class="article-icon">⚡</div>
+                        <h3>Understanding Tokens</h3>
+                        <p>How our pay-as-you-go pricing works and how to estimate costs</p>
+                    </a>
+                    <a href="#" class="article-card">
+                        <div class="article-icon">🔗</div>
+                        <h3>Connecting Your First App</h3>
+                        <p>Step-by-step guide to connect apps like CRM, Gmail, and Stripe</p>
+                    </a>
+                    <a href="#" class="article-card">
+                        <div class="article-icon">🎤</div>
+                        <h3>Voice Commands Setup</h3>
+                        <p>Configure voice commands and integrate with your phone</p>
+                    </a>
+                    <a href="#" class="article-card">
+                        <div class="article-icon">🛠️</div>
+                        <h3>Building in the Sandbox</h3>
+                        <p>Use AI, visual builder, or code to create custom apps</p>
+                    </a>
+                    <a href="#" class="article-card">
+                        <div class="article-icon">💰</div>
+                        <h3>Developer Revenue Sharing</h3>
+                        <p>Publish apps and earn 70% revenue from your creations</p>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Categories -->
+            <section class="help-section">
+                <h2>Browse by Category</h2>
+                <div class="categories-grid">
+                    <div class="category-card">
+                        <div class="category-icon">📚</div>
+                        <h3>Getting Started</h3>
+                        <ul>
+                            <li><a href="#">Create your account</a></li>
+                            <li><a href="#">Buy your first tokens</a></li>
+                            <li><a href="#">Connect an app</a></li>
+                            <li><a href="#">Run your first automation</a></li>
+                            <li><a href="#">Understanding the dashboard</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 12 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">🔌</div>
+                        <h3>Apps & Integrations</h3>
+                        <ul>
+                            <li><a href="#">Browse the marketplace</a></li>
+                            <li><a href="#">Install and configure apps</a></li>
+                            <li><a href="#">OAuth authentication</a></li>
+                            <li><a href="#">Manage app permissions</a></li>
+                            <li><a href="#">Troubleshooting connections</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 18 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">⚡</div>
+                        <h3>Workflows & Automation</h3>
+                        <ul>
+                            <li><a href="#">Create your first workflow</a></li>
+                            <li><a href="#">Use templates</a></li>
+                            <li><a href="#">Visual builder guide</a></li>
+                            <li><a href="#">Testing workflows</a></li>
+                            <li><a href="#">Workflow best practices</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 24 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">🎤</div>
+                        <h3>Voice Commands</h3>
+                        <ul>
+                            <li><a href="#">Setup voice recognition</a></li>
+                            <li><a href="#">Custom wake words</a></li>
+                            <li><a href="#">Phone integration</a></li>
+                            <li><a href="#">Voice command examples</a></li>
+                            <li><a href="#">Troubleshooting voice</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 15 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">🛠️</div>
+                        <h3>Sandbox & Building</h3>
+                        <ul>
+                            <li><a href="#">AI builder tutorial</a></li>
+                            <li><a href="#">Visual builder vs code mode</a></li>
+                            <li><a href="#">Testing your app</a></li>
+                            <li><a href="#">Deploying to production</a></li>
+                            <li><a href="#">Publishing to marketplace</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 21 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">💳</div>
+                        <h3>Billing & Tokens</h3>
+                        <ul>
+                            <li><a href="#">How token pricing works</a></li>
+                            <li><a href="#">Buy token packages</a></li>
+                            <li><a href="#">Token usage tracking</a></li>
+                            <li><a href="#">Refund policy</a></li>
+                            <li><a href="#">Invoice and receipts</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 14 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">💻</div>
+                        <h3>Developer Resources</h3>
+                        <ul>
+                            <li><a href="#">API documentation</a></li>
+                            <li><a href="#">Webhooks setup</a></li>
+                            <li><a href="#">API keys management</a></li>
+                            <li><a href="#">Rate limits</a></li>
+                            <li><a href="#">Publishing apps guide</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 28 articles →</a>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-icon">👥</div>
+                        <h3>Account & Settings</h3>
+                        <ul>
+                            <li><a href="#">Update profile</a></li>
+                            <li><a href="#">Security settings</a></li>
+                            <li><a href="#">Team management</a></li>
+                            <li><a href="#">Export your data</a></li>
+                            <li><a href="#">Delete account</a></li>
+                        </ul>
+                        <a href="#" class="view-all">View all 16 articles →</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section class="help-section faq-section">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h4>What is the Power Company model?</h4>
+                        <p>We operate like your power company - you only pay for what you use. No monthly subscriptions. We show you exactly what AI services cost us, add our 20% markup, and that's what you pay. Complete transparency.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>How much do tokens cost?</h4>
+                        <p>Tokens start at $0.001 each. A voice command costs 5 tokens ($0.005), API call costs 2 tokens ($0.002), building an app costs 50-500 tokens. Most users spend $20-50/month. See our <a href="pricing.html">pricing page</a> for details.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>Do tokens expire?</h4>
+                        <p>No! Purchased tokens never expire. Use them whenever you want.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>Can I get a refund?</h4>
+                        <p>Yes, unused tokens are eligible for refund within 30 days of purchase.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>What apps can I connect?</h4>
+                        <p>We have 200+ apps including CRM, Gmail, Stripe, Twilio, Slack, and more. Browse our <a href="integrations.html">integrations catalog</a>.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>How do I build custom apps?</h4>
+                        <p>Use our Sandbox editor with three modes: AI Builder (chat to generate code), Visual Builder (drag-and-drop), or Code Editor (write manually). Deploy with one click.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>Can I publish apps and make money?</h4>
+                        <p>Yes! Publish your apps on our marketplace and earn 70% of revenue. We handle billing, hosting, and support.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h4>Is there an API?</h4>
+                        <p>Yes, full REST API with webhooks. See our <a href="api-documentation.html">API documentation</a>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Support -->
+            <section class="support-cta">
+                <h2>Still need help?</h2>
+                <p>Our support team is here to assist you</p>
+                <div class="support-options">
+                    <a href="contact.html" class="support-card">
+                        <div class="support-icon">💬</div>
+                        <h3>Live Chat</h3>
+                        <p>Chat with our team</p>
+                    </a>
+                    <a href="mailto:support@ghost.app" class="support-card">
+                        <div class="support-icon">📧</div>
+                        <h3>Email Support</h3>
+                        <p>support@ghost.app</p>
+                    </a>
+                    <a href="status.html" class="support-card">
+                        <div class="support-icon">📊</div>
+                        <h3>System Status</h3>
+                        <p>Check uptime</p>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <a href="pricing.html">Pricing</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="changelog.html">Changelog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Developers</h4>
+                <a href="developer-dashboard.html">Developer Portal</a>
+                <a href="api-documentation.html">API Docs</a>
+                <a href="help-center.html">Help Center</a>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="status.html">Status</a>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <a href="terms.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Ghost Marketplace. The Power Company of AI.</p>
+        </div>
+    </footer>
+
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .help-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .help-hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .hero-search {
+            display: flex;
+            gap: 1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .search-large {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .btn-search {
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .help-container {
+            padding: 4rem 0;
+        }
+
+        .help-section {
+            margin-bottom: 5rem;
+        }
+
+        .help-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 2rem;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .article-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .article-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .article-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .article-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .category-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .category-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .category-card ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+
+        .category-card li {
+            margin-bottom: 0.5rem;
+        }
+
+        .category-card a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .category-card a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .view-all {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+        .faq-section {
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .faq-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .faq-item h4 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        .faq-item p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .faq-item a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .faq-item a:hover {
+            text-decoration: underline;
+        }
+
+        .support-cta {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+        }
+
+        .support-cta h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .support-cta p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .support-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .support-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .support-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .support-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .support-card h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .support-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .footer-section a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .help-hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-search {
+                flex-direction: column;
+            }
+
+            .articles-grid,
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<script src="js/navbar.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installed Apps - CyberCheck</title>
+  <link rel="stylesheet" href="../../packages/css/core.css">
+  <style>
+    body{background:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif}
+    .container{max-width:1200px;margin:0 auto;padding:32px 24px}
+    h1{font-size:32px;margin-bottom:32px}
+    .apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px}
+    .app-card{background:#fff;border-radius:12px;padding:24px;border:2px solid #e0e0e0}
+    .app-card.active{border-color:#10b981;background:#f0fdf4}
+    .app-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .app-icon{font-size:36px}
+    .app-title{font-size:18px;font-weight:600}
+    .app-desc{color:#666;font-size:14px;margin-bottom:16px;line-height:1.5}
+    .app-status{display:flex;gap:16px;margin-bottom:16px;font-size:13px}
+    .status-item{display:flex;align-items:center;gap:6px}
+    .status-dot{width:8px;height:8px;border-radius:50%}
+    .status-dot.active{background:#10b981}
+    .status-dot.inactive{background:#ef4444}
+    .app-actions{display:flex;gap:8px}
+    .btn{padding:10px 16px;border-radius:8px;border:none;font-weight:600;cursor:pointer;font-size:14px}
+    .btn-edit{background:#667eea;color:#fff}
+    .btn-edit:hover{background:#5568d3}
+    .btn-uninstall{background:#fff;border:2px solid #ef4444;color:#ef4444}
+    .btn-uninstall:hover{background:#fef2f2}
+    .empty{text-align:center;padding:60px 20px;color:#666}
+    .empty-icon{font-size:64px;margin-bottom:16px;opacity:0.3}
+    .btn-primary{display:inline-block;margin-top:16px;padding:12px 24px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;border-radius:8px;font-weight:600}
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+
+  <div class="container saas-content">
+    <h1>📦 Installed Apps</h1>
+    <div class="apps-grid" id="appsGrid">
+      <div style="text-align:center;padding:40px;grid-column:1/-1">
+        <p>Loading...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../packages/ui-kit/components/communication-buttons.html"></script>
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    const installedApps = [
+      {id:'crm',name:'CRM & Contacts',icon:'📞',desc:'Manage your customer database',active:true},
+      {id:'booking',name:'Booking System',icon:'📅',desc:'Let customers book appointments',active:true},
+      {id:'messaging',name:'Messages',icon:'💬',desc:'Send SMS and emails',active:true},
+      {id:'analytics',name:'Analytics',icon:'📈',desc:'View business insights',active:true},
+      {id:'loyalty',name:'Loyalty Program',icon:'🎁',desc:'Reward repeat customers',active:false}
+    ];
+
+    function renderApps() {
+      const grid = document.getElementById('appsGrid');
+      
+      if (installedApps.length === 0) {
+        grid.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📦</div>
+            <h3>No Apps Installed</h3>
+            <p>Install apps from the marketplace to get started</p>
+            <a href="tool-selection.html" class="btn-primary">Browse Apps</a>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = installedApps.map(app => `
+        <div class="app-card ${app.active ? 'active' : ''}">
+          <div class="app-header">
+            <div class="app-icon">${app.icon}</div>
+            <div class="app-title">${app.name}</div>
+          </div>
+          <div class="app-desc">${app.desc}</div>
+          <div class="app-status">
+            <div class="status-item">
+              <div class="status-dot ${app.active ? 'active' : 'inactive'}"></div>
+              <span>${app.active ? 'Active' : 'Inactive'}</span>
+            </div>
+          </div>
+          <div class="app-actions">
+            <button class="btn btn-edit" onclick="configureApp('${app.id}')">⚙️ Configure</button>
+            <button class="btn btn-uninstall" onclick="uninstallApp('${app.id}')">Uninstall</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function configureApp(appId) {
+      alert(`Configure ${appId} - Settings modal coming soon!`);
+    }
+
+    function uninstallApp(appId) {
+      if (confirm(`Uninstall this app? This will remove all associated data.`)) {
+        const index = installedApps.findIndex(a => a.id === appId);
+        if (index !== -1) {
+          installedApps.splice(index, 1);
+          renderApps();
+        }
+      }
+    }
+
+    renderApps();
+  </script>
+</body>
+</html>

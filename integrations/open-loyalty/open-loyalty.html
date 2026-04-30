@@ -1,0 +1,354 @@
+<!--
+  COMPONENT: Open Loyalty - Points & Rewards
+  GitHub: DivanteLtd/open-loyalty
+  For: Restaurants, bars, artists — customer loyalty program
+  Use cases: Points per visit, rewards catalog, VIP tiers, fan loyalty
+
+  Requires: shared.html on the page
+  Trigger: openComponent('loyalty')
+  Render: renderLoyalty(config)
+  config: { url, apiKey, customerId } — customerId from logged-in user session
+  Back end: store loyalty_url + loyalty_api_key on entity in Supabase
+
+  Setup:
+  1. Self-host: github.com/DivanteLtd/open-loyalty
+  2. Create loyalty program, set up points rules + rewards
+  3. Admin stores URL + API key in entity data
+  4. Component shows customer points + available rewards
+
+  API endpoints used:
+  - GET /api/customer/{customerId}/points-transfers — point history
+  - GET /api/customer/{customerId}/status — tier + total points
+  - GET /api/reward-catalog — available rewards
+  - POST /api/customer/{customerId}/redemption — redeem reward
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('loyalty')">⭐ Loyalty Rewards</button>
+-->
+
+<style>
+.comp-loyalty-header {
+    padding: 24px 20px 20px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    text-align: center;
+}
+.comp-loyalty-points {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.comp-loyalty-points-label {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.comp-loyalty-tier {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 14px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.comp-loyalty-progress-wrap {
+    padding: 16px 20px;
+    background: #fffbeb;
+    border-bottom: 1px solid #fde68a;
+}
+.comp-loyalty-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #92400e;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.comp-loyalty-bar {
+    height: 8px;
+    background: #fde68a;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.comp-loyalty-bar-fill {
+    height: 100%;
+    background: #f59e0b;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+.comp-loyalty-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+}
+.comp-loyalty-tab {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+.comp-loyalty-tab.active { color: #d97706; border-bottom-color: #d97706; }
+
+.comp-loyalty-reward {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+.comp-loyalty-reward:last-child { border-bottom: none; }
+.comp-loyalty-reward-icon {
+    width: 48px; height: 48px;
+    background: #fffbeb;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    border: 1px solid #fde68a;
+}
+.comp-loyalty-reward-info { flex: 1; }
+.comp-loyalty-reward-name { font-size: 0.92rem; font-weight: 700; color: #111; }
+.comp-loyalty-reward-pts { font-size: 0.78rem; color: #d97706; font-weight: 700; margin-top: 2px; }
+.comp-loyalty-reward-desc { font-size: 0.78rem; color: #888; margin-top: 2px; }
+.comp-loyalty-redeem {
+    padding: 8px 14px;
+    background: #f59e0b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.comp-loyalty-redeem:hover { background: #d97706; }
+.comp-loyalty-redeem:disabled { background: #ddd; cursor: not-allowed; color: #999; }
+
+.comp-loyalty-history-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.comp-loyalty-history-item:last-child { border-bottom: none; }
+.comp-loyalty-hist-label { font-size: 0.85rem; color: #333; }
+.comp-loyalty-hist-date { font-size: 0.75rem; color: #999; margin-top: 2px; }
+.comp-loyalty-hist-pts { font-size: 0.9rem; font-weight: 700; }
+.comp-loyalty-hist-pts.earn { color: #2d8a4e; }
+.comp-loyalty-hist-pts.spend { color: #e55; }
+
+.comp-loyalty-signin {
+    padding: 30px 20px;
+    text-align: center;
+}
+.comp-loyalty-signin p { color: #666; font-size: 0.9rem; margin-bottom: 16px; }
+.comp-loyalty-signin-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #f59e0b;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+</style>
+
+<div class="comp-overlay" id="comp-loyalty">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>⭐ Loyalty Rewards</h2>
+            <button class="comp-close" onclick="closeComponent('comp-loyalty')">✕</button>
+        </div>
+        <div id="comp-loyalty-body"><div class="comp-ea-loading">Loading...</div></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _loyaltyConfig = {};
+    let _customerPoints = 0;
+    let _nextTierPoints = 500;
+
+    function renderLoyalty(config) {
+        _loyaltyConfig = config || {};
+        const body = document.getElementById('comp-loyalty-body');
+
+        if (!config || !config.url) {
+            body.innerHTML = '<div class="comp-ea-no-url">Loyalty program not set up yet.</div>';
+            return;
+        }
+
+        // If no customer logged in, show sign in prompt
+        if (!config.customerId) {
+            body.innerHTML = `
+                <div class="comp-loyalty-signin">
+                    <div style="font-size:3rem;margin-bottom:12px;">⭐</div>
+                    <p>Sign in to view your points and rewards</p>
+                    <button class="comp-loyalty-signin-btn" onclick="_loyaltySignIn()">Sign In / Join</button>
+                </div>`;
+            return;
+        }
+
+        _fetchLoyaltyData(config, body);
+    }
+
+    function _fetchLoyaltyData(config, body) {
+        const base = config.url.replace(/\/$/, '');
+        const headers = { 'Authorization': 'Bearer ' + config.apiKey, 'Content-Type': 'application/json' };
+
+        Promise.all([
+            fetch(`${base}/api/customer/${config.customerId}/status`, { headers }).then(r => r.json()).catch(() => null),
+            fetch(`${base}/api/reward-catalog?perPage=20`, { headers }).then(r => r.json()).catch(() => ({ catalog: [] })),
+            fetch(`${base}/api/customer/${config.customerId}/points-transfers?perPage=10`, { headers }).then(r => r.json()).catch(() => ({ transfers: [] }))
+        ]).then(([status, catalog, history]) => {
+            _customerPoints = status?.points?.toSpend?.allTime || 0;
+            _nextTierPoints = status?.nextLevelPointsThreshold || 500;
+            _buildLoyaltyUI(body, status, catalog, history);
+        }).catch(() => {
+            // Show demo UI if API not available
+            _buildDemoUI(body);
+        });
+    }
+
+    function _buildLoyaltyUI(body, status, catalog, history) {
+        const points = status?.points?.toSpend?.allTime || 0;
+        const tier = status?.level || 'Member';
+        const nextTier = status?.nextLevelPointsThreshold || 500;
+        const progress = Math.min((points / nextTier) * 100, 100);
+
+        let html = `
+            <div class="comp-loyalty-header">
+                <div class="comp-loyalty-points">${points.toLocaleString()}</div>
+                <div class="comp-loyalty-points-label">Points</div>
+                <span class="comp-loyalty-tier">⭐ ${escapeHtml(tier)}</span>
+            </div>
+            <div class="comp-loyalty-progress-wrap">
+                <div class="comp-loyalty-progress-label">
+                    <span>${points} pts</span>
+                    <span>${nextTier} pts to next tier</span>
+                </div>
+                <div class="comp-loyalty-bar"><div class="comp-loyalty-bar-fill" style="width:${progress}%"></div></div>
+            </div>
+            <div class="comp-loyalty-tabs">
+                <div class="comp-loyalty-tab active" onclick="_loyaltySwitchTab('rewards', this)">🎁 Rewards</div>
+                <div class="comp-loyalty-tab" onclick="_loyaltySwitchTab('history', this)">📋 History</div>
+            </div>
+            <div id="comp-loyalty-tab-body"></div>`;
+        body.innerHTML = html;
+
+        _buildRewards(catalog?.catalog || catalog || []);
+    }
+
+    function _buildRewards(rewards) {
+        const tabBody = document.getElementById('comp-loyalty-tab-body');
+        if (!rewards.length) {
+            tabBody.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">No rewards available yet.</div>';
+            return;
+        }
+        const icons = ['☕', '🍔', '🍺', '🎟', '🎁', '⭐', '🏆', '💎'];
+        let html = '';
+        rewards.forEach((r, i) => {
+            const cost = r.pointsValue || r.requiredPoints || 0;
+            const canRedeem = _customerPoints >= cost;
+            html += `<div class="comp-loyalty-reward">`;
+            html += `<div class="comp-loyalty-reward-icon">${icons[i % icons.length]}</div>`;
+            html += `<div class="comp-loyalty-reward-info">`;
+            html += `<div class="comp-loyalty-reward-name">${escapeHtml(r.reward?.name || r.name || 'Reward')}</div>`;
+            html += `<div class="comp-loyalty-reward-pts">${cost.toLocaleString()} pts</div>`;
+            if (r.reward?.description) html += `<div class="comp-loyalty-reward-desc">${escapeHtml(r.reward.description)}</div>`;
+            html += `</div>`;
+            html += `<button class="comp-loyalty-redeem" ${!canRedeem ? 'disabled' : ''} onclick="_redeemReward('${r.id}')">${canRedeem ? 'Redeem' : 'Need ' + cost + ' pts'}</button>`;
+            html += `</div>`;
+        });
+        tabBody.innerHTML = html;
+    }
+
+    function _buildHistory(transfers) {
+        const tabBody = document.getElementById('comp-loyalty-tab-body');
+        if (!transfers.length) {
+            tabBody.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">No point history yet.</div>';
+            return;
+        }
+        let html = '';
+        transfers.forEach(t => {
+            const isEarn = t.value > 0;
+            const d = new Date(t.createdAt);
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            html += `<div class="comp-loyalty-history-item">`;
+            html += `<div><div class="comp-loyalty-hist-label">${escapeHtml(t.comment || (isEarn ? 'Points Earned' : 'Points Redeemed'))}</div>`;
+            html += `<div class="comp-loyalty-hist-date">${dateStr}</div></div>`;
+            html += `<div class="comp-loyalty-hist-pts ${isEarn ? 'earn' : 'spend'}">${isEarn ? '+' : ''}${t.value} pts</div>`;
+            html += `</div>`;
+        });
+        tabBody.innerHTML = html;
+    }
+
+    function _buildDemoUI(body) {
+        body.innerHTML = `
+            <div class="comp-loyalty-header">
+                <div class="comp-loyalty-points">250</div>
+                <div class="comp-loyalty-points-label">Points</div>
+                <span class="comp-loyalty-tier">⭐ Silver Member</span>
+            </div>
+            <div class="comp-loyalty-progress-wrap">
+                <div class="comp-loyalty-progress-label"><span>250 pts</span><span>500 pts to Gold</span></div>
+                <div class="comp-loyalty-bar"><div class="comp-loyalty-bar-fill" style="width:50%"></div></div>
+            </div>
+            <div style="padding:20px;text-align:center;color:#999;font-size:0.85rem;">Connect your loyalty account to see rewards</div>`;
+    }
+
+    window._loyaltySwitchTab = function(tab, el) {
+        document.querySelectorAll('.comp-loyalty-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        // Re-fetch and render based on tab
+        if (tab === 'history') {
+            const base = _loyaltyConfig.url.replace(/\/$/, '');
+            const headers = { 'Authorization': 'Bearer ' + _loyaltyConfig.apiKey };
+            fetch(`${base}/api/customer/${_loyaltyConfig.customerId}/points-transfers?perPage=10`, { headers })
+                .then(r => r.json())
+                .then(data => _buildHistory(data.transfers || []))
+                .catch(() => _buildHistory([]));
+        } else {
+            const base = _loyaltyConfig.url.replace(/\/$/, '');
+            const headers = { 'Authorization': 'Bearer ' + _loyaltyConfig.apiKey };
+            fetch(`${base}/api/reward-catalog?perPage=20`, { headers })
+                .then(r => r.json())
+                .then(data => _buildRewards(data.catalog || []))
+                .catch(() => _buildRewards([]));
+        }
+    };
+
+    window._redeemReward = function(rewardId) {
+        if (!confirm('Redeem this reward?')) return;
+        const base = _loyaltyConfig.url.replace(/\/$/, '');
+        fetch(`${base}/api/customer/${_loyaltyConfig.customerId}/redemption`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + _loyaltyConfig.apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rewardId })
+        })
+        .then(r => r.json())
+        .then(() => alert('Reward redeemed! 🎉'))
+        .catch(() => alert('Could not redeem. Try again.'));
+    };
+
+    window._loyaltySignIn = function() {
+        if (_loyaltyConfig.signInUrl) window.open(_loyaltyConfig.signInUrl, '_blank');
+    };
+
+    window.renderLoyalty = renderLoyalty;
+})();
+</script>

@@ -1,0 +1,137 @@
+<!--
+  COMPONENT: Booking / Reservations (Cal.com)
+  For: Restaurants, bars, artists, any business
+  Requires: shared.html included on the page
+  Trigger: openBooking(calLink) — pass entity.cal_link from GCR API
+  Back end: store cal_link on entity in Supabase, return from GCR API
+
+  Cal.com setup:
+  - Business owner creates Cal.com account
+  - Sets up event types (e.g. "Table for 2", "Artist Booking", "Private Event")
+  - Admin dashboard stores their cal_link (e.g. "username" or "username/event-type")
+  - GCR API returns cal_link with entity data
+  - This component reads it and opens the booking popup automatically
+
+  Supports:
+  - Popup modal (default)
+  - Inline embed
+  - Full page redirect fallback
+-->
+
+<!-- TRIGGER BUTTONS (copy to page) -->
+<!--
+<button class="link-btn" onclick="openBooking(entity.cal_link)">📅 Book a Table</button>
+<button class="link-btn" onclick="openBooking(entity.cal_link)">🎵 Book This Artist</button>
+<button class="link-btn" onclick="openBooking(entity.cal_link)">📅 Make a Reservation</button>
+-->
+
+<style>
+.comp-booking-wrap {
+    padding: 20px;
+}
+.comp-booking-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s;
+}
+.comp-booking-btn:hover { background: #333; }
+
+/* Inline embed container */
+.comp-booking-inline {
+    min-height: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f9f9f9;
+}
+
+/* No link fallback */
+.comp-booking-no-link {
+    padding: 30px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+}
+</style>
+
+<!-- Cal.com embed script — loads once -->
+<script>
+(function() {
+    // Load Cal.com embed script once
+    function loadCalEmbed(callback) {
+        if (window.Cal) { callback(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://app.cal.com/embed/embed.js';
+        s.onload = callback;
+        document.head.appendChild(s);
+    }
+
+    // Open Cal.com booking popup
+    function openBooking(calLink, label) {
+        if (!calLink) {
+            alert('Booking not available for this business yet.');
+            return;
+        }
+
+        loadCalEmbed(function() {
+            Cal('ui', {
+                styles: { branding: { brandColor: '#111111' } },
+                hideEventTypeDetails: false,
+            });
+            Cal('openModal', {
+                calLink: calLink,
+                config: {
+                    layout: 'month_view'
+                }
+            });
+        });
+    }
+
+    // Inline embed — use if you want booking embedded directly on the page
+    function embedBookingInline(calLink, containerId) {
+        if (!calLink) return;
+        const container = document.getElementById(containerId || 'comp-booking-inline');
+        if (!container) return;
+
+        loadCalEmbed(function() {
+            Cal('inline', {
+                elementOrSelector: '#' + (containerId || 'comp-booking-inline'),
+                calLink: calLink,
+                config: { layout: 'month_view' }
+            });
+        });
+    }
+
+    // Render booking button inside a section card
+    function renderBooking(calLink, label, containerId) {
+        const body = document.getElementById(containerId || 'comp-booking-body');
+        if (!body) return;
+
+        if (!calLink) {
+            body.innerHTML = '<div class="comp-booking-no-link">Booking not set up yet.</div>';
+            return;
+        }
+
+        const btnLabel = label || '📅 Book Now';
+        body.innerHTML = `
+            <div class="comp-booking-wrap">
+                <button class="comp-booking-btn" onclick="openBooking('${calLink.replace(/'/g, "\\'")}')">
+                    ${escapeHtml(btnLabel)}
+                </button>
+            </div>
+        `;
+    }
+
+    window.openBooking = openBooking;
+    window.embedBookingInline = embedBookingInline;
+    window.renderBooking = renderBooking;
+})();
+</script>

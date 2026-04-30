@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navigation Demo - CyberCheck</title>
+  <style>
+    body {
+      background: #f5f7fa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    }
+
+    .demo-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .demo-header h1 {
+      font-size: 48px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+
+    .demo-header p {
+      font-size: 20px;
+      color: #666;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      border: 2px solid #e0e0e0;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: #667eea;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1a1a1a;
+    }
+
+    .feature-desc {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .menu-preview {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      border: 2px solid #e0e0e0;
+      margin-bottom: 48px;
+    }
+
+    .menu-preview h2 {
+      font-size: 28px;
+      margin-bottom: 24px;
+      color: #1a1a1a;
+    }
+
+    .category-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+
+    .category {
+      background: #f5f7fa;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .category-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .page-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .page-list li {
+      padding: 8px 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .instructions {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 40px;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .instructions h2 {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .instructions p {
+      font-size: 18px;
+      opacity: 0.95;
+      margin-bottom: 24px;
+    }
+
+    .click-hint {
+      font-size: 48px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Include the hamburger navigation -->
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+
+  <div class="saas-content">
+    <div class="demo-header">
+      <h1>🍔 Hamburger Navigation Demo</h1>
+      <p>Click the menu icon in the top left to explore all pages</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">Easy Access</div>
+        <div class="feature-desc">
+          All platform pages organized by category in one menu
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <div class="feature-title">Smooth Animations</div>
+        <div class="feature-desc">
+          Beautiful slide-out drawer with smooth transitions
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title">Responsive</div>
+        <div class="feature-desc">
+          Works perfectly on desktop, tablet, and mobile devices
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">Active Highlighting</div>
+        <div class="feature-desc">
+          Current page is highlighted in purple for easy navigation
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⌨️</div>
+        <div class="feature-title">Keyboard Support</div>
+        <div class="feature-desc">
+          Press ESC key to close the menu anytime
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Quick Actions</div>
+        <div class="feature-desc">
+          "New Automation" button always visible in top right
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-preview">
+      <h2>📋 Menu Categories</h2>
+      <div class="category-list">
+        <div class="category">
+          <div class="category-name">Main</div>
+          <ul class="page-list">
+            <li>📊 Dashboard</li>
+            <li>🚀 Onboarding</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Automations</div>
+          <ul class="page-list">
+            <li>🤖 Create Workflow (AI)</li>
+            <li>⚙️ Automation Builder</li>
+            <li>📋 Templates</li>
+            <li>📜 Workflow Logs</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Apps & Integrations</div>
+          <ul class="page-list">
+            <li>🛒 App Marketplace</li>
+            <li>📦 Installed Apps</li>
+            <li>🔌 API Connections</li>
+            <li>🔗 Integrations</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Customer Features</div>
+          <ul class="page-list">
+            <li>👥 CRM</li>
+            <li>📅 Booking</li>
+            <li>💬 Messaging</li>
+            <li>📊 Analytics</li>
+            <li>🎁 Loyalty</li>
+            <li>⭐ Reviews</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Industry Dashboards</div>
+          <ul class="page-list">
+            <li>🍽️ Restaurant</li>
+            <li>⛵ Charter</li>
+            <li>👤 Customer View</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Tools</div>
+          <ul class="page-list">
+            <li>💬 AI Chat</li>
+            <li>🎴 Card Builder</li>
+            <li>🔍 Audit Log</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Admin</div>
+          <ul class="page-list">
+            <li>👨‍💼 Admin Dashboard</li>
+            <li>💰 Pricing Control</li>
+            <li>🏢 Platform</li>
+          </ul>
+        </div>
+
+        <div class="category">
+          <div class="category-name">Settings</div>
+          <ul class="page-list">
+            <li>⚙️ Settings</li>
+            <li>💳 Pricing</li>
+            <li>🏭 Industries</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <div class="click-hint">👈</div>
+      <h2>Try It Now!</h2>
+      <p>Click the hamburger menu icon in the top left corner</p>
+      <p>Explore all the pages available in your platform</p>
+    </div>
+  </div>
+</body>
+</html>

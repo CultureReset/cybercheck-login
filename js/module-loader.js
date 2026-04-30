@@ -46,46 +46,43 @@ const BUSINESS_TYPE_MODULES = {
  * Initialize dashboard modules based on business type
  */
 async function initBusinessTypeModules() {
-  // Get business data
   var business = await getSupabaseBusiness();
   if (!business) return;
 
-  var businessType = business.type || 'generic';
-  window._businessType = businessType;
+  window._businessType = business.type || 'generic';
 
-  // Get modules for this business type
-  var coreModules = BUSINESS_TYPE_MODULES.core;
-  var typeModules = BUSINESS_TYPE_MODULES[businessType] || [];
-  var activeModules = coreModules.concat(typeModules);
+  // Core nav always visible
+  var activeModules = ['overview', 'profile', 'analytics', 'billing', 'domain', 'publish', 'connections', 'theme'];
 
-  console.log('Business type:', businessType);
-  console.log('Active modules:', activeModules);
+  // Load installed apps from site_apps table
+  try {
+    var { data: installedApps } = await supabase
+      .from('site_apps')
+      .select('app_id')
+      .eq('site_id', business.site_id)
+      .eq('enabled', true);
 
-  // Hide all nav items first
-  document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
-    var page = item.dataset.page;
-    if (activeModules.indexOf(page) === -1) {
-      item.style.display = 'none';
-    } else {
-      item.style.display = '';
+    if (installedApps) {
+      installedApps.forEach(function(app) {
+        if (activeModules.indexOf(app.app_id) === -1) activeModules.push(app.app_id);
+      });
     }
+  } catch(e) {
+    // Fallback to business type if site_apps unavailable
+    var typeModules = BUSINESS_TYPE_MODULES[window._businessType] || [];
+    BUSINESS_TYPE_MODULES.core.concat(typeModules).forEach(function(m) {
+      if (activeModules.indexOf(m) === -1) activeModules.push(m);
+    });
+  }
+
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
+    item.style.display = activeModules.indexOf(item.dataset.page) !== -1 ? '' : 'none';
   });
 
-  // Hide nav section labels if all items in section are hidden
   hideEmptySections();
 
-  // Update business type badge
   var badge = document.getElementById('sidebar-biz-type');
-  if (badge) {
-    var typeLabels = {
-      rental: 'Rental Business',
-      restaurant: 'Restaurant',
-      salon: 'Salon & Spa',
-      shop: 'Retail Shop',
-      service: 'Service Business'
-    };
-    badge.textContent = typeLabels[businessType] || 'Business';
-  }
+  if (badge) badge.textContent = getBusinessTypeName(business.type);
 }
 
 /**

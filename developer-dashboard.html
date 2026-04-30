@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Portal - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
+
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Dashboard</h3>
+                <a href="dashboard.html" class="sidebar-link">
+                    <span class="link-icon">📊</span><span>Overview</span>
+                </a>
+                <a href="index.html#my-apps" class="sidebar-link">
+                    <span class="link-icon">📱</span><span>My Apps</span>
+                </a>
+                <a href="analytics.html" class="sidebar-link">
+                    <span class="link-icon">📈</span><span>Analytics</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Build</h3>
+                <a href="sandbox-projects.html" class="sidebar-link">
+                    <span class="link-icon">🔨</span><span>My Projects</span>
+                </a>
+                <a href="sandbox-editor.html" class="sidebar-link">
+                    <span class="link-icon">💻</span><span>Editor</span>
+                </a>
+                <a href="sandbox-deploy.html" class="sidebar-link">
+                    <span class="link-icon">🚀</span><span>Deployments</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Account</h3>
+                <a href="profile.html" class="sidebar-link">
+                    <span class="link-icon">👤</span><span>Profile</span>
+                </a>
+                <a href="billing.html" class="sidebar-link">
+                    <span class="link-icon">💳</span><span>Billing & Tokens</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Developer</h3>
+                <a href="developer-dashboard.html" class="sidebar-link active">
+                    <span class="link-icon">🏗️</span><span>Developer Portal</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            <div class="dashboard-header">
+                <div>
+                    <h1 class="dashboard-title">Developer Portal</h1>
+                    <p class="dashboard-subtitle">Publish apps and earn 70% revenue share</p>
+                </div>
+                <button class="btn-primary" onclick="location.href='sandbox-editor.html'">Create New App</button>
+            </div>
+
+            <!-- Revenue Overview -->
+            <div class="revenue-banner">
+                <div class="revenue-main">
+                    <div class="revenue-label">Total Earnings</div>
+                    <div class="revenue-amount">$12,847.32</div>
+                    <div class="revenue-change">+$2,145.50 this month</div>
+                </div>
+                <div class="revenue-stats">
+                    <div class="revenue-stat">
+                        <div class="stat-value">3,247</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="revenue-stat">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Published Apps</div>
+                    </div>
+                    <div class="revenue-stat">
+                        <div class="stat-value">98.5%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                </div>
+                <button class="btn-payout">Request Payout</button>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-details">
+                        <div class="stat-value">$8,547</div>
+                        <div class="stat-label">Pending Payout</div>
+                        <div class="stat-subtext">Available now</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-details">
+                        <div class="stat-value">145,823</div>
+                        <div class="stat-label">API Calls This Month</div>
+                        <div class="stat-subtext">+12.5% from last month</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-details">
+                        <div class="stat-value">4.8/5.0</div>
+                        <div class="stat-label">Average Rating</div>
+                        <div class="stat-subtext">Based on 287 reviews</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-details">
+                        <div class="stat-value">+32%</div>
+                        <div class="stat-label">Growth Rate</div>
+                        <div class="stat-subtext">New installs this month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Published Apps -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Your Published Apps</h2>
+                    <div class="section-actions">
+                        <select class="filter-select">
+                            <option>All Apps</option>
+                            <option>Active</option>
+                            <option>Draft</option>
+                            <option>Under Review</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="apps-grid">
+                    <div class="dev-app-card">
+                        <div class="app-card-header">
+                            <div class="app-icon-large">📊</div>
+                            <span class="app-badge live">Live</span>
+                        </div>
+                        <h3 class="app-card-title">CyberCheck CRM</h3>
+                        <p class="app-card-description">Complete CRM solution with lead management, pipeline tracking, and analytics</p>
+                        <div class="app-metrics">
+                            <div class="app-metric">
+                                <span class="metric-icon">👥</span>
+                                <span class="metric-text">1,247 users</span>
+                            </div>
+                            <div class="app-metric">
+                                <span class="metric-icon">💰</span>
+                                <span class="metric-text">$4,523/mo</span>
+                            </div>
+                            <div class="app-metric">
+                                <span class="metric-icon">⭐</span>
+                                <span class="metric-text">4.9 (124)</span>
+                            </div>
+                        </div>
+                        <div class="app-card-actions">
+                            <button class="btn-secondary-full">View Analytics</button>
+                            <button class="btn-outline-full">Edit</button>
+                        </div>
+                    </div>
+
+                    <div class="dev-app-card">
+                        <div class="app-card-header">
+                            <div class="app-icon-large">📧</div>
+                            <span class="app-badge live">Live</span>
+                        </div>
+                        <h3 class="app-card-title">Email Automation Pro</h3>
+                        <p class="app-card-description">Advanced email sequences with AI-powered personalization</p>
+                        <div class="app-metrics">
+                            <div class="app-metric">
+                                <span class="metric-icon">👥</span>
+                                <span class="metric-text">854 users</span>
+                            </div>
+                            <div class="app-metric">
+                                <span class="metric-icon">💰</span>
+                                <span class="metric-text">$3,247/mo</span>
+                            </div>
+                            <div class="app-metric">
+                                <span class="metric-icon">⭐</span>
+                                <span class="metric-text">4.7 (89)</span>
+                            </div>
+                        </div>
+                        <div class="app-card-actions">
+                            <button class="btn-secondary-full">View Analytics</button>
+                            <button class="btn-outline-full">Edit</button>
+                        </div>
+                    </div>
+
+                    <div class="dev-app-card">
+                        <div class="app-card-header">
+                            <div class="app-icon-large">💳</div>
+                            <span class="app-badge live">Live</span>
+                        </div>
+                        <h3 class="app-card-title">Payment Gateway</h3>
+                        <p class="app-card-description">Accept payments with Stripe, PayPal, and crypto support</p>
+                        <div class="app-metrics">
+                            <div class="app-metric">
+                                <span class="metric-icon">👥</span>
+                                <span class="metric-text">623 users</span>
+                            </div>
+                            <div class="app-metric">
+                                <span class="metric-icon">💰</span>
+                                <span class="metric-text">$2,145/mo</span>
+                            </div>
+                            <div class="app-metric">
+                                <span class="metric-icon">⭐</span>
+                                <span class="metric-text">4.8 (74)</span>
+                            </div>
+                        </div>
+                        <div class="app-card-actions">
+                            <button class="btn-secondary-full">View Analytics</button>
+                            <button class="btn-outline-full">Edit</button>
+                        </div>
+                    </div>
+
+                    <div class="dev-app-card draft">
+                        <div class="app-card-header">
+                            <div class="app-icon-large">📱</div>
+                            <span class="app-badge draft">Draft</span>
+                        </div>
+                        <h3 class="app-card-title">SMS Campaign Manager</h3>
+                        <p class="app-card-description">Bulk SMS campaigns with scheduling and tracking</p>
+                        <div class="app-metrics">
+                            <div class="app-metric">
+                                <span class="metric-icon">📝</span>
+                                <span class="metric-text">Not published</span>
+                            </div>
+                        </div>
+                        <div class="app-card-actions">
+                            <button class="btn-primary-full">Publish App</button>
+                            <button class="btn-outline-full">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Revenue Breakdown</h2>
+                    <select class="filter-select">
+                        <option>Last 30 days</option>
+                        <option>Last 90 days</option>
+                        <option>This year</option>
+                        <option>All time</option>
+                    </select>
+                </div>
+                <div class="revenue-chart">
+                    <div class="chart-bars">
+                        <div class="revenue-bar" style="height: 45%">
+                            <span class="bar-label">$1,823</span>
+                        </div>
+                        <div class="revenue-bar" style="height: 60%">
+                            <span class="bar-label">$2,145</span>
+                        </div>
+                        <div class="revenue-bar" style="height: 55%">
+                            <span class="bar-label">$1,987</span>
+                        </div>
+                        <div class="revenue-bar" style="height: 70%">
+                            <span class="bar-label">$2,456</span>
+                        </div>
+                        <div class="revenue-bar" style="height: 80%">
+                            <span class="bar-label">$2,847</span>
+                        </div>
+                        <div class="revenue-bar" style="height: 65%">
+                            <span class="bar-label">$2,289</span>
+                        </div>
+                    </div>
+                    <div class="chart-labels">
+                        <span>Week 1</span>
+                        <span>Week 2</span>
+                        <span>Week 3</span>
+                        <span>Week 4</span>
+                        <span>Week 5</span>
+                        <span>Week 6</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources -->
+            <div class="section-card">
+                <h2 class="section-title">Developer Resources</h2>
+                <div class="resources-grid">
+                    <a href="api-documentation.html" class="resource-card">
+                        <div class="resource-icon">📚</div>
+                        <div class="resource-content">
+                            <h3>API Documentation</h3>
+                            <p>Complete API reference and guides</p>
+                        </div>
+                        <div class="resource-arrow">→</div>
+                    </a>
+                    <a href="api-keys.html" class="resource-card">
+                        <div class="resource-icon">🔑</div>
+                        <div class="resource-content">
+                            <h3>API Keys</h3>
+                            <p>Manage your API credentials</p>
+                        </div>
+                        <div class="resource-arrow">→</div>
+                    </a>
+                    <a href="webhooks.html" class="resource-card">
+                        <div class="resource-icon">🔗</div>
+                        <div class="resource-content">
+                            <h3>Webhooks</h3>
+                            <p>Set up event notifications</p>
+                        </div>
+                        <div class="resource-arrow">→</div>
+                    </a>
+                    <a href="help-center.html" class="resource-card">
+                        <div class="resource-icon">💡</div>
+                        <div class="resource-content">
+                            <h3>Help Center</h3>
+                            <p>Guides and tutorials</p>
+                        </div>
+                        <div class="resource-arrow">→</div>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .revenue-banner {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .revenue-main {
+            flex: 1;
+        }
+
+        .revenue-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .revenue-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .revenue-change {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .revenue-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .revenue-stat {
+            text-align: center;
+        }
+
+        .revenue-stat .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .revenue-stat .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .btn-payout {
+            padding: 1rem 2rem;
+            background: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .btn-payout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            display: flex;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+        }
+
+        .stat-details {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-subtext {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .section-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .dev-app-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dev-app-card.draft {
+            opacity: 0.7;
+        }
+
+        .app-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .app-icon-large {
+            font-size: 3rem;
+        }
+
+        .app-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .app-badge.live {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .app-badge.draft {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+
+        .app-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-card-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+
+        .app-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .app-metric {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .metric-icon {
+            font-size: 1rem;
+        }
+
+        .app-card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary-full,
+        .btn-outline-full,
+        .btn-primary-full {
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .btn-secondary-full {
+            background: var(--bg-secondary);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline-full {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary-full {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .revenue-chart {
+            margin-top: 1.5rem;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+
+        .revenue-bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 0.5rem;
+        }
+
+        .bar-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-around;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .resource-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .resource-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .resource-icon {
+            font-size: 2rem;
+        }
+
+        .resource-content {
+            flex: 1;
+        }
+
+        .resource-content h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .resource-content p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .resource-arrow {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+    </style>
+
+    <script src="js/app-data.js"></script>
+    <script src="js/dashboard.js"></script>
+<script src="js/navbar.js"></script>
+</body>
+</html>

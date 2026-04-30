@@ -1,54 +1,19 @@
-// Beachside Circle Boats Dashboard - Configuration
-//
-// Real customer data. When the API is connected, this gets
-// overwritten with live data from the session endpoint.
-// When offline, this is the fallback so the dashboard still works.
+// CyberCheck Platform — Multi-tenant config
+// Loads from live session. No hardwired business data.
 
 const USER_CONFIG = {
-    user_id: 'user_beachside_001',
-    user_name: 'Beachside Owner',
-    user_email: 'beachsideboats@myyahoo.com',
-
-    business_id: 'beachside-circle-boats',
-    business_name: 'Beachside Circle Boat Rentals and Sales LLC',
-    business_type: 'rental',
-
-    installed_apps: [
-        'booking',
-        'sms',
-        'loyalty'
-    ],
-
-    connected_tools: [
-        'stripe',
-        'square',
-        'google-calendar',
-        'gmail',
-        'instagram',
-        'facebook',
-        'twilio'
-    ],
-
-    plan: 'professional',
-    plan_price: 49.99,
-
-    features: {
-        voice_ai: true,
-        workflows: true,
-        landing_page: true,
-        custom_domain: true,
-        white_label: false,
-        api_access: true,
-        webhooks: true
-    },
-
-    notifications: {
-        email: true,
-        sms: true,
-        in_app: true
-    },
-
-    // Flag: did we load from the API?
+    user_id: '',
+    user_name: '',
+    user_email: '',
+    business_id: '',
+    business_name: '',
+    business_type: '',
+    installed_apps: [],
+    connected_tools: [],
+    plan: 'free',
+    plan_price: 0,
+    features: {},
+    notifications: { email: true, sms: true, in_app: true },
     _fromApi: false
 };
 

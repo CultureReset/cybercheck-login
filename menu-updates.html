@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Menu Update System — Gulf Coast Radar</title>
+<link rel="stylesheet" href="/css/sales.css">
+<style>
+/* ─── CUSTOMIZE YOUR DEMO DATA AT THE BOTTOM IN THE CONFIG BLOCK ─── */
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#111;line-height:1.6;}
+
+/* ── Hero ──────────────────────────────────────────────────────── */
+.hero{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#fff;padding:120px 24px 80px;text-align:center;}
+.hero-eyebrow{display:inline-block;background:rgba(11,122,117,0.4);border:1px solid rgba(11,122,117,0.6);color:#5eead4;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:20px;}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;max-width:700px;margin:0 auto 20px;letter-spacing:-0.5px;}
+.hero h1 em{font-style:normal;color:#5eead4;}
+.hero-sub{font-size:clamp(1rem,2.5vw,1.2rem);color:rgba(255,255,255,0.7);max-width:520px;margin:0 auto 36px;line-height:1.6;}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{background:#0b7a75;color:#fff;padding:14px 28px;border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;transition:background .2s;border:none;cursor:pointer;}
+.btn-primary:hover{background:#065f5b;}
+.btn-outline{background:transparent;color:#fff;padding:14px 28px;border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;border:2px solid rgba(255,255,255,0.3);transition:all .2s;}
+.btn-outline:hover{border-color:#fff;background:rgba(255,255,255,0.1);}
+
+/* ── Section wrappers ──────────────────────────────────────────── */
+.section{padding:80px 24px;}
+.section-alt{background:#f8f9fa;}
+.section-dark{background:#0f172a;color:#fff;}
+.section-teal{background:linear-gradient(135deg,#0b7a75,#065f5b);color:#fff;}
+.container{max-width:1100px;margin:0 auto;}
+.container-sm{max-width:760px;margin:0 auto;}
+.section-label{font-size:0.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0b7a75;margin-bottom:12px;}
+.section-dark .section-label{color:#5eead4;}
+.section-teal .section-label{color:rgba(255,255,255,0.7);}
+h2{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:900;letter-spacing:-0.3px;line-height:1.2;}
+.section-sub{font-size:1.05rem;color:#555;margin-top:12px;line-height:1.6;max-width:560px;}
+.section-dark .section-sub{color:rgba(255,255,255,0.6);}
+.section-teal .section-sub{color:rgba(255,255,255,0.8);}
+
+/* ── Problem cards ─────────────────────────────────────────────── */
+.problem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:40px;}
+.problem-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.problem-icon{font-size:2rem;margin-bottom:12px;}
+.problem-card h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:#111;}
+.problem-card p{font-size:0.85rem;color:#666;line-height:1.5;}
+
+/* ── Steps ─────────────────────────────────────────────────────── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px;margin-top:48px;position:relative;}
+.step{text-align:center;position:relative;}
+.step-num{width:48px;height:48px;border-radius:50%;background:#0b7a75;color:#fff;font-size:1.2rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.step h3{font-size:1rem;font-weight:800;margin-bottom:8px;}
+.step p{font-size:0.85rem;color:#666;line-height:1.5;}
+
+/* ── Phone mockup ──────────────────────────────────────────────── */
+.phone-wrap{display:flex;justify-content:center;align-items:flex-start;gap:48px;flex-wrap:wrap;margin-top:56px;}
+.phone{position:relative;width:300px;flex-shrink:0;}
+.phone-label{text-align:center;font-size:0.78rem;font-weight:700;color:#888;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:16px;}
+.phone-frame{background:#1a1a1a;border-radius:44px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,0.35),0 0 0 1px rgba(255,255,255,0.08),inset 0 0 0 2px #333;}
+.phone-notch{width:100px;height:26px;background:#1a1a1a;border-radius:0 0 18px 18px;margin:0 auto 10px;position:relative;z-index:2;}
+.phone-screen{background:#fff;border-radius:30px;overflow:hidden;height:560px;position:relative;}
+.phone-screen iframe{width:100%;height:100%;border:none;display:block;}
+.phone-btn-vol{position:absolute;left:-14px;top:100px;width:4px;height:32px;background:#333;border-radius:2px;}
+.phone-btn-vol2{position:absolute;left:-14px;top:142px;width:4px;height:32px;background:#333;border-radius:2px;}
+.phone-btn-power{position:absolute;right:-14px;top:120px;width:4px;height:44px;background:#333;border-radius:2px;}
+
+/* SMS mockup inside phone */
+.sms-screen{background:#f5f5f0;height:100%;display:flex;flex-direction:column;font-family:-apple-system,sans-serif;}
+.sms-header{background:#fff;padding:12px 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;}
+.sms-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0b7a75,#065f5b);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:800;flex-shrink:0;}
+.sms-header-info h4{font-size:0.85rem;font-weight:700;margin:0;}
+.sms-header-info p{font-size:0.7rem;color:#888;margin:0;}
+.sms-body{flex:1;padding:16px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.sms-bubble{max-width:82%;padding:10px 13px;border-radius:18px;font-size:0.78rem;line-height:1.5;}
+.sms-in{background:#e9e9eb;color:#111;border-bottom-left-radius:4px;align-self:flex-start;}
+.sms-out{background:#0b7a75;color:#fff;border-bottom-right-radius:4px;align-self:flex-end;}
+.sms-time{font-size:0.65rem;color:#aaa;text-align:center;}
+.sms-link{color:#0b7a75;font-weight:700;word-break:break-all;display:block;margin-top:4px;text-decoration:underline;}
+.sms-out .sms-link{color:#a7f3d0;}
+.sms-link-preview{background:#fff;border-radius:10px;margin-top:6px;overflow:hidden;border:1px solid #ddd;}
+.sms-link-preview-img{width:100%;height:60px;background:linear-gradient(135deg,#0b7a75,#065f5b);display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.sms-link-preview-body{padding:7px 10px;}
+.sms-link-preview-body h5{font-size:0.72rem;font-weight:700;margin:0 0 2px;}
+.sms-link-preview-body p{font-size:0.65rem;color:#888;margin:0;}
+.sms-input-row{background:#fff;padding:8px 12px;display:flex;gap:8px;align-items:center;border-top:1px solid #eee;}
+.sms-input{flex:1;background:#f0f0f0;border:none;border-radius:18px;padding:7px 12px;font-size:0.75rem;color:#888;}
+.sms-send{width:30px;height:30px;background:#0b7a75;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.8rem;flex-shrink:0;}
+
+/* ── Feature grid ──────────────────────────────────────────────── */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:48px;}
+.feature-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:24px;}
+.feature-icon{font-size:1.8rem;margin-bottom:12px;}
+.feature-card h3{font-size:0.95rem;font-weight:700;margin-bottom:8px;color:#fff;}
+.feature-card p{font-size:0.83rem;color:rgba(255,255,255,0.6);line-height:1.55;}
+
+/* ── Demo showcase — side by side ──────────────────────────────── */
+.demo-row{display:flex;align-items:flex-start;gap:56px;flex-wrap:wrap;}
+.demo-text{flex:1;min-width:280px;padding-top:20px;}
+.demo-text h2{font-size:clamp(1.4rem,3vw,2rem);}
+.demo-text p{font-size:0.92rem;color:#555;margin-top:12px;line-height:1.7;}
+.demo-phone{flex-shrink:0;}
+.check-list{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+.check-item{display:flex;align-items:flex-start;gap:10px;font-size:0.88rem;color:#444;}
+.check-item::before{content:"✓";color:#0b7a75;font-weight:900;font-size:1rem;flex-shrink:0;margin-top:1px;}
+
+/* ── Pricing ───────────────────────────────────────────────────── */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:48px;}
+.pricing-card{border:2px solid #eee;border-radius:16px;padding:28px;position:relative;transition:border-color .2s;}
+.pricing-card:hover{border-color:#0b7a75;}
+.pricing-card.featured{border-color:#0b7a75;background:#f0fdf9;}
+.pricing-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#0b7a75;color:#fff;font-size:0.7rem;font-weight:800;padding:3px 14px;border-radius:20px;white-space:nowrap;letter-spacing:0.5px;}
+.pricing-name{font-size:0.8rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.pricing-price{font-size:2.4rem;font-weight:900;color:#111;line-height:1;}
+.pricing-price span{font-size:0.9rem;font-weight:500;color:#888;}
+.pricing-desc{font-size:0.83rem;color:#666;margin:10px 0 18px;line-height:1.5;}
+.pricing-features{display:flex;flex-direction:column;gap:8px;}
+.pricing-feature{font-size:0.82rem;color:#444;display:flex;align-items:center;gap:8px;}
+.pricing-feature::before{content:"✓";color:#0b7a75;font-weight:900;flex-shrink:0;}
+.pricing-cta{display:block;text-align:center;margin-top:22px;padding:11px;border-radius:8px;font-size:0.88rem;font-weight:700;text-decoration:none;background:#0b7a75;color:#fff;transition:background .2s;border:none;cursor:pointer;width:100%;}
+.pricing-cta:hover{background:#065f5b;}
+
+/* ── Stats bar ─────────────────────────────────────────────────── */
+.stats-bar{display:flex;justify-content:center;flex-wrap:wrap;gap:0;}
+.stat{padding:28px 48px;text-align:center;border-right:1px solid rgba(255,255,255,0.1);}
+.stat:last-child{border-right:none;}
+.stat-num{font-size:2.4rem;font-weight:900;color:#5eead4;}
+.stat-label{font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;}
+
+/* ── Final CTA ─────────────────────────────────────────────────── */
+.cta-section{background:linear-gradient(135deg,#0b7a75,#0f2027);color:#fff;padding:80px 24px;text-align:center;}
+.cta-section h2{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;margin-bottom:16px;}
+.cta-section p{font-size:1rem;color:rgba(255,255,255,0.75);margin-bottom:32px;}
+
+/* ── Inline CTA banner ─────────────────────────────────────────── */
+.cta-banner{background:linear-gradient(135deg,#0b7a75,#065f5b);color:#fff;padding:40px 24px;text-align:center;margin:0;}
+.cta-banner h3{font-size:1.4rem;font-weight:900;margin-bottom:8px;}
+.cta-banner p{font-size:0.9rem;color:rgba(255,255,255,0.8);margin-bottom:20px;}
+.cta-float{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#0b7a75;padding:12px 24px;border-radius:10px;font-weight:800;font-size:0.95rem;cursor:pointer;border:none;transition:transform .15s,box-shadow .15s;}
+.cta-float:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+
+@media(max-width:640px){
+  .phone{width:260px;}
+  .phone-screen{height:480px;}
+  .stat{padding:20px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Shared nav ──────────────────────────────────────────────────────── -->
+<nav class="s-nav" id="s-nav"></nav>
+
+<!-- Hero -->
+<section class="hero" style="padding-top:100px;">
+  <div class="hero-eyebrow">Daily Menu Update System</div>
+  <h1>Your menu. Updated in <em>60 seconds</em>. From a text.</h1>
+  <p class="hero-sub">One tap from their phone — prices, specials, catch of the day, happy hour all go live instantly on every platform.</p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="openSalesModal()">Get My Menu Live Today</button>
+    <a href="#demo" class="btn-outline">See How It Works</a>
+  </div>
+</section>
+
+<!-- Problem -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <h2>Every restaurant's menu online is wrong.</h2>
+    <p class="section-sub">And every platform told them to "just log in and update it." Nobody does. So the data stays stale.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">❌</div>
+        <h3>Wrong prices everywhere</h3>
+        <p>Menu online says $18. Actual price is $24. Customer feels misled before they even sit down.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📵</div>
+        <h3>No one logs into dashboards</h3>
+        <p>Owners are cooking at 6am. The last thing they'll do is find a website, log in, and navigate a CMS.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🐟</div>
+        <h3>Catch of the day? Yesterday's</h3>
+        <p>Seafood spots change their catch every morning. Their online menu shows last week's fish.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📉</div>
+        <h3>Specials no one sees</h3>
+        <p>Tuesday night taco special runs for 3 months. Online it shows the first week only — if at all.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">💬</div>
+        <h3>"What's the market price?"</h3>
+        <p>Customers shouldn't have to ask. When fish prices change daily, your menu should too — automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Banner 1 -->
+<div class="cta-banner">
+  <h3>Sound familiar? We fixed it.</h3>
+  <p>Get your menu accurate, live, and updating itself — starting today.</p>
+  <button class="cta-float" onclick="openSalesModal()">✅ Get Set Up Free Today</button>
+</div>
+
+<!-- How it works -->
+<section class="section" id="demo">
+  <div class="container">
+    <div class="section-label">How It Works</div>
+    <h2>Three steps. No app. No login.</h2>
+    <p class="section-sub">Built around something they already do — look at their phone.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>You send them a link</h3>
+        <p>Generate a secure link from your admin dashboard and text it to the owner. Takes 10 seconds.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>They tap it on their phone</h3>
+        <p>Their full menu opens — already pre-loaded with their current data. No login. No password.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Changes go live instantly</h3>
+        <p>Price update, new special, today's catch — saved immediately to their QR menu and GCR profile.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SMS Demo -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="demo-row">
+      <div class="demo-text">
+        <div class="section-label">The Text Message</div>
+        <h2>They get a text. They tap it. Done.</h2>
+        <p>Every morning a secure link lands in their SMS. It opens their full menu editor — no app, no password, no confusion.</p>
+        <div class="check-list">
+          <div class="check-item">Link is unique to their phone number — no one else can use it</div>
+          <div class="check-item">Expires after 30 hours so it's always fresh</div>
+          <div class="check-item">One link per business per day — automatically managed</div>
+          <div class="check-item">When Twilio approved — fully automated, zero work on your end</div>
+        </div>
+      </div>
+      <div class="demo-phone">
+        <div class="phone">
+          <div class="phone-label">Owner's Phone</div>
+          <div class="phone-frame">
+            <div class="phone-btn-vol"></div>
+            <div class="phone-btn-vol2"></div>
+            <div class="phone-btn-power"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="sms-screen" id="sms-demo">
+                <div class="sms-header">
+                  <div class="sms-avatar" id="sms-avatar">GCR</div>
+                  <div class="sms-header-info">
+                    <h4 id="sms-sender">Gulf Coast Radar</h4>
+                    <p>Today 7:02 AM</p>
+                  </div>
+                </div>
+                <div class="sms-body">
+                  <div class="sms-time">Today 7:02 AM</div>
+                  <div class="sms-bubble sms-in" id="sms-message-1"></div>
+                  <div class="sms-bubble sms-out" id="sms-reply-1"></div>
+                  <div class="sms-bubble sms-in" id="sms-message-2"></div>
+                </div>
+                <div class="sms-input-row">
+                  <div class="sms-input">Text Message</div>
+                  <div class="sms-send">↑</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mobile Editor Demo -->
+<section class="section">
+  <div class="container">
+    <div class="demo-row" style="flex-direction:row-reverse;">
+      <div class="demo-text">
+        <div class="section-label">The Mobile Editor</div>
+        <h2>Full menu control from their phone.</h2>
+        <p>Pre-loaded with their existing data. Tap any item to edit. Changes hit live in under a second.</p>
+        <div class="check-list">
+          <div class="check-item">Specials, menu prices, drinks, happy hour, events</div>
+          <div class="check-item">Upload photos from their camera — items and specials</div>
+          <div class="check-item">Catch of the day with market price toggle</div>
+          <div class="check-item">Add or remove items, create new sections</div>
+          <div class="check-item">Works perfectly on any phone, no app install</div>
+        </div>
+      </div>
+      <div class="demo-phone">
+        <div class="phone">
+          <div class="phone-label">Mobile Editor</div>
+          <div class="phone-frame">
+            <div class="phone-btn-vol"></div>
+            <div class="phone-btn-vol2"></div>
+            <div class="phone-btn-power"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <iframe id="editor-iframe" src="about:blank" title="Menu Editor Demo" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QR Menu Demo -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="demo-row">
+      <div class="demo-text">
+        <div class="section-label">The QR Menu</div>
+        <h2>A menu that's actually accurate today.</h2>
+        <p>Customers scan the QR code at the table and see real prices, today's catch, tonight's specials — not last year's PDF in a plastic sleeve.</p>
+        <div class="check-list">
+          <div class="check-item">Per-item photos with clean scrollable layout</div>
+          <div class="check-item">Happy hour auto-highlights when it's currently active</div>
+          <div class="check-item">Catch of the day section with market price support</div>
+          <div class="check-item">Fully custom colors and style per business</div>
+          <div class="check-item">Same data as their GCR profile — one update, everywhere</div>
+          <div class="check-item">No more "what's the market price?" — real prices shown every single day</div>
+        </div>
+      </div>
+      <div class="demo-phone">
+        <div class="phone">
+          <div class="phone-label">Customer's Phone — QR Menu</div>
+          <div class="phone-frame">
+            <div class="phone-btn-vol"></div>
+            <div class="phone-btn-vol2"></div>
+            <div class="phone-btn-power"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <iframe id="qr-iframe" src="about:blank" title="QR Menu Demo" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Banner 2 -->
+<div class="cta-banner">
+  <h3>Your QR menu could look like this.</h3>
+  <p>Custom colors, your branding, your actual menu — live today.</p>
+  <button class="cta-float" onclick="openSalesModal()">📱 Get My QR Menu</button>
+</div>
+
+<!-- Features -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-label">Everything Included</div>
+    <h2>Built for Gulf Coast restaurants, bars, and seafood spots.</h2>
+    <div class="feature-grid" id="feature-grid"></div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="section-dark" style="border-top:1px solid rgba(255,255,255,0.06);">
+  <div class="container">
+    <div class="stats-bar" id="stats-bar"></div>
+  </div>
+</section>
+
+<!-- CTA Banner 3 -->
+<div class="cta-banner" style="background:linear-gradient(135deg,#0f2027,#203a43);">
+  <h3>Stop losing customers to stale menus.</h3>
+  <p>60 seconds a day is all it takes. We handle everything else.</p>
+  <button class="cta-float" onclick="openSalesModal()">🚀 Start Today — No Contract</button>
+</div>
+
+<!-- Pricing -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:0;">
+      <div class="section-label" style="display:inline-block;">Pricing</div>
+      <h2>Simple, flat monthly pricing.</h2>
+      <p class="section-sub" style="margin:12px auto 0;">No setup fees. No contracts. Cancel anytime.</p>
+    </div>
+    <div class="pricing-grid" id="pricing-grid"></div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="cta-section">
+  <div class="container-sm">
+    <h2 id="cta-headline"></h2>
+    <p id="cta-sub"></p>
+    <button class="btn-primary" id="cta-btn" onclick="openSalesModal()" style="font-size:1rem;padding:16px 36px;">Get Started Today</button>
+  </div>
+</section>
+
+<!-- Shared footer -->
+<footer class="s-footer" id="s-footer"></footer>
+
+<script src="/js/sales-config.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// ██████████████████████  CUSTOMIZE YOUR DEMO HERE  ████████████████████████
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CONFIG = {
+
+  sms: {
+    sender:   'Gulf Coast Radar',
+    avatar:   'GCR',
+    business: 'The Shrimp Basket',
+    message1: `Hi! 👋 Here's your daily update link for The Shrimp Basket:\n\ncybercheck-links.vercel.app/menu-editor.html?token=demo\n\nUpdate your menu, specials, and catch of the day. Expires tonight.`,
+    reply1:   'Thanks! Just updated the catch and Tuesday special 🐟',
+    message2: '✅ Live! Customers can see it now on your QR menu and GCR profile.',
+  },
+
+  editorUrl: 'menu-editor.html?token=demo',
+  qrMenuUrl: 'qr-menu.html?slug=icehouse-tap-room',
+
+  features: [
+    { icon: '📱', title: 'One tap from a text',       desc: 'No app. No login. The link IS the editor. Opens right in their browser.' },
+    { icon: '🐟', title: 'Catch of the day',          desc: 'Seafood spots update daily fish, prep style, and price in 30 seconds.' },
+    { icon: '🔥', title: 'Daily specials',            desc: 'Add today\'s specials with a photo, discount text, and schedule.' },
+    { icon: '🍺', title: 'Happy hour management',     desc: 'Set days, times, and HH-specific pricing. Auto-highlights on the QR menu when active.' },
+    { icon: '📸', title: 'Photo upload from camera',  desc: 'Snap a photo of tonight\'s special or today\'s catch and it uploads instantly.' },
+    { icon: '🎨', title: 'Custom QR menu design',     desc: 'Describe your style — Grok AI generates a fully custom color theme for your QR menu.' },
+    { icon: '⚡', title: 'Instant live updates',      desc: 'Every save hits the database in under a second. No publish step. No delay.' },
+    { icon: '🔗', title: 'One update, everywhere',    desc: 'QR menu, GCR profile, and search listings all pull from the same database.' },
+    { icon: '💰', title: 'Real prices. Always.',      desc: 'No more "market price" mystery. Update fish prices every morning — customers see exactly what they\'ll pay before they order.' },
+  ],
+
+  stats: [
+    { num: '60s',  label: 'Average update time' },
+    { num: '100%', label: 'Menu accuracy' },
+    { num: '0',    label: 'Apps to install' },
+    { num: '24hr', label: 'Link expiry for security' },
+  ],
+
+  plans: [
+    {
+      name: 'Starter', price: '$49', period: '/mo per location',
+      desc: 'Perfect for single-location restaurants, bars, and seafood spots.', featured: false,
+      features: ['Daily update link via SMS', 'Full mobile menu editor', 'QR menu page', 'Specials + catch of day', 'GCR profile listing'],
+      cta: 'Get Started',
+    },
+    {
+      name: 'Pro', price: '$99', period: '/mo per location',
+      desc: 'Everything in Starter plus AI menu setup and custom QR menu design.', featured: true, badge: 'MOST POPULAR',
+      features: ['Everything in Starter', 'AI menu setup from photo or URL', 'Custom QR menu design (AI-generated)', 'Priority support', 'Happy hour automation'],
+      cta: 'Get Started',
+    },
+    {
+      name: 'AI Menu Setup', price: '$149', period: 'one time',
+      desc: 'We set up the full structured menu from a photo or your website. One time.', featured: false,
+      features: ['Upload menu photo or paste URL', 'AI extracts all sections, items, prices', 'You review and confirm', 'Live in under 5 minutes', 'Included free with Pro'],
+      cta: 'Add On',
+    },
+  ],
+
+  cta: {
+    headline: 'Ready to stop having wrong menus online?',
+    sub:      'Get your first business set up in 10 minutes. We handle everything.',
+    btnText:  'Get Started Today',
+  },
+
+};
+// ═══════════════════════════════════════════════════════════════════════════
+// ████████████████████  END OF CUSTOMIZABLE CONFIG  ████████████████████████
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Init shared nav + modal + footer
+initSalesPage('menu-updates', 'Menu Updates');
+
+// ── SMS demo ───────────────────────────────────────────────────────────────
+document.getElementById('sms-avatar').textContent = CONFIG.sms.avatar;
+document.getElementById('sms-sender').textContent = CONFIG.sms.sender;
+
+function smsHtml(text) {
+  return text.replace(/\n/g, '<br>').replace(
+    /(https?:\/\/[^\s<]+|[a-z0-9.-]+\.(app|io|com|vercel\.app)[^\s<]*)/gi,
+    '<a class="sms-link" href="#" onclick="return false;">$1</a>'
+  );
+}
+document.getElementById('sms-message-1').innerHTML = smsHtml(CONFIG.sms.message1);
+document.getElementById('sms-reply-1').innerHTML   = smsHtml(CONFIG.sms.reply1);
+document.getElementById('sms-message-2').innerHTML = smsHtml(CONFIG.sms.message2);
+
+// ── Lazy iframes ───────────────────────────────────────────────────────────
+lazyPhone('editor-iframe', CONFIG.editorUrl);
+lazyPhone('qr-iframe',     CONFIG.qrMenuUrl);
+
+// ── Features ───────────────────────────────────────────────────────────────
+document.getElementById('feature-grid').innerHTML = CONFIG.features.map(f =>
+  `<div class="feature-card">
+    <div class="feature-icon">${f.icon}</div>
+    <h3>${f.title}</h3>
+    <p>${f.desc}</p>
+  </div>`
+).join('');
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+document.getElementById('stats-bar').innerHTML = CONFIG.stats.map(s =>
+  `<div class="stat"><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`
+).join('');
+
+// ── Pricing ────────────────────────────────────────────────────────────────
+document.getElementById('pricing-grid').innerHTML = CONFIG.plans.map(p =>
+  `<div class="pricing-card${p.featured ? ' featured' : ''}">
+    ${p.badge ? `<div class="pricing-badge">${p.badge}</div>` : ''}
+    <div class="pricing-name">${p.name}</div>
+    <div class="pricing-price">${p.price}<span>${p.period}</span></div>
+    <div class="pricing-desc">${p.desc}</div>
+    <div class="pricing-features">${p.features.map(f => `<div class="pricing-feature">${f}</div>`).join('')}</div>
+    <button class="pricing-cta" onclick="openSalesModal()">${p.cta}</button>
+  </div>`
+).join('');
+
+// ── CTA ────────────────────────────────────────────────────────────────────
+document.getElementById('cta-headline').textContent = CONFIG.cta.headline;
+document.getElementById('cta-sub').textContent      = CONFIG.cta.sub;
+document.getElementById('cta-btn').textContent      = CONFIG.cta.btnText;
+</script>
+</body>
+</html>

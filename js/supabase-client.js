@@ -74,8 +74,18 @@ async function getSupabaseBusiness() {
       .single();
 
     if (userErr || !user) {
-      console.error('User lookup failed:', userErr ? userErr.message : 'No user record found');
-      return null;
+      var email = session.user.email;
+      var { data: userByEmail } = await supabase
+        .from('users')
+        .select('site_id, name, role')
+        .eq('email', email)
+        .single();
+      if (!userByEmail) {
+        console.error('User lookup failed by auth_id and email');
+        return null;
+      }
+      await supabase.from('users').update({ auth_id: session.user.id }).eq('email', email);
+      user = userByEmail;
     }
     _siteId = user.site_id;
 

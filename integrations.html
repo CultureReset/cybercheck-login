@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
+
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="integrations-hero">
+        <div class="container">
+            <h1>200+ Integrations</h1>
+            <p>Connect all your tools and automate everything</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">200+</span>
+                    <span class="stat-label">Apps</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">50K+</span>
+                    <span class="stat-label">Active Users</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">1M+</span>
+                    <span class="stat-label">Monthly Automations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="integrations-container">
+        <aside class="integrations-sidebar">
+            <h3>Categories</h3>
+            <div class="category-filters">
+                <label class="filter-item">
+                    <input type="checkbox" checked>
+                    <span>All Apps (200+)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>📊 CRM (24)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>💳 Payments (18)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>📧 Email (22)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>📱 SMS (12)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>📅 Calendar (15)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>🛒 E-commerce (28)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>💬 Chat (16)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>📊 Analytics (14)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>🎨 Design (10)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>👥 HR (12)</span>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox">
+                    <span>🗂️ Productivity (29)</span>
+                </label>
+            </div>
+        </aside>
+
+        <main class="integrations-main">
+            <div class="integrations-header">
+                <h2>Browse All Integrations</h2>
+                <select class="sort-select">
+                    <option>Most Popular</option>
+                    <option>Newest</option>
+                    <option>A-Z</option>
+                    <option>Most Used</option>
+                </select>
+            </div>
+
+            <!-- Featured Integrations -->
+            <section class="featured-section">
+                <h3>⭐ Most Popular</h3>
+                <div class="integrations-grid">
+                    <div class="integration-card featured">
+                        <div class="integration-badge">Featured</div>
+                        <div class="integration-icon">📊</div>
+                        <h4>CyberCheck CRM</h4>
+                        <p>Complete CRM with lead management, pipeline tracking, and analytics</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 12.5K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card featured">
+                        <div class="integration-badge">Featured</div>
+                        <div class="integration-icon">💳</div>
+                        <h4>Stripe</h4>
+                        <p>Accept payments, manage subscriptions, and handle invoices</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 10.2K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card featured">
+                        <div class="integration-badge">Featured</div>
+                        <div class="integration-icon">📧</div>
+                        <h4>Gmail</h4>
+                        <p>Send emails, read messages, manage labels and threads</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 9.8K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card featured">
+                        <div class="integration-badge">Featured</div>
+                        <div class="integration-icon">📱</div>
+                        <h4>Twilio</h4>
+                        <p>Send SMS, make calls, and manage phone numbers</p>
+                        <div class="integration-meta">
+                            <span>⚡ 3 tokens/call</span>
+                            <span>👥 8.4K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CRM Category -->
+            <section class="category-section">
+                <h3>📊 CRM & Sales</h3>
+                <div class="integrations-grid">
+                    <div class="integration-card">
+                        <div class="integration-icon">📊</div>
+                        <h4>Salesforce</h4>
+                        <p>World's #1 CRM platform</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 5.2K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">📊</div>
+                        <h4>HubSpot</h4>
+                        <p>Marketing, sales & service CRM</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 4.8K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">📊</div>
+                        <h4>Pipedrive</h4>
+                        <p>Sales pipeline management</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 3.6K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">📊</div>
+                        <h4>Zoho CRM</h4>
+                        <p>Customer relationship management</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 2.9K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- E-commerce Category -->
+            <section class="category-section">
+                <h3>🛒 E-commerce</h3>
+                <div class="integrations-grid">
+                    <div class="integration-card">
+                        <div class="integration-icon">🛒</div>
+                        <h4>Shopify</h4>
+                        <p>E-commerce platform for online stores</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 6.2K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">🛒</div>
+                        <h4>WooCommerce</h4>
+                        <p>WordPress e-commerce plugin</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 4.1K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">🛒</div>
+                        <h4>BigCommerce</h4>
+                        <p>Enterprise e-commerce platform</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 2.3K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">🛒</div>
+                        <h4>Amazon</h4>
+                        <p>Marketplace selling and fulfillment</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 3.8K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Communication Category -->
+            <section class="category-section">
+                <h3>💬 Communication</h3>
+                <div class="integrations-grid">
+                    <div class="integration-card">
+                        <div class="integration-icon">💬</div>
+                        <h4>Slack</h4>
+                        <p>Team messaging and collaboration</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 7.2K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">💬</div>
+                        <h4>Discord</h4>
+                        <p>Community chat platform</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 4.5K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">💬</div>
+                        <h4>Microsoft Teams</h4>
+                        <p>Enterprise team communication</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 5.8K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">💬</div>
+                        <h4>WhatsApp Business</h4>
+                        <p>Business messaging API</p>
+                        <div class="integration-meta">
+                            <span>⚡ 3 tokens/call</span>
+                            <span>👥 3.2K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Productivity Category -->
+            <section class="category-section">
+                <h3>🗂️ Productivity</h3>
+                <div class="integrations-grid">
+                    <div class="integration-card">
+                        <div class="integration-icon">📅</div>
+                        <h4>Google Calendar</h4>
+                        <p>Schedule and manage events</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 8.9K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">📝</div>
+                        <h4>Notion</h4>
+                        <p>All-in-one workspace</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 6.4K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">📋</div>
+                        <h4>Airtable</h4>
+                        <p>Flexible database platform</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 5.1K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+
+                    <div class="integration-card">
+                        <div class="integration-icon">✅</div>
+                        <h4>Asana</h4>
+                        <p>Project management tool</p>
+                        <div class="integration-meta">
+                            <span>⚡ 2 tokens/call</span>
+                            <span>👥 4.7K users</span>
+                        </div>
+                        <button class="btn-connect" onclick="location.href='login.html'">Connect</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View All CTA -->
+            <div class="view-all-cta">
+                <h3>Can't find what you need?</h3>
+                <p>Browse all 200+ integrations or build your own custom app</p>
+                <div class="cta-buttons">
+                    <button class="btn-large" onclick="location.href='index.html'">Browse All Apps</button>
+                    <button class="btn-large-outline" onclick="location.href='sandbox-editor.html'">Build Custom App</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <a href="pricing.html">Pricing</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="changelog.html">Changelog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Developers</h4>
+                <a href="developer-dashboard.html">Developer Portal</a>
+                <a href="api-documentation.html">API Docs</a>
+                <a href="help-center.html">Help Center</a>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="status.html">Status</a>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <a href="terms.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Ghost Marketplace. The Power Company of AI.</p>
+        </div>
+    </footer>
+
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .integrations-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .integrations-hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .integrations-hero p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .integrations-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            gap: 3rem;
+        }
+
+        .integrations-sidebar {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .integrations-sidebar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .category-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        .filter-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .filter-item input {
+            cursor: pointer;
+        }
+
+        .integrations-main {
+            max-width: 1000px;
+        }
+
+        .integrations-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .integrations-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .sort-select {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .category-section {
+            margin-bottom: 4rem;
+        }
+
+        .category-section h3,
+        .featured-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
+
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .integration-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .integration-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .integration-card.featured {
+            border-color: var(--primary);
+        }
+
+        .integration-badge {
+            position: absolute;
+            top: -10px;
+            right: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .integration-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .integration-card h4 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .integration-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+
+        .integration-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .btn-connect {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .view-all-cta {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .view-all-cta h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .view-all-cta p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-large-outline {
+            padding: 1rem 2rem;
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .footer-section a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .integrations-hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .integrations-container {
+                grid-template-columns: 1fr;
+            }
+
+            .integrations-sidebar {
+                position: static;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+<script src="js/navbar.js"></script>
+</body>
+</html>

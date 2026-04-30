@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automation Templates - CyberCheck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .business-name {
+      font-size: 18px;
+      color: #1a1a1a;
+      font-weight: 600;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #666;
+      text-decoration: none;
+    }
+    .nav-item:hover {
+      background: #f5f7fa;
+      color: #667eea;
+    }
+    .nav-item.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+    .header {
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 32px;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .tab:hover {
+      color: #667eea;
+    }
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 24px;
+    }
+    .template-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .template-card:hover {
+      border-color: #667eea;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .template-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .template-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .template-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .template-category {
+      font-size: 12px;
+      color: #667eea;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .template-description {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .template-workflow {
+      background: #f5f7fa;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    .template-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #666;
+    }
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    .popular-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #10b981;
+      color: white;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .templates-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="sidebar">
+    <div class="logo">🔐 CyberCheck</div>
+    <div class="business-name">🍕 Joe's Pizza</div>
+
+    <a href="dashboard-restaurant.html" class="nav-item">
+      <span>📊</span> Dashboard
+    </a>
+    <a href="ai-chat.html" class="nav-item">
+      <span>🤖</span> AI Assistant
+    </a>
+    <a href="automation-builder.html" class="nav-item active">
+      <span>⚡</span> Automations
+    </a>
+    <a href="connection-manager.html" class="nav-item">
+      <span>🔌</span> Connections
+    </a>
+    <a href="settings.html" class="nav-item">
+      <span>⚙️</span> Settings
+    </a>
+
+    <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+      <a href="#" class="nav-item">
+        <span>👤</span> John Doe
+      </a>
+      <a href="login.html" class="nav-item">
+        <span>🚪</span> Logout
+      </a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h1>⚡ Automation Templates</h1>
+      <p style="color: #666;">One-click automations ready to use</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="filterCategory('all')">All Templates</button>
+      <button class="tab" onclick="filterCategory('sales')">Sales</button>
+      <button class="tab" onclick="filterCategory('marketing')">Marketing</button>
+      <button class="tab" onclick="filterCategory('customer')">Customer Service</button>
+      <button class="tab" onclick="filterCategory('reporting')">Reporting</button>
+    </div>
+
+    <div class="templates-grid" id="templatesGrid">
+      <!-- Sales Templates -->
+      <div class="template-card" data-category="sales">
+        <div class="template-header">
+          <div class="template-icon">💳</div>
+          <div>
+            <div class="template-title">High-Value Customer Alert <span class="popular-badge">Popular</span></div>
+            <div class="template-category">Sales</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Get notified when customers make large purchases so you can send personalized thank you messages.
+        </div>
+        <div class="template-workflow">
+          💳 Stripe payment > $100 → 📧 Thank you email → 📸 Instagram shoutout
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('high-value')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="sales">
+        <div class="template-header">
+          <div class="template-icon">📊</div>
+          <div>
+            <div class="template-title">Daily Sales Report</div>
+            <div class="template-category">Sales</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Receive a daily summary of your sales from Stripe and Square delivered to your inbox every morning.
+        </div>
+        <div class="template-workflow">
+          ⏰ Every day 9AM → 💳 Pull Stripe data → ⬛ Pull Square data → 📧 Email report
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('daily-sales')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="sales">
+        <div class="template-header">
+          <div class="template-icon">🔔</div>
+          <div>
+            <div class="template-title">New Sale Notification</div>
+            <div class="template-category">Sales</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Get an instant SMS alert every time someone makes a purchase through Stripe or Square.
+        </div>
+        <div class="template-workflow">
+          💳 New payment → 💬 SMS to your phone
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('sale-notification')">Use This Template</button>
+        </div>
+      </div>
+
+      <!-- Marketing Templates -->
+      <div class="template-card" data-category="marketing">
+        <div class="template-header">
+          <div class="template-icon">📸</div>
+          <div>
+            <div class="template-title">Social Media Cross-Post <span class="popular-badge">Popular</span></div>
+            <div class="template-category">Marketing</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Automatically share your Instagram posts to Facebook to maximize your social media reach.
+        </div>
+        <div class="template-workflow">
+          📸 New Instagram post → 📘 Share to Facebook page
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('cross-post')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="marketing">
+        <div class="template-header">
+          <div class="template-icon">📧</div>
+          <div>
+            <div class="template-title">Welcome Email Sequence</div>
+            <div class="template-category">Marketing</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Send a welcome email series to new customers who make their first purchase.
+        </div>
+        <div class="template-workflow">
+          💳 First-time purchase → 📧 Welcome email → Wait 3 days → 📧 Follow-up
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('welcome-email')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="marketing">
+        <div class="template-header">
+          <div class="template-icon">🎉</div>
+          <div>
+            <div class="template-title">Birthday Discount Campaign</div>
+            <div class="template-category">Marketing</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Automatically send birthday discount codes to customers via email and SMS.
+        </div>
+        <div class="template-workflow">
+          🎂 Customer birthday → 📧 Email discount → 💬 SMS reminder
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('birthday')">Use This Template</button>
+        </div>
+      </div>
+
+      <!-- Customer Service Templates -->
+      <div class="template-card" data-category="customer">
+        <div class="template-header">
+          <div class="template-icon">💬</div>
+          <div>
+            <div class="template-title">Review Request After Purchase</div>
+            <div class="template-category">Customer Service</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Ask customers for reviews 3 days after their purchase to collect feedback and testimonials.
+        </div>
+        <div class="template-workflow">
+          💳 Purchase complete → Wait 3 days → 📧 Review request email
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('review-request')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="customer">
+        <div class="template-header">
+          <div class="template-icon">📱</div>
+          <div>
+            <div class="template-title">Order Ready Notification</div>
+            <div class="template-category">Customer Service</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Send SMS alerts to customers when their order is ready for pickup.
+        </div>
+        <div class="template-workflow">
+          ⬛ Order status changed → 💬 SMS: "Your order is ready!"
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('order-ready')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="customer">
+        <div class="template-header">
+          <div class="template-icon">🙏</div>
+          <div>
+            <div class="template-title">Thank You Message</div>
+            <div class="template-category">Customer Service</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Send personalized thank you messages after every purchase to build customer loyalty.
+        </div>
+        <div class="template-workflow">
+          💳 Payment received → 📧 Thank you email → 💬 SMS appreciation
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('thank-you')">Use This Template</button>
+        </div>
+      </div>
+
+      <!-- Reporting Templates -->
+      <div class="template-card" data-category="reporting">
+        <div class="template-header">
+          <div class="template-icon">📈</div>
+          <div>
+            <div class="template-title">Weekly Performance Report</div>
+            <div class="template-category">Reporting</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Get a comprehensive weekly report with sales, website traffic, and social media metrics.
+        </div>
+        <div class="template-workflow">
+          ⏰ Every Monday 9AM → 💳 Pull sales → 📊 Pull analytics → 📧 Email summary
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('weekly-report')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="reporting">
+        <div class="template-header">
+          <div class="template-icon">💰</div>
+          <div>
+            <div class="template-title">Monthly Revenue Summary</div>
+            <div class="template-category">Reporting</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Receive a detailed breakdown of monthly revenue across all payment platforms.
+        </div>
+        <div class="template-workflow">
+          ⏰ 1st of month → 💳 Stripe revenue → ⬛ Square revenue → 📧 Email report
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('monthly-revenue')">Use This Template</button>
+        </div>
+      </div>
+
+      <div class="template-card" data-category="reporting">
+        <div class="template-header">
+          <div class="template-icon">⚠️</div>
+          <div>
+            <div class="template-title">Low Inventory Alert</div>
+            <div class="template-category">Reporting</div>
+          </div>
+        </div>
+        <div class="template-description">
+          Get notified when inventory levels drop below a certain threshold.
+        </div>
+        <div class="template-workflow">
+          ⬛ Inventory < 10 units → 📧 Low stock alert → 💬 SMS to manager
+        </div>
+        <div class="template-actions">
+          <button class="btn btn-primary" onclick="activateTemplate('low-inventory')">Use This Template</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 48px; text-align: center;">
+      <p style="color: #666; margin-bottom: 16px;">Can't find what you need?</p>
+      <button class="btn btn-primary" onclick="window.location.href='automation-setup.html'" style="display: inline-flex; align-items: center; gap: 8px;">
+        🤖 Build Custom Automation
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function filterCategory(category) {
+      // Update active tab
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Filter cards
+      const cards = document.querySelectorAll('.template-card');
+      cards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function activateTemplate(templateId) {
+      const templates = {
+        'high-value': {
+          name: 'High-Value Customer Alert',
+          trigger: 'Stripe payment over $100',
+          action: 'Send thank you email and post to Instagram'
+        },
+        'daily-sales': {
+          name: 'Daily Sales Report',
+          trigger: 'Every day at 9:00 AM',
+          action: 'Pull sales data and email summary'
+        },
+        'sale-notification': {
+          name: 'New Sale Notification',
+          trigger: 'New payment received',
+          action: 'Send SMS notification'
+        },
+        'cross-post': {
+          name: 'Social Media Cross-Post',
+          trigger: 'New Instagram post',
+          action: 'Share to Facebook page'
+        },
+        'welcome-email': {
+          name: 'Welcome Email Sequence',
+          trigger: 'First-time purchase',
+          action: 'Send welcome email series'
+        },
+        'birthday': {
+          name: 'Birthday Discount Campaign',
+          trigger: 'Customer birthday',
+          action: 'Send discount code'
+        },
+        'review-request': {
+          name: 'Review Request After Purchase',
+          trigger: 'Purchase complete',
+          action: 'Send review request after 3 days'
+        },
+        'order-ready': {
+          name: 'Order Ready Notification',
+          trigger: 'Order status changed to ready',
+          action: 'Send SMS notification'
+        },
+        'thank-you': {
+          name: 'Thank You Message',
+          trigger: 'Payment received',
+          action: 'Send thank you message'
+        },
+        'weekly-report': {
+          name: 'Weekly Performance Report',
+          trigger: 'Every Monday at 9:00 AM',
+          action: 'Email weekly summary'
+        },
+        'monthly-revenue': {
+          name: 'Monthly Revenue Summary',
+          trigger: 'First of every month',
+          action: 'Email revenue report'
+        },
+        'low-inventory': {
+          name: 'Low Inventory Alert',
+          trigger: 'Inventory below 10 units',
+          action: 'Send alert notification'
+        }
+      };
+
+      const template = templates[templateId];
+
+      if (confirm(`Activate "${template.name}"?\n\nTrigger: ${template.trigger}\nAction: ${template.action}\n\nThis automation will start immediately.`)) {
+        alert(`✅ "${template.name}" has been activated!\n\n(Demo mode - In production, this would save to database and start running)`);
+        window.location.href = 'automation-builder.html';
+      }
+    }
+  </script>
+</body>
+</html>

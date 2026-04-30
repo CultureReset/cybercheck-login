@@ -1,0 +1,3579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CyberCheck</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 24px 32px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .back-btn:active {
+      transform: translateY(0);
+    }
+
+    .logo-icon {
+      font-size: 32px;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .admin-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: white;
+      border-radius: 16px;
+      padding: 8px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .nav-tab:hover {
+      background: #f3f4f6;
+      color: #333;
+    }
+
+    .nav-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .stat-change {
+      font-size: 13px;
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .stat-change.negative {
+      color: #ef4444;
+    }
+
+    .settings-section {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.2s;
+      font-family: 'Courier New', monospace;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: #999;
+      margin-top: 6px;
+    }
+
+    .btn-primary {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      padding: 14px 32px;
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-left: 12px;
+    }
+
+    .btn-secondary:hover {
+      background: #f8f9ff;
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .quick-link {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .quick-link:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+
+    .quick-link-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .quick-link-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .success-message {
+      background: #10b981;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+    }
+
+    .success-message.show {
+      display: flex;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 20px;
+      user-select: none;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .api-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .api-status.connected {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .api-status.disconnected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f9fafb;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 16px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .platform-nav {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .platform-nav-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .platform-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .platform-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #f8f9ff;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #667eea;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .platform-link:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .platform-link.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+    }
+
+    .nav-section {
+      margin-bottom: 16px;
+    }
+
+    .nav-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .dropdown-menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      min-width: 250px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      border-radius: 12px;
+      margin-top: 8px;
+      z-index: 1000;
+      padding: 8px;
+    }
+
+    .dropdown-content.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #333;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: #f8f9ff;
+      color: #667eea;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 0;
+    }
+
+    .editor-tab {
+      padding: 10px 20px;
+      border: none;
+      background: #f3f4f6;
+      color: #666;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .editor-tab:hover {
+      background: #e5e7eb;
+      color: #333;
+    }
+
+    .editor-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .editor-tab-content {
+      display: none;
+    }
+
+    .editor-tab-content.active {
+      display: block;
+    }
+
+    .menu-item-card {
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.2s;
+    }
+
+    .menu-item-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-delete {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background: #dc2626;
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .nav-tabs {
+        overflow-x: scroll;
+      }
+
+      .btn-secondary {
+        margin-left: 0;
+        margin-top: 12px;
+        display: block;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <div class="header">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <button onclick="goBack()" class="back-btn" title="Go Back">
+          ← Back
+        </button>
+        <div class="logo">
+          <div class="logo-icon">⚙️</div>
+          <div class="logo-text">CyberCheck Admin</div>
+        </div>
+      </div>
+      <div class="admin-badge">👤 Administrator</div>
+    </div>
+
+    <!-- Platform Navigation -->
+    <div class="platform-nav">
+      <div class="platform-nav-title">🚀 Quick Navigation - All Platforms</div>
+
+      <div class="nav-section">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+          <!-- Dropdown Menu -->
+          <div class="dropdown-menu">
+            <button class="dropdown-btn" onclick="toggleDropdown()">
+              📱 All Platforms & Pages
+              <span>▼</span>
+            </button>
+            <div id="platformDropdown" class="dropdown-content">
+              <!-- CyberCheck Section -->
+              <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase;">CyberCheck</div>
+              <a href="../../index.html" class="dropdown-item">
+                <span>🏠</span>
+                <span>CyberCheck Homepage</span>
+              </a>
+              <a href="customer-dashboard.html" class="dropdown-item">
+                <span>📊</span>
+                <span>Customer Dashboard</span>
+              </a>
+              <a href="card-builder.html" class="dropdown-item">
+                <span>🎨</span>
+                <span>Card Builder</span>
+              </a>
+              <a href="admin-pricing.html" class="dropdown-item">
+                <span>💰</span>
+                <span>Pricing Manager</span>
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <!-- Admin Dashboard Tabs -->
+              <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase;">Admin Dashboard Tabs</div>
+              <a href="#" onclick="switchTab('overview'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>📊</span>
+                <span>Overview</span>
+              </a>
+              <a href="#" onclick="switchTab('gcr-businesses'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>🏖️</span>
+                <span>GCR Businesses</span>
+              </a>
+              <a href="#" onclick="switchTab('bulk-events'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>📅</span>
+                <span>Bulk Events</span>
+              </a>
+              <a href="#" onclick="switchTab('api-keys'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>🔑</span>
+                <span>API Keys</span>
+              </a>
+              <a href="#" onclick="switchTab('pricing'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>💰</span>
+                <span>Pricing</span>
+              </a>
+              <a href="#" onclick="switchTab('users'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>👥</span>
+                <span>Users</span>
+              </a>
+              <a href="#" onclick="switchTab('settings'); toggleDropdown(); return false;" class="dropdown-item">
+                <span>⚙️</span>
+                <span>Settings</span>
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <!-- GCR Section -->
+              <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase;">Gulf Coast Radar</div>
+              <a href="file:///Users/owner/untitled%20folder/gcr-new/index.html" target="_blank" class="dropdown-item">
+                <span>🏖️</span>
+                <span>GCR Frontend</span>
+              </a>
+              <a href="file:///Users/owner/repos/GCR-Working-Jan2026/admin-dashboard.html" target="_blank" class="dropdown-item">
+                <span>⚙️</span>
+                <span>GCR Admin (Legacy)</span>
+              </a>
+              <a href="http://localhost:3002/api/businesses" target="_blank" class="dropdown-item">
+                <span>🔗</span>
+                <span>GCR API (Test)</span>
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <!-- Ghost OS Section -->
+              <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase;">Ghost OS</div>
+              <a href="file:///Users/owner/Documents%20copy/ghost-os/admin-dashboard.html" target="_blank" class="dropdown-item">
+                <span>👻</span>
+                <span>Ghost OS Dashboard</span>
+              </a>
+              <a href="file:///Users/owner/Documents%20copy/ghost-os-frontend/index.html" target="_blank" class="dropdown-item">
+                <span>🖥️</span>
+                <span>Ghost OS Frontend</span>
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <!-- Backend & API Section -->
+              <div style="padding: 8px 16px; font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase;">Backend & APIs</div>
+              <a href="http://localhost:3002" target="_blank" class="dropdown-item">
+                <span>🔌</span>
+                <span>GCR API Server</span>
+              </a>
+              <a href="http://localhost:3000" target="_blank" class="dropdown-item">
+                <span>🔌</span>
+                <span>Main API Server</span>
+              </a>
+              <a href="https://supabase.com/dashboard/project/lvmsmjlallptylonscat" target="_blank" class="dropdown-item">
+                <span>🗄️</span>
+                <span>Supabase Dashboard</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Quick Links to Dashboard Tabs -->
+          <a href="#" onclick="switchTab('overview'); return false;" class="platform-link">
+            📊 Overview
+          </a>
+          <a href="#" onclick="switchTab('gcr-businesses'); return false;" class="platform-link">
+            🏖️ GCR Businesses
+          </a>
+          <a href="#" onclick="switchTab('bulk-events'); return false;" class="platform-link">
+            📅 Bulk Events
+          </a>
+          <a href="#" onclick="switchTab('api-keys'); return false;" class="platform-link">
+            🔑 API Keys
+          </a>
+          <a href="#" onclick="switchTab('pricing'); return false;" class="platform-link">
+            💰 Pricing
+          </a>
+          <a href="#" onclick="switchTab('users'); return false;" class="platform-link">
+            👥 Users
+          </a>
+          <a href="#" onclick="switchTab('settings'); return false;" class="platform-link">
+            ⚙️ Settings
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="success-message">
+      <span>✅</span>
+      <span id="successText">Settings saved successfully!</span>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="nav-tab" onclick="switchTab('gcr-businesses')">🏖️ GCR Businesses</button>
+      <button class="nav-tab" onclick="switchTab('bulk-events')">📅 Bulk Events</button>
+      <button class="nav-tab" onclick="switchTab('api-keys')">🔑 API Keys</button>
+      <button class="nav-tab" onclick="switchTab('pricing')">💰 Pricing</button>
+      <button class="nav-tab" onclick="switchTab('users')">👥 Users</button>
+      <button class="nav-tab" onclick="switchTab('settings')">⚙️ Settings</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content active">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">1,247</div>
+          <div class="stat-change">+12% from last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Cards</div>
+          <div class="stat-value">3,891</div>
+          <div class="stat-change">+23% from last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Monthly Revenue</div>
+          <div class="stat-value">$42,350</div>
+          <div class="stat-change">+8% from last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Contact Exchanges</div>
+          <div class="stat-value">8,923</div>
+          <div class="stat-change">+31% from last month</div>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="settings-section">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="quick-links">
+          <a href="admin-pricing.html" class="quick-link">
+            <div class="quick-link-icon">💰</div>
+            <div class="quick-link-title">Manage Pricing</div>
+          </a>
+          <a href="#" class="quick-link" onclick="switchTab('api-keys'); return false;">
+            <div class="quick-link-icon">🔑</div>
+            <div class="quick-link-title">Configure APIs</div>
+          </a>
+          <a href="#" class="quick-link" onclick="switchTab('users'); return false;">
+            <div class="quick-link-icon">👥</div>
+            <div class="quick-link-title">View Users</div>
+          </a>
+          <a href="customer-dashboard.html" class="quick-link">
+            <div class="quick-link-icon">📊</div>
+            <div class="quick-link-title">Customer View</div>
+          </a>
+          <a href="card-builder.html" class="quick-link">
+            <div class="quick-link-icon">🎨</div>
+            <div class="quick-link-title">Card Builder</div>
+          </a>
+          <a href="index.html" class="quick-link">
+            <div class="quick-link-icon">🏠</div>
+            <div class="quick-link-title">Homepage</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- GCR Businesses Tab -->
+    <div id="gcr-businesses" class="tab-content">
+      <div class="settings-section">
+        <h2 class="section-title">
+          🏖️ Gulf Coast Radar - Business Management
+          <span id="gcrApiStatus" class="api-status disconnected">Connecting...</span>
+        </h2>
+        <p class="section-description">Manage all 820 businesses from your Supabase database</p>
+
+        <!-- Add New Business Button -->
+        <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+          <button onclick="openAddBusinessModal()" class="btn-primary">
+            ➕ Add New Business
+          </button>
+          <button onclick="toggleBulkUpload()" class="btn-secondary">
+            📤 Bulk Upload CSV
+          </button>
+        </div>
+
+        <!-- Bulk CSV Upload Section -->
+        <div id="bulkUploadSection" style="display: none; margin-bottom: 24px; padding: 24px; background: #f9fafb; border-radius: 12px; border: 2px solid #e5e7eb;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📤 Bulk Upload Businesses via CSV</h3>
+
+          <div style="background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #e5e7eb;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">CSV Format Requirements:</h4>
+            <div style="font-size: 13px; color: #666; line-height: 1.6;">
+              <p style="margin-bottom: 8px;">Your CSV file should have these columns (in any order):</p>
+              <ul style="margin-left: 20px; margin-bottom: 12px;">
+                <li><strong>name</strong> * (required) - Business name</li>
+                <li><strong>category</strong> * (required) - restaurants, coffee-sweets, nightlife, things-to-do, shopping, hotels, or other</li>
+                <li><strong>address</strong> - Full address</li>
+                <li><strong>phone</strong> - Phone number</li>
+                <li><strong>website</strong> - Website URL</li>
+                <li><strong>description</strong> - Short description</li>
+                <li><strong>about</strong> - Detailed information</li>
+                <li><strong>image</strong> - Main image URL</li>
+                <li><strong>profile_pic</strong> - Profile picture URL</li>
+                <li><strong>photos</strong> - Additional photo URLs (separate multiple with semicolons)</li>
+                <li><strong>rating</strong> - Rating (0-5)</li>
+                <li><strong>price_level</strong> - $, $$, $$$, or $$$$</li>
+                <li><strong>hours</strong> - Operating hours</li>
+                <li><strong>tags</strong> - Tags (separate multiple with semicolons)</li>
+                <li><strong>has_happy_hour</strong> - true or false</li>
+                <li><strong>featured</strong> - true or false</li>
+                <li><strong>verified</strong> - true or false</li>
+              </ul>
+              <p style="background: #fef3c7; padding: 8px 12px; border-radius: 4px; font-size: 12px;">
+                💡 <strong>Tip:</strong> For multiple values (photos, tags), separate them with semicolons (;)
+              </p>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label class="form-label">Select CSV File:</label>
+            <input type="file" id="bulkBusinessFile" accept=".csv" class="form-input" onchange="handleBulkBusinessFile(event)">
+          </div>
+
+          <!-- Preview -->
+          <div id="bulkBusinessPreview" style="display: none; margin-top: 16px;">
+            <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Preview:</h4>
+            <div id="bulkBusinessPreviewList" style="max-height: 300px; overflow-y: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;"></div>
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+              <button onclick="uploadBulkBusinesses()" class="btn-primary">✅ Upload <span id="bulkBusinessCount">0</span> Businesses</button>
+              <button onclick="cancelBulkBusinessUpload()" class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div id="bulkBusinessResults" style="display: none; margin-top: 16px;"></div>
+        </div>
+
+        <!-- Filters -->
+        <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+          <input
+            type="text"
+            id="gcrSearchInput"
+            class="form-input"
+            placeholder="Search businesses..."
+            style="flex: 1; min-width: 250px;"
+            oninput="filterGCRBusinesses()">
+
+          <select id="gcrCategoryFilter" class="form-input" style="width: 200px;" onchange="filterGCRBusinesses()">
+            <option value="">All Categories</option>
+            <option value="restaurants">Restaurants</option>
+            <option value="coffee-sweets">Coffee & Sweets</option>
+            <option value="things-to-do">Things to Do</option>
+            <option value="nightlife">Nightlife</option>
+            <option value="shopping">Shopping</option>
+            <option value="hotels">Hotels</option>
+            <option value="other">Other</option>
+          </select>
+
+          <select id="gcrStatusFilter" class="form-input" style="width: 150px;" onchange="filterGCRBusinesses()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="hidden">Hidden</option>
+            <option value="draft">Draft</option>
+          </select>
+
+          <button class="btn-primary" onclick="refreshGCRBusinesses()">🔄 Refresh</button>
+        </div>
+
+        <!-- Business Count -->
+        <div style="margin-bottom: 16px; font-size: 14px; color: #666;">
+          <span id="gcrBusinessCount">Loading...</span>
+        </div>
+
+        <!-- Businesses Table -->
+        <div class="table-container">
+          <table id="gcrBusinessesTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Rating</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="gcrBusinessesBody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                  <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                  <div>Loading businesses from Supabase...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Edit Business Modal -->
+      <div id="editBusinessModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+        <div style="max-width: 800px; margin: 40px auto; background: white; border-radius: 16px; padding: 32px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="font-size: 24px; font-weight: 700;">Edit Business</h2>
+            <button onclick="closeEditModal()" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999;">×</button>
+          </div>
+
+          <form id="editBusinessForm">
+            <input type="hidden" id="editBusinessId">
+
+            <div class="form-group">
+              <label class="form-label">Business Name</label>
+              <input type="text" id="editName" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="editCategory" class="form-input">
+                <option value="restaurants">Restaurants</option>
+                <option value="coffee-sweets">Coffee & Sweets</option>
+                <option value="things-to-do">Things to Do</option>
+                <option value="nightlife">Nightlife</option>
+                <option value="shopping">Shopping</option>
+                <option value="hotels">Hotels</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea id="editDescription" class="form-input" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" id="editPhone" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <input type="url" id="editWebsite" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input type="text" id="editAddress" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Hours</label>
+              <input type="text" id="editHours" class="form-input" placeholder="e.g., Mon-Fri 9am-5pm, Sat-Sun 10am-6pm">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select id="editStatus" class="form-input">
+                <option value="active">Active (Visible on site)</option>
+                <option value="hidden">Hidden</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+              <button type="submit" class="btn-primary">💾 Save Basic Info</button>
+              <button type="button" class="btn-secondary" onclick="openAdvancedEditor()">🍽️ Edit Menu & Details</button>
+              <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Business Modal -->
+    <div id="addBusinessModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1002; overflow-y: auto;">
+      <div style="max-width: 800px; margin: 20px auto; background: white; border-radius: 16px; padding: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 24px; font-weight: 600; margin: 0;">➕ Add New Business</h2>
+          <button onclick="closeAddBusinessModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">✕</button>
+        </div>
+
+        <div style="display: grid; gap: 20px;">
+          <!-- Basic Info -->
+          <div class="form-group">
+            <label class="form-label">Business Name *</label>
+            <input type="text" id="newBizName" class="form-input" placeholder="Enter business name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select id="newBizCategory" class="form-input" required>
+              <option value="restaurants">Restaurants</option>
+              <option value="coffee-sweets">Coffee & Sweets</option>
+              <option value="nightlife">Nightlife</option>
+              <option value="things-to-do">Things to Do</option>
+              <option value="shopping">Shopping</option>
+              <option value="hotels">Hotels</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" id="newBizAddress" class="form-input" placeholder="123 Main St, Orange Beach, AL">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" id="newBizPhone" class="form-input" placeholder="(251) 555-1234">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <input type="url" id="newBizWebsite" class="form-input" placeholder="https://example.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="newBizDescription" class="form-input" rows="3" placeholder="Brief description of the business"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">About (Detailed)</label>
+            <textarea id="newBizAbout" class="form-input" rows="4" placeholder="Detailed information about the business"></textarea>
+          </div>
+
+          <!-- Photos/Images -->
+          <div class="form-group">
+            <label class="form-label">Main Image URL</label>
+            <input type="url" id="newBizImage" class="form-input" placeholder="https://example.com/image.jpg">
+            <small style="color: #666; font-size: 12px;">Direct link to business photo</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Profile Picture URL</label>
+            <input type="url" id="newBizProfilePic" class="form-input" placeholder="https://example.com/profile.jpg">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Additional Photo URLs (comma-separated)</label>
+            <textarea id="newBizPhotos" class="form-input" rows="2" placeholder="https://example.com/photo1.jpg, https://example.com/photo2.jpg"></textarea>
+          </div>
+
+          <!-- Additional Info -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Rating (0-5)</label>
+              <input type="number" id="newBizRating" class="form-input" min="0" max="5" step="0.1" placeholder="4.5">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price Level</label>
+              <select id="newBizPriceLevel" class="form-input">
+                <option value="$">$ - Budget</option>
+                <option value="$$" selected>$$ - Moderate</option>
+                <option value="$$$">$$$ - Upscale</option>
+                <option value="$$$$">$$$$ - Fine Dining</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Hours</label>
+            <input type="text" id="newBizHours" class="form-input" placeholder="Mon-Sun: 11:00 AM - 9:00 PM">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" id="newBizTags" class="form-input" placeholder="seafood, waterfront, family-friendly">
+          </div>
+
+          <!-- Checkboxes -->
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="newBizHappyHour">
+              <span>Has Happy Hour</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="newBizFeatured">
+              <span>Featured</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="newBizVerified">
+              <span>Verified</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
+          <button onclick="saveNewBusiness()" class="btn-primary">💾 Save Business</button>
+          <button onclick="closeAddBusinessModal()" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Editor Modal -->
+    <div id="advancedEditorModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; overflow-y: auto;">
+      <div style="max-width: 1200px; margin: 20px auto; background: white; border-radius: 16px; padding: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 24px; font-weight: 700;">Advanced Business Editor</h2>
+          <button onclick="closeAdvancedEditor()" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999;">×</button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; flex-wrap: wrap;">
+          <button class="editor-tab active" onclick="switchEditorTab('menu')" data-tab="menu">🍽️ Menu</button>
+          <button class="editor-tab" onclick="switchEditorTab('drinks')" data-tab="drinks">🍹 Drinks</button>
+          <button class="editor-tab" onclick="switchEditorTab('happy-hour')" data-tab="happy-hour">🎉 Happy Hour</button>
+          <button class="editor-tab" onclick="switchEditorTab('specials')" data-tab="specials">⭐ Specials</button>
+          <button class="editor-tab" onclick="switchEditorTab('events')" data-tab="events">📅 Events</button>
+          <button class="editor-tab" onclick="switchEditorTab('bulk-upload')" data-tab="bulk-upload">📤 Bulk Upload</button>
+        </div>
+
+        <!-- Menu Tab -->
+        <div id="menu-tab" class="editor-tab-content active">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 600;">Menu Items</h3>
+            <button onclick="addMenuItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Menu Item</button>
+          </div>
+          <div id="menuItemsList"></div>
+        </div>
+
+        <!-- Drinks Tab -->
+        <div id="drinks-tab" class="editor-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 600;">Drinks</h3>
+            <button onclick="addDrinkItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Drink</button>
+          </div>
+          <div id="drinksItemsList"></div>
+        </div>
+
+        <!-- Happy Hour Tab -->
+        <div id="happy-hour-tab" class="editor-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 600;">Happy Hour</h3>
+            <button onclick="addHappyHourItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Happy Hour Item</button>
+          </div>
+          <div id="happyHourItemsList"></div>
+        </div>
+
+        <!-- Specials Tab -->
+        <div id="specials-tab" class="editor-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 600;">Specials</h3>
+            <button onclick="addSpecialItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Special</button>
+          </div>
+          <div id="specialsItemsList"></div>
+        </div>
+
+        <!-- Events Tab -->
+        <div id="events-tab" class="editor-tab-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 600;">Events</h3>
+            <button onclick="addEventItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Event</button>
+          </div>
+          <div id="eventsItemsList"></div>
+        </div>
+
+        <!-- Bulk Upload Tab -->
+        <div id="bulk-upload-tab" class="editor-tab-content">
+          <!-- CSV Upload Section -->
+          <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #0369a1;">📊 CSV Upload (Recommended)</h3>
+            <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+              Upload CSV files for menu items, drinks, events, specials, or happy hour items. Perfect for bulk weekly events!
+            </p>
+
+            <!-- Data Type Selection -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">What are you uploading?</label>
+              <select id="csvDataType" class="form-input" style="padding: 12px;">
+                <option value="restaurant_full_menu">Full Restaurant Menu (Auto-Organize)</option>
+                <option value="menu">Menu Items</option>
+                <option value="drinks">Drinks</option>
+                <option value="events">Events</option>
+                <option value="specials">Daily Specials</option>
+                <option value="happy_hour">Happy Hour Items</option>
+              </select>
+            </div>
+
+            <!-- CSV File Input -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Upload CSV File</label>
+              <input type="file" id="csvFileInput" accept=".csv" class="form-input" style="padding: 12px;">
+            </div>
+
+            <!-- CSV Format Help -->
+            <div id="csvFormatHelp" style="background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 16px; font-size: 13px;">
+              <strong>Required CSV Columns:</strong>
+              <div id="csvColumnsHelp" style="margin-top: 8px; font-family: 'Courier New', monospace; color: #475569;"></div>
+            </div>
+
+            <button onclick="processCSV()" class="btn-primary">📊 Process CSV & Preview</button>
+          </div>
+
+          <!-- JSON Upload Section -->
+          <div style="border-top: 2px solid #e5e7eb; padding-top: 24px;">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">📤 JSON Upload (Advanced)</h3>
+            <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+              Upload complete business data in JSON format. Empty sections will preserve existing data.
+            </p>
+            <textarea id="bulkUploadJSON" class="form-input" rows="15" style="font-family: 'Monaco', 'Courier New', monospace; font-size: 12px;" placeholder='{
+  "menu": [...],
+  "drinks": [...],
+  "happy_hour": {...},
+  "specials": [...],
+  "events": [...]
+}'></textarea>
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 16px; font-size: 13px;">
+              <strong>Note:</strong> Empty sections will preserve existing data. Only include sections you want to update.
+            </div>
+            <button onclick="applyBulkUpload()" class="btn-primary" style="margin-top: 16px;">📤 Apply JSON Upload</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
+          <button onclick="saveAdvancedChanges()" class="btn-primary">💾 Save All Changes</button>
+          <button onclick="closeAdvancedEditor()" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Events Tab -->
+    <div id="bulk-events" class="tab-content">
+      <div class="settings-section">
+        <h2 class="section-title">📅 Bulk Event Management</h2>
+        <p class="section-description">Upload events for multiple businesses at once. System will automatically match events to businesses.</p>
+
+        <!-- CSV Format -->
+        <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #0369a1;">📊 CSV Format</h3>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+            Upload a CSV file with the following columns. The system will automatically match events to businesses by name or location.
+          </p>
+
+          <div style="background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 16px; font-size: 13px;">
+            <strong>Required Columns:</strong>
+            <div style="margin-top: 8px; font-family: 'Courier New', monospace; color: #475569;">
+              business_name, event_name, description, date, start_time, end_time, price, image_url
+            </div>
+            <div style="margin-top: 12px; font-size: 12px; color: #64748b;">
+              <strong>Example:</strong><br>
+              The Craft Bar, Trivia Night, Weekly trivia competition, 2026-02-05, 19:00, 22:00, Free, https://...
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Upload Events CSV</label>
+            <input type="file" id="bulkEventsFile" accept=".csv" class="form-input" style="padding: 12px;">
+          </div>
+
+          <button onclick="processBulkEvents()" class="btn-primary">📊 Process & Match Events</button>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="bulkEventsPreview" style="display: none; background: #fff; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #059669;">✅ Events Matched & Ready</h3>
+          <div id="matchedEventsStats" style="margin-bottom: 16px; padding: 16px; background: #f0fdf4; border-radius: 8px;"></div>
+          <div id="matchedEventsList" style="max-height: 400px; overflow-y: auto;"></div>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button onclick="uploadBulkEvents()" class="btn-primary">🚀 Upload All Events to Businesses</button>
+            <button onclick="cancelBulkEvents()" class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="bulkEventsResults" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- API Keys Tab -->
+    <div id="api-keys" class="tab-content">
+      <!-- OAuth Settings -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          🔐 OAuth Integration
+          <span class="api-status connected">Connected</span>
+        </h2>
+        <p class="section-description">Configure your OAuth providers for social login (Google, Facebook, Microsoft)</p>
+
+        <form id="oauthForm">
+          <div class="form-group">
+            <label class="form-label">Google OAuth Client ID</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="googleClientId"
+                placeholder="123456789-abcdefghijklmnop.apps.googleusercontent.com"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('googleClientId')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Facebook App ID</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="facebookAppId"
+                placeholder="1234567890123456"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('facebookAppId')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://developers.facebook.com/" target="_blank">Facebook Developers</a></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Microsoft Client ID (Optional)</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="microsoftClientId"
+                placeholder="12345678-1234-1234-1234-123456789012"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('microsoftClientId')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://portal.azure.com/" target="_blank">Azure Portal</a></div>
+          </div>
+
+          <button type="submit" class="btn-primary">Save OAuth Settings</button>
+          <button type="button" class="btn-secondary" onclick="testOAuthConnection()">Test Connection</button>
+        </form>
+      </div>
+
+      <!-- Payment Integration -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          💳 Payment Integration
+          <span class="api-status disconnected">Not Connected</span>
+        </h2>
+        <p class="section-description">Configure Stripe for payment processing</p>
+
+        <form id="stripeForm">
+          <div class="form-group">
+            <label class="form-label">Stripe Publishable Key</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="stripePublishableKey"
+                placeholder="pk_live_..."
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('stripePublishableKey')">👁️</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Stripe Secret Key</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="stripeSecretKey"
+                placeholder="sk_live_..."
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('stripeSecretKey')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://dashboard.stripe.com/" target="_blank">Stripe Dashboard</a></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Stripe Webhook Secret</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="stripeWebhookSecret"
+                placeholder="whsec_..."
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('stripeWebhookSecret')">👁️</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">Save Stripe Settings</button>
+          <button type="button" class="btn-secondary" onclick="testStripeConnection()">Test Connection</button>
+        </form>
+      </div>
+
+      <!-- Email Service -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          📧 Email Service
+          <span class="api-status disconnected">Not Connected</span>
+        </h2>
+        <p class="section-description">Configure email service for notifications and contact exchanges</p>
+
+        <form id="emailForm">
+          <div class="form-group">
+            <label class="form-label">Email Provider</label>
+            <select class="form-input" id="emailProvider">
+              <option value="">Select Provider</option>
+              <option value="sendgrid">SendGrid</option>
+              <option value="mailgun">Mailgun</option>
+              <option value="ses">Amazon SES</option>
+              <option value="smtp">Custom SMTP</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">API Key / Username</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="emailApiKey"
+                placeholder="SG...."
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('emailApiKey')">👁️</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">From Email Address</label>
+            <input
+              type="email"
+              class="form-input"
+              id="fromEmail"
+              placeholder="noreply@cybercheck.io"
+              value="">
+          </div>
+
+          <button type="submit" class="btn-primary">Save Email Settings</button>
+          <button type="button" class="btn-secondary" onclick="sendTestEmail()">Send Test Email</button>
+        </form>
+      </div>
+
+      <!-- Backend API -->
+      <div class="settings-section">
+        <h2 class="section-title">🔗 Backend API Configuration</h2>
+        <p class="section-description">Configure your backend API endpoint</p>
+
+        <form id="backendForm">
+          <div class="form-group">
+            <label class="form-label">API Base URL</label>
+            <input
+              type="url"
+              class="form-input"
+              id="apiBaseUrl"
+              placeholder="http://localhost:3000/api/cybercheck"
+              value="http://localhost:3000/api/cybercheck">
+            <div class="form-help">Your backend API endpoint (currently used in api-client.js)</div>
+          </div>
+
+          <button type="submit" class="btn-primary">Save Backend Settings</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pricing Tab -->
+    <div id="pricing" class="tab-content">
+      <div class="settings-section">
+        <h2 class="section-title">💰 Pricing Management</h2>
+        <p class="section-description">Go to the full pricing dashboard to manage packages and features</p>
+        <a href="admin-pricing.html" class="btn-primary" style="display: inline-block; text-decoration: none;">Open Pricing Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="users" class="tab-content">
+      <div class="settings-section">
+        <h2 class="section-title">👥 User Management</h2>
+        <p class="section-description">View and manage all platform users</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Plan</th>
+                <th>Cards</th>
+                <th>Status</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="user-avatar">JM</div>
+                    <span>Joe Martinez</span>
+                  </div>
+                </td>
+                <td>joe@joespizza.com</td>
+                <td><strong>Professional</strong></td>
+                <td>3</td>
+                <td><span class="api-status connected">Active</span></td>
+                <td>Dec 15, 2025</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="user-avatar">MT</div>
+                    <span>Mike Thompson</span>
+                  </div>
+                </td>
+                <td>captain@gulfadventure.com</td>
+                <td><strong>Business</strong></td>
+                <td>5</td>
+                <td><span class="api-status connected">Active</span></td>
+                <td>Dec 10, 2025</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="user-avatar">SA</div>
+                    <span>Sarah Anderson</span>
+                  </div>
+                </td>
+                <td>sarah@realestate.com</td>
+                <td><strong>Starter</strong></td>
+                <td>1</td>
+                <td><span class="api-status connected">Active</span></td>
+                <td>Jan 2, 2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings" class="tab-content">
+      <div class="settings-section">
+        <h2 class="section-title">⚙️ Platform Settings</h2>
+        <p class="section-description">Configure general platform settings</p>
+
+        <form id="platformForm">
+          <div class="form-group">
+            <label class="form-label">Platform Name</label>
+            <input
+              type="text"
+              class="form-input"
+              id="platformName"
+              value="CyberCheck">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Primary Domain</label>
+            <input
+              type="text"
+              class="form-input"
+              id="primaryDomain"
+              placeholder="cybercheck.io"
+              value="cybercheck.io">
+            <div class="form-help">Users will get username.cybercheck.io subdomains</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Support Email</label>
+            <input
+              type="email"
+              class="form-input"
+              id="supportEmail"
+              placeholder="support@cybercheck.io"
+              value="support@cybercheck.io">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Enable User Registration</label>
+            <select class="form-input" id="enableRegistration">
+              <option value="true">Yes - Open Registration</option>
+              <option value="false">No - Invite Only</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Default User Plan</label>
+            <select class="form-input" id="defaultPlan">
+              <option value="starter">Starter (Free Trial)</option>
+              <option value="professional">Professional</option>
+              <option value="business">Business</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary">Save Platform Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Back Button Navigation
+    function goBack() {
+      // Check if there's history to go back to
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // If no history, go to CyberCheck homepage
+        window.location.href = '../../index.html';
+      }
+    }
+
+    // Dropdown Menu Toggle
+    function toggleDropdown() {
+      const dropdown = document.getElementById('platformDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+      if (!e.target.matches('.dropdown-btn') && !e.target.closest('.dropdown-btn')) {
+        const dropdown = document.getElementById('platformDropdown');
+        if (dropdown && dropdown.classList.contains('show')) {
+          dropdown.classList.remove('show');
+        }
+      }
+    });
+
+    // Tab Switching
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Remove active from all nav tabs
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+
+      // Highlight nav tab
+      event.target.classList.add('active');
+    }
+
+    // Toggle password visibility
+    function toggleVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+      } else {
+        input.type = input.type === 'text' ? 'password' : 'text';
+      }
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      const successMsg = document.getElementById('successMessage');
+      document.getElementById('successText').textContent = message;
+      successMsg.classList.add('show');
+      setTimeout(() => {
+        successMsg.classList.remove('show');
+      }, 3000);
+    }
+
+    // OAuth Form Submit
+    document.getElementById('oauthForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const settings = {
+        googleClientId: document.getElementById('googleClientId').value,
+        facebookAppId: document.getElementById('facebookAppId').value,
+        microsoftClientId: document.getElementById('microsoftClientId').value
+      };
+
+      // Save to localStorage for now (in production, save to backend)
+      localStorage.setItem('oauthSettings', JSON.stringify(settings));
+
+      // Update the actual config files
+      updateOAuthConfig(settings);
+
+      showSuccess('OAuth settings saved successfully!');
+    });
+
+    // Stripe Form Submit
+    document.getElementById('stripeForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const settings = {
+        publishableKey: document.getElementById('stripePublishableKey').value,
+        secretKey: document.getElementById('stripeSecretKey').value,
+        webhookSecret: document.getElementById('stripeWebhookSecret').value
+      };
+
+      localStorage.setItem('stripeSettings', JSON.stringify(settings));
+      showSuccess('Stripe settings saved successfully!');
+    });
+
+    // Email Form Submit
+    document.getElementById('emailForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const settings = {
+        provider: document.getElementById('emailProvider').value,
+        apiKey: document.getElementById('emailApiKey').value,
+        fromEmail: document.getElementById('fromEmail').value
+      };
+
+      localStorage.setItem('emailSettings', JSON.stringify(settings));
+      showSuccess('Email settings saved successfully!');
+    });
+
+    // Backend Form Submit
+    document.getElementById('backendForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const apiBaseUrl = document.getElementById('apiBaseUrl').value;
+      localStorage.setItem('apiBaseUrl', apiBaseUrl);
+      showSuccess('Backend settings saved! Reload pages to apply changes.');
+    });
+
+    // Platform Form Submit
+    document.getElementById('platformForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const settings = {
+        platformName: document.getElementById('platformName').value,
+        primaryDomain: document.getElementById('primaryDomain').value,
+        supportEmail: document.getElementById('supportEmail').value,
+        enableRegistration: document.getElementById('enableRegistration').value,
+        defaultPlan: document.getElementById('defaultPlan').value
+      };
+
+      localStorage.setItem('platformSettings', JSON.stringify(settings));
+      showSuccess('Platform settings saved successfully!');
+    });
+
+    // Update OAuth config in login/signup pages
+    function updateOAuthConfig(settings) {
+      // This would typically make an API call to update the config
+      // For now, we'll store in localStorage and pages will read from there
+      console.log('OAuth config updated:', settings);
+    }
+
+    // Test OAuth Connection
+    function testOAuthConnection() {
+      showSuccess('Testing OAuth connection... Check browser console for details');
+      console.log('OAuth Test: Would verify credentials with providers');
+    }
+
+    // Test Stripe Connection
+    function testStripeConnection() {
+      showSuccess('Testing Stripe connection... Check browser console for details');
+      console.log('Stripe Test: Would verify credentials with Stripe API');
+    }
+
+    // Send Test Email
+    function sendTestEmail() {
+      showSuccess('Sending test email... Check your inbox!');
+      console.log('Email Test: Would send test email via configured provider');
+    }
+
+    // Load saved settings on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      // Load OAuth settings
+      const oauthSettings = JSON.parse(localStorage.getItem('oauthSettings') || '{}');
+      if (oauthSettings.googleClientId) {
+        document.getElementById('googleClientId').value = oauthSettings.googleClientId;
+      }
+      if (oauthSettings.facebookAppId) {
+        document.getElementById('facebookAppId').value = oauthSettings.facebookAppId;
+      }
+      if (oauthSettings.microsoftClientId) {
+        document.getElementById('microsoftClientId').value = oauthSettings.microsoftClientId;
+      }
+
+      // Load Stripe settings
+      const stripeSettings = JSON.parse(localStorage.getItem('stripeSettings') || '{}');
+      if (stripeSettings.publishableKey) {
+        document.getElementById('stripePublishableKey').value = stripeSettings.publishableKey;
+      }
+      if (stripeSettings.secretKey) {
+        document.getElementById('stripeSecretKey').value = stripeSettings.secretKey;
+      }
+      if (stripeSettings.webhookSecret) {
+        document.getElementById('stripeWebhookSecret').value = stripeSettings.webhookSecret;
+      }
+
+      // Load Email settings
+      const emailSettings = JSON.parse(localStorage.getItem('emailSettings') || '{}');
+      if (emailSettings.provider) {
+        document.getElementById('emailProvider').value = emailSettings.provider;
+      }
+      if (emailSettings.apiKey) {
+        document.getElementById('emailApiKey').value = emailSettings.apiKey;
+      }
+      if (emailSettings.fromEmail) {
+        document.getElementById('fromEmail').value = emailSettings.fromEmail;
+      }
+
+      // Load Backend settings
+      const apiBaseUrl = localStorage.getItem('apiBaseUrl');
+      if (apiBaseUrl) {
+        document.getElementById('apiBaseUrl').value = apiBaseUrl;
+      }
+
+      // Load Platform settings
+      const platformSettings = JSON.parse(localStorage.getItem('platformSettings') || '{}');
+      if (platformSettings.platformName) {
+        document.getElementById('platformName').value = platformSettings.platformName;
+      }
+      if (platformSettings.primaryDomain) {
+        document.getElementById('primaryDomain').value = platformSettings.primaryDomain;
+      }
+      if (platformSettings.supportEmail) {
+        document.getElementById('supportEmail').value = platformSettings.supportEmail;
+      }
+      if (platformSettings.enableRegistration) {
+        document.getElementById('enableRegistration').value = platformSettings.enableRegistration;
+      }
+      if (platformSettings.defaultPlan) {
+        document.getElementById('defaultPlan').value = platformSettings.defaultPlan;
+      }
+    });
+
+    // ========================================
+    // GCR BUSINESSES MANAGEMENT
+    // ========================================
+
+    const GCR_API_URL = 'http://localhost:3002/api';
+    let allGCRBusinesses = [];
+    let filteredGCRBusinesses = [];
+
+    // Load GCR businesses from Supabase
+    async function loadGCRBusinesses() {
+      try {
+        const response = await fetch(`${GCR_API_URL}/admin/businesses`);
+        const data = await response.json();
+
+        if (data.success) {
+          allGCRBusinesses = data.businesses;
+          filteredGCRBusinesses = allGCRBusinesses;
+          displayGCRBusinesses(filteredGCRBusinesses);
+          updateGCRStatus('connected', `${data.count} businesses loaded`);
+        } else {
+          throw new Error('Failed to load businesses');
+        }
+      } catch (error) {
+        console.error('Error loading GCR businesses:', error);
+        updateGCRStatus('disconnected', 'API not available');
+        document.getElementById('gcrBusinessesBody').innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 40px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+              <div style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">Cannot connect to GCR API</div>
+              <div style="color: #666; font-size: 14px;">Make sure the API is running on http://localhost:3002</div>
+              <button onclick="refreshGCRBusinesses()" class="btn-primary" style="margin-top: 16px;">Retry Connection</button>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Display businesses in table
+    function displayGCRBusinesses(businesses) {
+      const tbody = document.getElementById('gcrBusinessesBody');
+
+      if (businesses.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 40px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+              <div>No businesses found matching your filters</div>
+            </td>
+          </tr>
+        `;
+        document.getElementById('gcrBusinessCount').textContent = 'No businesses found';
+        return;
+      }
+
+      tbody.innerHTML = businesses.map(business => `
+        <tr>
+          <td>
+            <div style="font-weight: 600;">${business.name}</div>
+            <div style="font-size: 12px; color: #999; margin-top: 4px;">${business.vicinity || business.address || ''}</div>
+          </td>
+          <td>
+            <span style="padding: 4px 8px; background: #f3f4f6; border-radius: 6px; font-size: 12px; font-weight: 600;">
+              ${business.category || 'other'}
+            </span>
+          </td>
+          <td>
+            ${business.rating ? `⭐ ${business.rating} (${business.user_ratings_total || 0})` : 'No rating'}
+          </td>
+          <td>${business.phone || '-'}</td>
+          <td>
+            <span class="api-status ${business.status === 'active' ? 'connected' : 'disconnected'}">
+              ${business.status || 'active'}
+            </span>
+          </td>
+          <td>
+            <button onclick="editGCRBusiness('${business.id}')" style="background: #667eea; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+              ✏️ Edit
+            </button>
+            <button onclick="toggleGCRBusinessStatus('${business.id}', '${business.status}')" style="background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; margin-left: 8px;">
+              ${business.status === 'active' ? '👁️ Hide' : '✅ Activate'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('gcrBusinessCount').innerHTML = `
+        Showing <strong>${businesses.length}</strong> of <strong>${allGCRBusinesses.length}</strong> businesses
+      `;
+    }
+
+    // Filter businesses
+    function filterGCRBusinesses() {
+      const searchTerm = document.getElementById('gcrSearchInput').value.toLowerCase();
+      const categoryFilter = document.getElementById('gcrCategoryFilter').value;
+      const statusFilter = document.getElementById('gcrStatusFilter').value;
+
+      filteredGCRBusinesses = allGCRBusinesses.filter(business => {
+        const matchesSearch = !searchTerm ||
+          business.name.toLowerCase().includes(searchTerm) ||
+          (business.address && business.address.toLowerCase().includes(searchTerm)) ||
+          (business.vicinity && business.vicinity.toLowerCase().includes(searchTerm));
+
+        const matchesCategory = !categoryFilter || business.category === categoryFilter;
+        const matchesStatus = !statusFilter || business.status === statusFilter;
+
+        return matchesSearch && matchesCategory && matchesStatus;
+      });
+
+      displayGCRBusinesses(filteredGCRBusinesses);
+    }
+
+    // Refresh businesses
+    function refreshGCRBusinesses() {
+      updateGCRStatus('disconnected', 'Refreshing...');
+      loadGCRBusinesses();
+    }
+
+    // Update API status
+    function updateGCRStatus(status, text) {
+      const statusEl = document.getElementById('gcrApiStatus');
+      statusEl.className = `api-status ${status}`;
+      statusEl.textContent = text;
+    }
+
+    // Edit business
+    function editGCRBusiness(businessId) {
+      const business = allGCRBusinesses.find(b => b.id === businessId);
+      if (!business) return;
+
+      document.getElementById('editBusinessId').value = business.id;
+      document.getElementById('editName').value = business.name || '';
+      document.getElementById('editCategory').value = business.category || 'other';
+      document.getElementById('editDescription').value = business.description || '';
+      document.getElementById('editPhone').value = business.phone || '';
+      document.getElementById('editWebsite').value = business.website || '';
+      document.getElementById('editAddress').value = business.address || business.vicinity || '';
+      document.getElementById('editHours').value = business.hours || '';
+      document.getElementById('editStatus').value = business.status || 'active';
+
+      document.getElementById('editBusinessModal').style.display = 'block';
+    }
+
+    // Close edit modal
+    function closeEditModal() {
+      document.getElementById('editBusinessModal').style.display = 'none';
+    }
+
+    // Open Add New Business modal
+    function openAddBusinessModal() {
+      // Reset all form fields
+      document.getElementById('newBizName').value = '';
+      document.getElementById('newBizCategory').value = 'restaurants';
+      document.getElementById('newBizAddress').value = '';
+      document.getElementById('newBizPhone').value = '';
+      document.getElementById('newBizWebsite').value = '';
+      document.getElementById('newBizDescription').value = '';
+      document.getElementById('newBizAbout').value = '';
+      document.getElementById('newBizImage').value = '';
+      document.getElementById('newBizProfilePic').value = '';
+      document.getElementById('newBizPhotos').value = '';
+      document.getElementById('newBizRating').value = '';
+      document.getElementById('newBizPriceLevel').value = '$$';
+      document.getElementById('newBizHours').value = '';
+      document.getElementById('newBizTags').value = '';
+      document.getElementById('newBizHappyHour').checked = false;
+      document.getElementById('newBizFeatured').checked = false;
+      document.getElementById('newBizVerified').checked = false;
+
+      document.getElementById('addBusinessModal').style.display = 'block';
+    }
+
+    // Close Add New Business modal
+    function closeAddBusinessModal() {
+      document.getElementById('addBusinessModal').style.display = 'none';
+    }
+
+    // Save new business
+    async function saveNewBusiness() {
+      const name = document.getElementById('newBizName').value.trim();
+      const category = document.getElementById('newBizCategory').value;
+
+      if (!name) {
+        alert('Please enter a business name');
+        return;
+      }
+
+      if (!category) {
+        alert('Please select a category');
+        return;
+      }
+
+      // Collect all form data
+      const address = document.getElementById('newBizAddress').value.trim();
+      const phone = document.getElementById('newBizPhone').value.trim();
+      const website = document.getElementById('newBizWebsite').value.trim();
+      const description = document.getElementById('newBizDescription').value.trim();
+      const about = document.getElementById('newBizAbout').value.trim();
+      const image = document.getElementById('newBizImage').value.trim();
+      const profilePic = document.getElementById('newBizProfilePic').value.trim();
+      const photosInput = document.getElementById('newBizPhotos').value.trim();
+      const rating = parseFloat(document.getElementById('newBizRating').value) || null;
+      const priceLevel = document.getElementById('newBizPriceLevel').value;
+      const hours = document.getElementById('newBizHours').value.trim();
+      const tagsInput = document.getElementById('newBizTags').value.trim();
+      const hasHappyHour = document.getElementById('newBizHappyHour').checked;
+      const featured = document.getElementById('newBizFeatured').checked;
+      const verified = document.getElementById('newBizVerified').checked;
+
+      // Parse photos (comma-separated)
+      const photos = photosInput ? photosInput.split(',').map(p => p.trim()).filter(p => p) : [];
+
+      // Parse tags (comma-separated)
+      const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+
+      // Create new business object
+      const newBusiness = {
+        name: name,
+        category: category,
+        address: address || null,
+        phone: phone || null,
+        website: website || null,
+        description: description || null,
+        about: about || null,
+        image: image || null,
+        profile_pic: profilePic || null,
+        photos: photos.length > 0 ? photos : null,
+        rating: rating,
+        price_level: priceLevel,
+        hours: hours || null,
+        tags: tags.length > 0 ? tags : null,
+        has_happy_hour: hasHappyHour,
+        featured: featured,
+        verified: verified,
+        status: 'active',
+        menu: [],
+        drinks: [],
+        happy_hour: [],
+        specials: [],
+        events: []
+      };
+
+      try {
+        const response = await fetch(`${GCR_API_URL}/businesses`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newBusiness)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess('✅ Business added successfully!');
+          closeAddBusinessModal();
+          refreshGCRBusinesses();
+        } else {
+          throw new Error(data.error || 'Failed to add business');
+        }
+      } catch (error) {
+        console.error('Error adding business:', error);
+        alert('❌ Error adding business: ' + error.message);
+      }
+    }
+
+    // Toggle bulk upload section
+    function toggleBulkUpload() {
+      const section = document.getElementById('bulkUploadSection');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Handle bulk business CSV file
+    let bulkBusinessData = [];
+
+    function handleBulkBusinessFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        parseBulkBusinessCSV(text);
+      };
+      reader.readAsText(file);
+    }
+
+    // Parse bulk business CSV
+    function parseBulkBusinessCSV(csvText) {
+      const lines = csvText.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        alert('CSV file is empty or invalid');
+        return;
+      }
+
+      // Parse header
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+      // Required columns
+      const requiredCols = ['name', 'category'];
+      const missingCols = requiredCols.filter(col => !headers.includes(col));
+      if (missingCols.length > 0) {
+        alert(`Missing required columns: ${missingCols.join(', ')}`);
+        return;
+      }
+
+      // Parse data rows
+      bulkBusinessData = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length === 0) continue;
+
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+
+        // Required fields
+        if (!row.name || !row.category) continue;
+
+        // Parse boolean values
+        row.has_happy_hour = row.has_happy_hour === 'true' || row.has_happy_hour === '1';
+        row.featured = row.featured === 'true' || row.featured === '1';
+        row.verified = row.verified === 'true' || row.verified === '1';
+
+        // Parse rating
+        if (row.rating) {
+          row.rating = parseFloat(row.rating);
+          if (isNaN(row.rating)) row.rating = null;
+        }
+
+        // Parse arrays (semicolon-separated)
+        if (row.photos) {
+          row.photos = row.photos.split(';').map(p => p.trim()).filter(p => p);
+        }
+        if (row.tags) {
+          row.tags = row.tags.split(';').map(t => t.trim()).filter(t => t);
+        }
+
+        bulkBusinessData.push(row);
+      }
+
+      if (bulkBusinessData.length === 0) {
+        alert('No valid businesses found in CSV');
+        return;
+      }
+
+      displayBulkBusinessPreview();
+    }
+
+    // Parse CSV line (handles quoted values)
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    // Display bulk business preview
+    function displayBulkBusinessPreview() {
+      const previewList = document.getElementById('bulkBusinessPreviewList');
+      previewList.innerHTML = bulkBusinessData.map((biz, index) => `
+        <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; ${index % 2 === 0 ? 'background: #f9fafb;' : ''}">
+          <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${biz.name}</div>
+          <div style="font-size: 13px; color: #666;">
+            Category: ${biz.category} ${biz.address ? `• ${biz.address}` : ''} ${biz.phone ? `• ${biz.phone}` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('bulkBusinessCount').textContent = bulkBusinessData.length;
+      document.getElementById('bulkBusinessPreview').style.display = 'block';
+      document.getElementById('bulkBusinessResults').style.display = 'none';
+    }
+
+    // Upload bulk businesses
+    async function uploadBulkBusinesses() {
+      if (bulkBusinessData.length === 0) {
+        alert('No businesses to upload');
+        return;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+      const errors = [];
+
+      for (const bizData of bulkBusinessData) {
+        try {
+          const newBusiness = {
+            name: bizData.name,
+            category: bizData.category,
+            address: bizData.address || null,
+            phone: bizData.phone || null,
+            website: bizData.website || null,
+            description: bizData.description || null,
+            about: bizData.about || null,
+            image: bizData.image || null,
+            profile_pic: bizData.profile_pic || null,
+            photos: Array.isArray(bizData.photos) && bizData.photos.length > 0 ? bizData.photos : null,
+            rating: bizData.rating || null,
+            price_level: bizData.price_level || '$$',
+            hours: bizData.hours || null,
+            tags: Array.isArray(bizData.tags) && bizData.tags.length > 0 ? bizData.tags : null,
+            has_happy_hour: bizData.has_happy_hour || false,
+            featured: bizData.featured || false,
+            verified: bizData.verified || false,
+            status: 'active',
+            menu: [],
+            drinks: [],
+            happy_hour: [],
+            specials: [],
+            events: []
+          };
+
+          const response = await fetch(`${GCR_API_URL}/businesses`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newBusiness)
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            successCount++;
+          } else {
+            throw new Error(data.error || 'Upload failed');
+          }
+        } catch (error) {
+          console.error('Error uploading business:', bizData.name, error);
+          errorCount++;
+          errors.push({ business: bizData.name, error: error.message });
+        }
+      }
+
+      // Show results
+      const resultsDiv = document.getElementById('bulkBusinessResults');
+      resultsDiv.innerHTML = `
+        <div style="padding: 24px; background: ${errorCount === 0 ? '#d1fae5' : '#fef2f2'}; border-radius: 8px; border: 2px solid ${errorCount === 0 ? '#10b981' : '#fca5a5'};">
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: ${errorCount === 0 ? '#059669' : '#dc2626'};">
+            ${errorCount === 0 ? '✅' : '⚠️'} Upload Complete
+          </div>
+          <div style="font-size: 14px; color: #475569;">
+            <div>✅ Successfully added: ${successCount} businesses</div>
+            ${errorCount > 0 ? `<div style="color: #dc2626;">❌ Errors: ${errorCount}</div>` : ''}
+          </div>
+          ${errors.length > 0 ? `
+            <div style="margin-top: 16px; padding: 12px; background: #fff; border-radius: 6px; font-size: 13px; max-height: 200px; overflow-y: auto;">
+              <strong>Errors:</strong>
+              ${errors.map(e => `<div>• ${e.business}: ${e.error}</div>`).join('')}
+            </div>
+          ` : ''}
+          <button onclick="finishBulkBusinessUpload()" class="btn-primary" style="margin-top: 16px;">Done</button>
+        </div>
+      `;
+
+      resultsDiv.style.display = 'block';
+      document.getElementById('bulkBusinessPreview').style.display = 'none';
+
+      // Refresh business list
+      refreshGCRBusinesses();
+    }
+
+    // Cancel bulk business upload
+    function cancelBulkBusinessUpload() {
+      bulkBusinessData = [];
+      document.getElementById('bulkBusinessPreview').style.display = 'none';
+      document.getElementById('bulkBusinessFile').value = '';
+    }
+
+    // Finish bulk business upload
+    function finishBulkBusinessUpload() {
+      bulkBusinessData = [];
+      document.getElementById('bulkBusinessPreview').style.display = 'none';
+      document.getElementById('bulkBusinessResults').style.display = 'none';
+      document.getElementById('bulkBusinessFile').value = '';
+      document.getElementById('bulkUploadSection').style.display = 'none';
+    }
+
+    // Save business changes
+    document.getElementById('editBusinessForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const businessId = document.getElementById('editBusinessId').value;
+      const updates = {
+        name: document.getElementById('editName').value,
+        category: document.getElementById('editCategory').value,
+        description: document.getElementById('editDescription').value,
+        phone: document.getElementById('editPhone').value,
+        website: document.getElementById('editWebsite').value,
+        address: document.getElementById('editAddress').value,
+        hours: document.getElementById('editHours').value,
+        status: document.getElementById('editStatus').value
+      };
+
+      try {
+        const response = await fetch(`${GCR_API_URL}/businesses/${businessId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updates)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess('Business updated successfully!');
+          closeEditModal();
+          refreshGCRBusinesses();
+        } else {
+          throw new Error(data.error || 'Failed to update business');
+        }
+      } catch (error) {
+        console.error('Error updating business:', error);
+        alert('Error updating business: ' + error.message);
+      }
+    });
+
+    // Toggle business status
+    async function toggleGCRBusinessStatus(businessId, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
+
+      if (!confirm(`Change business status to "${newStatus}"?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${GCR_API_URL}/businesses/${businessId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess(`Business ${newStatus === 'active' ? 'activated' : 'hidden'} successfully!`);
+          refreshGCRBusinesses();
+        } else {
+          throw new Error(data.error || 'Failed to update status');
+        }
+      } catch (error) {
+        console.error('Error toggling status:', error);
+        alert('Error updating status: ' + error.message);
+      }
+    }
+
+    // Load GCR businesses when page loads
+    window.addEventListener('DOMContentLoaded', function() {
+      loadGCRBusinesses();
+
+      // Add event listener for CSV data type selector
+      const csvDataTypeSelect = document.getElementById('csvDataType');
+      if (csvDataTypeSelect) {
+        csvDataTypeSelect.addEventListener('change', updateCSVFormatHelp);
+      }
+    });
+
+    // ========================================
+    // ADVANCED EDITOR FOR MENU, DRINKS, ETC.
+    // ========================================
+
+    let currentEditingBusiness = null;
+    let advancedData = {
+      menu: [],
+      drinks: [],
+      happy_hour: null,
+      specials: [],
+      events: []
+    };
+
+    // Open advanced editor
+    function openAdvancedEditor() {
+      const businessId = document.getElementById('editBusinessId').value;
+      currentEditingBusiness = allGCRBusinesses.find(b => b.id === businessId);
+
+      if (!currentEditingBusiness) return;
+
+      // Load existing data
+      advancedData = {
+        menu: currentEditingBusiness.menu || [],
+        drinks: currentEditingBusiness.drinks || [],
+        happy_hour: currentEditingBusiness.happy_hour || null,
+        specials: currentEditingBusiness.specials || [],
+        events: currentEditingBusiness.events || []
+      };
+
+      renderMenuItems();
+      renderDrinkItems();
+      renderHappyHourItems();
+      renderSpecialItems();
+      renderEventItems();
+      updateCSVFormatHelp();
+
+      document.getElementById('advancedEditorModal').style.display = 'block';
+    }
+
+    // Close advanced editor
+    function closeAdvancedEditor() {
+      document.getElementById('advancedEditorModal').style.display = 'none';
+    }
+
+    // Switch editor tabs
+    function switchEditorTab(tabName) {
+      document.querySelectorAll('.editor-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.editor-tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+    }
+
+    // Menu Items Management
+    function addMenuItem() {
+      const newItem = {
+        id: Date.now().toString(),
+        name: '',
+        description: '',
+        price: '',
+        image: '',
+        category: 'lunch',
+        dietary: []
+      };
+      advancedData.menu.push(newItem);
+      renderMenuItems();
+    }
+
+    function renderMenuItems() {
+      const container = document.getElementById('menuItemsList');
+      if (advancedData.menu.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No menu items yet. Click "+ Add Menu Item" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = advancedData.menu.map((item, index) => `
+        <div class="menu-item-card">
+          <div class="item-header">
+            <h4 style="font-size: 16px; font-weight: 600; color: #333;">${item.name || 'New Menu Item'}</h4>
+            <div class="item-actions">
+              <button onclick="deleteMenuItem(${index})" class="btn-small btn-delete">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="item-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Item Name</label>
+              <input type="text" class="form-input" value="${item.name || ''}" onchange="updateMenuItem(${index}, 'name', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Price</label>
+              <input type="text" class="form-input" value="${item.price || ''}" onchange="updateMenuItem(${index}, 'price', this.value)" placeholder="$12.99" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Category</label>
+              <select class="form-input" onchange="updateMenuItem(${index}, 'category', this.value)" style="padding: 10px;">
+                <option value="breakfast" ${item.category === 'breakfast' ? 'selected' : ''}>Breakfast</option>
+                <option value="lunch" ${item.category === 'lunch' ? 'selected' : ''}>Lunch</option>
+                <option value="dinner" ${item.category === 'dinner' ? 'selected' : ''}>Dinner</option>
+                <option value="appetizers" ${item.category === 'appetizers' ? 'selected' : ''}>Appetizers</option>
+                <option value="desserts" ${item.category === 'desserts' ? 'selected' : ''}>Desserts</option>
+                <option value="seafood" ${item.category === 'seafood' ? 'selected' : ''}>Seafood</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Image URL</label>
+              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateMenuItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Description</label>
+            <textarea class="form-input" rows="2" onchange="updateMenuItem(${index}, 'description', this.value)" style="padding: 10px;">${item.description || ''}</textarea>
+          </div>
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Dietary Options</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 4px; font-size: 13px;">
+                <input type="checkbox" ${(item.dietary || []).includes('vegan') ? 'checked' : ''} onchange="toggleDietary(${index}, 'vegan', this.checked)"> Vegan
+              </label>
+              <label style="display: flex; align-items: center; gap: 4px; font-size: 13px;">
+                <input type="checkbox" ${(item.dietary || []).includes('vegetarian') ? 'checked' : ''} onchange="toggleDietary(${index}, 'vegetarian', this.checked)"> Vegetarian
+              </label>
+              <label style="display: flex; align-items: center; gap: 4px; font-size: 13px;">
+                <input type="checkbox" ${(item.dietary || []).includes('gluten-free') ? 'checked' : ''} onchange="toggleDietary(${index}, 'gluten-free', this.checked)"> Gluten-Free
+              </label>
+              <label style="display: flex; align-items: center; gap: 4px; font-size: 13px;">
+                <input type="checkbox" ${(item.dietary || []).includes('dairy-free') ? 'checked' : ''} onchange="toggleDietary(${index}, 'dairy-free', this.checked)"> Dairy-Free
+              </label>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateMenuItem(index, field, value) {
+      advancedData.menu[index][field] = value;
+    }
+
+    function deleteMenuItem(index) {
+      if (confirm('Delete this menu item?')) {
+        advancedData.menu.splice(index, 1);
+        renderMenuItems();
+      }
+    }
+
+    function toggleDietary(index, option, checked) {
+      if (!advancedData.menu[index].dietary) {
+        advancedData.menu[index].dietary = [];
+      }
+      if (checked) {
+        if (!advancedData.menu[index].dietary.includes(option)) {
+          advancedData.menu[index].dietary.push(option);
+        }
+      } else {
+        advancedData.menu[index].dietary = advancedData.menu[index].dietary.filter(d => d !== option);
+      }
+    }
+
+    // Drinks Management (similar structure)
+    function addDrinkItem() {
+      const newItem = {
+        id: Date.now().toString(),
+        name: '',
+        description: '',
+        price: '',
+        image: '',
+        category: 'cocktails'
+      };
+      advancedData.drinks.push(newItem);
+      renderDrinkItems();
+    }
+
+    function renderDrinkItems() {
+      const container = document.getElementById('drinksItemsList');
+      if (advancedData.drinks.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No drinks yet. Click "+ Add Drink" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = advancedData.drinks.map((item, index) => `
+        <div class="menu-item-card">
+          <div class="item-header">
+            <h4 style="font-size: 16px; font-weight: 600; color: #333;">${item.name || 'New Drink'}</h4>
+            <div class="item-actions">
+              <button onclick="deleteDrinkItem(${index})" class="btn-small btn-delete">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="item-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Drink Name</label>
+              <input type="text" class="form-input" value="${item.name || ''}" onchange="updateDrinkItem(${index}, 'name', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Price</label>
+              <input type="text" class="form-input" value="${item.price || ''}" onchange="updateDrinkItem(${index}, 'price', this.value)" placeholder="$8.99" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Category</label>
+              <select class="form-input" onchange="updateDrinkItem(${index}, 'category', this.value)" style="padding: 10px;">
+                <option value="cocktails" ${item.category === 'cocktails' ? 'selected' : ''}>Cocktails</option>
+                <option value="beer" ${item.category === 'beer' ? 'selected' : ''}>Beer</option>
+                <option value="wine" ${item.category === 'wine' ? 'selected' : ''}>Wine</option>
+                <option value="spirits" ${item.category === 'spirits' ? 'selected' : ''}>Spirits</option>
+                <option value="non-alcoholic" ${item.category === 'non-alcoholic' ? 'selected' : ''}>Non-Alcoholic</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Image URL</label>
+              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateDrinkItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Description</label>
+            <textarea class="form-input" rows="2" onchange="updateDrinkItem(${index}, 'description', this.value)" style="padding: 10px;">${item.description || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateDrinkItem(index, field, value) {
+      advancedData.drinks[index][field] = value;
+    }
+
+    function deleteDrinkItem(index) {
+      if (confirm('Delete this drink?')) {
+        advancedData.drinks.splice(index, 1);
+        renderDrinkItems();
+      }
+    }
+
+    // Happy Hour Management
+    function addHappyHourItem() {
+      if (!advancedData.happy_hour) {
+        advancedData.happy_hour = { items: [] };
+      }
+      const newItem = {
+        id: Date.now().toString(),
+        name: '',
+        description: '',
+        price: '',
+        image: ''
+      };
+      advancedData.happy_hour.items.push(newItem);
+      renderHappyHourItems();
+    }
+
+    function renderHappyHourItems() {
+      const container = document.getElementById('happyHourItemsList');
+      if (!advancedData.happy_hour || !advancedData.happy_hour.items || advancedData.happy_hour.items.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No happy hour items yet. Click "+ Add Happy Hour Item" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = advancedData.happy_hour.items.map((item, index) => `
+        <div class="menu-item-card">
+          <div class="item-header">
+            <h4 style="font-size: 16px; font-weight: 600; color: #333;">${item.name || 'New Happy Hour Item'}</h4>
+            <div class="item-actions">
+              <button onclick="deleteHappyHourItem(${index})" class="btn-small btn-delete">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="item-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Item Name</label>
+              <input type="text" class="form-input" value="${item.name || ''}" onchange="updateHappyHourItem(${index}, 'name', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Price</label>
+              <input type="text" class="form-input" value="${item.price || ''}" onchange="updateHappyHourItem(${index}, 'price', this.value)" placeholder="$5.99" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Image URL</label>
+              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateHappyHourItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Description</label>
+            <textarea class="form-input" rows="2" onchange="updateHappyHourItem(${index}, 'description', this.value)" style="padding: 10px;">${item.description || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateHappyHourItem(index, field, value) {
+      advancedData.happy_hour.items[index][field] = value;
+    }
+
+    function deleteHappyHourItem(index) {
+      if (confirm('Delete this happy hour item?')) {
+        advancedData.happy_hour.items.splice(index, 1);
+        renderHappyHourItems();
+      }
+    }
+
+    // Specials Management
+    function addSpecialItem() {
+      const newItem = {
+        id: Date.now().toString(),
+        name: '',
+        description: '',
+        price: '',
+        image: '',
+        day: 'monday'
+      };
+      advancedData.specials.push(newItem);
+      renderSpecialItems();
+    }
+
+    function renderSpecialItems() {
+      const container = document.getElementById('specialsItemsList');
+      if (advancedData.specials.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No specials yet. Click "+ Add Special" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = advancedData.specials.map((item, index) => `
+        <div class="menu-item-card">
+          <div class="item-header">
+            <h4 style="font-size: 16px; font-weight: 600; color: #333;">${item.name || 'New Special'}</h4>
+            <div class="item-actions">
+              <button onclick="deleteSpecialItem(${index})" class="btn-small btn-delete">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="item-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Special Name</label>
+              <input type="text" class="form-input" value="${item.name || ''}" onchange="updateSpecialItem(${index}, 'name', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Price</label>
+              <input type="text" class="form-input" value="${item.price || ''}" onchange="updateSpecialItem(${index}, 'price', this.value)" placeholder="$15.99" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Day</label>
+              <select class="form-input" onchange="updateSpecialItem(${index}, 'day', this.value)" style="padding: 10px;">
+                <option value="monday" ${item.day === 'monday' ? 'selected' : ''}>Monday</option>
+                <option value="tuesday" ${item.day === 'tuesday' ? 'selected' : ''}>Tuesday</option>
+                <option value="wednesday" ${item.day === 'wednesday' ? 'selected' : ''}>Wednesday</option>
+                <option value="thursday" ${item.day === 'thursday' ? 'selected' : ''}>Thursday</option>
+                <option value="friday" ${item.day === 'friday' ? 'selected' : ''}>Friday</option>
+                <option value="saturday" ${item.day === 'saturday' ? 'selected' : ''}>Saturday</option>
+                <option value="sunday" ${item.day === 'sunday' ? 'selected' : ''}>Sunday</option>
+                <option value="daily" ${item.day === 'daily' ? 'selected' : ''}>Daily</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Image URL</label>
+              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateSpecialItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Description</label>
+            <textarea class="form-input" rows="2" onchange="updateSpecialItem(${index}, 'description', this.value)" style="padding: 10px;">${item.description || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateSpecialItem(index, field, value) {
+      advancedData.specials[index][field] = value;
+    }
+
+    function deleteSpecialItem(index) {
+      if (confirm('Delete this special?')) {
+        advancedData.specials.splice(index, 1);
+        renderSpecialItems();
+      }
+    }
+
+    // Events Management
+    function addEventItem() {
+      const newItem = {
+        id: Date.now().toString(),
+        name: '',
+        description: '',
+        date: '',
+        time: '',
+        price: '',
+        image: ''
+      };
+      advancedData.events.push(newItem);
+      renderEventItems();
+    }
+
+    function renderEventItems() {
+      const container = document.getElementById('eventsItemsList');
+      if (advancedData.events.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No events yet. Click "+ Add Event" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = advancedData.events.map((item, index) => `
+        <div class="menu-item-card">
+          <div class="item-header">
+            <h4 style="font-size: 16px; font-weight: 600; color: #333;">${item.name || 'New Event'}</h4>
+            <div class="item-actions">
+              <button onclick="deleteEventItem(${index})" class="btn-small btn-delete">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="item-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Event Name</label>
+              <input type="text" class="form-input" value="${item.name || ''}" onchange="updateEventItem(${index}, 'name', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Date</label>
+              <input type="date" class="form-input" value="${item.date || ''}" onchange="updateEventItem(${index}, 'date', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Time</label>
+              <input type="time" class="form-input" value="${item.time || ''}" onchange="updateEventItem(${index}, 'time', this.value)" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Price</label>
+              <input type="text" class="form-input" value="${item.price || ''}" onchange="updateEventItem(${index}, 'price', this.value)" placeholder="$25" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Image URL</label>
+              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateEventItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Description</label>
+            <textarea class="form-input" rows="2" onchange="updateEventItem(${index}, 'description', this.value)" style="padding: 10px;">${item.description || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateEventItem(index, field, value) {
+      advancedData.events[index][field] = value;
+    }
+
+    function deleteEventItem(index) {
+      if (confirm('Delete this event?')) {
+        advancedData.events.splice(index, 1);
+        renderEventItems();
+      }
+    }
+
+    // CSV Format Help
+    function updateCSVFormatHelp() {
+      const dataType = document.getElementById('csvDataType').value;
+      const helpDiv = document.getElementById('csvColumnsHelp');
+
+      const formats = {
+        restaurant_full_menu: 'restaurant, city, state, menu, section, item_name, description, price, price_type, time_window, notes\n\nExample:\nCosmo\'s Restaurant, Orange Beach, AL, Lunch, Appetizers, Calamari, Lightly fried calamari, $12.99, fixed, , \n\nThis format auto-organizes items into Menu, Drinks, and Happy Hour sections based on the data.',
+        menu: 'name, description, price, image, category, dietary\n\nExample:\nSpicy Tuna Roll, Fresh tuna with spicy mayo, $12.99, https://..., lunch, gluten-free;vegan',
+        drinks: 'name, description, price, image, category\n\nExample:\nMargarita, Classic lime margarita, $10, https://..., cocktails',
+        events: 'name, description, date, time, price, image\n\nExample:\nLive Music Night, Local band performs, 2026-02-15, 19:00, Free, https://...',
+        specials: 'name, description, price, image, day\n\nExample:\nTaco Tuesday, 3 tacos for special price, $8.99, https://..., tuesday',
+        happy_hour: 'name, description, price, image\n\nExample:\nHouse Wine, Red or white wine, $5, https://...'
+      };
+
+      helpDiv.textContent = formats[dataType] || '';
+    }
+
+    // CSV Processing
+    function processCSV() {
+      const fileInput = document.getElementById('csvFileInput');
+      const dataType = document.getElementById('csvDataType').value;
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please select a CSV file first');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const csvText = e.target.result;
+          const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+
+          if (rows.length === 0) {
+            alert('CSV file is empty');
+            return;
+          }
+
+          // Parse CSV (simple parser - handles basic CSV format)
+          const parseCSVRow = (row) => {
+            const cells = [];
+            let currentCell = '';
+            let insideQuotes = false;
+
+            for (let i = 0; i < row.length; i++) {
+              const char = row[i];
+
+              if (char === '"') {
+                insideQuotes = !insideQuotes;
+              } else if (char === ',' && !insideQuotes) {
+                cells.push(currentCell.trim());
+                currentCell = '';
+              } else {
+                currentCell += char;
+              }
+            }
+            cells.push(currentCell.trim());
+            return cells;
+          };
+
+          // Check if first row is header
+          const firstRow = parseCSVRow(rows[0]);
+          const hasHeader = firstRow.some(cell =>
+            cell.toLowerCase().includes('name') ||
+            cell.toLowerCase().includes('description') ||
+            cell.toLowerCase().includes('price')
+          );
+
+          const dataRows = hasHeader ? rows.slice(1) : rows;
+          const parsedItems = [];
+
+          // Special handling for restaurant_full_menu (auto-organizes into menu, drinks, happy_hour)
+          if (dataType === 'restaurant_full_menu') {
+            const organizedData = {
+              menu: [],
+              drinks: [],
+              happy_hour_items: []
+            };
+
+            dataRows.forEach((row, rowIndex) => {
+              const cells = parseCSVRow(row);
+              if (cells.length === 0 || cells.every(cell => !cell)) return;
+
+              // Columns: restaurant, city, state, menu, section, item_name, description, price, price_type, time_window, notes
+              const restaurant = cells[0] || '';
+              const city = cells[1] || '';
+              const state = cells[2] || '';
+              const menuType = (cells[3] || '').toLowerCase();
+              const section = (cells[4] || '').toLowerCase();
+              const itemName = cells[5] || '';
+              const description = cells[6] || '';
+              const price = cells[7] || '';
+              const priceType = cells[8] || '';
+              const timeWindow = cells[9] || '';
+              const notes = cells[10] || '';
+
+              if (!itemName) return; // Skip if no item name
+
+              const baseItem = {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: itemName,
+                description: description,
+                price: price,
+                image: ''
+              };
+
+              // Categorize based on menu type and section
+              if (menuType.includes('happy hour') || timeWindow) {
+                // Happy Hour items
+                const happyHourItem = {
+                  ...baseItem,
+                  time_window: timeWindow
+                };
+                organizedData.happy_hour_items.push(happyHourItem);
+
+                // If it's a drink, also add to drinks
+                if (section.includes('beer') || section.includes('wine') || section.includes('cocktail') ||
+                    section.includes('drink') || section.includes('margarita') || section.includes('martini')) {
+                  organizedData.drinks.push({
+                    ...baseItem,
+                    category: 'happy-hour'
+                  });
+                }
+              } else if (section.includes('drink') || section.includes('cocktail') || section.includes('beer') ||
+                         section.includes('wine') || section.includes('beverage') || section.includes('martini') ||
+                         section.includes('margarita') || section.includes('mocktail')) {
+                // Drinks section
+                organizedData.drinks.push({
+                  ...baseItem,
+                  category: menuType || 'cocktails'
+                });
+              } else {
+                // Menu items (food)
+                let category = 'lunch';
+                if (menuType.includes('lunch')) category = 'lunch';
+                else if (menuType.includes('dinner')) category = 'dinner';
+                else if (menuType.includes('breakfast')) category = 'breakfast';
+                else if (menuType.includes('sunset')) category = 'dinner';
+                else if (menuType.includes('sushi')) category = 'sushi';
+
+                // Refine category based on section
+                if (section.includes('appetizer')) category = 'appetizers';
+                else if (section.includes('dessert')) category = 'desserts';
+                else if (section.includes('sushi') || section.includes('sashimi') || section.includes('roll')) category = 'sushi';
+                else if (section.includes('seafood')) category = 'seafood';
+
+                organizedData.menu.push({
+                  ...baseItem,
+                  category: category,
+                  dietary: []
+                });
+              }
+            });
+
+            // Apply organized data to advancedData
+            advancedData.menu = [...advancedData.menu, ...organizedData.menu];
+            advancedData.drinks = [...advancedData.drinks, ...organizedData.drinks];
+
+            if (organizedData.happy_hour_items.length > 0) {
+              advancedData.happy_hour = {
+                title: 'Happy Hour',
+                description: 'Daily happy hour specials',
+                items: organizedData.happy_hour_items
+              };
+            }
+
+            // Render all sections
+            renderMenuItems();
+            renderDrinkItems();
+            renderHappyHourItems();
+
+            const totalItems = organizedData.menu.length + organizedData.drinks.length + organizedData.happy_hour_items.length;
+            alert(`✅ Successfully organized ${totalItems} items from CSV!\n\n• ${organizedData.menu.length} menu items\n• ${organizedData.drinks.length} drinks\n• ${organizedData.happy_hour_items.length} happy hour items\n\nYou can now review and edit before saving.`);
+
+            // Switch to menu tab
+            switchEditorTab('menu');
+            return;
+          }
+
+          // Parse based on data type (for other formats)
+          dataRows.forEach((row, rowIndex) => {
+            const cells = parseCSVRow(row);
+
+            if (cells.length === 0 || cells.every(cell => !cell)) return; // Skip empty rows
+
+            let item;
+
+            if (dataType === 'menu') {
+              // name, description, price, image, category, dietary
+              item = {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: cells[0] || '',
+                description: cells[1] || '',
+                price: cells[2] || '',
+                image: cells[3] || '',
+                category: cells[4] || 'lunch',
+                dietary: cells[5] ? cells[5].split(';').map(d => d.trim()).filter(d => d) : []
+              };
+            } else if (dataType === 'drinks') {
+              // name, description, price, image, category
+              item = {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: cells[0] || '',
+                description: cells[1] || '',
+                price: cells[2] || '',
+                image: cells[3] || '',
+                category: cells[4] || 'cocktails'
+              };
+            } else if (dataType === 'events') {
+              // name, description, date, time, price, image
+              item = {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: cells[0] || '',
+                description: cells[1] || '',
+                date: cells[2] || '',
+                time: cells[3] || '',
+                price: cells[4] || '',
+                image: cells[5] || ''
+              };
+            } else if (dataType === 'specials') {
+              // name, description, price, image, day
+              item = {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: cells[0] || '',
+                description: cells[1] || '',
+                price: cells[2] || '',
+                image: cells[3] || '',
+                day: (cells[4] || 'daily').toLowerCase()
+              };
+            } else if (dataType === 'happy_hour') {
+              // name, description, price, image
+              item = {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: cells[0] || '',
+                description: cells[1] || '',
+                price: cells[2] || '',
+                image: cells[3] || ''
+              };
+            }
+
+            if (item && item.name) {
+              parsedItems.push(item);
+            }
+          });
+
+          if (parsedItems.length === 0) {
+            alert('No valid items found in CSV. Please check the format.');
+            return;
+          }
+
+          // Apply parsed items to advancedData
+          if (dataType === 'happy_hour') {
+            // Happy hour is a special structure
+            advancedData.happy_hour = {
+              title: 'Happy Hour',
+              description: 'Daily happy hour specials',
+              items: parsedItems
+            };
+            renderHappyHourItems();
+          } else {
+            // For other types, replace the entire array
+            advancedData[dataType] = parsedItems;
+
+            // Call appropriate render function
+            if (dataType === 'menu') renderMenuItems();
+            else if (dataType === 'drinks') renderDrinkItems();
+            else if (dataType === 'events') renderEventItems();
+            else if (dataType === 'specials') renderSpecialItems();
+          }
+
+          alert(`✅ Successfully processed ${parsedItems.length} ${dataType} items from CSV!\n\nYou can now review and edit the items before saving.`);
+
+          // Switch to the appropriate tab
+          const tabMap = {
+            menu: 'menu',
+            drinks: 'drinks',
+            happy_hour: 'happy-hour',
+            specials: 'specials',
+            events: 'events'
+          };
+          switchEditorTab(tabMap[dataType]);
+
+        } catch (error) {
+          console.error('CSV processing error:', error);
+          alert('Error processing CSV: ' + error.message);
+        }
+      };
+
+      reader.onerror = function() {
+        alert('Error reading file');
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Bulk Upload (JSON)
+    function applyBulkUpload() {
+      try {
+        const jsonData = JSON.parse(document.getElementById('bulkUploadJSON').value);
+
+        // Only update non-empty sections (preserve existing data for empty sections)
+        if (jsonData.menu && jsonData.menu.length > 0) {
+          advancedData.menu = jsonData.menu;
+        }
+        if (jsonData.drinks && jsonData.drinks.length > 0) {
+          advancedData.drinks = jsonData.drinks;
+        }
+        if (jsonData.happy_hour) {
+          advancedData.happy_hour = jsonData.happy_hour;
+        }
+        if (jsonData.specials && jsonData.specials.length > 0) {
+          advancedData.specials = jsonData.specials;
+        }
+        if (jsonData.events && jsonData.events.length > 0) {
+          advancedData.events = jsonData.events;
+        }
+
+        // Re-render all sections
+        renderMenuItems();
+        renderDrinkItems();
+        renderHappyHourItems();
+        renderSpecialItems();
+        renderEventItems();
+
+        alert('Bulk upload applied! Empty sections preserved existing data.');
+      } catch (error) {
+        alert('Invalid JSON format: ' + error.message);
+      }
+    }
+
+    // Save advanced changes
+    async function saveAdvancedChanges() {
+      if (!currentEditingBusiness) return;
+
+      const updates = {
+        menu: advancedData.menu,
+        drinks: advancedData.drinks,
+        happy_hour: advancedData.happy_hour,
+        has_happy_hour: (advancedData.happy_hour && advancedData.happy_hour.items && advancedData.happy_hour.items.length > 0),
+        specials: advancedData.specials,
+        events: advancedData.events
+      };
+
+      try {
+        const response = await fetch(`${GCR_API_URL}/businesses/${currentEditingBusiness.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updates)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess('Menu, drinks, and details saved successfully!');
+          closeAdvancedEditor();
+          refreshGCRBusinesses();
+        } else {
+          throw new Error(data.error || 'Failed to save');
+        }
+      } catch (error) {
+        console.error('Error saving advanced data:', error);
+        alert('Error saving: ' + error.message);
+      }
+    }
+
+    // ========================================
+    // BULK EVENTS MANAGEMENT
+    // ========================================
+
+    let bulkEventsData = [];
+
+    // Process bulk events CSV
+    function processBulkEvents() {
+      const fileInput = document.getElementById('bulkEventsFile');
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please select a CSV file first');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const csvText = e.target.result;
+          const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+
+          if (rows.length === 0) {
+            alert('CSV file is empty');
+            return;
+          }
+
+          // Parse CSV
+          const parseCSVRow = (row) => {
+            const cells = [];
+            let currentCell = '';
+            let insideQuotes = false;
+
+            for (let i = 0; i < row.length; i++) {
+              const char = row[i];
+              if (char === '"') {
+                insideQuotes = !insideQuotes;
+              } else if (char === ',' && !insideQuotes) {
+                cells.push(currentCell.trim());
+                currentCell = '';
+              } else {
+                currentCell += char;
+              }
+            }
+            cells.push(currentCell.trim());
+            return cells;
+          };
+
+          // Check if first row is header
+          const firstRow = parseCSVRow(rows[0]);
+          const hasHeader = firstRow.some(cell =>
+            cell.toLowerCase().includes('business') ||
+            cell.toLowerCase().includes('event') ||
+            cell.toLowerCase().includes('name')
+          );
+
+          const dataRows = hasHeader ? rows.slice(1) : rows;
+          const parsedEvents = [];
+          const unmatchedEvents = [];
+
+          // Parse each row: business_name, event_name, description, date, start_time, end_time, price, image_url
+          dataRows.forEach((row, rowIndex) => {
+            const cells = parseCSVRow(row);
+            if (cells.length === 0 || cells.every(cell => !cell)) return;
+
+            const businessName = cells[0] || '';
+            const eventData = {
+              business_name: businessName,
+              event: {
+                id: Date.now().toString() + '_' + rowIndex,
+                name: cells[1] || '',
+                description: cells[2] || '',
+                date: cells[3] || '',
+                time: cells[4] ? `${cells[4]} - ${cells[5] || ''}` : '',
+                start_time: cells[4] || '',
+                end_time: cells[5] || '',
+                price: cells[6] || 'Free',
+                image: cells[7] || ''
+              }
+            };
+
+            // Try to match business
+            const matchedBusiness = allGCRBusinesses.find(biz =>
+              biz.name.toLowerCase().includes(businessName.toLowerCase()) ||
+              businessName.toLowerCase().includes(biz.name.toLowerCase())
+            );
+
+            if (matchedBusiness) {
+              eventData.business_id = matchedBusiness.id;
+              eventData.matched_name = matchedBusiness.name;
+              parsedEvents.push(eventData);
+            } else {
+              unmatchedEvents.push(eventData);
+            }
+          });
+
+          if (parsedEvents.length === 0) {
+            alert('No events could be matched to businesses. Please check business names in your CSV.');
+            return;
+          }
+
+          // Store parsed events
+          bulkEventsData = parsedEvents;
+
+          // Display preview
+          displayBulkEventsPreview(parsedEvents, unmatchedEvents);
+
+        } catch (error) {
+          console.error('CSV processing error:', error);
+          alert('Error processing CSV: ' + error.message);
+        }
+      };
+
+      reader.onerror = function() {
+        alert('Error reading file');
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Display preview of matched events
+    function displayBulkEventsPreview(matchedEvents, unmatchedEvents) {
+      // Group events by business
+      const eventsByBusiness = {};
+      matchedEvents.forEach(item => {
+        if (!eventsByBusiness[item.business_id]) {
+          eventsByBusiness[item.business_id] = {
+            name: item.matched_name,
+            events: []
+          };
+        }
+        eventsByBusiness[item.business_id].events.push(item.event);
+      });
+
+      // Show stats
+      const statsDiv = document.getElementById('matchedEventsStats');
+      statsDiv.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+          <div>
+            <div style="font-size: 24px; font-weight: 700; color: #059669;">${matchedEvents.length}</div>
+            <div style="font-size: 12px; color: #64748b;">Events Matched</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: 700; color: #059669;">${Object.keys(eventsByBusiness).length}</div>
+            <div style="font-size: 12px; color: #64748b;">Businesses</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: 700; color: ${unmatchedEvents.length > 0 ? '#dc2626' : '#059669'}">${unmatchedEvents.length}</div>
+            <div style="font-size: 12px; color: #64748b;">Unmatched</div>
+          </div>
+        </div>
+      `;
+
+      // Show event list
+      const listDiv = document.getElementById('matchedEventsList');
+      let html = '';
+
+      Object.entries(eventsByBusiness).forEach(([businessId, data]) => {
+        html += `
+          <div style="margin-bottom: 16px; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <div style="font-weight: 600; font-size: 16px; color: #333; margin-bottom: 12px;">
+              ${data.name} <span style="color: #64748b; font-weight: 400; font-size: 14px;">(${data.events.length} events)</span>
+            </div>
+            ${data.events.map(event => `
+              <div style="padding: 12px; background: #fff; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb;">
+                <div style="font-weight: 600; color: #0369a1;">${event.name}</div>
+                <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                  📅 ${event.date} ${event.time ? '• ⏰ ' + event.time : ''} ${event.price ? '• 💵 ' + event.price : ''}
+                </div>
+                <div style="font-size: 13px; color: #475569; margin-top: 6px;">${event.description}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      });
+
+      if (unmatchedEvents.length > 0) {
+        html += `
+          <div style="margin-top: 24px; padding: 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fca5a5;">
+            <div style="font-weight: 600; font-size: 16px; color: #dc2626; margin-bottom: 12px;">
+              ⚠️ Unmatched Events (${unmatchedEvents.length})
+            </div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
+              These events could not be matched to any business. Please check business names.
+            </div>
+            ${unmatchedEvents.map(item => `
+              <div style="padding: 8px; background: #fff; border-radius: 6px; margin-bottom: 6px; font-size: 13px;">
+                <strong>${item.business_name}</strong> - ${item.event.name}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      listDiv.innerHTML = html;
+
+      // Show preview section
+      document.getElementById('bulkEventsPreview').style.display = 'block';
+    }
+
+    // Upload bulk events to businesses
+    async function uploadBulkEvents() {
+      if (bulkEventsData.length === 0) {
+        alert('No events to upload');
+        return;
+      }
+
+      // Group events by business
+      const eventsByBusiness = {};
+      bulkEventsData.forEach(item => {
+        if (!eventsByBusiness[item.business_id]) {
+          eventsByBusiness[item.business_id] = [];
+        }
+        eventsByBusiness[item.business_id].push(item.event);
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+      const errors = [];
+
+      // Show progress
+      document.getElementById('bulkEventsResults').innerHTML = `
+        <div style="padding: 16px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffc107;">
+          <div style="font-weight: 600; margin-bottom: 8px;">⏳ Uploading events...</div>
+          <div>Please wait while we update all businesses.</div>
+        </div>
+      `;
+      document.getElementById('bulkEventsResults').style.display = 'block';
+
+      // Update each business
+      for (const [businessId, newEvents] of Object.entries(eventsByBusiness)) {
+        try {
+          // Get current business data
+          const business = allGCRBusinesses.find(b => b.id === businessId);
+          if (!business) {
+            errorCount++;
+            errors.push({ business: businessId, error: 'Business not found' });
+            continue;
+          }
+
+          // Merge new events with existing events (avoid duplicates)
+          const existingEvents = business.events || [];
+          const mergedEvents = [...existingEvents, ...newEvents];
+
+          // Update business
+          const response = await fetch(`${GCR_API_URL}/businesses/${businessId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ events: mergedEvents })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            successCount++;
+          } else {
+            throw new Error(data.error || 'Update failed');
+          }
+        } catch (error) {
+          console.error('Error updating business:', businessId, error);
+          errorCount++;
+          errors.push({ business: businessId, error: error.message });
+        }
+      }
+
+      // Show results
+      const resultsDiv = document.getElementById('bulkEventsResults');
+      resultsDiv.innerHTML = `
+        <div style="padding: 24px; background: ${errorCount === 0 ? '#d1fae5' : '#fef2f2'}; border-radius: 8px; border: 2px solid ${errorCount === 0 ? '#10b981' : '#fca5a5'};">
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: ${errorCount === 0 ? '#059669' : '#dc2626'};">
+            ${errorCount === 0 ? '✅' : '⚠️'} Upload Complete
+          </div>
+          <div style="font-size: 14px; color: #475569;">
+            <div>✅ Successfully updated: ${successCount} businesses</div>
+            ${errorCount > 0 ? `<div style="color: #dc2626;">❌ Errors: ${errorCount}</div>` : ''}
+            <div style="margin-top: 8px;">📅 Total events uploaded: ${bulkEventsData.length}</div>
+          </div>
+          ${errors.length > 0 ? `
+            <div style="margin-top: 16px; padding: 12px; background: #fff; border-radius: 6px; font-size: 13px;">
+              <strong>Errors:</strong>
+              ${errors.map(e => `<div>• ${e.business}: ${e.error}</div>`).join('')}
+            </div>
+          ` : ''}
+          <button onclick="finishBulkUpload()" class="btn-primary" style="margin-top: 16px;">Done</button>
+        </div>
+      `;
+
+      // Hide preview
+      document.getElementById('bulkEventsPreview').style.display = 'none';
+
+      // Refresh business list
+      refreshGCRBusinesses();
+    }
+
+    // Cancel bulk events
+    function cancelBulkEvents() {
+      bulkEventsData = [];
+      document.getElementById('bulkEventsPreview').style.display = 'none';
+      document.getElementById('bulkEventsFile').value = '';
+    }
+
+    // Finish bulk upload
+    function finishBulkUpload() {
+      bulkEventsData = [];
+      document.getElementById('bulkEventsPreview').style.display = 'none';
+      document.getElementById('bulkEventsResults').style.display = 'none';
+      document.getElementById('bulkEventsFile').value = '';
+    }
+  </script>
+</body>
+</html>

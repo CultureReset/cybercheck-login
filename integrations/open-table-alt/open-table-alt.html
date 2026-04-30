@@ -1,0 +1,186 @@
+<!--
+  COMPONENT: Table Reservations (OpenTable Alternative)
+  Uses: Libre Res / custom reservation system
+  For: Restaurants, bars — table booking with party size + date/time
+
+  Requires: shared.html on the page
+  Trigger: openComponent('table-res')
+  Render: renderTableRes(config)
+  config: { url, apiKey, partyMin, partyMax, openTime, closeTime }
+  Back end: store reservation_url on entity in Supabase
+
+  Open source alternatives to OpenTable:
+  - Booked Scheduler: github.com/nick-griffiths/booked
+  - LibreRes: self-hosted reservation system
+  - Or connect to existing OpenTable/Resy embed via their widget
+
+  This component works as:
+  1. Embed mode — iframe to self-hosted reservation system
+  2. Native mode — built-in date/time/party picker that posts to your API
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('table-res')">🍽 Reserve a Table</button>
+-->
+
+<style>
+.comp-res-form { padding: 20px; }
+.comp-res-row { margin-bottom: 16px; }
+.comp-res-label { display: block; font-size: 0.82rem; font-weight: 700; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.comp-res-select, .comp-res-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: #111;
+    background: #fff;
+    appearance: none;
+}
+.comp-res-select:focus, .comp-res-input:focus { outline: none; border-color: #111; }
+.comp-res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.comp-res-submit {
+    width: 100%;
+    padding: 14px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+}
+.comp-res-submit:hover { background: #333; }
+.comp-res-confirm {
+    padding: 30px 20px;
+    text-align: center;
+}
+.comp-res-confirm .icon { font-size: 3rem; margin-bottom: 12px; }
+.comp-res-confirm h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.comp-res-confirm p { color: #666; font-size: 0.9rem; }
+</style>
+
+<div class="comp-overlay" id="comp-table-res">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>🍽 Reserve a Table</h2>
+            <button class="comp-close" onclick="closeComponent('comp-table-res')">✕</button>
+        </div>
+        <div id="comp-table-res-body"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _resConfig = {};
+
+    function renderTableRes(config) {
+        _resConfig = config || {};
+        const body = document.getElementById('comp-table-res-body');
+
+        // If external reservation URL provided, embed it
+        if (config && config.url) {
+            body.innerHTML = `<iframe style="width:100%;height:560px;border:none;" src="${escapeAttr(config.url)}" loading="lazy"></iframe>`;
+            return;
+        }
+
+        // Native built-in form
+        const today = new Date().toISOString().split('T')[0];
+        const partyMin = config.partyMin || 1;
+        const partyMax = config.partyMax || 10;
+
+        let partyOptions = '';
+        for (let i = partyMin; i <= partyMax; i++) {
+            partyOptions += `<option value="${i}">${i} ${i === 1 ? 'person' : 'people'}</option>`;
+        }
+
+        body.innerHTML = `
+            <div class="comp-res-form">
+                <div class="comp-res-grid">
+                    <div class="comp-res-row">
+                        <label class="comp-res-label">Date</label>
+                        <input class="comp-res-input" type="date" id="comp-res-date" min="${today}" value="${today}">
+                    </div>
+                    <div class="comp-res-row">
+                        <label class="comp-res-label">Party Size</label>
+                        <select class="comp-res-select" id="comp-res-party">${partyOptions}</select>
+                    </div>
+                </div>
+                <div class="comp-res-row">
+                    <label class="comp-res-label">Time</label>
+                    <select class="comp-res-select" id="comp-res-time">
+                        ${_buildTimeSlots(config.openTime || '11:00', config.closeTime || '21:00')}
+                    </select>
+                </div>
+                <div class="comp-res-row">
+                    <label class="comp-res-label">Name</label>
+                    <input class="comp-res-input" type="text" id="comp-res-name" placeholder="Your name">
+                </div>
+                <div class="comp-res-row">
+                    <label class="comp-res-label">Phone</label>
+                    <input class="comp-res-input" type="tel" id="comp-res-phone" placeholder="(555) 000-0000">
+                </div>
+                <button class="comp-res-submit" onclick="_submitTableRes()">Confirm Reservation</button>
+            </div>`;
+    }
+
+    function _buildTimeSlots(open, close) {
+        const slots = [];
+        const [oh, om] = open.split(':').map(Number);
+        const [ch, cm] = close.split(':').map(Number);
+        let h = oh, m = om;
+        while (h < ch || (h === ch && m < cm)) {
+            const ampm = h < 12 ? 'AM' : 'PM';
+            const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            const displayM = m === 0 ? '00' : m;
+            slots.push(`<option value="${h}:${m === 0 ? '00' : m}">${displayH}:${displayM} ${ampm}</option>`);
+            m += 30;
+            if (m >= 60) { m = 0; h++; }
+        }
+        return slots.join('');
+    }
+
+    window._submitTableRes = function() {
+        const date = document.getElementById('comp-res-date').value;
+        const time = document.getElementById('comp-res-time').value;
+        const party = document.getElementById('comp-res-party').value;
+        const name = document.getElementById('comp-res-name').value;
+        const phone = document.getElementById('comp-res-phone').value;
+
+        if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
+
+        const body = document.getElementById('comp-table-res-body');
+
+        // If API endpoint configured, POST to it
+        if (_resConfig.apiEndpoint) {
+            fetch(_resConfig.apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date, time, party_size: party, name, phone })
+            })
+            .then(r => r.json())
+            .then(() => _showConfirmation(body, name, date, time, party))
+            .catch(() => _showConfirmation(body, name, date, time, party));
+        } else {
+            _showConfirmation(body, name, date, time, party);
+        }
+    };
+
+    function _showConfirmation(body, name, date, time, party) {
+        const d = new Date(date + 'T12:00:00');
+        const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        body.innerHTML = `
+            <div class="comp-res-confirm">
+                <div class="icon">🎉</div>
+                <h3>You're on the list, ${escapeHtml(name)}!</h3>
+                <p>${dateStr} at ${escapeHtml(time)}<br>Party of ${escapeHtml(party)}</p>
+                <p style="margin-top:12px;font-size:0.8rem;color:#999;">We'll confirm your reservation by phone.</p>
+            </div>`;
+    }
+
+    window.renderTableRes = renderTableRes;
+})();
+</script>

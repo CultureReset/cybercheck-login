@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Menu Update</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh;padding-bottom:100px;}
+
+.header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:18px 16px 14px;position:sticky;top:0;z-index:20;}
+.header-top{display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:17px;font-weight:700;}
+.header .sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;}
+.saved-badge{font-size:11px;background:rgba(34,197,94,.2);color:#86efac;border:1px solid rgba(34,197,94,.3);padding:3px 10px;border-radius:20px;display:none;}
+.saved-badge.show{display:inline-block;}
+
+.tabs{display:flex;overflow-x:auto;background:#1e293b;border-bottom:1px solid #334155;scrollbar-width:none;position:sticky;top:72px;z-index:19;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:11px 16px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.tab.active{color:#818cf8;border-bottom-color:#818cf8;}
+
+.panel{display:none;padding:16px;}
+.panel.active{display:block;}
+
+/* Catch of Day */
+.cotd-intro{font-size:13px;color:#94a3b8;margin-bottom:14px;line-height:1.5;}
+.cotd-current{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.cotd-current .lbl{font-size:11px;color:#818cf8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.cotd-current .name{font-size:16px;font-weight:700;}
+.cotd-current .price{font-size:14px;color:#818cf8;margin-top:2px;}
+.cotd-clear{margin-left:auto;background:none;border:1px solid #475569;color:#94a3b8;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
+
+.cotd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cotd-tile{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:12px;cursor:pointer;transition:all .15s;text-align:left;}
+.cotd-tile:active{transform:scale(.97);}
+.cotd-tile.selected{border-color:#818cf8;background:#1e1b4b;}
+.cotd-tile img{width:100%;height:70px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
+.cotd-tile .t-name{font-size:13px;font-weight:600;line-height:1.3;}
+.cotd-tile .t-cat{font-size:11px;color:#94a3b8;margin-top:2px;}
+.cotd-tile .t-price{font-size:13px;color:#818cf8;font-weight:600;margin-top:4px;}
+
+/* Menu section */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;}
+.section-header h3{font-size:14px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;}
+.btn-add-sm{background:#1e293b;border:1px dashed #475569;color:#818cf8;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+
+.item-row{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.item-img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.item-img-ph{width:44px;height:44px;border-radius:8px;background:#334155;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-meta{font-size:12px;color:#94a3b8;margin-top:2px;}
+.item-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-edit-sm{background:#334155;border:none;color:#f1f5f9;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+.btn-del-sm{background:none;border:1px solid #7f1d1d;color:#f87171;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+
+.empty-state{text-align:center;padding:32px 16px;color:#475569;font-size:14px;}
+
+/* Specials */
+.special-row{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;}
+.special-info{flex:1;min-width:0;}
+.special-name{font-size:14px;font-weight:600;}
+.special-meta{font-size:12px;color:#94a3b8;margin-top:3px;}
+
+/* Overlay / Drawer */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;}
+.overlay.open{display:flex;align-items:flex-end;}
+.drawer{background:#1e293b;border-radius:20px 20px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:20px 16px 36px;}
+.drawer-handle{width:40px;height:4px;background:#475569;border-radius:2px;margin:0 auto 18px;}
+.drawer h2{font-size:17px;font-weight:700;margin-bottom:18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:#94a3b8;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.field input,.field textarea,.field select{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:15px;font-family:inherit;}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#818cf8;}
+.field textarea{resize:none;height:72px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-save{width:100%;padding:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:16px;font-weight:700;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;}
+.btn-cancel{width:100%;padding:12px;background:#334155;color:#f1f5f9;font-size:14px;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;}
+.btn-delete-full{width:100%;padding:12px;background:none;color:#f87171;font-size:14px;border:1px solid #7f1d1d;border-radius:12px;cursor:pointer;}
+
+/* Type pills */
+.type-row{display:flex;gap:8px;flex-wrap:wrap;}
+.type-pill{padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #334155;color:#94a3b8;background:none;}
+.type-pill.active{background:#4f46e5;border-color:#4f46e5;color:#fff;}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#4f46e5;color:#fff;padding:10px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* Spinner */
+.spinner-wrap{display:none;position:fixed;inset:0;background:rgba(15,23,42,.8);z-index:200;align-items:center;justify-content:center;}
+.spinner-wrap.show{display:flex;}
+.spinner{width:44px;height:44px;border:4px solid #334155;border-top-color:#818cf8;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.category-label{font-size:11px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.08em;margin:16px 0 6px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1 id="biz-name">Loading…</h1>
+      <div class="sub" id="biz-date"></div>
+    </div>
+    <span class="saved-badge" id="saved-badge">✓ Saved</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('cotd')">🎣 Catch of the Day</div>
+  <div class="tab" onclick="switchTab('menu')">📋 Full Menu</div>
+  <div class="tab" onclick="switchTab('specials')">🔥 Specials</div>
+</div>
+
+<!-- Catch of the Day -->
+<div class="panel active" id="panel-cotd">
+  <p class="cotd-intro">Tap an item from your menu to mark it as today's Catch of the Day. It goes live on your QR menu immediately.</p>
+  <div id="cotd-current" style="display:none;"></div>
+  <div id="cotd-grid" class="cotd-grid"></div>
+  <div class="empty-state" id="cotd-empty" style="display:none;">🍽️<br>Add menu items first, then pick your Catch of the Day.</div>
+</div>
+
+<!-- Full Menu -->
+<div class="panel" id="panel-menu">
+  <div class="section-header">
+    <h3>Menu Items</h3>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-add-sm" onclick="openScanDrawer('menu')">📷 Scan Photo</button>
+      <button class="btn-add-sm" onclick="openItemDrawer()">+ Add Item</button>
+    </div>
+  </div>
+  <div id="menu-list"></div>
+</div>
+
+<!-- Specials -->
+<div class="panel" id="panel-specials">
+  <div class="section-header">
+    <h3>Today's Specials</h3>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-add-sm" onclick="openScanDrawer('specials')">📷 Scan Photo</button>
+      <button class="btn-add-sm" onclick="openSpecialDrawer()">+ Add Special</button>
+    </div>
+  </div>
+  <div id="specials-list"></div>
+</div>
+
+<!-- Item Drawer -->
+<div class="overlay" id="item-overlay" onclick="closeItemDrawer()">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="drawer-handle"></div>
+    <h2 id="item-drawer-title">Add Menu Item</h2>
+    <input type="hidden" id="item-id">
+    <div class="field"><label>Item Name *</label><input type="text" id="item-name" placeholder="e.g. Grilled Mahi"></div>
+    <div class="field-row">
+      <div class="field"><label>Price</label><input type="number" id="item-price" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="field"><label>Category</label><input type="text" id="item-cat" placeholder="e.g. Seafood"></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="item-desc" placeholder="Short description…"></textarea></div>
+
+    <!-- Photo Gallery -->
+    <div class="field">
+      <label>Photos</label>
+      <p style="font-size:12px;color:#94a3b8;margin:-4px 0 10px;">Tap a slot to take a photo or upload from your gallery</p>
+
+      <!-- Main Photo -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;color:#818cf8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Main Photo</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div id="item-main-photo-wrap" style="width:90px;height:90px;border-radius:10px;background:#334155;border:2px dashed #475569;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;" onclick="document.getElementById('item-main-photo-input').click()">
+            <img id="item-main-photo-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:8px;">
+            <span id="item-main-photo-icon" style="font-size:28px;">📷</span>
+          </div>
+          <div style="flex:1;">
+            <button type="button" style="width:100%;padding:10px;background:#1e293b;border:1px solid #475569;color:#f1f5f9;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:6px;" onclick="document.getElementById('item-main-photo-input').click()">📷 Take Photo</button>
+            <button type="button" style="width:100%;padding:10px;background:#1e293b;border:1px solid #475569;color:#f1f5f9;border-radius:8px;font-size:13px;cursor:pointer;" onclick="triggerGallery('item-main-photo-input')">🖼 Upload from Gallery</button>
+          </div>
+        </div>
+        <input type="file" id="item-main-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this,'main')">
+        <input type="hidden" id="item-photo">
+      </div>
+
+      <!-- Extra Photos -->
+      <div style="font-size:11px;color:#818cf8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Additional Photos</div>
+      <div style="display:flex;gap:10px;">
+        <div id="item-extra-0-wrap" style="flex:1;aspect-ratio:1;border-radius:10px;background:#334155;border:2px dashed #475569;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('item-extra-0-input').click()">
+          <img id="item-extra-0-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:8px;">
+          <span style="font-size:22px;">+</span>
+          <input type="file" id="item-extra-0-input" accept="image/*" style="display:none;position:absolute;" onchange="handlePhotoUpload(this,'extra',0)">
+        </div>
+        <div id="item-extra-1-wrap" style="flex:1;aspect-ratio:1;border-radius:10px;background:#334155;border:2px dashed #475569;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('item-extra-1-input').click()">
+          <img id="item-extra-1-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:8px;">
+          <span style="font-size:22px;">+</span>
+          <input type="file" id="item-extra-1-input" accept="image/*" style="display:none;position:absolute;" onchange="handlePhotoUpload(this,'extra',1)">
+        </div>
+        <div id="item-extra-2-wrap" style="flex:1;aspect-ratio:1;border-radius:10px;background:#334155;border:2px dashed #475569;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;" onclick="document.getElementById('item-extra-2-input').click()">
+          <img id="item-extra-2-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:8px;">
+          <span style="font-size:22px;">+</span>
+          <input type="file" id="item-extra-2-input" accept="image/*" style="display:none;position:absolute;" onchange="handlePhotoUpload(this,'extra',2)">
+        </div>
+      </div>
+      <input type="hidden" id="item-extra-photos" value="[]">
+    </div>
+
+    <div class="field">
+      <label>Type</label>
+      <div class="type-row">
+        <div class="type-pill active" data-type="food" onclick="selectType(this)">Food</div>
+        <div class="type-pill" data-type="drink" onclick="selectType(this)">Drink</div>
+        <div class="type-pill" data-type="happy_hour" onclick="selectType(this)">Happy Hour</div>
+      </div>
+    </div>
+    <button class="btn-save" onclick="saveItem()">Save Item</button>
+    <button class="btn-cancel" onclick="closeItemDrawer()">Cancel</button>
+    <button class="btn-delete-full" id="item-delete-btn" style="display:none;" onclick="deleteItem()">Remove Item</button>
+  </div>
+</div>
+
+<!-- Special Drawer -->
+<div class="overlay" id="special-overlay" onclick="closeSpecialDrawer()">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="drawer-handle"></div>
+    <h2 id="special-drawer-title">Add Special</h2>
+    <input type="hidden" id="special-id">
+    <div class="field"><label>Special Name *</label><input type="text" id="special-name" placeholder="e.g. $5 Margaritas"></div>
+    <div class="field"><label>Deal / Discount</label><input type="text" id="special-discount" placeholder="e.g. Half off, $5, 2-for-1"></div>
+    <div class="field"><label>Description</label><textarea id="special-desc" placeholder="More details…"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Days</label><input type="text" id="special-days" placeholder="e.g. Mon-Fri"></div>
+      <div class="field"><label>Time</label><input type="text" id="special-time" placeholder="e.g. 4-7 PM"></div>
+    </div>
+    <button class="btn-save" onclick="saveSpecial()">Save Special</button>
+    <button class="btn-cancel" onclick="closeSpecialDrawer()">Cancel</button>
+    <button class="btn-delete-full" id="special-delete-btn" style="display:none;" onclick="deleteSpecial()">Remove Special</button>
+  </div>
+</div>
+
+<!-- AI Scan Drawer -->
+<div class="overlay" id="scan-overlay" onclick="closeScanDrawer()">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="drawer-handle"></div>
+    <h2 id="scan-title">Scan Photo</h2>
+    <div id="scan-step-upload">
+      <div style="border:2px dashed #475569;border-radius:12px;padding:28px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="document.getElementById('scan-file').click()">
+        <div style="font-size:32px;margin-bottom:6px;">📷</div>
+        <div style="font-size:14px;color:#94a3b8;">Tap to take a photo or pick from library</div>
+      </div>
+      <input type="file" id="scan-file" accept="image/*" style="display:none;" onchange="scanHandleFile(this)">
+      <div id="scan-preview-wrap" style="display:none;text-align:center;margin-bottom:12px;">
+        <img id="scan-preview" style="max-width:100%;max-height:220px;border-radius:10px;">
+      </div>
+      <div class="field">
+        <label>AI model</label>
+        <select id="scan-provider">
+          <option value="">Auto (default)</option>
+        </select>
+      </div>
+    </div>
+    <div id="scan-status" style="font-size:13px;color:#94a3b8;margin:6px 0;min-height:18px;"></div>
+    <div id="scan-results" style="display:none;max-height:55vh;overflow-y:auto;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:12px;"></div>
+    <button class="btn-save" id="scan-btn" style="display:none;" onclick="runScan()">Scan Photo</button>
+    <button class="btn-save" id="scan-import-btn" style="display:none;" onclick="importScan()">Import All</button>
+    <button class="btn-cancel" onclick="closeScanDrawer()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="spinner-wrap" id="spinner"><div class="spinner"></div></div>
+
+<script>
+const API = 'https://cybercheck-api-database.vercel.app';
+const token = new URLSearchParams(location.search).get('token');
+let _data = { entity: {}, menu_items: [], specials: [], events: [] };
+let _cotdSpecialId = null;
+
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+function toast(msg, ok=true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = ok ? '#4f46e5' : '#dc2626';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+function showSaved() {
+  const b = document.getElementById('saved-badge');
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 2000);
+}
+function spin(on) { document.getElementById('spinner').classList.toggle('show', on); }
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['cotd','menu','specials'][i] === t));
+  document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+  document.getElementById('panel-' + t).classList.add('active');
+}
+
+async function load() {
+  if (!token) { document.getElementById('biz-name').textContent = 'Invalid link'; return; }
+  spin(true);
+  try {
+    const r = await fetch(`${API}/api/update/${token}/data`);
+    if (!r.ok) throw new Error('Link not found or expired');
+    _data = await r.json();
+    document.getElementById('biz-name').textContent = _data.entity?.name || 'Menu Update';
+    document.getElementById('biz-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    renderCotd();
+    renderMenu();
+    renderSpecials();
+  } catch(e) {
+    toast(e.message, false);
+  }
+  spin(false);
+}
+
+// ── Catch of the Day ────────────────────────────────────────────
+function renderCotd() {
+  // Find existing catch of the day special
+  const cotd = _data.specials.find(s => s.special_name && s.special_name.toLowerCase().includes('catch of the day'));
+  _cotdSpecialId = cotd ? cotd.id : null;
+
+  const currentEl = document.getElementById('cotd-current');
+  if (cotd) {
+    currentEl.style.display = 'flex';
+    currentEl.innerHTML = `<div style="flex:1"><div class="lbl">Today's Catch</div><div class="name">${esc(cotd.discount_text || cotd.description || '')}</div><div class="price">${esc(cotd.special_name)}</div></div><button class="cotd-clear" onclick="clearCotd()">✕ Clear</button>`;
+  } else {
+    currentEl.style.display = 'none';
+  }
+
+  const foodItems = _data.menu_items.filter(i => i.item_type !== 'drink');
+  const grid = document.getElementById('cotd-grid');
+  const empty = document.getElementById('cotd-empty');
+  if (!foodItems.length) { grid.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  // Group by category
+  const cats = {};
+  foodItems.forEach(i => { const c = i.category || 'Menu'; if (!cats[c]) cats[c] = []; cats[c].push(i); });
+
+  grid.innerHTML = Object.entries(cats).map(([cat, items]) =>
+    `<div style="grid-column:1/-1;font-size:11px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.08em;margin-top:8px;">${esc(cat)}</div>` +
+    items.map(item => {
+      const isCurrent = cotd && (cotd.discount_text === item.name || cotd.description === item.name);
+      return `<button class="cotd-tile${isCurrent?' selected':''}" onclick="setCotd(${item.id},${JSON.stringify(esc(item.name))},${item.price||0})">
+        ${item.photo_url ? `<img src="${esc(item.photo_url)}" onerror="this.style.display='none'">` : ''}
+        <div class="t-name">${esc(item.name)}</div>
+        <div class="t-price">$${Number(item.price||0).toFixed(2)}</div>
+      </button>`;
+    }).join('')
+  ).join('');
+}
+
+async function setCotd(itemId, itemName, price) {
+  spin(true);
+  try {
+    const body = { special_name: 'Catch of the Day', discount_text: itemName, description: `$${Number(price).toFixed(2)}` };
+    if (_cotdSpecialId) body.id = _cotdSpecialId;
+    const r = await fetch(`${API}/api/update/${token}/specials`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    if (_cotdSpecialId) {
+      _data.specials = _data.specials.map(s => s.id === _cotdSpecialId ? d.item : s);
+    } else {
+      _data.specials.push(d.item);
+    }
+    _cotdSpecialId = d.item.id;
+    renderCotd();
+    renderSpecials();
+    showSaved();
+    toast('Catch of the Day set! ✓');
+  } catch(e) { toast(e.message, false); }
+  spin(false);
+}
+
+async function clearCotd() {
+  if (!_cotdSpecialId) return;
+  spin(true);
+  try {
+    await fetch(`${API}/api/update/${token}/specials/${_cotdSpecialId}`, { method:'DELETE' });
+    _data.specials = _data.specials.filter(s => s.id !== _cotdSpecialId);
+    _cotdSpecialId = null;
+    renderCotd();
+    renderSpecials();
+    showSaved();
+  } catch(e) { toast(e.message, false); }
+  spin(false);
+}
+
+// ── Full Menu ────────────────────────────────────────────────────
+function renderMenu() {
+  const el = document.getElementById('menu-list');
+  if (!_data.menu_items.length) {
+    el.innerHTML = '<div class="empty-state">🍽️<br>No items yet. Tap "+ Add Item" to get started.</div>';
+    return;
+  }
+  const cats = {};
+  _data.menu_items.forEach(i => { const c = i.category || 'Menu'; if (!cats[c]) cats[c] = []; cats[c].push(i); });
+  el.innerHTML = Object.entries(cats).map(([cat, items]) =>
+    `<div class="category-label">${esc(cat)}</div>` +
+    items.map(item => `
+      <div class="item-row">
+        ${item.photo_url ? `<img class="item-img" src="${esc(item.photo_url)}" onerror="this.className='item-img-ph';this.textContent='🍽️'">` : `<div class="item-img-ph">🍽️</div>`}
+        <div class="item-info">
+          <div class="item-name">${esc(item.name)}</div>
+          <div class="item-meta">$${Number(item.price||0).toFixed(2)}${item.item_type !== 'food' ? ' · '+item.item_type : ''}</div>
+        </div>
+        <div class="item-actions">
+          <button class="btn-edit-sm" onclick="openItemDrawer(${item.id})">Edit</button>
+          <button class="btn-del-sm" onclick="quickDelete(${item.id})">✕</button>
+        </div>
+      </div>`
+    ).join('')
+  ).join('');
+}
+
+// ── Item Drawer ──────────────────────────────────────────────────
+// ── Photo upload ─────────────────────────────────────────────────
+function triggerGallery(inputId) {
+  // Temporarily remove capture so only gallery shows, then restore
+  const el = document.getElementById(inputId);
+  el.removeAttribute('capture');
+  el.click();
+}
+
+async function handlePhotoUpload(input, type, extraIndex) {
+  const file = input.files[0];
+  if (!file) return;
+  toast('Uploading photo…');
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    const r = await fetch(`${API}/api/update/${token}/upload`, { method: 'POST', body: formData });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Upload failed');
+    if (type === 'main') {
+      document.getElementById('item-photo').value = d.url;
+      document.getElementById('item-main-photo-img').src = d.url;
+      document.getElementById('item-main-photo-img').style.display = '';
+      document.getElementById('item-main-photo-icon').style.display = 'none';
+    } else {
+      const extras = JSON.parse(document.getElementById('item-extra-photos').value || '[]');
+      extras[extraIndex] = d.url;
+      document.getElementById('item-extra-photos').value = JSON.stringify(extras);
+      document.getElementById('item-extra-' + extraIndex + '-img').src = d.url;
+      document.getElementById('item-extra-' + extraIndex + '-img').style.display = '';
+    }
+    toast('Photo uploaded ✓');
+  } catch(e) { toast(e.message, false); }
+}
+
+function resetPhotoSlots() {
+  document.getElementById('item-photo').value = '';
+  document.getElementById('item-extra-photos').value = '[]';
+  document.getElementById('item-main-photo-img').src = '';
+  document.getElementById('item-main-photo-img').style.display = 'none';
+  document.getElementById('item-main-photo-icon').style.display = '';
+  [0,1,2].forEach(i => {
+    document.getElementById('item-extra-' + i + '-img').src = '';
+    document.getElementById('item-extra-' + i + '-img').style.display = 'none';
+    document.getElementById('item-extra-' + i + '-input').value = '';
+  });
+  document.getElementById('item-main-photo-input').value = '';
+}
+
+function loadPhotoSlots(item) {
+  const photoUrl = item.photo_url || item.image_url || '';
+  document.getElementById('item-photo').value = photoUrl;
+  if (photoUrl) {
+    document.getElementById('item-main-photo-img').src = photoUrl;
+    document.getElementById('item-main-photo-img').style.display = '';
+    document.getElementById('item-main-photo-icon').style.display = 'none';
+  }
+  const extras = Array.isArray(item.extra_photos) ? item.extra_photos : [];
+  document.getElementById('item-extra-photos').value = JSON.stringify(extras);
+  [0,1,2].forEach(i => {
+    if (extras[i]) {
+      document.getElementById('item-extra-' + i + '-img').src = extras[i];
+      document.getElementById('item-extra-' + i + '-img').style.display = '';
+    }
+  });
+}
+
+function openItemDrawer(id) {
+  document.getElementById('item-id').value = '';
+  document.getElementById('item-name').value = '';
+  document.getElementById('item-price').value = '';
+  document.getElementById('item-cat').value = '';
+  document.getElementById('item-desc').value = '';
+  resetPhotoSlots();
+  document.getElementById('item-delete-btn').style.display = 'none';
+  document.getElementById('item-drawer-title').textContent = 'Add Menu Item';
+  document.querySelectorAll('.type-pill').forEach(p => p.classList.toggle('active', p.dataset.type === 'food'));
+
+  if (id) {
+    const item = _data.menu_items.find(i => i.id === id);
+    if (item) {
+      document.getElementById('item-id').value = id;
+      document.getElementById('item-name').value = item.name;
+      document.getElementById('item-price').value = item.price || '';
+      document.getElementById('item-cat').value = item.category || '';
+      document.getElementById('item-desc').value = item.description || '';
+      document.getElementById('item-delete-btn').style.display = '';
+      document.getElementById('item-drawer-title').textContent = 'Edit Item';
+      document.querySelectorAll('.type-pill').forEach(p => p.classList.toggle('active', p.dataset.type === (item.item_type||'food')));
+      loadPhotoSlots(item);
+    }
+  }
+  document.getElementById('item-overlay').classList.add('open');
+}
+function closeItemDrawer() { document.getElementById('item-overlay').classList.remove('open'); }
+function selectType(el) { document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('active')); el.classList.add('active'); }
+
+async function saveItem() {
+  const name = document.getElementById('item-name').value.trim();
+  if (!name) { toast('Name required', false); return; }
+  const body = {
+    id:          document.getElementById('item-id').value || undefined,
+    name,
+    price:       parseFloat(document.getElementById('item-price').value) || 0,
+    category:    document.getElementById('item-cat').value.trim() || 'Menu Items',
+    description: document.getElementById('item-desc').value.trim(),
+    photo_url:   document.getElementById('item-photo').value.trim() || null,
+    extra_photos: JSON.parse(document.getElementById('item-extra-photos').value || '[]').filter(Boolean),
+    item_type:   document.querySelector('.type-pill.active')?.dataset.type || 'food',
+  };
+  spin(true);
+  try {
+    const r = await fetch(`${API}/api/update/${token}/menu-items`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    if (body.id) {
+      _data.menu_items = _data.menu_items.map(i => String(i.id) === String(body.id) ? d.item : i);
+    } else {
+      _data.menu_items.push(d.item);
+    }
+    renderMenu();
+    renderCotd();
+    closeItemDrawer();
+    showSaved();
+    toast('Item saved ✓');
+  } catch(e) { toast(e.message, false); }
+  spin(false);
+}
+
+async function quickDelete(id) {
+  if (!confirm('Remove this item?')) return;
+  spin(true);
+  try {
+    await fetch(`${API}/api/update/${token}/menu-items/${id}`, { method:'DELETE' });
+    _data.menu_items = _data.menu_items.filter(i => i.id !== id);
+    renderMenu();
+    renderCotd();
+    showSaved();
+    toast('Removed');
+  } catch(e) { toast(e.message, false); }
+  spin(false);
+}
+
+async function deleteItem() {
+  const id = document.getElementById('item-id').value;
+  if (!id || !confirm('Remove this item?')) return;
+  closeItemDrawer();
+  await quickDelete(parseInt(id));
+}
+
+// ── Specials ─────────────────────────────────────────────────────
+function renderSpecials() {
+  const el = document.getElementById('specials-list');
+  const visible = _data.specials.filter(s => !(s.special_name||'').toLowerCase().includes('catch of the day'));
+  if (!visible.length) {
+    el.innerHTML = '<div class="empty-state">🔥<br>No specials yet.</div>';
+    return;
+  }
+  el.innerHTML = visible.map(s => `
+    <div class="special-row">
+      <div class="special-info">
+        <div class="special-name">${esc(s.special_name)}</div>
+        ${s.discount_text ? `<div class="special-meta" style="color:#818cf8;font-weight:600;">${esc(s.discount_text)}</div>` : ''}
+        ${s.description ? `<div class="special-meta">${esc(s.description)}</div>` : ''}
+        ${s.days ? `<div class="special-meta">📅 ${esc(s.days)}</div>` : ''}
+      </div>
+      <div class="item-actions">
+        <button class="btn-edit-sm" onclick="openSpecialDrawer(${s.id})">Edit</button>
+        <button class="btn-del-sm" onclick="deleteSpecialById(${s.id})">✕</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function openSpecialDrawer(id) {
+  document.getElementById('special-id').value = '';
+  document.getElementById('special-name').value = '';
+  document.getElementById('special-discount').value = '';
+  document.getElementById('special-desc').value = '';
+  document.getElementById('special-days').value = '';
+  document.getElementById('special-time').value = '';
+  document.getElementById('special-delete-btn').style.display = 'none';
+  document.getElementById('special-drawer-title').textContent = 'Add Special';
+
+  if (id) {
+    const s = _data.specials.find(x => x.id === id);
+    if (s) {
+      document.getElementById('special-id').value = id;
+      document.getElementById('special-name').value = s.special_name || '';
+      document.getElementById('special-discount').value = s.discount_text || '';
+      document.getElementById('special-desc').value = s.description || '';
+      document.getElementById('special-days').value = s.days || '';
+      document.getElementById('special-time').value = s.start_time || '';
+      document.getElementById('special-delete-btn').style.display = '';
+      document.getElementById('special-drawer-title').textContent = 'Edit Special';
+    }
+  }
+  document.getElementById('special-overlay').classList.add('open');
+}
+function closeSpecialDrawer() { document.getElementById('special-overlay').classList.remove('open'); }
+
+async function saveSpecial() {
+  const name = document.getElementById('special-name').value.trim();
+  if (!name) { toast('Name required', false); return; }
+  const body = {
+    id:            document.getElementById('special-id').value || undefined,
+    special_name:  name,
+    discount_text: document.getElementById('special-discount').value.trim() || null,
+    description:   document.getElementById('special-desc').value.trim() || null,
+    days:          document.getElementById('special-days').value.trim() || null,
+    start_time:    document.getElementById('special-time').value.trim() || null,
+  };
+  spin(true);
+  try {
+    const r = await fetch(`${API}/api/update/${token}/specials`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    if (body.id) {
+      _data.specials = _data.specials.map(s => String(s.id) === String(body.id) ? d.item : s);
+    } else {
+      _data.specials.push(d.item);
+    }
+    renderSpecials();
+    closeSpecialDrawer();
+    showSaved();
+    toast('Special saved ✓');
+  } catch(e) { toast(e.message, false); }
+  spin(false);
+}
+
+async function deleteSpecialById(id) {
+  if (!confirm('Remove this special?')) return;
+  spin(true);
+  try {
+    await fetch(`${API}/api/update/${token}/specials/${id}`, { method:'DELETE' });
+    _data.specials = _data.specials.filter(s => s.id !== id);
+    renderSpecials();
+    showSaved();
+    toast('Removed');
+  } catch(e) { toast(e.message, false); }
+  spin(false);
+}
+
+async function deleteSpecial() {
+  const id = document.getElementById('special-id').value;
+  if (!id) return;
+  closeSpecialDrawer();
+  await deleteSpecialById(parseInt(id));
+}
+
+// ── AI Photo Scan ────────────────────────────────────────────────
+let _scanMode = 'menu';        // 'menu' | 'specials'
+let _scanBase64 = null;
+let _scanMime = 'image/jpeg';
+let _scanResult = null;
+let _scanProvidersCache = null;
+
+function openScanDrawer(mode) {
+  _scanMode = mode;
+  _scanBase64 = null; _scanResult = null;
+  document.getElementById('scan-title').textContent = mode === 'specials' ? 'Scan Specials Photo' : 'Scan Menu Photo';
+  document.getElementById('scan-file').value = '';
+  document.getElementById('scan-preview-wrap').style.display = 'none';
+  document.getElementById('scan-preview').src = '';
+  document.getElementById('scan-status').textContent = '';
+  document.getElementById('scan-results').style.display = 'none';
+  document.getElementById('scan-results').innerHTML = '';
+  document.getElementById('scan-btn').style.display = 'none';
+  document.getElementById('scan-import-btn').style.display = 'none';
+  loadScanProviders();
+  document.getElementById('scan-overlay').classList.add('open');
+}
+function closeScanDrawer() { document.getElementById('scan-overlay').classList.remove('open'); }
+
+async function loadScanProviders() {
+  const sel = document.getElementById('scan-provider');
+  try {
+    if (!_scanProvidersCache) {
+      const r = await fetch(`${API}/api/update/${token}/vision-providers`);
+      _scanProvidersCache = r.ok ? await r.json() : { providers: [] };
+    }
+    const saved = localStorage.getItem('cc_scan_provider') || '';
+    let html = `<option value="">Auto (${_scanProvidersCache.default || 'default'})</option>`;
+    (_scanProvidersCache.providers || []).forEach(p => {
+      const dis = p.configured ? '' : ' disabled';
+      const sfx = p.configured ? '' : ' — not configured';
+      html += `<option value="${p.id}"${dis}${p.id === saved ? ' selected' : ''}>${p.label}${sfx}</option>`;
+    });
+    sel.innerHTML = html;
+    sel.onchange = () => localStorage.setItem('cc_scan_provider', sel.value || '');
+  } catch (e) { /* keep default */ }
+}
+
+// Magic-byte HEIC detection (iOS camera photos sometimes arrive as HEIC with empty type)
+async function isHeicByMagicBytes(file) {
+  try {
+    const buf = await file.slice(0, 12).arrayBuffer();
+    const v = new Uint8Array(buf);
+    if (v[4]!==0x66||v[5]!==0x74||v[6]!==0x79||v[7]!==0x70) return false;
+    const brand = String.fromCharCode(v[8],v[9],v[10],v[11]);
+    return /^(heic|heis|hevx|hevc|mif1|msf1)/i.test(brand);
+  } catch(e) { return false; }
+}
+
+let _heic2anyPromise = null;
+function loadHeic2Any() {
+  if (window.heic2any) return Promise.resolve(window.heic2any);
+  if (_heic2anyPromise) return _heic2anyPromise;
+  _heic2anyPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    s.onload = () => window.heic2any ? resolve(window.heic2any) : reject(new Error('heic2any not available'));
+    s.onerror = () => reject(new Error('failed to load heic2any'));
+    document.head.appendChild(s);
+  });
+  return _heic2anyPromise;
+}
+
+async function compressToJpeg(file) {
+  const isHeic = /^(image\/heic|image\/heif)$/i.test(file.type || '') || /\.hei[cf]$/i.test(file.name || '') || await isHeicByMagicBytes(file);
+  if (isHeic) {
+    const h = await loadHeic2Any();
+    const out = await h({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+    file = new File([Array.isArray(out) ? out[0] : out], (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('read failed'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('decode failed'));
+      img.onload = () => {
+        const maxDim = 1280;
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        const cw = Math.round(img.naturalWidth * scale), ch = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = cw; canvas.height = ch;
+        canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.8), mimeType: 'image/jpeg' });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function scanHandleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('scan-status').textContent = 'Preparing photo…';
+  try {
+    const c = await compressToJpeg(file);
+    _scanBase64 = c.dataUrl;
+    _scanMime = c.mimeType;
+    document.getElementById('scan-preview').src = _scanBase64;
+    document.getElementById('scan-preview-wrap').style.display = '';
+    document.getElementById('scan-btn').style.display = '';
+    document.getElementById('scan-status').textContent = 'Photo ready — tap "Scan Photo".';
+  } catch (e) {
+    document.getElementById('scan-status').textContent = '❌ Could not read image (' + (e.message || 'unknown') + ').';
+  }
+}
+
+async function runScan() {
+  if (!_scanBase64) return;
+  const btn = document.getElementById('scan-btn');
+  btn.disabled = true;
+  document.getElementById('scan-status').textContent = '⏳ AI is reading your photo — 5–15 seconds…';
+  const endpoint = _scanMode === 'specials' ? 'scan/specials' : 'scan/menu';
+  const provider = document.getElementById('scan-provider').value;
+  try {
+    const r = await fetch(`${API}/api/update/${token}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_base64: _scanBase64, mime_type: _scanMime, provider: provider || undefined }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Scan failed');
+    _scanResult = d;
+    renderScanResults();
+    document.getElementById('scan-results').style.display = '';
+    document.getElementById('scan-import-btn').style.display = '';
+    btn.style.display = 'none';
+    const count = _scanMode === 'specials'
+      ? (d.items || []).length
+      : (d.categories || []).reduce((n, c) => n + (c.items || []).length, 0);
+    document.getElementById('scan-status').textContent = `✅ Found ${count} items. Review below, then Import All.`;
+  } catch (e) {
+    document.getElementById('scan-status').textContent = '❌ ' + (e.message || 'Scan failed');
+  }
+  btn.disabled = false;
+}
+
+function renderScanResults() {
+  const el = document.getElementById('scan-results');
+  const inp = 'width:100%;padding:5px 7px;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#f1f5f9;font-size:13px;';
+  if (_scanMode === 'specials') {
+    el.innerHTML = (_scanResult.items || []).map((it, i) =>
+      `<div style="padding:8px 0;border-bottom:1px solid #334155;">
+        <input data-i="${i}" data-k="special_name"  value="${esc(it.special_name||'')}"  placeholder="Name"     style="${inp}margin-bottom:4px;font-weight:600;" oninput="scanEdit(this)">
+        <input data-i="${i}" data-k="discount_text" value="${esc(it.discount_text||'')}" placeholder="Deal"    style="${inp}margin-bottom:4px;" oninput="scanEdit(this)">
+        <input data-i="${i}" data-k="description"   value="${esc(it.description||'')}"   placeholder="Details" style="${inp}" oninput="scanEdit(this)">
+        <button onclick="scanDelete(${i})" style="margin-top:4px;background:none;border:1px solid #7f1d1d;color:#f87171;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;">Remove</button>
+      </div>`).join('') || '<div style="color:#94a3b8;font-size:13px;">No specials found.</div>';
+  } else {
+    el.innerHTML = (_scanResult.categories || []).map((cat, ci) =>
+      `<div style="margin-bottom:16px;">
+        <div style="font-weight:700;font-size:13px;color:#818cf8;text-transform:uppercase;letter-spacing:.06em;padding:8px 0 6px;border-bottom:2px solid #334155;margin-bottom:8px;">
+          ${esc(cat.name || 'Menu')} <span style="font-weight:400;color:#475569;font-size:11px;">${cat.item_type||'food'} · ${(cat.items||[]).length} items</span>
+        </div>
+        ${(cat.items || []).map((it, ii) =>
+          `<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;margin-bottom:8px;">
+            <div style="display:grid;grid-template-columns:1fr 90px auto;gap:8px;margin-bottom:6px;align-items:center;">
+              <input data-ci="${ci}" data-ii="${ii}" data-k="name" value="${esc(it.name||'')}" placeholder="Item name" style="${inp}font-weight:600;" oninput="scanEditMenu(this)">
+              <input data-ci="${ci}" data-ii="${ii}" data-k="price" type="number" step="0.01" min="0" value="${it.price||0}" style="${inp}" oninput="scanEditMenu(this)">
+              <button onclick="scanDeleteMenu(${ci},${ii})" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>
+            </div>
+            <textarea data-ci="${ci}" data-ii="${ii}" data-k="description" placeholder="Description…" rows="2" style="${inp}resize:none;margin-bottom:${(it.modifiers||[]).length?'6':'0'}px;" oninput="scanEditMenu(this)">${esc(it.description||'')}</textarea>
+            ${(it.modifiers||[]).length ? `<div style="font-size:11px;color:#64748b;">Add-ons: ${it.modifiers.map(m=>esc(m.name)+' $'+m.price).join(' · ')}</div>` : ''}
+          </div>`).join('')}
+      </div>`).join('') || '<div style="color:#94a3b8;font-size:13px;">No items found.</div>';
+  }
+}
+function scanEdit(el) {
+  const i = +el.dataset.i, k = el.dataset.k;
+  if (_scanResult?.items?.[i]) _scanResult.items[i][k] = el.value;
+}
+function scanDelete(i) { _scanResult.items.splice(i, 1); renderScanResults(); }
+function scanEditMenu(el) {
+  const ci = +el.dataset.ci, ii = +el.dataset.ii, k = el.dataset.k;
+  const it = _scanResult?.categories?.[ci]?.items?.[ii];
+  if (it) it[k] = k === 'price' ? (parseFloat(el.value) || 0) : el.value;
+}
+function scanDeleteMenu(ci, ii) { _scanResult.categories[ci].items.splice(ii, 1); renderScanResults(); }
+
+async function importScan() {
+  const btn = document.getElementById('scan-import-btn');
+  btn.disabled = true; btn.textContent = 'Importing…';
+  let added = 0, errs = 0;
+  try {
+    if (_scanMode === 'specials') {
+      for (const it of (_scanResult.items || [])) {
+        if (!it.special_name) continue;
+        try {
+          const r = await fetch(`${API}/api/update/${token}/specials`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              special_name: it.special_name, discount_text: it.discount_text || '',
+              description: it.description || '', days: it.days || null,
+              start_time: it.start_time || null, end_time: it.end_time || null,
+            }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error);
+          _data.specials.push(d.item);
+          added++;
+        } catch (e) { errs++; }
+      }
+    } else {
+      for (const cat of (_scanResult.categories || [])) {
+        const sectionMods = Array.isArray(cat.section_modifiers) ? cat.section_modifiers : [];
+        for (const it of (cat.items || [])) {
+          if (!it.name) continue;
+          const itemMods = Array.isArray(it.modifiers) ? it.modifiers : [];
+          const modifiers = itemMods.concat(sectionMods)
+            .map(m => ({ name: String(m.name || '').trim(), price: parseFloat(m.price) || 0 }))
+            .filter(m => m.name);
+          try {
+            const r = await fetch(`${API}/api/update/${token}/menu-items`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: it.name, price: parseFloat(it.price) || 0,
+                category: cat.name || 'Menu Items', description: it.description || '',
+                item_type: cat.item_type || 'food',
+                modifiers,
+              }),
+            });
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error);
+            _data.menu_items.push(d.item);
+            added++;
+          } catch (e) { errs++; }
+        }
+      }
+    }
+    renderMenu(); renderSpecials(); renderCotd();
+    toast(`Imported ${added}${errs ? ` (${errs} failed)` : ''} ✓`);
+    closeScanDrawer();
+  } catch (e) { toast(e.message, false); }
+  btn.disabled = false; btn.textContent = 'Import All';
+}
+
+load();
+</script>
+</body>
+</html>

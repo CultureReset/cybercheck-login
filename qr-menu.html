@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Menu</title>
+<style>
+/* ── Theme variables — Grok writes only these to customize ─────────────── */
+:root {
+  --bg:           #ffffff;
+  --surface:      #f7f7f7;
+  --surface2:     #efefef;
+  --primary:      #0b7a75;
+  --primary-dark: #065f5b;
+  --accent:       #f0a500;
+  --accent-light: #fff8e6;
+  --text:         #111111;
+  --text-muted:   #777777;
+  --text-light:   #aaaaaa;
+  --border:       #eeeeee;
+  --special-bg:   #fffbf0;
+  --special-border: #f0a500;
+  --hh-bg:        #f0fdf4;
+  --hh-border:    #16a34a;
+  --hh-text:      #15803d;
+  --catch-bg:     #eff6ff;
+  --catch-border: #2563eb;
+  --catch-text:   #1d4ed8;
+  --hero-height:  220px;
+  --radius:       12px;
+  --font:         -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.hero {
+  width: 100%;
+  height: var(--hero-height);
+  object-fit: cover;
+  display: block;
+  background: var(--primary-dark);
+}
+.hero-placeholder {
+  width: 100%;
+  height: var(--hero-height);
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+}
+
+/* ── Business header ───────────────────────────────────────────────────── */
+.biz-header {
+  background: var(--bg);
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.biz-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.biz-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.biz-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.badge-hh   { background: var(--hh-bg);    color: var(--hh-text);    border: 1px solid var(--hh-border); }
+.badge-spec { background: var(--accent-light); color: #92400e; border: 1px solid var(--accent); }
+
+/* ── Sticky nav tabs (sections) ────────────────────────────────────────── */
+.nav-tabs {
+  display: flex;
+  overflow-x: auto;
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab {
+  flex-shrink: 0;
+  padding: 11px 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  transition: color 0.15s;
+}
+.nav-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+.section-wrap {
+  padding: 14px 14px 0;
+}
+.section-card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  margin-bottom: 14px;
+}
+.section-card.specials {
+  border: 2px solid var(--special-border);
+  background: var(--special-bg);
+}
+.section-card.happyhour {
+  border: 2px solid var(--hh-border);
+  background: var(--hh-bg);
+}
+.section-card.catch {
+  border: 2px solid var(--catch-border);
+  background: var(--catch-bg);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-card.specials .section-head { border-bottom-color: #fde68a; }
+.section-card.happyhour .section-head { border-bottom-color: #bbf7d0; }
+.section-card.catch .section-head { border-bottom-color: #bfdbfe; }
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+.section-card.specials .section-title { color: #92400e; }
+.section-card.happyhour .section-title { color: var(--hh-text); }
+.section-card.catch .section-title { color: var(--catch-text); }
+
+.section-now {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+.section-card.specials .section-now { background: var(--accent); }
+.section-card.happyhour .section-now { background: var(--hh-border); }
+
+/* ── Menu items ────────────────────────────────────────────────────────── */
+.menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.menu-item:last-child { border-bottom: none; }
+
+.item-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+.item-body { flex: 1; min-width: 0; }
+.item-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.item-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.item-price {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+.item-price-strike {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  text-decoration: line-through;
+  margin-right: 4px;
+}
+.badge-market {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--catch-bg);
+  color: var(--catch-text);
+  border: 1px solid var(--catch-border);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.badge-soldout {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ── Special cards (larger image treatment) ────────────────────────────── */
+.special-item {
+  display: flex;
+  flex-direction: column;
+}
+.special-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  background: var(--surface2);
+}
+.special-body {
+  padding: 12px 16px 14px;
+}
+.special-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.special-discount {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #92400e;
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+.special-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.45;
+}
+.special-days {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 5px;
+}
+
+/* ── Events ────────────────────────────────────────────────────────────── */
+.event-item {
+  display: flex;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.event-item:last-child { border-bottom: none; }
+.event-date-box {
+  flex-shrink: 0;
+  width: 44px;
+  text-align: center;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 4px;
+}
+.event-month { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.event-day { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+.event-body { flex: 1; min-width: 0; }
+.event-name { font-size: 0.92rem; font-weight: 700; }
+.event-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+.event-time { font-size: 0.75rem; color: var(--text-light); margin-top: 4px; }
+.event-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+/* Tonight hero block */
+.event-tonight {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.event-tonight-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--primary);
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-bottom: 8px;
+}
+.event-tonight-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.event-tonight-time {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.event-no-tonight {
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.event-weekly-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.event-weekly-list { display: none; }
+.event-weekly-list.open { display: block; }
+.event-weekly-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.event-weekly-day {
+  font-weight: 700;
+  width: 80px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+.event-weekly-day.today { color: var(--primary); }
+.event-weekly-artist { flex: 1; font-weight: 600; }
+.event-weekly-time { font-size: 0.75rem; color: var(--text-light); }
+
+/* ── HH items ──────────────────────────────────────────────────────────── */
+.hh-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.hh-item:last-child { border-bottom: none; }
+.hh-item-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+.hh-item-body { flex: 1; min-width: 0; }
+.hh-item-name { font-size: 0.9rem; font-weight: 700; }
+.hh-item-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.hh-prices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.hh-price-now { font-size: 0.92rem; font-weight: 800; color: var(--hh-text); }
+.hh-price-reg { font-size: 0.75rem; color: var(--text-light); text-decoration: line-through; }
+
+/* ── Empty / loading / error ───────────────────────────────────────────── */
+.state-msg {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+.biz-info-bar {
+  padding: 10px 20px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.biz-info-row { display: flex; align-items: center; gap: 6px; }
+.biz-social-links { display: flex; gap: 10px; padding: 8px 20px 4px; flex-wrap: wrap; }
+.biz-social-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.78rem; color: var(--primary); text-decoration: none;
+  padding: 4px 10px; background: rgba(99,102,241,.08); border-radius: 20px;
+}
+.menu-footer {
+  text-align: center;
+  padding: 24px 20px;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+.menu-footer a { color: var(--primary); text-decoration: none; }
+
+@media (max-width: 400px) {
+  .item-img { width: 60px; height: 60px; }
+  .biz-name { font-size: 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="hero-wrap"></div>
+<div id="header-wrap"></div>
+<div id="info-wrap"></div>
+<div id="tabs-wrap"></div>
+<div id="content-wrap"><div class="state-msg"><div class="spinner"></div>Loading menu…</div></div>
+<div class="menu-footer">Powered by <a href="https://gulfcoastradar.com" target="_blank">Gulf Coast Radar</a></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Config
+// ─────────────────────────────────────────────────────────────────────────────
+const API = 'https://cybercheck-api-database.vercel.app';
+const params = new URLSearchParams(window.location.search);
+const TOKEN   = params.get('token');
+const SLUG    = params.get('slug');
+const SITE_ID = params.get('site_id') || params.get('site');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Theme — apply CSS variables from entity.qr_theme JSON
+// ─────────────────────────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  if (!theme || typeof theme !== 'object') return;
+  const root = document.documentElement;
+  const map = {
+    bg: '--bg', surface: '--surface', surface2: '--surface2',
+    primary: '--primary', primary_dark: '--primary-dark',
+    accent: '--accent', accent_light: '--accent-light',
+    text: '--text', text_muted: '--text-muted', text_light: '--text-light',
+    border: '--border', font: '--font',
+    special_bg: '--special-bg', special_border: '--special-border',
+    hh_bg: '--hh-bg', hh_border: '--hh-border', hh_text: '--hh-text',
+    catch_bg: '--catch-bg', catch_border: '--catch-border', catch_text: '--catch-text',
+    hero_height: '--hero-height', radius: '--radius',
+  };
+  Object.entries(map).forEach(([key, cssVar]) => {
+    if (theme[key]) root.style.setProperty(cssVar, theme[key]);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fetch data
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchData() {
+  if (TOKEN) {
+    const r = await fetch(`${API}/update/${TOKEN}/data`);
+    if (!r.ok) throw new Error('Invalid link');
+    return await r.json();
+  }
+  if (SLUG && !SITE_ID) {
+    const r = await fetch(`${API}/api/gcr/entity/${encodeURIComponent(SLUG)}`);
+    if (!r.ok) throw new Error('Business not found');
+    const d = await r.json();
+    // normalize to same shape as token/data response
+    // API returns nested: menu.sections, menu.items, drinks.sections, drinks.items, happy_hour.sections, happy_hour.items
+    return {
+      entity: d.entity,
+      specials: d.specials || [],
+      menu_sections: (d.menu && d.menu.sections) || [],
+      menu_items: (d.menu && d.menu.items) || [],
+      drink_sections: (d.drinks && d.drinks.sections) || [],
+      drink_items: (d.drinks && d.drinks.items) || [],
+      hh_sections: (d.happy_hour && d.happy_hour.sections) || [],
+      hh_items: (d.happy_hour && d.happy_hour.items) || [],
+      events: d.events || [],
+      photos: d.photos || [],
+    };
+  }
+  if (SITE_ID) {
+    const r = await fetch(`${API}/api/public/menu?site_id=${encodeURIComponent(SITE_ID)}`);
+    if (!r.ok) throw new Error('Business not found');
+    const d = await r.json();
+    // Build sections+items arrays from a list of { name, items[] } sections
+    const buildTab = (sectionsList, idPrefix) => {
+      const secs = [], itms = [];
+      (sectionsList || []).forEach(sec => {
+        const secId = (idPrefix + '_' + sec.name).replace(/\s+/g, '_').toLowerCase();
+        secs.push({ id: secId, section_name: sec.name });
+        (sec.items || []).forEach(item => {
+          const itm = {
+            [idPrefix === 'food' ? 'menu_section_id' : idPrefix === 'drink' ? 'drink_section_id' : 'hh_section_id']: secId,
+            item_name: item.name,
+            price: item.price || 0,
+            description: item.description || '',
+            image_url: item.photo_url || item.image_url || '',
+            tags: item.tags || [],
+            modifiers: item.modifiers || [],
+            extra_photos: item.extra_photos || [],
+            is_available: true,
+            is_market_price: false,
+          };
+          if (idPrefix === 'hh') itm.hh_price = item.price || 0;
+          itms.push(itm);
+        });
+      });
+      return { secs, itms };
+    };
+    // Use new sections structure; fall back to legacy menu array for food
+    const foodSections = d.sections?.food || (d.menu || []).map(c => ({ name: c.category, items: c.items }));
+    const food  = buildTab(foodSections,          'food');
+    const drink = buildTab(d.sections?.drink       || [], 'drink');
+    const hh    = buildTab(d.sections?.happy_hour  || [], 'hh');
+    // Map hh_schedule from businesses.metadata → entity fields isHHActive() expects
+    const hhSched = d.hh_schedule || {};
+    return {
+      entity: {
+        name:         d.business_name || 'Menu',
+        logo_url:     d.logo_url || '',
+        description:  d.tagline || '',
+        hours:        d.hours || null,
+        social_links: d.social_links || null,
+        address:      d.address || '',
+        phone:        d.phone || '',
+        hh_days:  hhSched.days  || null,
+        hh_start: hhSched.start || null,
+        hh_end:   hhSched.end   || null,
+      },
+      specials: d.specials || [],
+      menu_sections: food.secs,   menu_items: food.itms,
+      drink_sections: drink.secs, drink_items: drink.itms,
+      hh_sections: hh.secs,       hh_items: hh.itms,
+      events: d.events || [], photos: [],
+    };
+  }
+  // No identifier — show restaurant search page
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function itemAvailableNow(item) {
+  const meta = item.metadata || item.schedule || {};
+  if (!meta.days && !meta.start && !meta.start_time) return true; // no schedule = always show
+  const now   = new Date();
+  const day   = ['sun','mon','tue','wed','thu','fri','sat'][now.getDay()];
+  const hhmm  = now.getHours() * 60 + now.getMinutes();
+  if (meta.days && Array.isArray(meta.days) && !meta.days.includes(day)) return false;
+  if (meta.start) {
+    const [sh, sm] = meta.start.split(':').map(Number);
+    const [eh, em] = (meta.end||'23:59').split(':').map(Number);
+    const start = sh * 60 + sm, end = eh * 60 + em;
+    if (hhmm < start || hhmm > end) return false;
+  }
+  return true;
+}
+
+function fmtPrice(price, priceText) {
+  if (priceText) return esc(priceText);
+  if (price != null && price !== '') return '$' + parseFloat(price).toFixed(2);
+  return '';
+}
+
+function parseTimeToHour(t) {
+  if (!t) return null;
+  const m = t.match(/(\d+):?(\d*)\s*(AM|PM)?/i);
+  if (!m) return null;
+  let h = parseInt(m[1]), min = parseInt(m[2] || '0');
+  const ap = (m[3] || '').toUpperCase();
+  if (ap === 'PM' && h < 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  return h + min / 60;
+}
+
+function isHHActive(entity) {
+  if (!entity.hh_days || !entity.hh_start || !entity.hh_end) return false;
+  const now = new Date();
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const days = entity.hh_days.split(',').map(d => d.trim().toLowerCase());
+  if (!days.some(d => dayName.toLowerCase().startsWith(d.toLowerCase().substring(0, 3)))) return false;
+  const h = now.getHours() + now.getMinutes() / 60;
+  const start = parseTimeToHour(entity.hh_start);
+  const end   = parseTimeToHour(entity.hh_end);
+  return start != null && end != null && h >= start && h < end;
+}
+
+function imgTag(url, cls, alt) {
+  if (!url) return '';
+  return `<img class="${cls}" src="${url.replace(/"/g,'&quot;')}" alt="${esc(alt || '')}" loading="lazy" onerror="this.style.display='none'">`;
+}
+
+function fmtEventDate(dateStr) {
+  if (!dateStr) return { month: '', day: '' };
+  const d = new Date(dateStr + 'T12:00:00');
+  return {
+    month: d.toLocaleDateString('en-US', { month: 'short' }),
+    day:   d.getDate()
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render sections
+// ─────────────────────────────────────────────────────────────────────────────
+// ── Catch of the Day hero — shown at the top of every menu ──────
+function renderCatchOfDay(d) {
+  // Collect catch items from multiple possible sources
+  const catchItems = [];
+
+  // Source 1: GCR menu_sections with section_name = "Catch of the Day"
+  const catchSecs = (d.menu_sections || []).filter(s =>
+    (s.section_name || '').toLowerCase().includes('catch'));
+  catchSecs.forEach(sec => {
+    (d.menu_items || []).filter(i => i.menu_section_id === sec.id)
+      .forEach(i => catchItems.push({ name: i.item_name, description: i.description, price: i.price, price_text: i.price_text, image_url: i.image_url, is_market_price: i.is_market_price }));
+  });
+
+  // Source 2: site_id sections.food with category = "Catch of the Day"
+  (d.menu_sections || []).filter(s => (s.section_name || '').toLowerCase().includes('catch'))
+    .forEach(sec => {
+      (d.menu_items || []).filter(i => i.menu_section_id === sec.id && !catchItems.find(c => c.name === i.item_name))
+        .forEach(i => catchItems.push({ name: i.item_name || i.name, description: i.description, price: i.price, price_text: i.price_text, image_url: i.image_url || i.photo_url, is_market_price: i.is_market_price }));
+    });
+
+  // Source 3: specials with "catch" in the name
+  (d.specials || []).filter(s => (s.special_name || '').toLowerCase().includes('catch'))
+    .forEach(s => catchItems.push({ name: s.special_name, description: s.description || s.discount_text, price: null, price_text: null }));
+
+  if (!catchItems.length) return '';
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  return `<div id="tab-catch" style="
+    background: linear-gradient(135deg, #0c4a6e, #075985);
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 4px;
+    border: 2px solid #0ea5e9;
+    box-shadow: 0 8px 24px rgba(14,165,233,.25);
+  ">
+    <div style="padding:16px 18px 10px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#7dd3fc;margin-bottom:2px;">🎣 Today's Fresh Catch</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.6);">${today}</div>
+      </div>
+      <span style="background:#0ea5e9;color:#fff;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.05em;">FRESH TODAY</span>
+    </div>
+    ${catchItems.map(item => {
+      const hasImg = item.image_url;
+      const price = item.is_market_price ? 'Ask your server' : (item.price_text || (item.price ? '$' + Number(item.price).toFixed(2) : 'Ask your server'));
+      return `<div style="display:flex;gap:0;border-top:1px solid rgba(255,255,255,.1);${hasImg ? 'min-height:110px;' : 'padding:14px 18px;'}">
+        ${hasImg ? `<div style="width:110px;flex-shrink:0;background-image:url('${item.image_url}');background-size:cover;background-position:center;"></div>` : ''}
+        <div style="flex:1;padding:14px 18px;">
+          <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;">${esc(item.name || '')}</div>
+          ${item.description ? `<div style="font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:8px;">${esc(item.description)}</div>` : ''}
+          <div style="font-size:16px;font-weight:800;color:#7dd3fc;">${price}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── Live Music / Events Banner ─────────────────────────────────
+function renderLiveMusicBanner(events) {
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const todayName = now.toLocaleDateString('en-US',{weekday:'long'}).toLowerCase();
+
+  const liveTonight = events.filter(e => {
+    if (!e.is_active && e.is_active !== undefined) return false;
+    const isToday = e.event_date === todayStr;
+    const isRecurring = e.recurring && (e.day_of_week||'').toLowerCase().startsWith(todayName.slice(0,3));
+    const name = (e.event_name || e.name || '').toLowerCase();
+    const type = (e.event_type || '').toLowerCase();
+    const isMusic = name.includes('live') || name.includes('music') || name.includes('dj') || name.includes('band') || type.includes('music') || type.includes('live');
+    return (isToday || isRecurring) && isMusic;
+  });
+
+  if (!liveTonight.length) return '';
+
+  const tonight = liveTonight[0];
+  const name = tonight.event_name || tonight.name || 'Live Music';
+  const desc = tonight.description || '';
+  const startTime = tonight.start_time ? (() => {
+    const [h,m] = tonight.start_time.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return ((h % 12) || 12) + (m ? ':' + String(m).padStart(2,'0') : '') + ' ' + ampm;
+  })() : '';
+  const endTime = tonight.end_time ? (() => {
+    const [h,m] = tonight.end_time.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return ((h % 12) || 12) + (m ? ':' + String(m).padStart(2,'0') : '') + ' ' + ampm;
+  })() : '';
+  const timeStr = startTime ? (endTime ? `${startTime} – ${endTime}` : `Starting ${startTime}`) : 'Tonight';
+
+  const artistImg = tonight.image_url || tonight.artist_image_url || '';
+  const artistProfile = tonight.artist_slug ? `<a href="profile.html?id=${esc(tonight.artist_slug)}" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;padding:6px 16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:999px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;">View Artist Profile →</a>` : '';
+
+  return `<div id="tab-live" style="
+    background: linear-gradient(135deg, #1a0533, #2d1b69);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid #7c3aed;
+    box-shadow: 0 8px 24px rgba(124,58,237,.3);
+    margin-bottom: 4px;
+  ">
+    <div style="padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#c4b5fd;margin-bottom:2px;">🎸 Live Music Tonight</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.55);">${timeStr}</div>
+      </div>
+      <span style="background:#7c3aed;color:#fff;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;animation:pulse 2s infinite;">LIVE TONIGHT</span>
+    </div>
+    <div style="display:flex;gap:0;${artistImg ? 'min-height:120px;' : 'padding:0 18px 18px;'}border-top:1px solid rgba(255,255,255,.1);">
+      ${artistImg ? `<div style="width:120px;flex-shrink:0;background-image:url('${artistImg}');background-size:cover;background-position:center top;"></div>` : ''}
+      <div style="flex:1;padding:16px 18px;">
+        <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px;">${esc(name)}</div>
+        ${desc ? `<div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:8px;">${esc(desc)}</div>` : ''}
+        ${artistProfile}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSpecials(specials) {
+  if (!specials.length) return '';
+  const todayShort = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+  const todayFull  = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][new Date().getDay()];
+  const filtered = specials.filter(s => {
+    if (!s.days) return true;
+    const d = s.days.toLowerCase();
+    return d.includes(todayShort) || d.includes(todayFull);
+  });
+  if (!filtered.length) return '';
+  const items = filtered.map(s => {
+    let html = '<div class="special-item">';
+    if (s.image_url) html += imgTag(s.image_url, 'special-img', s.special_name);
+    html += '<div class="special-body">';
+    html += `<div class="special-name">${esc(s.special_name)}</div>`;
+    if (s.discount_text) html += `<span class="special-discount">${esc(s.discount_text)}</span>`;
+    if (s.description)   html += `<div class="special-desc">${esc(s.description)}</div>`;
+    const schedParts = [s.days, s.start_time ? s.start_time + (s.end_time ? ' – ' + s.end_time : '') : ''].filter(Boolean);
+    if (schedParts.length) html += `<div class="special-days">📅 ${esc(schedParts.join('  '))}</div>`;
+    html += '</div></div>';
+    return html;
+  }).join('<div style="height:1px;background:var(--border);"></div>');
+
+  return `<div class="section-card specials" id="tab-specials">
+    <div class="section-head">
+      <div class="section-title">🔥 Today's Specials</div>
+      <span class="section-now">LIVE</span>
+    </div>
+    ${items}
+  </div>`;
+}
+
+function renderMenuSections(sections, items) {
+  if (!sections.length && !items.length) return '';
+  let html = '';
+
+  // Group items by section
+  const bySection = {};
+  items.forEach(item => {
+    const sid = item.menu_section_id || '__none__';
+    if (!bySection[sid]) bySection[sid] = [];
+    bySection[sid].push(item);
+  });
+
+  sections.forEach(sec => {
+    const secItems = (bySection[sec.id] || []).filter(i => i.is_available !== false);
+    if (!secItems.length) return;
+    const isCatch = sec.section_name === 'Catch of the Day';
+    const cls = isCatch ? 'section-card catch' : 'section-card';
+    const icon = isCatch ? '🎣 ' : '';
+
+    html += `<div class="${cls}" id="tab-menu-${sec.id}">
+      <div class="section-head">
+        <div class="section-title">${icon}${esc(sec.section_name)}</div>
+        ${isCatch ? '<span class="section-now">TODAY</span>' : ''}
+      </div>`;
+
+    secItems.forEach(item => {
+      const mods = (item.modifiers || []).filter(m => m.name);
+      html += `<div class="menu-item">`;
+      if (item.image_url) html += imgTag(item.image_url, 'item-img', item.item_name);
+      html += `<div class="item-body">
+        <div class="item-name">${esc(item.item_name)}</div>
+        ${item.description ? `<div class="item-desc">${esc(item.description)}</div>` : ''}
+        ${mods.length ? `<div class="item-desc" style="color:var(--accent,#888);font-size:12px;">Add: ${mods.map(m => esc(m.name) + (m.price ? ' +$'+Number(m.price).toFixed(2) : '')).join(' · ')}</div>` : ''}
+        <div class="item-footer">`;
+      if (item.is_market_price || (!item.price && !item.price_text)) {
+        // Never show "Market Price" — always give tourists something useful
+        html += `<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Ask your server for today's price</span>`;
+      } else {
+        const p = fmtPrice(item.price, item.price_text);
+        if (p) html += `<span class="item-price">${p}</span>`;
+      }
+      html += '</div></div></div>';
+    });
+
+    // Unsectioned items
+    if (sec === sections[0] && bySection['__none__']) {
+      bySection['__none__'].filter(i => i.is_available !== false).forEach(item => {
+        html += `<div class="menu-item">`;
+        if (item.image_url) html += imgTag(item.image_url, 'item-img', item.item_name);
+        html += `<div class="item-body">
+          <div class="item-name">${esc(item.item_name)}</div>
+          ${item.description ? `<div class="item-desc">${esc(item.description)}</div>` : ''}
+          <div class="item-footer">
+            ${fmtPrice(item.price, item.price_text) ? `<span class="item-price">${fmtPrice(item.price, item.price_text)}</span>` : ''}
+          </div>
+        </div></div>`;
+      });
+    }
+
+    html += '</div>';
+  });
+
+  return html;
+}
+
+function renderDrinks(sections, items) {
+  if (!items.length) return '';
+  const bySection = {};
+  items.forEach(i => {
+    const sid = i.drink_section_id || '__none__';
+    if (!bySection[sid]) bySection[sid] = [];
+    bySection[sid].push(i);
+  });
+
+  let html = '';
+  const allSections = sections.length ? sections : [{ id: '__none__', section_name: 'Drinks' }];
+
+  allSections.forEach(sec => {
+    const secItems = (bySection[sec.id] || []).filter(i => i.is_available !== false);
+    if (!secItems.length) return;
+    html += `<div class="section-card" id="tab-drinks-${sec.id}">
+      <div class="section-head"><div class="section-title">🍹 ${esc(sec.section_name)}</div></div>`;
+    secItems.forEach(item => {
+      html += `<div class="menu-item">`;
+      if (item.image_url) html += imgTag(item.image_url, 'item-img', item.item_name);
+      html += `<div class="item-body">
+        <div class="item-name">${esc(item.item_name)}</div>
+        ${item.description ? `<div class="item-desc">${esc(item.description)}</div>` : ''}
+        <div class="item-footer">
+          ${fmtPrice(item.price, item.price_text) ? `<span class="item-price">${fmtPrice(item.price, item.price_text)}</span>` : ''}
+        </div>
+      </div></div>`;
+    });
+    html += '</div>';
+  });
+
+  return html;
+}
+
+function renderHappyHour(entity, hhSections, hhItems, isActive) {
+  if (!hhItems.length && !entity.hh_description) return '';
+  let html = `<div class="section-card happyhour" id="tab-hh">
+    <div class="section-head">
+      <div class="section-title">🍺 Happy Hour</div>
+      ${isActive ? '<span class="section-now">NOW</span>' : ''}
+    </div>`;
+
+  if (entity.hh_days || entity.hh_start) {
+    html += `<div style="padding:10px 16px;font-size:0.8rem;color:var(--hh-text);font-weight:600;border-bottom:1px solid var(--border);">
+      ⏰ ${esc(entity.hh_days || '')} ${entity.hh_start ? esc(entity.hh_start) + ' – ' + esc(entity.hh_end || '') : ''}
+    </div>`;
+  }
+  if (entity.hh_description) {
+    html += `<div style="padding:10px 16px;font-size:0.82rem;color:var(--text-muted);border-bottom:1px solid var(--border);">${esc(entity.hh_description)}</div>`;
+  }
+
+  hhItems.forEach(item => {
+    html += `<div class="hh-item">`;
+    if (item.image_url) html += imgTag(item.image_url, 'hh-item-img', item.item_name);
+    html += `<div class="hh-item-body">
+      <div class="hh-item-name">${esc(item.item_name)}</div>
+      ${item.description ? `<div class="hh-item-desc">${esc(item.description)}</div>` : ''}
+    </div>
+    <div class="hh-prices">`;
+    if (item.hh_price != null) html += `<div class="hh-price-now">$${parseFloat(item.hh_price).toFixed(2)}</div>`;
+    if (item.regular_price != null) html += `<div class="hh-price-reg">$${parseFloat(item.regular_price).toFixed(2)}</div>`;
+    if (item.price_text && !item.hh_price) html += `<div class="hh-price-now">${esc(item.price_text)}</div>`;
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function renderEvents(events) {
+  if (!events.length) return '';
+
+  const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  const todayEvents = events.filter(ev => ev.event_date === todayStr);
+  // Weekly events = same week, sorted by date
+  const weekEvents  = events.filter(ev => ev.event_date && ev.event_date >= todayStr)
+                            .sort((a, b) => a.event_date.localeCompare(b.event_date));
+  // Non-date events (description-only) that aren't today
+  const otherEvents = events.filter(ev => !ev.event_date);
+
+  let html = `<div class="section-card" id="tab-events">
+    <div class="section-head"><div class="section-title">🎵 Live Music &amp; Events</div></div>`;
+
+  // Tonight block
+  if (todayEvents.length) {
+    todayEvents.forEach(ev => {
+      html += `<div class="event-tonight">
+        <div class="event-tonight-label">Tonight</div>
+        <div class="event-tonight-name">${esc(ev.event_name)}</div>
+        <div class="event-tonight-time">
+          ${ev.start_time ? '⏰ ' + esc(ev.start_time) + (ev.end_time ? ' – ' + esc(ev.end_time) : '') : ''}
+          ${ev.cover_charge ? ' &nbsp;·&nbsp; 🎟 ' + esc(ev.cover_charge) : ''}
+          ${ev.description ? '<br>' + esc(ev.description) : ''}
+        </div>
+      </div>`;
+    });
+  } else {
+    html += `<div class="event-no-tonight">No live music tonight</div>`;
+  }
+
+  // Weekly lineup toggle (only if there are future events beyond today)
+  const futureEvents = weekEvents.filter(ev => ev.event_date > todayStr);
+  if (futureEvents.length || otherEvents.length) {
+    const allWeek = [...futureEvents, ...otherEvents];
+    html += `<button class="event-weekly-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.ev-arrow').textContent=this.nextElementSibling.classList.contains('open')?'▴':'▾'">
+      View Weekly Lineup <span class="ev-arrow">▾</span>
+    </button>
+    <div class="event-weekly-list">`;
+
+    allWeek.forEach(ev => {
+      let dayLabel = '';
+      if (ev.event_date) {
+        const d = new Date(ev.event_date + 'T12:00:00');
+        const isToday = ev.event_date === todayStr;
+        dayLabel = `<span class="event-weekly-day${isToday ? ' today' : ''}">${DAY_NAMES[d.getDay()]}</span>`;
+      }
+      html += `<div class="event-weekly-row">
+        ${dayLabel}
+        <span class="event-weekly-artist">${esc(ev.event_name)}</span>
+        <span class="event-weekly-time">${ev.start_time ? esc(ev.start_time) : ''}</span>
+      </div>`;
+    });
+
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Nav tabs
+// ─────────────────────────────────────────────────────────────────────────────
+function buildTabs(tabs) {
+  if (tabs.length < 2) return;
+  const wrap = document.getElementById('tabs-wrap');
+  wrap.innerHTML = '<div class="nav-tabs">' +
+    tabs.map((t, i) =>
+      `<div class="nav-tab${i === 0 ? ' active' : ''}" onclick="scrollToSection('${t.id}',this)">${t.label}</div>`
+    ).join('') + '</div>';
+}
+
+function scrollToSection(id, el) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const offset = document.getElementById('tabs-wrap').offsetHeight + 4;
+  const top = target.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top, behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main render
+// ─────────────────────────────────────────────────────────────────────────────
+async function renderData(d) {
+  const contentWrap = document.getElementById('content-wrap');
+  try {
+    const entity = d.entity || {};
+
+    // Apply custom theme if set
+    if (entity.qr_theme) {
+      try { applyTheme(typeof entity.qr_theme === 'string' ? JSON.parse(entity.qr_theme) : entity.qr_theme); }
+      catch(e) {}
+    }
+    // Also check businesses.qr_theme for site_id-based menus
+    if (!entity.qr_theme && d.qr_theme) {
+      try { applyTheme(typeof d.qr_theme === 'string' ? JSON.parse(d.qr_theme) : d.qr_theme); }
+      catch(e) {}
+    }
+
+    // Page title
+    document.title = entity.name ? entity.name + ' — Menu' : 'Menu';
+
+    // Hero
+    const heroWrap = document.getElementById('hero-wrap');
+    const heroUrl  = entity.hero_image_url || (d.photos && d.photos[0] && d.photos[0].image_url);
+    heroWrap.innerHTML = heroUrl
+      ? `<img class="hero" src="${heroUrl.replace(/"/g,'&quot;')}" alt="${esc(entity.name)}">`
+      : `<div class="hero-placeholder">${esc(entity.icon || '🍽️')}</div>`;
+
+    // Header
+    const hhActive = isHHActive(entity);
+    const hasSpec  = (d.specials || []).length > 0;
+    document.getElementById('header-wrap').innerHTML = `
+      <div class="biz-header">
+        <div class="biz-name">${esc(entity.name || 'Menu')}</div>
+        ${entity.description ? `<div class="biz-sub">${esc(entity.description)}</div>` : ''}
+        <div class="biz-badges">
+          ${hhActive ? '<span class="badge badge-hh">🍺 Happy Hour Now</span>' : ''}
+          ${hasSpec  ? '<span class="badge badge-spec">🔥 Specials Today</span>' : ''}
+        </div>
+      </div>`;
+
+    // Info bar: hours, address, phone, social links
+    const infoWrap = document.getElementById('info-wrap');
+    if (infoWrap) {
+      let infoHtml = '';
+      const infoRows = [];
+      if (entity.hours)   infoRows.push(`<span>🕐</span><span>${esc(entity.hours)}</span>`);
+      if (entity.address) infoRows.push(`<span>📍</span><span>${esc(entity.address)}</span>`);
+      if (entity.phone)   infoRows.push(`<span>📞</span><a href="tel:${esc(entity.phone)}" style="color:var(--primary);text-decoration:none;">${esc(entity.phone)}</a>`);
+      if (infoRows.length) {
+        infoHtml += `<div class="biz-info-bar">${infoRows.map(r => `<div class="biz-info-row">${r}</div>`).join('')}</div>`;
+      }
+      const sl = entity.social_links || {};
+      const socialIcons = { instagram: '📸', facebook: '👍', twitter: '🐦', tiktok: '🎵', website: '🌐', yelp: '⭐' };
+      const socialLinks = Object.entries(sl).filter(([,v]) => v).map(([k,v]) =>
+        `<a class="biz-social-link" href="${v.startsWith('http') ? v : 'https://'+v}" target="_blank" rel="noopener">${socialIcons[k]||'🔗'} ${k.charAt(0).toUpperCase()+k.slice(1)}</a>`
+      ).join('');
+      if (socialLinks) infoHtml += `<div class="biz-social-links">${socialLinks}</div>`;
+      infoWrap.innerHTML = infoHtml;
+    }
+
+    // ── Module config — from AI-generated or manually set qr_theme ──
+    const rawTheme = entity.qr_theme || d.qr_theme || {};
+    const theme = typeof rawTheme === 'string' ? (() => { try { return JSON.parse(rawTheme); } catch(e) { return {}; } })() : rawTheme;
+    const mods = Object.assign({ catch_of_day:true, live_music:true, specials:true, happy_hour:true, menu:true, drinks:true, events:true }, theme.modules || {});
+    const defaultOrder = ['catch_of_day','live_music','specials','happy_hour','menu','drinks','events'];
+    const moduleOrder = (theme.module_order && theme.module_order.length) ? theme.module_order : defaultOrder;
+    const moduleStyles = theme.module_styles || {};
+    if (theme.template) document.body.setAttribute('data-template', theme.template);
+
+    // Wrap a module's HTML with its own style scope if module_styles exist
+    function wrapModuleStyle(key, html) {
+      const s = moduleStyles[key];
+      if (!s || !html) return html;
+      const cssVars = Object.entries(s).map(([k,v]) => {
+        const varMap = { bg:'--bg', surface:'--surface', border:'--border', text:'--text', accent:'--accent', primary:'--primary' };
+        return varMap[k] ? varMap[k] + ':' + v : null;
+      }).filter(Boolean).join(';');
+      if (!cssVars) return html;
+      return `<div style="${cssVars};border-radius:16px;overflow:hidden;">${html}</div>`;
+    }
+
+    // Build all possible modules
+    const allModules = {
+      catch_of_day: () => { if (!mods.catch_of_day) return null; const h = renderCatchOfDay(d); return h ? { html: wrapModuleStyle('catch_of_day', h) } : null; },
+      live_music:   () => { if (!mods.live_music) return null; const h = renderLiveMusicBanner(d.events || []); return h ? { html: wrapModuleStyle('live_music', h) } : null; },
+      specials:     () => { if (!mods.specials) return null; const h = renderSpecials(d.specials || []); return h ? { html: wrapModuleStyle('specials', h), tab: { id:'tab-specials', label:'🔥 Specials' } } : null; },
+      happy_hour:   () => { if (!mods.happy_hour) return null; const h = renderHappyHour(entity, d.hh_sections||[], d.hh_items||[], hhActive); return h ? { html: wrapModuleStyle('happy_hour', h), tab: { id:'tab-hh', label:'🍺 Happy Hour' } } : null; },
+      menu:         () => { if (!mods.menu) return null; const h = renderMenuSections(d.menu_sections||[], d.menu_items||[]); return h ? { html: wrapModuleStyle('menu', h), tab: { id:`tab-menu-${(d.menu_sections||[])[0]?.id||0}`, label:'🍽️ Menu' } } : null; },
+      drinks:       () => { if (!mods.drinks) return null; const h = renderDrinks(d.drink_sections||[], d.drink_items||[]); return h ? { html: wrapModuleStyle('drinks', h), tab: { id:`tab-drinks-${(d.drink_sections||[])[0]?.id||'__none__'}`, label:'🍹 Drinks' } } : null; },
+      events:       () => { if (!mods.events) return null; const h = renderEvents(d.events||[]); return h ? { html: wrapModuleStyle('events', h), tab: { id:'tab-events', label:'🎉 Events' } } : null; },
+    };
+
+    const blocks = [];
+    const tabs   = [];
+    moduleOrder.forEach(key => {
+      const builder = allModules[key];
+      if (!builder) return;
+      const result = builder();
+      if (!result) return;
+      blocks.push(result.html);
+      if (result.tab) tabs.push(result.tab);
+    });
+
+    if (!blocks.length) {
+      contentWrap.innerHTML = '<div class="state-msg">Menu coming soon</div>';
+      return;
+    }
+
+    buildTabs(tabs);
+    contentWrap.innerHTML = '<div class="section-wrap">' + blocks.join('') + '</div>';
+
+  } catch (err) {
+    contentWrap.innerHTML = `<div class="state-msg">Could not load menu.<br><small>${esc(err.message)}</small></div>`;
+  }
+}
+
+// ── Restaurant search landing page ────────────────────────────────────────────
+async function showRestaurantSearch() {
+  const wrap = document.getElementById('content-wrap') || document.body;
+  wrap.innerHTML = `
+    <div style="max-width:520px;margin:48px auto;padding:0 16px;">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="font-size:48px;margin-bottom:8px;">🍽️</div>
+        <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;">Find a Restaurant</h1>
+        <p style="color:var(--text-muted);font-size:14px;margin:0;">Search by restaurant name</p>
+      </div>
+      <input type="text" id="biz-search-input" placeholder="🔍 Type restaurant name..." autocomplete="off"
+        style="width:100%;padding:14px 16px;font-size:16px;border:2px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);box-sizing:border-box;margin-bottom:12px;"
+        oninput="filterRestaurants(this.value)">
+      <div id="biz-search-results" style="display:none;border:1px solid var(--border);border-radius:12px;overflow:hidden;"></div>
+    </div>`;
+
+  // Load all businesses
+  let businesses = [];
+  try {
+    const [bizRes, entRes] = await Promise.all([
+      fetch(`${API}/api/admin/businesses`).catch(() => null),
+      fetch(`${API}/api/gcr/entities?limit=200`).catch(() => null),
+    ]);
+    if (bizRes?.ok) businesses = businesses.concat(await bizRes.json());
+    if (entRes?.ok) {
+      const ents = await entRes.json();
+      (ents.entities || ents || []).forEach(e => {
+        if (!businesses.find(b => b.slug === e.slug)) {
+          businesses.push({ name: e.name, slug: e.slug, city: e.city, _type: 'gcr' });
+        }
+      });
+    }
+  } catch(e) {}
+
+  window._bizSearchList = businesses;
+  filterRestaurants('');
+}
+
+function filterRestaurants(q) {
+  const list = window._bizSearchList || [];
+  const results = document.getElementById('biz-search-results');
+  if (!results) return;
+  const term = q.trim().toLowerCase();
+  const matches = term ? list.filter(b => (b.name||'').toLowerCase().includes(term)) : list.slice(0, 20);
+  if (!matches.length) {
+    results.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">No restaurants found</div>';
+  } else {
+    results.innerHTML = matches.map(b => {
+      const href = b.site_id ? `?site_id=${b.site_id}` : `?slug=${encodeURIComponent(b.slug||'')}`;
+      return `<a href="${href}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;color:var(--text);border-bottom:1px solid var(--border);">
+        <span style="font-size:24px;">🏪</span>
+        <div>
+          <div style="font-weight:600;">${esc(b.name||'')}</div>
+          ${b.city ? `<div style="font-size:12px;color:var(--text-muted);">${esc(b.city)}</div>` : ''}
+        </div>
+        <span style="margin-left:auto;color:var(--text-muted);">→</span>
+      </a>`;
+    }).join('');
+  }
+  results.style.display = '';
+}
+
+// ── Promotions Engine ─────────────────────────────────────────
+const _promos = [];
+const _promoShown = new Set();
+
+async function loadPromos(siteId) {
+  if (!siteId) return;
+  try {
+    const r = await fetch(`${API}/api/dashboard/promotions/public?site_id=${encodeURIComponent(siteId)}`);
+    const data = await r.json();
+    if (Array.isArray(data)) {
+      _promos.push(...data);
+      schedulePromos();
+    }
+  } catch(e) {}
+}
+
+function schedulePromos() {
+  _promos.forEach(p => {
+    if (_promoShown.has(p.id)) return;
+    const cfg = p.trigger_config || {};
+    if (p.type === 'on_scan') setTimeout(() => showPromo(p), 2000);
+    else if (p.type === 'random') {
+      if (Math.random() < (cfg.probability || 0.4)) {
+        setTimeout(() => { if (!_promoShown.has(p.id)) showPromo(p); }, (cfg.delay_seconds || 25) * 1000);
+      }
+    } else if (p.type === 'time_based') {
+      const now = new Date();
+      const [h, m] = (cfg.time || '16:00').split(':').map(Number);
+      const diff = Math.abs((now.getHours() * 60 + now.getMinutes()) - (h * 60 + m));
+      if (diff <= (cfg.window_minutes || 60)) setTimeout(() => showPromo(p), 3000);
+    }
+  });
+}
+
+function checkSpendTrigger(total) {
+  _promos.forEach(p => {
+    if (_promoShown.has(p.id) || p.type !== 'spend_threshold') return;
+    if (total >= ((p.trigger_config || {}).spend || 50)) showPromo(p);
+  });
+}
+
+function showPromo(promo) {
+  if (_promoShown.has(promo.id)) return;
+  _promoShown.add(promo.id);
+  const modal = document.createElement('div');
+  modal.id = 'pm-' + promo.id;
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0;';
+  modal.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:10px;">🎁</div>
+    <h2 style="font-size:19px;font-weight:800;color:#0f172a;margin:0 0 8px;">${esc(promo.title)}</h2>
+    ${promo.description ? `<p style="font-size:14px;color:#475569;margin:0 0 14px;line-height:1.55;">${esc(promo.description)}</p>` : ''}
+    ${promo.discount_text ? `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:15px;font-weight:700;color:#166534;">${esc(promo.discount_text)}</div>` : ''}
+    <div id="pc-${promo.id}">
+      <p style="font-size:13px;color:#64748b;margin:0 0 10px;">Enter your phone to claim — we'll text you the code:</p>
+      <input type="tel" id="pp-${promo.id}" placeholder="(555) 555-5555"
+        style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-size:17px;text-align:center;margin-bottom:10px;box-sizing:border-box;">
+      <button onclick="claimPromo('${promo.id}','${SITE_ID||''}')"
+        style="width:100%;padding:14px;background:#0b7a75;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;">${esc(promo.cta_text || 'Claim Offer')}</button>
+    </div>
+    <button onclick="document.getElementById('pm-${promo.id}').remove()" style="margin-top:14px;background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;">No thanks</button>
+  </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+async function claimPromo(promoId, siteId) {
+  const phone = (document.getElementById('pp-' + promoId)?.value || '').replace(/\D/g,'');
+  if (phone.length < 10) { alert('Please enter a valid 10-digit phone number'); return; }
+  const btn = document.querySelector(`#pm-${promoId} button`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+  try {
+    const r = await fetch(`${API}/api/dashboard/promotions/claim`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ promotion_id: promoId, phone, site_id: siteId }),
+    });
+    const d = await r.json();
+    const el = document.getElementById('pc-' + promoId);
+    if (el) el.innerHTML = `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:20px;">
+      <div style="font-size:28px;margin-bottom:6px;">✅</div>
+      <div style="font-weight:900;font-size:22px;color:#166534;letter-spacing:.05em;margin-bottom:4px;">${d.coupon_code}</div>
+      <div style="font-size:13px;color:#166534;margin-bottom:${d.loyalty_number?'10px':'0'};">Code sent to your phone!</div>
+      ${d.loyalty_number ? `<div style="font-size:12px;color:#166534;padding-top:10px;border-top:1px solid #86efac;">Loyalty # <strong>${d.loyalty_number}</strong>${d.is_new_customer?" — Welcome to our rewards program!":""}</div>` : ''}
+    </div>`;
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+  }
+}
+
+const _ps = document.createElement('style');
+_ps.textContent = '@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
+document.head.appendChild(_ps);
+
+async function render() {
+  const d = await fetchData();
+  if (!d) { showRestaurantSearch(); return; }
+  await renderData(d);
+  if (SITE_ID) loadPromos(SITE_ID);
+}
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!--
+  COMPONENT: Easy!Appointments Booking
+  GitHub: alextselegidis/easyappointments
+  Self-hosted PHP appointment scheduler
+  For: Restaurants, salons, services, any appointment-based business
+
+  Requires: shared.html on the page
+  Trigger: openComponent('easy-appt')
+  Render: renderEasyAppt(eaUrl, eaApiKey)
+  Back end: store easy_appointments_url + easy_appointments_api_key on entity in Supabase
+
+  Setup for business:
+  1. Clone: git clone https://github.com/alextselegidis/easyappointments
+  2. Host on their server (PHP + MySQL)
+  3. Admin adds their URL to their GCR entity
+  4. This component embeds their booking page automatically
+
+  Two modes:
+  - EMBED MODE: iframe embed of their booking page (simplest)
+  - API MODE: fetch services/providers/slots via REST API for custom UI
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('easy-appt')">📅 Schedule Appointment</button>
+-->
+
+<style>
+.comp-ea-iframe {
+    width: 100%;
+    height: 580px;
+    border: none;
+    display: block;
+}
+.comp-ea-loading {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+}
+.comp-ea-services {
+    padding: 0;
+}
+.comp-ea-service {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.comp-ea-service:hover { background: #f9f9f9; }
+.comp-ea-service:last-child { border-bottom: none; }
+.comp-ea-service-info { flex: 1; }
+.comp-ea-service-name { font-size: 0.95rem; font-weight: 700; color: #111; }
+.comp-ea-service-duration { font-size: 0.8rem; color: #888; margin-top: 2px; }
+.comp-ea-service-price { font-size: 0.95rem; font-weight: 700; color: #111; white-space: nowrap; }
+.comp-ea-book-btn {
+    padding: 8px 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.comp-ea-book-btn:hover { background: #333; }
+.comp-ea-no-url {
+    padding: 30px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+}
+.comp-ea-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+}
+.comp-ea-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+}
+.comp-ea-tab.active { color: #111; border-bottom-color: #111; }
+</style>
+
+<!-- POPUP -->
+<div class="comp-overlay" id="comp-easy-appt">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>📅 Book Appointment</h2>
+            <button class="comp-close" onclick="closeComponent('comp-easy-appt')">✕</button>
+        </div>
+        <div id="comp-ea-tabs-wrap"></div>
+        <div id="comp-easy-appt-body"><div class="comp-ea-loading">Loading...</div></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _eaUrl = null;
+    let _eaApiKey = null;
+    let _eaMode = 'embed'; // 'embed' or 'api'
+
+    function renderEasyAppt(eaUrl, eaApiKey) {
+        _eaUrl = eaUrl;
+        _eaApiKey = eaApiKey;
+        const body = document.getElementById('comp-easy-appt-body');
+        const tabsWrap = document.getElementById('comp-ea-tabs-wrap');
+
+        if (!eaUrl) {
+            tabsWrap.innerHTML = '';
+            body.innerHTML = '<div class="comp-ea-no-url">Appointments not set up yet.</div>';
+            return;
+        }
+
+        // If API key provided, offer both modes
+        if (eaApiKey) {
+            tabsWrap.innerHTML = `
+                <div class="comp-ea-tabs">
+                    <div class="comp-ea-tab active" onclick="_eaSwitchTab('embed', this)">📅 Book</div>
+                    <div class="comp-ea-tab" onclick="_eaSwitchTab('services', this)">📋 Services</div>
+                </div>`;
+        } else {
+            tabsWrap.innerHTML = '';
+        }
+
+        _showEmbed(eaUrl, body);
+    }
+
+    function _showEmbed(url, body) {
+        _eaMode = 'embed';
+        const bookingUrl = url.replace(/\/$/, '') + '/booking';
+        body.innerHTML = `<iframe class="comp-ea-iframe" src="${bookingUrl}" title="Book Appointment" loading="lazy"></iframe>`;
+    }
+
+    function _showServices(body) {
+        _eaMode = 'services';
+        body.innerHTML = '<div class="comp-ea-loading">Loading services...</div>';
+
+        const apiUrl = _eaUrl.replace(/\/$/, '') + '/api/v1/services';
+
+        fetch(apiUrl, {
+            headers: {
+                'Authorization': 'Bearer ' + _eaApiKey,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(r => r.json())
+        .then(services => {
+            if (!services || !services.length) {
+                body.innerHTML = '<div class="comp-ea-no-url">No services found.</div>';
+                return;
+            }
+            let html = '<div class="comp-ea-services">';
+            services.forEach(svc => {
+                const duration = svc.duration ? `${svc.duration} min` : '';
+                const price = svc.price > 0 ? `$${parseFloat(svc.price).toFixed(2)}` : 'Free';
+                const bookUrl = (_eaUrl.replace(/\/$/, '')) + '/booking?service=' + svc.id;
+                html += `<div class="comp-ea-service">`;
+                html += `<div class="comp-ea-service-info">`;
+                html += `<div class="comp-ea-service-name">${escapeHtml(svc.name)}</div>`;
+                if (duration) html += `<div class="comp-ea-service-duration">⏱ ${duration}</div>`;
+                html += `</div>`;
+                html += `<div style="display:flex;align-items:center;gap:10px;">`;
+                if (svc.price > 0) html += `<div class="comp-ea-service-price">${price}</div>`;
+                html += `<a href="${escapeAttr(bookUrl)}" target="_blank" class="comp-ea-book-btn">Book</a>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+            html += '</div>';
+            body.innerHTML = html;
+        })
+        .catch(() => {
+            // Fallback to embed if API fails
+            _showEmbed(_eaUrl, body);
+        });
+    }
+
+    window._eaSwitchTab = function(tab, el) {
+        document.querySelectorAll('.comp-ea-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        const body = document.getElementById('comp-easy-appt-body');
+        if (tab === 'embed') _showEmbed(_eaUrl, body);
+        if (tab === 'services') _showServices(body);
+    };
+
+    window.renderEasyAppt = renderEasyAppt;
+})();
+</script>

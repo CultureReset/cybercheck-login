@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Workflow - CyberCheck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      color: white;
+    }
+    .header h1 {
+      font-size: 36px;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+    }
+    .header p {
+      font-size: 18px;
+      opacity: 0.95;
+    }
+    .create-box {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .input-section {
+      margin-bottom: 24px;
+    }
+    .input-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .text-input {
+      width: 100%;
+      padding: 16px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      resize: vertical;
+      min-height: 140px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .text-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .examples {
+      background: #f5f7fa;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .examples-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .example-item {
+      font-size: 14px;
+      color: #666;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid #667eea;
+    }
+    .example-item:hover {
+      background: #f9fafb;
+      transform: translateX(4px);
+    }
+    .example-item:last-child {
+      margin-bottom: 0;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-voice {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    .btn-voice:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    .btn-voice.listening {
+      animation: pulse 1.5s infinite;
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .processing {
+      display: none;
+      text-align: center;
+      padding: 32px;
+    }
+    .processing.active {
+      display: block;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .processing-text {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .processing-detail {
+      font-size: 14px;
+      color: #999;
+    }
+    .result {
+      display: none;
+    }
+    .result.active {
+      display: block;
+    }
+    .workflow-preview {
+      background: #f5f7fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .workflow-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .workflow-desc {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    .step {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border-left: 4px solid #667eea;
+    }
+    .step:last-child {
+      margin-bottom: 0;
+    }
+    .step-number {
+      font-size: 12px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+    .step-action {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .step-details {
+      font-size: 13px;
+      color: #666;
+    }
+    .trigger-box {
+      background: #fef3c7;
+      border: 2px dashed #f59e0b;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .trigger-text {
+      font-size: 14px;
+      color: #92400e;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <div class="container">
+    <div class="header">
+      <h1>🤖 Create Workflow with AI</h1>
+      <p>Just describe what you want to automate - AI does the rest!</p>
+    </div>
+
+    <div class="create-box">
+      <!-- Input Section -->
+      <div class="input-section" id="inputSection">
+        <label class="input-label">Describe your workflow in plain English:</label>
+        <textarea
+          class="text-input"
+          id="workflowInput"
+          placeholder="Type what you want to automate...&#10;&#10;Example: When someone fills out my contact form, send them a welcome text message and add them to my CRM with a 'new lead' tag"
+        ></textarea>
+
+        <div class="examples">
+          <div class="examples-title">💡 Try these examples:</div>
+          <div class="example-item" onclick="setExample(0)">
+            When someone books an appointment, send them a confirmation SMS and email
+          </div>
+          <div class="example-item" onclick="setExample(1)">
+            Every day at 9am, send me a summary of yesterday's sales and new leads
+          </div>
+          <div class="example-item" onclick="setExample(2)">
+            When a customer leaves a 5-star review, thank them with a text and give them 50 loyalty points
+          </div>
+          <div class="example-item" onclick="setExample(3)">
+            24 hours before any appointment, send the customer a reminder text
+          </div>
+          <div class="example-item" onclick="setExample(4)">
+            When someone makes a purchase, ask them for a review 3 days later
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-voice" id="voiceBtn" onclick="toggleVoice()">
+            🎤 Use Voice
+          </button>
+          <button class="btn btn-primary" onclick="createWorkflow()">
+            ✨ Create Workflow
+          </button>
+        </div>
+      </div>
+
+      <!-- Processing Section -->
+      <div class="processing" id="processingSection">
+        <div class="spinner"></div>
+        <div class="processing-text">🤖 AI is building your workflow...</div>
+        <div class="processing-detail" id="processingDetail">Analyzing your request</div>
+      </div>
+
+      <!-- Result Section -->
+      <div class="result" id="resultSection">
+        <div class="workflow-preview" id="workflowPreview"></div>
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="saveWorkflow()">
+            ✅ Save & Enable
+          </button>
+          <button class="btn" style="background:#e0e0e0;" onclick="reset()">
+            ← Start Over
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api'; // Change to your API URL
+    let generatedWorkflow = null;
+    let isListening = false;
+    let recognition = null;
+
+    const examples = [
+      "When someone books an appointment, send them a confirmation SMS and email",
+      "Every day at 9am, send me a summary of yesterday's sales and new leads",
+      "When a customer leaves a 5-star review, thank them with a text and give them 50 loyalty points",
+      "24 hours before any appointment, send the customer a reminder text",
+      "When someone makes a purchase, ask them for a review 3 days later"
+    ];
+
+    function setExample(index) {
+      document.getElementById('workflowInput').value = examples[index];
+    }
+
+    async function createWorkflow() {
+      const input = document.getElementById('workflowInput').value.trim();
+
+      if (!input) {
+        alert('Please describe what you want to automate');
+        return;
+      }
+
+      // Show processing
+      document.getElementById('inputSection').style.display = 'none';
+      document.getElementById('processingSection').classList.add('active');
+
+      // Simulate AI processing steps
+      updateProcessingStatus('Understanding your request...');
+      await sleep(1000);
+
+      updateProcessingStatus('Identifying trigger event...');
+      await sleep(800);
+
+      updateProcessingStatus('Selecting actions...');
+      await sleep(800);
+
+      updateProcessingStatus('Building workflow...');
+
+      try {
+        // Call AI API to generate workflow
+        const response = await fetch(`${API_BASE}/ai/generate-workflow`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: input })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          generatedWorkflow = data.workflow;
+          showWorkflowPreview(data.workflow);
+        } else {
+          throw new Error(data.error || 'Failed to generate workflow');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to create workflow. Please try again.');
+        reset();
+      }
+    }
+
+    function showWorkflowPreview(workflow) {
+      document.getElementById('processingSection').classList.remove('active');
+      document.getElementById('resultSection').classList.add('active');
+
+      let html = `
+        <div class="workflow-title">
+          ${workflow.icon || '⚡'} ${workflow.name}
+        </div>
+        <div class="workflow-desc">${workflow.description}</div>
+
+        <div class="trigger-box">
+          <div class="trigger-text">🎯 TRIGGER: ${workflow.trigger_description}</div>
+        </div>
+      `;
+
+      workflow.steps.forEach((step, index) => {
+        html += `
+          <div class="step">
+            <div class="step-number">STEP ${index + 1}</div>
+            <div class="step-action">${step.action_name}</div>
+            <div class="step-details">${step.description}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('workflowPreview').innerHTML = html;
+    }
+
+    async function saveWorkflow() {
+      try {
+        const response = await fetch(`${API_BASE}/workflows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(generatedWorkflow)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('✅ Workflow created and enabled!');
+          window.location.href = 'automation-builder.html';
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        console.error('Error saving workflow:', error);
+        alert('Failed to save workflow. Please try again.');
+      }
+    }
+
+    function reset() {
+      document.getElementById('inputSection').style.display = 'block';
+      document.getElementById('processingSection').classList.remove('active');
+      document.getElementById('resultSection').classList.remove('active');
+      document.getElementById('workflowInput').value = '';
+      generatedWorkflow = null;
+    }
+
+    function updateProcessingStatus(text) {
+      document.getElementById('processingDetail').textContent = text;
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Voice input
+    function toggleVoice() {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        if (!recognition) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          recognition = new SpeechRecognition();
+          recognition.continuous = false;
+          recognition.interimResults = false;
+
+          recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('workflowInput').value = transcript;
+            stopVoice();
+          };
+
+          recognition.onend = () => stopVoice();
+          recognition.onerror = () => {
+            alert('Voice recognition error. Please try again.');
+            stopVoice();
+          };
+        }
+
+        if (isListening) {
+          stopVoice();
+        } else {
+          startVoice();
+        }
+      } else {
+        alert('Voice recognition not supported in your browser');
+      }
+    }
+
+    function startVoice() {
+      isListening = true;
+      recognition.start();
+      document.getElementById('voiceBtn').classList.add('listening');
+      document.getElementById('voiceBtn').textContent = '🎤 Listening...';
+    }
+
+    function stopVoice() {
+      isListening = false;
+      if (recognition) recognition.stop();
+      document.getElementById('voiceBtn').classList.remove('listening');
+      document.getElementById('voiceBtn').innerHTML = '🎤 Use Voice';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Business Cards - CyberCheck Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .nav-icon {
+      font-size: 20px;
+    }
+
+    /* Voice Control Button */
+    .voice-btn {
+      width: 100%;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px dashed rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .voice-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .voice-btn.listening {
+      background: #ef4444;
+      border-color: #ef4444;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      padding: 32px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: #1a1a1a;
+    }
+
+    .btn-primary {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 900;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .stat-change {
+      font-size: 12px;
+      color: #10b981;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .card-item {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s;
+    }
+
+    .card-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-preview {
+      height: 180px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 24px;
+    }
+
+    .card-preview.charter {
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+    }
+
+    .card-emoji {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .card-name {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .card-info {
+      padding: 20px;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .card-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    .card-stat {
+      flex: 1;
+      text-align: center;
+    }
+
+    .card-stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1a1a1a;
+    }
+
+    .card-stat-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+
+    .btn-action:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    /* Add Card */
+    .add-card {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border: 3px dashed #667eea;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 320px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .add-card:hover {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      transform: translateY(-4px);
+    }
+
+    .add-icon {
+      font-size: 64px;
+      color: #667eea;
+      margin-bottom: 16px;
+    }
+
+    .add-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 24px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .close-btn {
+      font-size: 32px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .close-btn:hover {
+      color: #666;
+    }
+
+    /* QR Code Display */
+    .qr-section {
+      text-align: center;
+      padding: 24px;
+      background: #f9fafb;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .qr-code {
+      width: 256px;
+      height: 256px;
+      background: white;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .username-display {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 16px;
+    }
+
+    /* Contacts Table */
+    .contacts-section {
+      margin-top: 24px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .contacts-table {
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .contacts-table th {
+      background: #f9fafb;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 700;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .contacts-table td {
+      padding: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .contacts-table tr:hover {
+      background: #f9fafb;
+    }
+
+    .industry-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e0e7ff;
+      color: #667eea;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 80px;
+        padding: 16px;
+      }
+
+      .main-content {
+        margin-left: 80px;
+        padding: 20px;
+      }
+
+      .logo-text,
+      .nav-text {
+        display: none;
+      }
+
+      .voice-btn span {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <span>🔐</span>
+      <span class="logo-text">CyberCheck</span>
+    </div>
+
+    <div class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-text">Dashboard</span>
+    </div>
+
+    <div class="nav-item" onclick="showSection('cards')">
+      <span class="nav-icon">💳</span>
+      <span class="nav-text">My Cards</span>
+    </div>
+
+    <div class="nav-item" onclick="showSection('contacts')">
+      <span class="nav-icon">👥</span>
+      <span class="nav-text">Contacts</span>
+    </div>
+
+    <div class="nav-item" onclick="showSection('analytics')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-text">Analytics</span>
+    </div>
+
+    <div class="nav-item" onclick="showSection('integrations')">
+      <span class="nav-icon">🔌</span>
+      <span class="nav-text">Integrations</span>
+    </div>
+
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-text">Settings</span>
+    </div>
+
+    <button class="voice-btn" onclick="toggleVoice()">
+      <span>🎤</span>
+      <span>Voice Control</span>
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1 class="page-title">Dashboard</h1>
+      <button class="btn-primary" onclick="openCardBuilder()">+ Create New Card</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👁️</div>
+        <div class="stat-value">1,247</div>
+        <div class="stat-label">Total Views</div>
+        <div class="stat-change">↑ 23% this week</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-value">89</div>
+        <div class="stat-label">Contact Exchanges</div>
+        <div class="stat-change">↑ 12 new today</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">💳</div>
+        <div class="stat-value">3</div>
+        <div class="stat-label">Active Cards</div>
+        <div class="stat-change">Limit: 5 cards</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📱</div>
+        <div class="stat-value">456</div>
+        <div class="stat-label">QR Scans</div>
+        <div class="stat-change">↑ 34% this week</div>
+      </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px;">My Business Cards</h2>
+    <div class="cards-grid">
+      <!-- Restaurant Card -->
+      <div class="card-item">
+        <div class="card-preview">
+          <div class="card-emoji">🍕</div>
+          <div class="card-name">Joe's Pizza</div>
+        </div>
+        <div class="card-info">
+          <div class="card-meta">
+            <span>joespizza</span>
+            <span>Restaurant</span>
+          </div>
+          <div class="card-stats">
+            <div class="card-stat">
+              <div class="card-stat-value">587</div>
+              <div class="card-stat-label">Views</div>
+            </div>
+            <div class="card-stat">
+              <div class="card-stat-value">43</div>
+              <div class="card-stat-label">Exchanges</div>
+            </div>
+            <div class="card-stat">
+              <div class="card-stat-value">234</div>
+              <div class="card-stat-label">Scans</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-action" onclick="viewCard('restaurant')">👁️ View</button>
+            <button class="btn-action" onclick="editCard('restaurant')">✏️ Edit</button>
+            <button class="btn-action" onclick="showQR('restaurant')">📱 QR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charter Card -->
+      <div class="card-item">
+        <div class="card-preview charter">
+          <div class="card-emoji">⚓</div>
+          <div class="card-name">Gulf Adventure</div>
+        </div>
+        <div class="card-info">
+          <div class="card-meta">
+            <span>gulfadventure</span>
+            <span>Charter</span>
+          </div>
+          <div class="card-stats">
+            <div class="card-stat">
+              <div class="card-stat-value">412</div>
+              <div class="card-stat-label">Views</div>
+            </div>
+            <div class="card-stat">
+              <div class="card-stat-value">28</div>
+              <div class="card-stat-label">Exchanges</div>
+            </div>
+            <div class="card-stat">
+              <div class="card-stat-value">156</div>
+              <div class="card-stat-label">Scans</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-action" onclick="viewCard('charter')">👁️ View</button>
+            <button class="btn-action" onclick="editCard('charter')">✏️ Edit</button>
+            <button class="btn-action" onclick="showQR('charter')">📱 QR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Card -->
+      <div class="card-item add-card" onclick="openCardBuilder()">
+        <div class="add-icon">➕</div>
+        <div class="add-text">Create New Card</div>
+      </div>
+    </div>
+
+    <!-- Recent Contacts -->
+    <div class="contacts-section">
+      <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px;">Recent Contact Exchanges</h2>
+
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search by name, industry, or company..." id="contactSearch" oninput="searchContacts()">
+        <button class="btn-primary">🔍 Search</button>
+        <button class="btn-primary" onclick="exportContacts()">📥 Export CSV</button>
+      </div>
+
+      <table class="contacts-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Industry</th>
+            <th>Company</th>
+            <th>Card</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="contactsTableBody">
+          <tr>
+            <td><strong>John Smith</strong><br><small>john@example.com</small></td>
+            <td><span class="industry-badge">Restaurant</span></td>
+            <td>Smith's Cafe</td>
+            <td>Joe's Pizza</td>
+            <td>Today, 2:30 PM</td>
+            <td><button class="btn-action" style="border: none; background: #f3f4f6;">💾 Save to CRM</button></td>
+          </tr>
+          <tr>
+            <td><strong>Sarah Johnson</strong><br><small>sarah@corp.com</small></td>
+            <td><span class="industry-badge">Corporate</span></td>
+            <td>Tech Corp</td>
+            <td>Gulf Adventure</td>
+            <td>Yesterday, 4:15 PM</td>
+            <td><button class="btn-action" style="border: none; background: #f3f4f6;">💾 Save to CRM</button></td>
+          </tr>
+          <tr>
+            <td><strong>Mike Davis</strong><br><small>mike@build.co</small></td>
+            <td><span class="industry-badge">Construction</span></td>
+            <td>Davis Construction</td>
+            <td>Joe's Pizza</td>
+            <td>2 days ago</td>
+            <td><button class="btn-action" style="border: none; background: #f3f4f6;">💾 Save to CRM</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div class="modal" id="qrModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Your QR Code & Share Link</h2>
+        <span class="close-btn" onclick="closeModal('qrModal')">&times;</span>
+      </div>
+
+      <div class="qr-section">
+        <div class="qr-code">
+          <canvas id="qrCanvas"></canvas>
+        </div>
+        <div class="username-display" id="shareLink">cybercheck.io/joespizza</div>
+        <button class="btn-primary" onclick="downloadQR()">📥 Download QR Code</button>
+        <button class="btn-primary" onclick="copyLink()" style="margin-left: 12px;">📋 Copy Link</button>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <h3 style="margin-bottom: 16px;">Share Options</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+          <button class="btn-action">📱 Text Message</button>
+          <button class="btn-action">✉️ Email</button>
+          <button class="btn-action">📘 Facebook</button>
+          <button class="btn-action">📸 Instagram</button>
+          <button class="btn-action">🐦 Twitter</button>
+          <button class="btn-action">💼 LinkedIn</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    // Voice Control
+    let voiceActive = false;
+    let recognition;
+
+    function toggleVoice() {
+      const btn = document.querySelector('.voice-btn');
+
+      if (!voiceActive) {
+        startVoiceControl();
+        btn.classList.add('listening');
+        btn.innerHTML = '<span>🎤</span><span>Listening...</span>';
+      } else {
+        stopVoiceControl();
+        btn.classList.remove('listening');
+        btn.innerHTML = '<span>🎤</span><span>Voice Control</span>';
+      }
+    }
+
+    function startVoiceControl() {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          console.log('Voice:', transcript);
+
+          if (transcript.includes('create new card')) {
+            openCardBuilder();
+          } else if (transcript.includes('show analytics')) {
+            showSection('analytics');
+          } else if (transcript.includes('show contacts')) {
+            showSection('contacts');
+          } else if (transcript.includes('search for') && transcript.includes('restaurant')) {
+            document.getElementById('contactSearch').value = 'restaurant';
+            searchContacts();
+          }
+        };
+
+        recognition.start();
+        voiceActive = true;
+      } else {
+        alert('Voice recognition not supported in this browser');
+      }
+    }
+
+    function stopVoiceControl() {
+      if (recognition) {
+        recognition.stop();
+        voiceActive = false;
+      }
+    }
+
+    function showSection(section) {
+      alert('Navigating to ' + section + ' section');
+    }
+
+    function openCardBuilder() {
+      alert('Opening card builder...');
+      // Will implement full builder in next file
+    }
+
+    function viewCard(type) {
+      if (type === 'restaurant') {
+        window.open('demos/demo-restaurant.html', '_blank');
+      } else if (type === 'charter') {
+        window.open('demos/demo-charter.html', '_blank');
+      }
+    }
+
+    function editCard(type) {
+      alert('Opening editor for ' + type);
+    }
+
+    function showQR(type) {
+      const modal = document.getElementById('qrModal');
+      const link = type === 'restaurant' ? 'cybercheck.io/joespizza' : 'cybercheck.io/gulfadventure';
+
+      document.getElementById('shareLink').textContent = link;
+
+      // Generate QR code
+      const canvas = document.getElementById('qrCanvas');
+      QRCode.toCanvas(canvas, 'https://' + link, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#667eea',
+          light: '#ffffff'
+        }
+      });
+
+      modal.classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function downloadQR() {
+      const canvas = document.getElementById('qrCanvas');
+      const link = document.createElement('a');
+      link.download = 'qr-code.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function copyLink() {
+      const link = document.getElementById('shareLink').textContent;
+      navigator.clipboard.writeText('https://' + link);
+      alert('Link copied to clipboard!');
+    }
+
+    function searchContacts() {
+      const searchTerm = document.getElementById('contactSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#contactsTableBody tr');
+
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    }
+
+    function exportContacts() {
+      // Simulate CSV export
+      const csv = 'Name,Email,Industry,Company,Card,Date\n' +
+                   'John Smith,john@example.com,Restaurant,Smiths Cafe,Joes Pizza,Today\n' +
+                   'Sarah Johnson,sarah@corp.com,Corporate,Tech Corp,Gulf Adventure,Yesterday\n';
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'contacts-export.csv';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

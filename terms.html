@@ -1,87 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms &amp; Conditions — CyberCheck</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.7; }
-    .header { background: #1e293b; border-bottom: 1px solid #334155; padding: 18px 24px; display: flex; align-items: center; gap: 12px; }
-    .header .logo { font-size: 20px; font-weight: 700; color: #3b82f6; letter-spacing: -0.5px; }
-    .header .logo span { color: #e2e8f0; }
-    .container { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
-    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-    .meta { color: #94a3b8; font-size: 14px; margin-bottom: 40px; }
-    h2 { font-size: 1.15rem; font-weight: 600; color: #93c5fd; margin: 36px 0 12px; }
-    p { color: #cbd5e1; margin-bottom: 14px; }
-    ul { color: #cbd5e1; padding-left: 20px; margin-bottom: 14px; }
-    ul li { margin-bottom: 6px; }
-    a { color: #3b82f6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .highlight { background: #1e293b; border: 1px solid #3b82f6; border-radius: 10px; padding: 20px 24px; margin: 24px 0; }
-    .highlight p { margin: 0 0 10px; }
-    .highlight p:last-child { margin: 0; }
-    strong { color: #e2e8f0; }
-    footer { text-align: center; color: #475569; font-size: 13px; padding: 32px 24px; border-top: 1px solid #1e293b; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Ghost Marketplace</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="window.location.href='home.html'">
+                Ghost Marketplace
+            </div>
 
-<div class="header">
-  <div class="logo">Cyber<span>Check</span></div>
-</div>
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
 
-<div class="container">
-  <h1>Terms &amp; Conditions</h1>
-  <p class="meta">Effective Date: March 23, 2026 &nbsp;·&nbsp; Last Updated: March 23, 2026</p>
+            <div class="nav-links">
+                <a href="index.html">Marketplace</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="help-center.html">Help</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="developer-dashboard.html">Developers</a>
+            </div>
 
-  <p>These Terms and Conditions govern your use of CyberCheck and all platforms and business websites operating on the CyberCheck platform, including Gulf Coast Radar (GCR). By using our services, you agree to these terms.</p>
+            <div class="nav-actions">
+                <button class="nav-btn-secondary" onclick="location.href='login.html'">Sign In</button>
+                <button class="nav-btn-primary" onclick="location.href='signup.html'">Get Started Free</button>
+            </div>
+        </div>
+    </nav>
 
-  <h2>1. SMS Messaging Program</h2>
-  <div class="highlight">
-    <p><strong>Program Name:</strong> CyberCheck SMS Notifications</p>
-    <p><strong>Description:</strong> Transactional SMS messages including booking confirmations, booking reminders, contact form notifications, and welcome messages for users who register on Gulf Coast Radar or book through a CyberCheck-powered business website.</p>
-    <p><strong>Message Frequency:</strong> Varies based on your bookings and interactions. Typically 1–3 messages per transaction or registration.</p>
-    <p><strong>Message &amp; Data Rates:</strong> Message and data rates may apply depending on your carrier and plan.</p>
-    <p><strong>To opt out:</strong> Reply <strong>STOP</strong> at any time to unsubscribe from SMS messages. You will receive a one-time confirmation and no further messages will be sent.</p>
-    <p><strong>For help:</strong> Reply <strong>HELP</strong> or contact us at <a href="mailto:support@cybercheck.app">support@cybercheck.app</a></p>
-  </div>
+    <div class="legal-container">
+        <div class="legal-sidebar">
+            <h3>Legal</h3>
+            <a href="terms.html" class="active">Terms of Service</a>
+            <a href="privacy.html">Privacy Policy</a>
+        </div>
 
-  <h2>2. Use of Services</h2>
-  <p>CyberCheck provides booking management, SMS notifications, and digital presence tools for local businesses. You agree to use these services only for lawful purposes and in accordance with these terms.</p>
-  <ul>
-    <li>You must provide accurate information when booking or registering</li>
-    <li>You must be at least 13 years of age to use our services</li>
-    <li>You are responsible for maintaining the security of your account credentials</li>
-  </ul>
+        <div class="legal-content">
+            <h1>Terms of Service</h1>
+            <p class="last-updated">Last updated: January 24, 2024</p>
 
-  <h2>3. Bookings and Payments</h2>
-  <p>Bookings made through CyberCheck-powered websites are subject to each individual business's cancellation and refund policies. Payment processing is handled securely by Stripe. CyberCheck is not responsible for disputes between customers and individual businesses.</p>
+            <section class="legal-section">
+                <h2>1. Agreement to Terms</h2>
+                <p>By accessing and using Ghost Marketplace ("Service"), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this Service.</p>
+            </section>
 
-  <h2>4. SMS Opt-In Consent</h2>
-  <p>By providing your phone number and consenting during booking or registration, you agree to receive SMS messages as described above. Consent is not a condition of purchase. You may opt out at any time by replying <strong>STOP</strong>.</p>
+            <section class="legal-section">
+                <h2>2. Use License & Token System</h2>
+                <p>Ghost Marketplace operates on a pay-as-you-go token system:</p>
+                <ul>
+                    <li><strong>Token Purchase:</strong> You purchase tokens that are consumed based on actual usage of AI services and platform features</li>
+                    <li><strong>Transparent Pricing:</strong> All AI provider costs are published openly. We add a 20% markup for platform infrastructure</li>
+                    <li><strong>No Subscriptions:</strong> You only pay for what you use. No monthly fees or hidden charges</li>
+                    <li><strong>Token Expiration:</strong> Purchased tokens never expire</li>
+                    <li><strong>Refunds:</strong> Unused tokens are eligible for refund within 30 days of purchase</li>
+                </ul>
+            </section>
 
-  <h2>5. Intellectual Property</h2>
-  <p>All content, branding, and technology on the CyberCheck platform is the property of CyberCheck. You may not copy, reproduce, or distribute any content without written permission.</p>
+            <section class="legal-section">
+                <h2>3. User Accounts</h2>
+                <p>To access certain features of the Service, you must register for an account. You agree to:</p>
+                <ul>
+                    <li>Provide accurate, current, and complete information during registration</li>
+                    <li>Maintain and promptly update your account information</li>
+                    <li>Maintain the security of your password and account</li>
+                    <li>Accept responsibility for all activities that occur under your account</li>
+                    <li>Immediately notify us of any unauthorized use of your account</li>
+                </ul>
+            </section>
 
-  <h2>6. Limitation of Liability</h2>
-  <p>CyberCheck is provided "as is." We are not liable for any indirect, incidental, or consequential damages arising from your use of our services. Our total liability shall not exceed the amount you paid to us in the 12 months preceding the claim.</p>
+            <section class="legal-section">
+                <h2>4. Acceptable Use</h2>
+                <p>You agree NOT to use the Service to:</p>
+                <ul>
+                    <li>Violate any applicable laws or regulations</li>
+                    <li>Infringe upon intellectual property rights of others</li>
+                    <li>Transmit malicious code, viruses, or harmful software</li>
+                    <li>Attempt to gain unauthorized access to the Service or related systems</li>
+                    <li>Interfere with or disrupt the Service or servers</li>
+                    <li>Create apps that facilitate illegal activities</li>
+                    <li>Abuse AI systems to generate harmful or illegal content</li>
+                    <li>Scrape or harvest data from the platform without permission</li>
+                </ul>
+            </section>
 
-  <h2>7. Changes to Terms</h2>
-  <p>We may update these terms at any time. Continued use of our services after changes are posted constitutes acceptance of the updated terms.</p>
+            <section class="legal-section">
+                <h2>5. Developer Terms</h2>
+                <p>If you publish apps on Ghost Marketplace:</p>
+                <ul>
+                    <li><strong>Revenue Share:</strong> Developers receive 70% of revenue generated from their apps</li>
+                    <li><strong>Content Ownership:</strong> You retain all rights to your code and intellectual property</li>
+                    <li><strong>Quality Standards:</strong> Apps must meet our quality and security standards</li>
+                    <li><strong>Support Obligations:</strong> You're responsible for supporting your published apps</li>
+                    <li><strong>Removal Rights:</strong> We reserve the right to remove apps that violate terms or harm users</li>
+                </ul>
+            </section>
 
-  <h2>8. Contact</h2>
-  <p>For questions about these terms or our SMS program:</p>
-  <ul>
-    <li>Email: <a href="mailto:support@cybercheck.app">support@cybercheck.app</a></li>
-    <li>Website: <a href="https://cybercheck-login.vercel.app">cybercheck-login.vercel.app</a></li>
-  </ul>
-</div>
+            <section class="legal-section">
+                <h2>6. Intellectual Property</h2>
+                <p>The Service and its original content (excluding user-generated content) are owned by Ghost Marketplace and are protected by copyright, trademark, and other intellectual property laws.</p>
+                <p><strong>Your Content:</strong> You retain all rights to content you create using the platform. We claim no ownership over your code, apps, or data.</p>
+            </section>
 
-<footer>
-  &copy; 2026 CyberCheck. All rights reserved. &nbsp;·&nbsp; <a href="/privacy.html">Privacy Policy</a>
-</footer>
+            <section class="legal-section">
+                <h2>7. Data & Privacy</h2>
+                <p>Our collection and use of personal information is described in our <a href="privacy.html">Privacy Policy</a>. Key points:</p>
+                <ul>
+                    <li>We collect minimal data necessary to provide the Service</li>
+                    <li>You can export all your data at any time</li>
+                    <li>We never sell your personal information</li>
+                    <li>You can delete your account and all associated data</li>
+                </ul>
+            </section>
 
+            <section class="legal-section">
+                <h2>8. Payment & Billing</h2>
+                <ul>
+                    <li><strong>Token Purchases:</strong> All purchases are final, subject to our refund policy</li>
+                    <li><strong>Pricing Changes:</strong> We reserve the right to adjust token pricing with 30 days notice</li>
+                    <li><strong>Payment Processing:</strong> Payments are processed securely through Stripe</li>
+                    <li><strong>Taxes:</strong> You are responsible for applicable taxes in your jurisdiction</li>
+                    <li><strong>Billing Disputes:</strong> Contact billing@ghost.app within 30 days of charge</li>
+                </ul>
+            </section>
+
+            <section class="legal-section">
+                <h2>9. Service Availability</h2>
+                <p>We strive for 99.9% uptime but cannot guarantee uninterrupted service. We are not liable for:</p>
+                <ul>
+                    <li>Scheduled maintenance and downtime</li>
+                    <li>Third-party service failures (AWS, OpenAI, etc.)</li>
+                    <li>Force majeure events beyond our control</li>
+                </ul>
+                <p>Check <a href="status.html">status.ghost.app</a> for real-time service status.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>10. Disclaimer of Warranties</h2>
+                <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>11. Limitation of Liability</h2>
+                <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, GHOST MARKETPLACE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES.</p>
+                <p>Our total liability shall not exceed the amount you paid us in the 12 months prior to the claim.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>12. Termination</h2>
+                <p>We reserve the right to suspend or terminate your account for violations of these Terms. You may terminate your account at any time by contacting support. Upon termination:</p>
+                <ul>
+                    <li>Unused tokens may be refunded per our refund policy</li>
+                    <li>Your data will be deleted after 30 days unless you export it</li>
+                    <li>Published apps may be removed from the marketplace</li>
+                </ul>
+            </section>
+
+            <section class="legal-section">
+                <h2>13. Changes to Terms</h2>
+                <p>We may update these Terms from time to time. We will notify you of material changes via email or platform notification. Continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>14. Governing Law</h2>
+                <p>These Terms shall be governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to its conflict of law provisions.</p>
+            </section>
+
+            <section class="legal-section">
+                <h2>15. Contact Information</h2>
+                <p>For questions about these Terms, please contact us:</p>
+                <ul>
+                    <li><strong>Email:</strong> legal@ghost.app</li>
+                    <li><strong>Support:</strong> <a href="contact.html">Contact Page</a></li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <a href="pricing.html">Pricing</a>
+                <a href="templates.html">Templates</a>
+                <a href="integrations.html">Integrations</a>
+                <a href="changelog.html">Changelog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Developers</h4>
+                <a href="developer-dashboard.html">Developer Portal</a>
+                <a href="api-documentation.html">API Docs</a>
+                <a href="help-center.html">Help Center</a>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="status.html">Status</a>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <a href="terms.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Ghost Marketplace. The Power Company of AI.</p>
+        </div>
+    </footer>
+
+    <style>
+        .legal-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            gap: 3rem;
+        }
+
+        .legal-sidebar {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .legal-sidebar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .legal-sidebar a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .legal-sidebar a:hover {
+            background: var(--bg-tertiary);
+            color: var(--text);
+        }
+
+        .legal-sidebar a.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .legal-content {
+            max-width: 900px;
+        }
+
+        .legal-content h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .last-updated {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+
+        .legal-section {
+            margin-bottom: 3rem;
+        }
+
+        .legal-section h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .legal-section p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .legal-section ul {
+            list-style: disc;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+
+        .legal-section li {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .legal-section a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .legal-section a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .footer-section a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .legal-container {
+                grid-template-columns: 1fr;
+            }
+
+            .legal-sidebar {
+                position: static;
+            }
+
+            .legal-content h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+<script src="js/navbar.js"></script>
 </body>
 </html>

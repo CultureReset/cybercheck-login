@@ -1,0 +1,102 @@
+<!--
+  COMPONENT: Happy Hour - WITH IMAGES + WITHOUT IMAGES
+  Requires: shared.html included on the page
+  Trigger with images:    openComponent('happy-hour')
+  Trigger without images: openComponent('happy-hour-list')
+  Render with images:     renderHappyHour(sections, hhStart, hhEnd)
+  Render without images:  renderHappyHourList(sections, hhStart, hhEnd)
+  Pass: data.sections, entity.hh_start, entity.hh_end from GCR API
+-->
+
+<!-- TRIGGER BUTTONS (copy to page) -->
+<!--
+<button class="link-btn" onclick="openComponent('happy-hour')">🍺 Happy Hour</button>
+<button class="link-btn" onclick="openComponent('happy-hour-list')">🍺 Happy Hour</button>
+-->
+
+<!-- WITH IMAGES POPUP -->
+<div class="comp-overlay" id="comp-happy-hour">
+    <div class="comp-modal">
+        <div class="comp-modal-header" style="background:#f0a500;">
+            <div>
+                <h2 style="color:#fff;">🍺 Happy Hour</h2>
+                <div id="comp-hh-time" style="font-size:0.8rem;color:rgba(255,255,255,0.85);margin-top:2px;"></div>
+            </div>
+            <button class="comp-close" onclick="closeComponent('comp-happy-hour')" style="background:rgba(255,255,255,0.2);color:#fff;">✕</button>
+        </div>
+        <div id="comp-happy-hour-body"></div>
+    </div>
+</div>
+
+<!-- NO IMAGES POPUP -->
+<div class="comp-overlay" id="comp-happy-hour-list">
+    <div class="comp-modal">
+        <div class="comp-modal-header" style="background:#f0a500;">
+            <div>
+                <h2 style="color:#fff;">🍺 Happy Hour</h2>
+                <div id="comp-hh-list-time" style="font-size:0.8rem;color:rgba(255,255,255,0.85);margin-top:2px;"></div>
+            </div>
+            <button class="comp-close" onclick="closeComponent('comp-happy-hour-list')" style="background:rgba(255,255,255,0.2);color:#fff;">✕</button>
+        </div>
+        <div id="comp-happy-hour-list-body"></div>
+    </div>
+</div>
+
+<script>
+function renderHappyHour(sections, hhStart, hhEnd) {
+    const hhSections = sections.filter(s => s.section_key === 'happy_hour');
+    const body = document.getElementById('comp-happy-hour-body');
+    const timeEl = document.getElementById('comp-hh-time');
+    if (hhStart && hhEnd) timeEl.textContent = `${hhStart} – ${hhEnd}`;
+
+    if (!hhSections.length) {
+        body.innerHTML = '<p style="padding:20px;color:#999">No happy hour items.</p>';
+        return;
+    }
+    let html = '';
+    hhSections.forEach(sec => {
+        (sec.ungrouped_items || []).forEach(item => {
+            const price = item.price_numeric || 0;
+            const img = item.photo_url || item.image_url || '';
+            html += `<div class="comp-item-img">`;
+            html += img
+                ? `<img class="comp-item-thumb" src="${escapeAttr(img)}" alt="${escapeHtml(item.item_name)}">`
+                : `<div class="comp-item-thumb-placeholder"></div>`;
+            html += `<div class="comp-item-body">`;
+            html += `<div class="comp-item-row">`;
+            html += `<div class="comp-item-name">${escapeHtml(item.item_name)}</div>`;
+            if (price > 0) html += `<div class="comp-item-price" style="color:#f0a500;">$${price.toFixed(2)}</div>`;
+            html += `</div>`;
+            if (item.item_description) html += `<div class="comp-item-desc">${escapeHtml(item.item_description)}</div>`;
+            html += `</div></div>`;
+        });
+    });
+    body.innerHTML = html;
+}
+
+function renderHappyHourList(sections, hhStart, hhEnd) {
+    const hhSections = sections.filter(s => s.section_key === 'happy_hour');
+    const body = document.getElementById('comp-happy-hour-list-body');
+    const timeEl = document.getElementById('comp-hh-list-time');
+    if (hhStart && hhEnd) timeEl.textContent = `${hhStart} – ${hhEnd}`;
+
+    if (!hhSections.length) {
+        body.innerHTML = '<p style="padding:20px;color:#999">No happy hour items.</p>';
+        return;
+    }
+    let html = '';
+    hhSections.forEach(sec => {
+        (sec.ungrouped_items || []).forEach(item => {
+            const price = item.price_numeric || 0;
+            html += `<div class="comp-item-list">`;
+            html += `<div class="comp-item-row">`;
+            html += `<div class="comp-item-name">${escapeHtml(item.item_name)}</div>`;
+            if (price > 0) html += `<div class="comp-item-price" style="color:#f0a500;">$${price.toFixed(2)}</div>`;
+            html += `</div>`;
+            if (item.item_description) html += `<div class="comp-item-desc">${escapeHtml(item.item_description)}</div>`;
+            html += `</div>`;
+        });
+    });
+    body.innerHTML = html;
+}
+</script>

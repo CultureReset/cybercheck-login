@@ -1,0 +1,54 @@
+<!--
+  COMPONENT: Menu - WITH IMAGES
+  Requires: shared.html included on the page
+  Trigger: openComponent('menu-images')
+  Render: renderMenuImages(sections) — pass data.sections from GCR API
+-->
+
+<!-- TRIGGER BUTTON (copy to page) -->
+<!--
+<button class="link-btn" onclick="openComponent('menu-images')">📋 View Menu</button>
+-->
+
+<!-- POPUP (copy to page body) -->
+<div class="comp-overlay" id="comp-menu-images">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>Menu</h2>
+            <button class="comp-close" onclick="closeComponent('comp-menu-images')">✕</button>
+        </div>
+        <div id="comp-menu-images-body"></div>
+    </div>
+</div>
+
+<script>
+function renderMenuImages(sections) {
+    const body = document.getElementById('comp-menu-images-body');
+    if (!sections || !sections.length) {
+        body.innerHTML = '<p style="padding:20px;color:#999">No menu items found.</p>';
+        return;
+    }
+    let html = '';
+    sections.forEach(sec => {
+        const items = sec.ungrouped_items || [];
+        if (!items.length) return;
+        html += `<div class="comp-section-label">${escapeHtml(sec.section_label)}</div>`;
+        items.forEach(item => {
+            const price = item.price_numeric || 0;
+            const img = item.photo_url || item.image_url || '';
+            html += `<div class="comp-item-img">`;
+            html += img
+                ? `<img class="comp-item-thumb" src="${escapeAttr(img)}" alt="${escapeHtml(item.item_name)}">`
+                : `<div class="comp-item-thumb-placeholder"></div>`;
+            html += `<div class="comp-item-body">`;
+            html += `<div class="comp-item-row">`;
+            html += `<div class="comp-item-name">${escapeHtml(item.item_name)}</div>`;
+            if (price > 0) html += `<div class="comp-item-price">$${price.toFixed(2)}</div>`;
+            html += `</div>`;
+            if (item.item_description) html += `<div class="comp-item-desc">${escapeHtml(item.item_description)}</div>`;
+            html += `</div></div>`;
+        });
+    });
+    body.innerHTML = html;
+}
+</script>

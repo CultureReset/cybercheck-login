@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started — CyberCheck</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex}
+
+    /* Layout */
+    .ob-left{width:280px;flex-shrink:0;background:#0a1120;border-right:1px solid #1e293b;padding:32px 24px;display:flex;flex-direction:column}
+    .ob-main{flex:1;overflow-y:auto;padding:40px 48px}
+    .ob-right{width:320px;flex-shrink:0;background:#0a1120;border-left:1px solid #1e293b;padding:32px 24px;display:flex;flex-direction:column;align-items:center}
+
+    /* Left sidebar */
+    .ob-logo{font-size:18px;font-weight:800;color:#00ada8;letter-spacing:.5px;margin-bottom:40px}
+    .ob-steps-list{display:flex;flex-direction:column;gap:8px}
+    .ob-step-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;cursor:default;opacity:.4;transition:opacity .2s}
+    .ob-step-item.active{opacity:1;background:#1e293b}
+    .ob-step-item.done{opacity:.7}
+    .ob-step-num{width:28px;height:28px;border-radius:50%;border:2px solid #475569;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+    .ob-step-item.active .ob-step-num{border-color:#00ada8;color:#00ada8}
+    .ob-step-item.done .ob-step-num{border-color:#22c55e;background:#22c55e;color:#fff}
+    .ob-step-label{font-size:13px;font-weight:600}
+    .ob-step-sub{font-size:11px;color:#64748b;margin-top:2px}
+    .ob-help{margin-top:auto;padding-top:24px;border-top:1px solid #1e293b;font-size:12px;color:#475569}
+
+    /* Main */
+    .step-panel{display:none}
+    .step-panel.active{display:block}
+    .ob-step-title{font-size:26px;font-weight:700;margin-bottom:6px}
+    .ob-step-desc{font-size:14px;color:#94a3b8;margin-bottom:32px}
+
+    /* Form fields */
+    .field-group{display:grid;gap:16px;margin-bottom:24px}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .field label{display:block;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .field input,.field select,.field textarea{width:100%;padding:11px 14px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px;outline:none;transition:border-color .2s}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:#00ada8}
+    .field select option{background:#1e293b}
+    .field textarea{resize:vertical;min-height:80px}
+
+    /* Apps grid */
+    .apps-section{margin-bottom:28px}
+    .apps-section-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+    .apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+    .app-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:12px}
+    .app-card:hover{border-color:#475569}
+    .app-card.selected{border-color:#00ada8;background:#0f2822}
+    .app-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+    .app-name{font-size:13px;font-weight:600;margin-bottom:3px}
+    .app-desc{font-size:11px;color:#64748b;line-height:1.4}
+    .app-price{font-size:11px;color:#00ada8;margin-top:4px}
+    .app-check{margin-left:auto;flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .2s}
+    .app-card.selected .app-check{background:#00ada8;border-color:#00ada8;color:#fff}
+
+    /* Provider selection */
+    .provider-card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:18px;margin-bottom:12px}
+    .provider-app-name{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .provider-options{display:flex;gap:8px;flex-wrap:wrap}
+    .provider-btn{padding:8px 14px;border-radius:6px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+    .provider-btn:hover{border-color:#475569;color:#e2e8f0}
+    .provider-btn.selected{border-color:#00ada8;color:#00ada8;background:rgba(0,173,168,.08)}
+
+    /* Nav buttons */
+    .ob-nav{display:flex;gap:12px;margin-top:32px}
+    .btn-primary{padding:12px 28px;background:#00ada8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s}
+    .btn-primary:hover{background:#009590}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+    .btn-secondary{padding:12px 28px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+    .btn-secondary:hover{border-color:#475569;color:#e2e8f0}
+
+    /* Right panel - live preview */
+    .ob-preview-label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;text-align:center}
+    .phone-frame{width:240px;height:480px;background:#1e293b;border-radius:36px;border:3px solid #334155;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .phone-screen{flex:1;overflow:hidden;position:relative}
+    .preview-content{padding:20px 16px;text-align:center}
+    .preview-avatar{width:70px;height:70px;border-radius:50%;background:#334155;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden}
+    .preview-avatar img{width:100%;height:100%;object-fit:cover}
+    .preview-name{font-size:15px;font-weight:700;margin-bottom:4px}
+    .preview-tagline{font-size:11px;color:#64748b;margin-bottom:16px}
+    .preview-btn{width:100%;padding:10px;background:#00ada8;color:#fff;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:6px;text-align:center}
+    .preview-btn.outline{background:transparent;border:1px solid #334155;color:#94a3b8}
+    .preview-url{font-size:10px;color:#475569;text-align:center;margin-top:12px;word-break:break-all}
+
+    /* Summary */
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+    .summary-card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:14px}
+    .summary-card h4{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+    .summary-card p{font-size:14px;font-weight:600}
+    .installed-list{display:flex;flex-wrap:wrap;gap:6px}
+    .installed-tag{padding:4px 10px;background:#0f2822;border:1px solid #00ada8;border-radius:20px;font-size:11px;color:#00ada8;font-weight:600}
+
+    /* Loading */
+    .loading{text-align:center;padding:40px;color:#64748b}
+
+    @media(max-width:900px){
+      .ob-right{display:none}
+      .ob-left{display:none}
+      .ob-main{padding:24px 20px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left sidebar -->
+<aside class="ob-left">
+  <div class="ob-logo">CYBERCHECK</div>
+  <div class="ob-steps-list">
+    <div class="ob-step-item active" id="nav-1">
+      <div class="ob-step-num">1</div>
+      <div><div class="ob-step-label">Business Details</div><div class="ob-step-sub">Your info</div></div>
+    </div>
+    <div class="ob-step-item" id="nav-2">
+      <div class="ob-step-num">2</div>
+      <div><div class="ob-step-label">Choose Your Apps</div><div class="ob-step-sub">Install what you need</div></div>
+    </div>
+    <div class="ob-step-item" id="nav-3">
+      <div class="ob-step-num">3</div>
+      <div><div class="ob-step-label">Connect Tools</div><div class="ob-step-sub">Stripe, Square, etc.</div></div>
+    </div>
+    <div class="ob-step-item" id="nav-4">
+      <div class="ob-step-num">4</div>
+      <div><div class="ob-step-label">Review & Publish</div><div class="ob-step-sub">Go live</div></div>
+    </div>
+  </div>
+  <div class="ob-help">Need help? <a href="#" style="color:#00ada8">Contact support</a></div>
+</aside>
+
+<!-- Main content -->
+<main class="ob-main">
+
+  <!-- Step 1: Business Details -->
+  <div class="step-panel active" id="step-1">
+    <div class="ob-step-title">Tell us about your business</div>
+    <div class="ob-step-desc">This powers your public page, AI agent, and directory listing.</div>
+    <div class="field-group">
+      <div class="field-row">
+        <div class="field">
+          <label>Business Name</label>
+          <input type="text" id="biz-name" placeholder="e.g. Circle Boats" oninput="updatePreview()">
+        </div>
+        <div class="field">
+          <label>Business Type</label>
+          <select id="biz-type" onchange="updatePreview()">
+            <option value="">Select type...</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Short Description</label>
+        <textarea id="biz-desc" placeholder="What do you do? What makes you special?" oninput="updatePreview()"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" id="biz-phone" placeholder="(555) 000-0000">
+        </div>
+        <div class="field">
+          <label>Website (optional)</label>
+          <input type="url" id="biz-website" placeholder="https://...">
+        </div>
+      </div>
+      <div class="field">
+        <label>Address</label>
+        <input type="text" id="biz-address" placeholder="123 Main St, City, State">
+      </div>
+    </div>
+    <div class="ob-nav">
+      <button class="btn-primary" onclick="goStep(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Choose Apps -->
+  <div class="step-panel" id="step-2">
+    <div class="ob-step-title">Choose your apps</div>
+    <div class="ob-step-desc">Install only what you need. You can add or remove anytime from the App Store.</div>
+    <div id="apps-container"><div class="loading">Loading apps...</div></div>
+    <div class="ob-nav">
+      <button class="btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn-primary" onclick="goStep(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Connect Tools -->
+  <div class="step-panel" id="step-3">
+    <div class="ob-step-title">Connect your tools</div>
+    <div class="ob-step-desc">For each app you selected, choose built-in or connect your existing account.</div>
+    <div id="providers-container"><div class="loading">Loading...</div></div>
+    <div class="ob-nav">
+      <button class="btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn-primary" onclick="goStep(4)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Review & Publish -->
+  <div class="step-panel" id="step-4">
+    <div class="ob-step-title">You're ready to go live</div>
+    <div class="ob-step-desc">Review your setup and publish your page.</div>
+    <div class="summary-grid">
+      <div class="summary-card"><h4>Business</h4><p id="sum-name">—</p></div>
+      <div class="summary-card"><h4>Type</h4><p id="sum-type">—</p></div>
+      <div class="summary-card"><h4>Phone</h4><p id="sum-phone">—</p></div>
+      <div class="summary-card"><h4>Your URL</h4><p id="sum-url" style="font-size:12px;color:#00ada8">—</p></div>
+    </div>
+    <div class="summary-card" style="margin-bottom:24px">
+      <h4>Installed Apps</h4>
+      <div class="installed-list" id="sum-apps" style="margin-top:8px"></div>
+    </div>
+    <div class="ob-nav">
+      <button class="btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn-primary" id="publish-btn" onclick="publish()">🚀 Publish My Page</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- Right panel: live preview -->
+<aside class="ob-right">
+  <div class="ob-preview-label">Live Preview</div>
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <div class="preview-content" id="preview-content">
+        <div class="preview-avatar" id="preview-avatar">🏢</div>
+        <div class="preview-name" id="preview-name">Your Business</div>
+        <div class="preview-tagline" id="preview-tagline">Your tagline here</div>
+        <div id="preview-buttons"></div>
+      </div>
+    </div>
+  </div>
+  <div class="preview-url" id="preview-url">cybercheck.com/@your-handle</div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/cc.js"></script>
+<script>
+  window.CC_API_BASE = 'https://cybercheck-api-database.vercel.app';
+
+  var _step = 1;
+  var _selectedApps = new Set();
+  var _allApps = [];
+  var _providers = {}; // app_id → provider choice
+  var _bizType = '';
+
+  // Business type options — loaded from apps table categories
+  var BUSINESS_TYPES = [
+    { value: 'restaurant', label: 'Restaurant' },
+    { value: 'rental', label: 'Rental Business' },
+    { value: 'charter', label: 'Charter / Tours' },
+    { value: 'salon', label: 'Salon & Spa' },
+    { value: 'shop', label: 'Retail Shop' },
+    { value: 'service', label: 'Service Business' },
+    { value: 'hotel', label: 'Hotel / Resort' },
+    { value: 'events', label: 'Events / Venue' },
+    { value: 'artist', label: 'Artist / Musician' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  // Providers available per category
+  var PROVIDERS = {
+    booking:  [{ id: 'builtin', label: 'CyberCheck Built-in' }, { id: 'square', label: 'Square' }, { id: 'stripe', label: 'Stripe' }],
+    ordering: [{ id: 'builtin', label: 'CyberCheck Built-in' }, { id: 'square', label: 'Square' }],
+    payments: [{ id: 'stripe', label: 'Stripe' }, { id: 'square', label: 'Square' }],
+    crm:      [{ id: 'builtin', label: 'CyberCheck Built-in' }],
+    menu:     [{ id: 'builtin', label: 'CyberCheck Built-in' }],
+    marketing:[{ id: 'builtin', label: 'CyberCheck Built-in' }],
+    analytics:[{ id: 'builtin', label: 'CyberCheck Built-in' }]
+  };
+
+  async function init() {
+    // Auth guard
+    var session = await CC.getSession();
+    if (!session || !session.user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Check if already onboarded
+    if (session.business && session.business.name) {
+      var onboarded = localStorage.getItem('cc_onboarded_' + session.business.site_id);
+      if (onboarded) {
+        window.location.href = 'app-dashboard.html';
+        return;
+      }
+    }
+
+    // Populate business type dropdown
+    var sel = document.getElementById('biz-type');
+    BUSINESS_TYPES.forEach(function(t) {
+      var opt = document.createElement('option');
+      opt.value = t.value;
+      opt.textContent = t.label;
+      sel.appendChild(opt);
+    });
+
+    // Pre-fill business name if set during signup
+    if (session.business && session.business.name) {
+      document.getElementById('biz-name').value = session.business.name;
+      if (session.business.type) {
+        document.getElementById('biz-type').value = session.business.type;
+        _bizType = session.business.type;
+      }
+    }
+
+    updatePreview();
+    await loadApps();
+  }
+
+  async function loadApps() {
+    var token = CC.getToken();
+    if (!token) return;
+    try {
+      var r = await fetch(window.CC_API_BASE + '/api/apps', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (r.ok) _allApps = await r.json();
+    } catch(e) { console.warn('Could not load apps:', e); }
+  }
+
+  function goStep(n) {
+    if (n === 1 && !validateStep1()) return;
+
+    // Mark current as done
+    document.getElementById('nav-' + _step).classList.remove('active');
+    document.getElementById('nav-' + _step).classList.add('done');
+    document.getElementById('step-' + _step).classList.remove('active');
+
+    _step = n;
+
+    document.getElementById('nav-' + _step).classList.add('active');
+    document.getElementById('nav-' + _step).classList.remove('done');
+    document.getElementById('step-' + _step).classList.add('active');
+
+    if (n === 2) renderApps();
+    if (n === 3) renderProviders();
+    if (n === 4) renderSummary();
+
+    updatePreview();
+  }
+
+  function validateStep1() {
+    var name = document.getElementById('biz-name').value.trim();
+    var type = document.getElementById('biz-type').value;
+    if (!name) { alert('Please enter your business name.'); return false; }
+    if (!type) { alert('Please select your business type.'); return false; }
+    _bizType = type;
+    return true;
+  }
+
+  function renderApps() {
+    var container = document.getElementById('apps-container');
+    if (!_allApps.length) {
+      container.innerHTML = '<div class="loading">No apps available yet.</div>';
+      return;
+    }
+
+    // Group by category
+    var byCategory = {};
+    _allApps.forEach(function(app) {
+      // Filter by business type if app has business_types
+      var types = app.business_types || [];
+      if (types.length > 0 && _bizType && !types.includes(_bizType) && !types.includes('all')) return;
+      var cat = app.category || 'Other';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(app);
+    });
+
+    var html = '';
+    Object.keys(byCategory).forEach(function(cat) {
+      html += '<div class="apps-section">';
+      html += '<div class="apps-section-label">' + capitalize(cat) + '</div>';
+      html += '<div class="apps-grid">';
+      byCategory[cat].forEach(function(app) {
+        var sel = _selectedApps.has(app.app_id);
+        var price = app.monthly_price > 0 ? '$' + Number(app.monthly_price).toFixed(0) + '/mo' : 'Free';
+        html += '<div class="app-card' + (sel ? ' selected' : '') + '" onclick="toggleApp(\'' + esc(app.app_id) + '\')" id="app-card-' + esc(app.app_id) + '">' +
+          '<div class="app-icon">' + (app.icon || '📦') + '</div>' +
+          '<div style="flex:1">' +
+            '<div class="app-name">' + esc(app.name) + '</div>' +
+            '<div class="app-desc">' + esc(app.description || '') + '</div>' +
+            '<div class="app-price">' + price + '</div>' +
+          '</div>' +
+          '<div class="app-check">' + (sel ? '✓' : '') + '</div>' +
+        '</div>';
+      });
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html || '<div class="loading">No apps match your business type.</div>';
+  }
+
+  function toggleApp(appId) {
+    if (_selectedApps.has(appId)) {
+      _selectedApps.delete(appId);
+    } else {
+      _selectedApps.add(appId);
+    }
+    var card = document.getElementById('app-card-' + appId);
+    if (card) {
+      card.classList.toggle('selected');
+      var check = card.querySelector('.app-check');
+      if (check) check.textContent = _selectedApps.has(appId) ? '✓' : '';
+    }
+    updatePreview();
+  }
+
+  function renderProviders() {
+    var container = document.getElementById('providers-container');
+    var selected = Array.from(_selectedApps);
+    if (!selected.length) {
+      container.innerHTML = '<div class="loading">No apps selected. <a href="#" onclick="goStep(2);return false" style="color:#00ada8">Go back and select apps</a>.</div>';
+      return;
+    }
+
+    var html = '';
+    selected.forEach(function(appId) {
+      var app = _allApps.find(function(a){ return a.app_id === appId; });
+      if (!app) return;
+      var cat = (app.category || '').toLowerCase();
+      var provs = PROVIDERS[cat] || [{ id: 'builtin', label: 'CyberCheck Built-in' }];
+      if (provs.length <= 1) return; // No choice needed
+
+      var current = _providers[appId] || provs[0].id;
+      html += '<div class="provider-card">';
+      html += '<div class="provider-app-name"><span>' + (app.icon || '📦') + '</span>' + esc(app.name) + '</div>';
+      html += '<div class="provider-options">';
+      provs.forEach(function(p) {
+        html += '<button class="provider-btn' + (current === p.id ? ' selected' : '') + '" onclick="selectProvider(\'' + esc(appId) + '\',\'' + esc(p.id) + '\')">' + esc(p.label) + '</button>';
+      });
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html || '<div style="color:#64748b;font-size:14px">All selected apps use CyberCheck built-in — no connections needed. Continue to the next step.</div>';
+  }
+
+  function selectProvider(appId, providerId) {
+    _providers[appId] = providerId;
+    var card = document.querySelector('[onclick*="' + appId + '"]') && document.querySelectorAll('.provider-card');
+    renderProviders();
+  }
+
+  function renderSummary() {
+    var name = document.getElementById('biz-name').value.trim();
+    var type = document.getElementById('biz-type').value;
+    var phone = document.getElementById('biz-phone').value.trim();
+    var handle = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    document.getElementById('sum-name').textContent = name || '—';
+    document.getElementById('sum-type').textContent = capitalize(type) || '—';
+    document.getElementById('sum-phone').textContent = phone || '—';
+    document.getElementById('sum-url').textContent = 'cybercheck.com/@' + handle;
+
+    var appsList = document.getElementById('sum-apps');
+    if (_selectedApps.size === 0) {
+      appsList.innerHTML = '<span style="color:#64748b;font-size:13px">No apps selected</span>';
+    } else {
+      appsList.innerHTML = Array.from(_selectedApps).map(function(id) {
+        var app = _allApps.find(function(a){ return a.app_id === id; });
+        return '<span class="installed-tag">' + (app ? (app.icon + ' ' + app.name) : id) + '</span>';
+      }).join('');
+    }
+  }
+
+  async function publish() {
+    var btn = document.getElementById('publish-btn');
+    btn.disabled = true;
+    btn.textContent = 'Publishing...';
+
+    var token = CC.getToken();
+    var name = document.getElementById('biz-name').value.trim();
+    var type = document.getElementById('biz-type').value;
+    var phone = document.getElementById('biz-phone').value.trim();
+    var address = document.getElementById('biz-address').value.trim();
+    var desc = document.getElementById('biz-desc').value.trim();
+    var website = document.getElementById('biz-website').value.trim();
+
+    try {
+      // Update business profile
+      await fetch(window.CC_API_BASE + '/api/site/content', {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tagline: desc,
+          contact_phone: phone,
+          address: address,
+          website_url: website
+        })
+      });
+
+      // Install selected apps
+      var installs = Array.from(_selectedApps).map(function(appId) {
+        return fetch(window.CC_API_BASE + '/api/apps/install', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ app_id: appId, provider: _providers[appId] || 'builtin' })
+        });
+      });
+      await Promise.all(installs);
+
+      // Mark onboarded
+      var session = await CC.getSession();
+      if (session && session.business) {
+        localStorage.setItem('cc_onboarded_' + session.business.site_id, '1');
+      }
+
+      window.location.href = 'app-dashboard.html';
+
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = '🚀 Publish My Page';
+      alert('Something went wrong: ' + e.message);
+    }
+  }
+
+  function updatePreview() {
+    var name = document.getElementById('biz-name') ? document.getElementById('biz-name').value.trim() : '';
+    var desc = document.getElementById('biz-desc') ? document.getElementById('biz-desc').value.trim() : '';
+    var handle = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'your-handle';
+
+    document.getElementById('preview-name').textContent = name || 'Your Business';
+    document.getElementById('preview-tagline').textContent = desc || 'Your tagline here';
+    document.getElementById('preview-url').textContent = 'cybercheck.com/@' + handle;
+
+    // Show buttons for selected apps
+    var btns = document.getElementById('preview-buttons');
+    if (btns) {
+      var btnMap = {
+        'restaurant-menu': '📋 View Menu',
+        'bakery-menu': '📋 View Menu',
+        'charter-booking': '📅 Book a Trip',
+        'rental-booking': '📅 Book Now',
+        'salon-booking': '📅 Book Appointment',
+        'service-booking': '📅 Book Now',
+        'restaurant-ordering': '🛒 Order Online',
+        'basic-crm': null,
+        'review-requests': '⭐ Leave a Review',
+        'loyalty': '🎁 Loyalty Rewards',
+        'analytics': null,
+        'qr-menu': null,
+        'social-feed': null,
+        'social-manager': null,
+        'sms-notifications': null
+      };
+      var html = '';
+      var count = 0;
+      _selectedApps.forEach(function(id) {
+        if (count >= 4) return;
+        var label = btnMap[id];
+        if (label) {
+          html += '<div class="preview-btn">' + label + '</div>';
+          count++;
+        }
+      });
+      if (count === 0) {
+        html = '<div class="preview-btn outline">📞 Call Us</div>';
+        html += '<div class="preview-btn outline">📍 Directions</div>';
+      }
+      btns.innerHTML = html;
+    }
+  }
+
+  function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g,' ') : ''; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  init();
+</script>
+</body>
+</html>

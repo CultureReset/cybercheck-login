@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Public Profile - CyberCheck</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      height: 100vh;
+      padding-top: 64px;
+    }
+
+    /* Left Side - Editor */
+    .editor-panel {
+      background: white;
+      overflow-y: auto;
+      padding: 40px;
+    }
+
+    .editor-header {
+      margin-bottom: 32px;
+    }
+
+    .editor-header h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    .editor-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .section {
+      margin-bottom: 32px;
+      padding-bottom: 32px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      min-height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* Photo Upload */
+    .photo-upload {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .photo-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: white;
+      overflow: hidden;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .btn-upload {
+      padding: 10px 20px;
+      background: #f5f7fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-upload:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    /* Links Section */
+    .links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .link-item {
+      background: #f5f7fa;
+      padding: 16px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      transition: all 0.2s;
+    }
+
+    .link-item:hover {
+      border-color: #667eea;
+    }
+
+    .link-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .link-icon {
+      font-size: 24px;
+    }
+
+    .link-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .link-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .link-inputs input {
+      padding: 10px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .link-inputs input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn-add-link {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-add-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Color Picker */
+    .color-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .color-option {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+
+    .color-option.active {
+      border-color: #1a1a1a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Right Side - Preview */
+    .preview-panel {
+      background: #667eea;
+      overflow-y: auto;
+      padding: 40px 20px;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+    }
+
+    .preview-label {
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .preview-container {
+      max-width: 360px;
+      margin: 0 auto;
+    }
+
+    /* Linktree Preview */
+    .preview-profile {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .preview-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      font-size: 48px;
+      border: 4px solid rgba(255,255,255,0.3);
+      overflow: hidden;
+    }
+
+    .preview-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-name {
+      font-size: 28px;
+      font-weight: 900;
+      color: white;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .preview-bio {
+      font-size: 15px;
+      color: rgba(255,255,255,0.95);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .preview-location {
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .preview-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-link {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 14px;
+      text-decoration: none;
+      color: #1a1a1a;
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+    }
+
+    .preview-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Save Bar */
+    .save-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 2px solid #e0e0e0;
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .save-status {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .save-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      padding: 12px 24px;
+      background: #f5f7fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .btn-primary {
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 1024px) {
+      .editor-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-panel {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<script src="../../packages/ui-kit/components/universal-nav.html"></script>
+  <script src="../../packages/ui-kit/components/hamburger-nav.html"></script>
+
+  <div class="editor-layout">
+    <!-- Left Side - Editor -->
+    <div class="editor-panel">
+      <div class="editor-header">
+        <h1>Edit Your Public Profile</h1>
+        <p>Customize your linktree-style page that customers see</p>
+      </div>
+
+      <!-- Profile Info Section -->
+      <div class="section">
+        <div class="section-title">📋 Basic Information</div>
+
+        <div class="form-group">
+          <label class="form-label">Profile Photo</label>
+          <div class="photo-upload">
+            <div class="photo-preview" id="photoPreview">
+              🍕
+            </div>
+            <div>
+              <button class="btn-upload" onclick="document.getElementById('photoInput').click()">
+                Upload Photo
+              </button>
+              <input type="file" id="photoInput" accept="image/*" style="display: none" onchange="handlePhotoUpload(event)">
+              <p style="font-size: 12px; color: #666; margin-top: 8px;">JPG, PNG or GIF (max 2MB)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Business Name</label>
+          <input type="text" class="form-input" id="businessName" value="Joe's Pizza" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bio / Tagline</label>
+          <textarea class="form-textarea" id="bio" oninput="updatePreview()">🍕 Authentic New York Style Pizza · Open Daily 11am-11pm · Free Delivery</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-input" id="location" value="📍 123 Main St, New York, NY" oninput="updatePreview()">
+        </div>
+      </div>
+
+      <!-- Links Section -->
+      <div class="section">
+        <div class="section-title">🔗 Links</div>
+
+        <div class="links-list" id="linksList">
+          <!-- Links will be added here dynamically -->
+        </div>
+
+        <button class="btn-add-link" onclick="addLink()">
+          <span>➕</span>
+          <span>Add New Link</span>
+        </button>
+      </div>
+
+      <!-- Theme Section -->
+      <div class="section">
+        <div class="section-title">🎨 Theme</div>
+
+        <div class="form-group">
+          <label class="form-label">Background Gradient</label>
+          <div class="color-options">
+            <div class="color-option active" style="background: linear-gradient(135deg, #667eea, #764ba2)" onclick="changeTheme(0)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #f093fb, #f5576c)" onclick="changeTheme(1)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #4facfe, #00f2fe)" onclick="changeTheme(2)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #43e97b, #38f9d7)" onclick="changeTheme(3)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #fa709a, #fee140)" onclick="changeTheme(4)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #30cfd0, #330867)" onclick="changeTheme(5)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #a8edea, #fed6e3)" onclick="changeTheme(6)"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #ff9a9e, #fecfef)" onclick="changeTheme(7)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 80px"></div> <!-- Spacer for save bar -->
+    </div>
+
+    <!-- Right Side - Live Preview -->
+    <div class="preview-panel" id="previewPanel">
+      <div class="preview-label">Live Preview</div>
+
+      <div class="preview-container">
+        <div class="preview-profile">
+          <div class="preview-image" id="previewImage">
+            🍕
+          </div>
+          <div class="preview-name" id="previewName">Joe's Pizza</div>
+          <div class="preview-bio" id="previewBio">🍕 Authentic New York Style Pizza · Open Daily 11am-11pm · Free Delivery</div>
+          <div class="preview-location" id="previewLocation">
+            📍 123 Main St, New York, NY
+          </div>
+        </div>
+
+        <div class="preview-links" id="previewLinks">
+          <!-- Links will be rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Bar -->
+  <div class="save-bar">
+    <div class="save-status">
+      <span id="saveStatus">Unsaved changes</span>
+    </div>
+    <div class="save-actions">
+      <button class="btn-secondary" onclick="window.open('../public/linktree.html', '_blank')">
+        Preview Live
+      </button>
+      <button class="btn-primary" onclick="saveProfile()">
+        Save Changes
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Data structure
+    let profileData = {
+      businessName: "Joe's Pizza",
+      bio: "🍕 Authentic New York Style Pizza · Open Daily 11am-11pm · Free Delivery",
+      location: "📍 123 Main St, New York, NY",
+      photo: null,
+      theme: 0,
+      links: [
+        { icon: "🍕", title: "View Our Menu", url: "menu.html" },
+        { icon: "📱", title: "Order Online", url: "order.html" },
+        { icon: "📍", title: "Get Directions", url: "https://maps.google.com" },
+        { icon: "📞", title: "Call Us", url: "tel:+15551234567" }
+      ]
+    };
+
+    const themes = [
+      'linear-gradient(135deg, #667eea, #764ba2)',
+      'linear-gradient(135deg, #f093fb, #f5576c)',
+      'linear-gradient(135deg, #4facfe, #00f2fe)',
+      'linear-gradient(135deg, #43e97b, #38f9d7)',
+      'linear-gradient(135deg, #fa709a, #fee140)',
+      'linear-gradient(135deg, #30cfd0, #330867)',
+      'linear-gradient(135deg, #a8edea, #fed6e3)',
+      'linear-gradient(135deg, #ff9a9e, #fecfef)'
+    ];
+
+    // Initialize
+    function init() {
+      renderLinks();
+      updatePreview();
+    }
+
+    // Render links in editor
+    function renderLinks() {
+      const container = document.getElementById('linksList');
+      container.innerHTML = '';
+
+      profileData.links.forEach((link, index) => {
+        const linkEl = document.createElement('div');
+        linkEl.className = 'link-item';
+        linkEl.innerHTML = `
+          <div class="link-header">
+            <span class="link-icon">${link.icon}</span>
+            <div class="link-actions">
+              <button class="btn-icon" onclick="moveLink(${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+              <button class="btn-icon" onclick="moveLink(${index}, 1)" ${index === profileData.links.length - 1 ? 'disabled' : ''}>↓</button>
+              <button class="btn-icon" onclick="deleteLink(${index})">🗑️</button>
+            </div>
+          </div>
+          <div class="link-inputs">
+            <input type="text" placeholder="Icon (emoji)" value="${link.icon}" onchange="updateLink(${index}, 'icon', this.value)" maxlength="2">
+            <input type="text" placeholder="Link Title" value="${link.title}" onchange="updateLink(${index}, 'title', this.value)">
+            <input type="text" placeholder="URL" value="${link.url}" onchange="updateLink(${index}, 'url', this.value)">
+          </div>
+        `;
+        container.appendChild(linkEl);
+      });
+    }
+
+    // Update preview
+    function updatePreview() {
+      // Update text fields
+      profileData.businessName = document.getElementById('businessName').value;
+      profileData.bio = document.getElementById('bio').value;
+      profileData.location = document.getElementById('location').value;
+
+      document.getElementById('previewName').textContent = profileData.businessName;
+      document.getElementById('previewBio').textContent = profileData.bio;
+      document.getElementById('previewLocation').textContent = profileData.location;
+
+      // Update links
+      const previewLinks = document.getElementById('previewLinks');
+      previewLinks.innerHTML = '';
+
+      profileData.links.forEach(link => {
+        const linkEl = document.createElement('a');
+        linkEl.className = 'preview-link';
+        linkEl.href = '#';
+        linkEl.innerHTML = `<span>${link.icon}</span><span>${link.title}</span>`;
+        previewLinks.appendChild(linkEl);
+      });
+
+      markUnsaved();
+    }
+
+    // Handle photo upload
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          profileData.photo = e.target.result;
+          document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" alt="Profile">`;
+          document.getElementById('previewImage').innerHTML = `<img src="${e.target.result}" alt="Profile">`;
+          markUnsaved();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Add new link
+    function addLink() {
+      profileData.links.push({
+        icon: '🔗',
+        title: 'New Link',
+        url: 'https://'
+      });
+      renderLinks();
+      updatePreview();
+    }
+
+    // Update link
+    function updateLink(index, field, value) {
+      profileData.links[index][field] = value;
+      updatePreview();
+    }
+
+    // Delete link
+    function deleteLink(index) {
+      if (confirm('Delete this link?')) {
+        profileData.links.splice(index, 1);
+        renderLinks();
+        updatePreview();
+      }
+    }
+
+    // Move link
+    function moveLink(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex >= 0 && newIndex < profileData.links.length) {
+        const temp = profileData.links[index];
+        profileData.links[index] = profileData.links[newIndex];
+        profileData.links[newIndex] = temp;
+        renderLinks();
+        updatePreview();
+      }
+    }
+
+    // Change theme
+    function changeTheme(themeIndex) {
+      profileData.theme = themeIndex;
+      document.getElementById('previewPanel').style.background = themes[themeIndex];
+
+      // Update active state
+      document.querySelectorAll('.color-option').forEach((el, i) => {
+        el.classList.toggle('active', i === themeIndex);
+      });
+
+      markUnsaved();
+    }
+
+    // Mark as unsaved
+    function markUnsaved() {
+      document.getElementById('saveStatus').innerHTML = '⚠️ Unsaved changes';
+    }
+
+    // Save profile
+    function saveProfile() {
+      // TODO: Send to backend API
+      console.log('Saving profile:', profileData);
+
+      // Simulate save
+      document.getElementById('saveStatus').innerHTML = '✅ Saved successfully';
+
+      alert('Profile saved! (Backend API not connected yet)');
+
+      // In real implementation:
+      // fetch('/api/profile/update', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(profileData)
+      // });
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - CyberCheck</title>
+
+  <!-- Google OAuth SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Facebook OAuth SDK -->
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .signup-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 440px;
+      padding: 48px 40px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .logo-text {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-text {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .welcome-text h1 {
+      font-size: 24px;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .welcome-text p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-signup {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 24px;
+    }
+
+    .btn-signup:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-signup:active {
+      transform: translateY(0);
+    }
+
+    .terms {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    .terms a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .terms a:hover {
+      text-decoration: underline;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 32px 0;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .divider span {
+      padding: 0 16px;
+    }
+
+    .social-signup {
+      display: grid;
+      gap: 12px;
+    }
+
+    .btn-social {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      color: #333;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-social:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #e0e0e0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .signup-container {
+        padding: 32px 24px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <div class="logo">
+      <div class="logo-icon">🚀</div>
+      <div class="logo-text">CyberCheck</div>
+    </div>
+
+    <div class="welcome-text">
+      <h1>Create your account</h1>
+      <p>Start building your business dashboard</p>
+    </div>
+
+    <form id="signupForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" placeholder="John" required>
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" placeholder="Doe" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="businessName">Business Name</label>
+        <input type="text" id="businessName" placeholder="Joe's Pizza" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@business.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Min. 8 characters" required>
+      </div>
+
+      <button type="submit" class="btn-signup">Create Account</button>
+
+      <div class="terms">
+        By creating an account, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+      </div>
+    </form>
+
+    <div class="divider">
+      <span>Or sign up with</span>
+    </div>
+
+    <div class="social-signup">
+      <button class="btn-social" onclick="signUpWithGoogle()">
+        <span>🔍</span>
+        Sign up with Google
+      </button>
+      <button class="btn-social" onclick="signUpWithFacebook()">
+        <span>📘</span>
+        Sign up with Facebook
+      </button>
+      <button class="btn-social">
+        <span>🪟</span>
+        Sign up with Microsoft
+      </button>
+    </div>
+
+    <div class="login-link">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+
+  <script src="js/api-client.js"></script>
+  <script>
+    // OAuth Configuration - Loaded from Admin Dashboard
+    const oauthSettings = JSON.parse(localStorage.getItem('oauthSettings') || '{}');
+    const GOOGLE_CLIENT_ID = oauthSettings.googleClientId || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+    const FACEBOOK_APP_ID = oauthSettings.facebookAppId || 'YOUR_FACEBOOK_APP_ID';
+
+    // Initialize Facebook SDK
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId: FACEBOOK_APP_ID,
+        cookie: true,
+        xfbml: true,
+        version: 'v18.0'
+      });
+    };
+
+    // Google OAuth Sign Up
+    function signUpWithGoogle() {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback
+      });
+
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          const client = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'email profile',
+            callback: handleGoogleCallback,
+          });
+          client.requestAccessToken();
+        }
+      });
+    }
+
+    // Handle Google OAuth Callback
+    async function handleGoogleCallback(response) {
+      try {
+        const result = await CyberCheckAPI.auth.oauthSignup({
+          provider: 'google',
+          credential: response.credential || response.access_token,
+          id_token: response.credential
+        });
+
+        if (result.success) {
+          sessionStorage.setItem('authToken', result.token);
+          sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+          alert('Account created successfully!\nLet\'s connect your tools...');
+          window.location.href = 'onboarding.html';
+        } else {
+          alert(result.error || 'Google sign-up failed. Please try again.');
+        }
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        alert('Failed to sign up with Google. Please try again.');
+      }
+    }
+
+    // Facebook OAuth Sign Up
+    function signUpWithFacebook() {
+      FB.login(function(response) {
+        if (response.authResponse) {
+          handleFacebookCallback(response.authResponse);
+        } else {
+          console.log('User cancelled sign-up or did not fully authorize.');
+        }
+      }, {scope: 'email,public_profile'});
+    }
+
+    // Handle Facebook OAuth Callback
+    async function handleFacebookCallback(authResponse) {
+      try {
+        FB.api('/me', {fields: 'id,name,email,picture'}, async function(userInfo) {
+          const result = await CyberCheckAPI.auth.oauthSignup({
+            provider: 'facebook',
+            access_token: authResponse.accessToken,
+            user_id: authResponse.userID,
+            user_info: userInfo
+          });
+
+          if (result.success) {
+            sessionStorage.setItem('authToken', result.token);
+            sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+            alert('Account created successfully!\nLet\'s connect your tools...');
+            window.location.href = 'onboarding.html';
+          } else {
+            alert(result.error || 'Facebook sign-up failed. Please try again.');
+          }
+        });
+      } catch (error) {
+        console.error('Facebook OAuth error:', error);
+        alert('Failed to sign up with Facebook. Please try again.');
+      }
+    }
+
+    // Regular email/password signup
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const userData = {
+        first_name: document.getElementById('firstName').value,
+        last_name: document.getElementById('lastName').value,
+        business_name: document.getElementById('businessName').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      };
+
+      const submitBtn = document.querySelector('.btn-signup');
+
+      // Validate password length
+      if (userData.password.length < 8) {
+        alert('Password must be at least 8 characters long');
+        return;
+      }
+
+      // Disable button during signup
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+
+      try {
+        const response = await CyberCheckAPI.auth.signup(userData);
+
+        if (response.success) {
+          // Store user data
+          sessionStorage.setItem('authToken', response.token);
+          sessionStorage.setItem('currentUser', JSON.stringify(response.user));
+
+          // Redirect to onboarding
+          alert('Account created successfully!\nLet\'s connect your tools...');
+          window.location.href = 'onboarding.html';
+        } else {
+          alert(response.error || 'Signup failed. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Account';
+        }
+      } catch (error) {
+        console.error('Signup error:', error);
+        alert('Network error. Please check your connection and try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

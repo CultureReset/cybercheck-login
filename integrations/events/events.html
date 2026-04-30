@@ -1,0 +1,250 @@
+<!--
+  COMPONENT: Events Card - Calendar + List
+  For: Restaurants, bars, venues, any business
+  Requires: shared.html included on the page
+  Trigger: openComponent('events')
+  Render: renderEvents(events)
+  Pass: data.events from GCR API /api/gcr/entity/{slug}
+-->
+
+<!-- TRIGGER BUTTON -->
+<!--
+<button class="link-btn" onclick="openComponent('events')">🎉 Events</button>
+-->
+
+<style>
+/* Calendar */
+.comp-cal {
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+}
+.comp-cal-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.comp-cal-nav h3 { font-size: 1rem; font-weight: 700; color: #111; }
+.comp-cal-nav button {
+    border: none;
+    background: #f0f0f0;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.comp-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+}
+.comp-cal-day-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #999;
+    padding: 4px 0;
+}
+.comp-cal-day {
+    font-size: 0.82rem;
+    padding: 6px 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    color: #333;
+}
+.comp-cal-day:hover { background: #f5f5f5; }
+.comp-cal-day.today { background: #111; color: #fff; border-radius: 50%; }
+.comp-cal-day.has-event::after {
+    content: '';
+    display: block;
+    width: 4px; height: 4px;
+    background: #667eea;
+    border-radius: 50%;
+    margin: 2px auto 0;
+}
+.comp-cal-day.today.has-event::after { background: #fff; }
+.comp-cal-day.selected { background: #667eea; color: #fff; border-radius: 50%; }
+.comp-cal-day.selected.has-event::after { background: #fff; }
+.comp-cal-day.empty { cursor: default; }
+
+/* Event list */
+.comp-event-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+.comp-event-item:last-child { border-bottom: none; }
+.comp-event-item.hidden { display: none; }
+
+.comp-event-date-badge {
+    flex-shrink: 0;
+    width: 48px;
+    text-align: center;
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 6px 4px;
+}
+.comp-event-date-badge .month {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #667eea;
+}
+.comp-event-date-badge .day {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #111;
+    line-height: 1;
+}
+
+.comp-event-info { flex: 1; min-width: 0; }
+.comp-event-name { font-size: 0.95rem; font-weight: 700; color: #111; }
+.comp-event-time { font-size: 0.8rem; color: #667eea; font-weight: 600; margin-top: 2px; }
+.comp-event-venue { font-size: 0.8rem; color: #888; margin-top: 2px; }
+.comp-event-desc { font-size: 0.8rem; color: #999; margin-top: 4px; line-height: 1.4; }
+
+.comp-event-cover {
+    width: 64px; height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.comp-no-events {
+    padding: 30px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+}
+</style>
+
+<!-- POPUP -->
+<div class="comp-overlay" id="comp-events">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>🎉 Events</h2>
+            <button class="comp-close" onclick="closeComponent('comp-events')">✕</button>
+        </div>
+        <div id="comp-events-cal"></div>
+        <div id="comp-events-body"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let _eventsData = [];
+    let _calYear, _calMonth, _selectedDate = null;
+
+    function renderEvents(events) {
+        _eventsData = (events || []).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+        const now = new Date();
+        _calYear = now.getFullYear();
+        _calMonth = now.getMonth();
+        _selectedDate = null;
+        _buildCalendar();
+        _buildList();
+    }
+
+    function _buildCalendar() {
+        const el = document.getElementById('comp-events-cal');
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+        const now = new Date();
+
+        // Get event dates for this month
+        const eventDays = new Set();
+        _eventsData.forEach(ev => {
+            if (!ev.start_date) return;
+            const d = new Date(ev.start_date);
+            if (d.getFullYear() === _calYear && d.getMonth() === _calMonth) {
+                eventDays.add(d.getDate());
+            }
+        });
+
+        const firstDay = new Date(_calYear, _calMonth, 1).getDay();
+        const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+
+        let html = `<div class="comp-cal">`;
+        html += `<div class="comp-cal-nav">`;
+        html += `<button onclick="_eventsNavMonth(-1)">‹</button>`;
+        html += `<h3>${months[_calMonth]} ${_calYear}</h3>`;
+        html += `<button onclick="_eventsNavMonth(1)">›</button>`;
+        html += `</div>`;
+        html += `<div class="comp-cal-grid">`;
+        days.forEach(d => html += `<div class="comp-cal-day-label">${d}</div>`);
+        for (let i = 0; i < firstDay; i++) html += `<div class="comp-cal-day empty"></div>`;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const isToday = d === now.getDate() && _calMonth === now.getMonth() && _calYear === now.getFullYear();
+            const hasEvent = eventDays.has(d);
+            const isSelected = _selectedDate === d;
+            const cls = ['comp-cal-day', isToday ? 'today' : '', hasEvent ? 'has-event' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+            html += `<div class="${cls}" onclick="_eventsSelectDay(${d})">${d}</div>`;
+        }
+        html += `</div></div>`;
+        el.innerHTML = html;
+    }
+
+    function _buildList(filterDay) {
+        const body = document.getElementById('comp-events-body');
+        const filtered = filterDay
+            ? _eventsData.filter(ev => {
+                if (!ev.start_date) return false;
+                const d = new Date(ev.start_date);
+                return d.getDate() === filterDay && d.getMonth() === _calMonth && d.getFullYear() === _calYear;
+              })
+            : _eventsData;
+
+        if (!filtered.length) {
+            body.innerHTML = `<div class="comp-no-events">${filterDay ? 'No events on this day.' : 'No upcoming events.'}</div>`;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(ev => {
+            const img = ev.image_url || ev.photo_url || '';
+            let dateStr = '', monthStr = '', dayNum = '';
+            if (ev.start_date) {
+                const d = new Date(ev.start_date);
+                monthStr = d.toLocaleDateString('en-US', { month: 'short' });
+                dayNum = d.getDate();
+                dateStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            }
+            html += `<div class="comp-event-item">`;
+            if (dayNum) {
+                html += `<div class="comp-event-date-badge"><div class="month">${escapeHtml(monthStr)}</div><div class="day">${dayNum}</div></div>`;
+            }
+            html += `<div class="comp-event-info">`;
+            html += `<div class="comp-event-name">${escapeHtml(ev.name)}</div>`;
+            if (dateStr) html += `<div class="comp-event-time">🕐 ${dateStr}</div>`;
+            if (ev.venue || ev.location) html += `<div class="comp-event-venue">📍 ${escapeHtml(ev.venue || ev.location)}</div>`;
+            if (ev.description) html += `<div class="comp-event-desc">${escapeHtml(ev.description)}</div>`;
+            html += `</div>`;
+            if (img) html += `<img class="comp-event-cover" src="${escapeAttr(img)}" alt="${escapeHtml(ev.name)}">`;
+            html += `</div>`;
+        });
+        body.innerHTML = html;
+    }
+
+    window._eventsNavMonth = function(dir) {
+        _calMonth += dir;
+        if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+        if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+        _selectedDate = null;
+        _buildCalendar();
+        _buildList();
+    };
+
+    window._eventsSelectDay = function(day) {
+        _selectedDate = _selectedDate === day ? null : day;
+        _buildCalendar();
+        _buildList(_selectedDate);
+    };
+
+    window.renderEvents = renderEvents;
+})();
+</script>

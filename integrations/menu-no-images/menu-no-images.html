@@ -1,0 +1,49 @@
+<!--
+  COMPONENT: Menu - NO IMAGES
+  Requires: shared.html included on the page
+  Trigger: openComponent('menu-list')
+  Render: renderMenuList(sections) — pass data.sections from GCR API
+-->
+
+<!-- TRIGGER BUTTON (copy to page) -->
+<!--
+<button class="link-btn" onclick="openComponent('menu-list')">📋 View Menu</button>
+-->
+
+<!-- POPUP (copy to page body) -->
+<div class="comp-overlay" id="comp-menu-list">
+    <div class="comp-modal">
+        <div class="comp-modal-header">
+            <h2>Menu</h2>
+            <button class="comp-close" onclick="closeComponent('comp-menu-list')">✕</button>
+        </div>
+        <div id="comp-menu-list-body"></div>
+    </div>
+</div>
+
+<script>
+function renderMenuList(sections) {
+    const body = document.getElementById('comp-menu-list-body');
+    if (!sections || !sections.length) {
+        body.innerHTML = '<p style="padding:20px;color:#999">No menu items found.</p>';
+        return;
+    }
+    let html = '';
+    sections.forEach(sec => {
+        const items = sec.ungrouped_items || [];
+        if (!items.length) return;
+        html += `<div class="comp-section-label">${escapeHtml(sec.section_label)}</div>`;
+        items.forEach(item => {
+            const price = item.price_numeric || 0;
+            html += `<div class="comp-item-list">`;
+            html += `<div class="comp-item-row">`;
+            html += `<div class="comp-item-name">${escapeHtml(item.item_name)}</div>`;
+            if (price > 0) html += `<div class="comp-item-price">$${price.toFixed(2)}</div>`;
+            html += `</div>`;
+            if (item.item_description) html += `<div class="comp-item-desc">${escapeHtml(item.item_description)}</div>`;
+            html += `</div>`;
+        });
+    });
+    body.innerHTML = html;
+}
+</script>
