@@ -23,16 +23,31 @@ var _session = null;
 var _business = null;
 var _siteId = null;
 
-// Listen for session expiry and force re-login immediately
 if (supabase) {
   supabase.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+    if (event === 'TOKEN_REFRESHED' && session) {
+      _session = session;
+      return;
+    }
+    if (event === 'SIGNED_OUT') {
+      // Don't bounce to login if we're already there (avoids reload loops),
+      // and skip if a valid session is still in localStorage — Supabase
+      // sometimes fires SIGNED_OUT spuriously on tab wake-up before the
+      // refresh-token call completes.
+      if (location.pathname.endsWith('/login.html')) return;
+      var hasStoredSession = false;
+      try {
+        var sbKey = Object.keys(localStorage).find(function(k) {
+          return k.startsWith('sb-') && k.endsWith('-auth-token');
+        });
+        if (sbKey) {
+          var s = JSON.parse(localStorage.getItem(sbKey));
+          if (s && s.access_token) hasStoredSession = true;
+        }
+      } catch(e) {}
+      if (hasStoredSession) return;
       clearSupabaseCache();
       window.location.href = 'login.html';
-    }
-    if (event === 'TOKEN_REFRESHED' && session) {
-      // Keep cache in sync with refreshed token
-      _session = session;
     }
   });
 }
@@ -126,38 +141,11 @@ async function requireSupabaseAuth() {
   return session;
 }
 
-// ============================================
-// Inactivity timeout — 1 hour, then force re-login
-// ============================================
-var INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 hour in ms
-var _inactivityTimer = null;
+// Stale flag from the old client-side inactivity timer (now removed) —
+// clean it up so it doesn't sit in localStorage forever.
+try { localStorage.removeItem('cc_last_active'); } catch(e) {}
 
-function _resetInactivityTimer() {
-  localStorage.setItem('cc_last_active', Date.now());
-}
-
-function _checkInactivity() {
-  var last = parseInt(localStorage.getItem('cc_last_active') || '0');
-  if (last && (Date.now() - last) >= INACTIVITY_LIMIT) {
-    clearSupabaseCache();
-    if (supabase) supabase.auth.signOut();
-    window.location.href = 'login.html';
-  }
-}
-
-function startInactivityWatch() {
-  _resetInactivityTimer();
-  // Update last active on any user interaction
-  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function(evt) {
-    document.addEventListener(evt, _resetInactivityTimer, { passive: true });
-  });
-  // Check every 5 minutes
-  _inactivityTimer = setInterval(_checkInactivity, 5 * 60 * 1000);
-}
-
-function stopInactivityWatch() {
-  if (_inactivityTimer) clearInterval(_inactivityTimer);
-  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function(evt) {
-    document.removeEventListener(evt, _resetInactivityTimer);
-  });
-}
+// No-ops kept so existing call sites don't throw. Supabase manages session
+// expiry + refresh on its own; we don't add a second timer on top.
+function startInactivityWatch() {}
+function stopInactivityWatch() {}
