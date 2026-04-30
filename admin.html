@@ -1650,6 +1650,11 @@
           <p style="font-size:13px;color:var(--text-muted);">Track clicks → calls → directions → bookings for each business.</p>
           <div id="ga-conversions-table"></div>
         </div>
+
+        <!-- Platform traffic + funnel injected here by _renderPlatformAnalytics() -->
+        <div id="ga-platform-wrap" style="margin-top:4px;">
+          <div style="color:var(--text-muted);font-size:13px;padding:20px 0;">Loading platform analytics…</div>
+        </div>
       </div>
 
       <!-- ── GCR REVIEWS ──────────────────────── -->
@@ -9028,32 +9033,151 @@
     // ── GCR Analytics ────────────────────────────────────────
     async function loadGCRAnalytics() {
       var token = getAuthToken();
+      var el = function(id){ return document.getElementById(id); };
+
+      // ── 1. Entity-level views (existing gcrDb data) ──
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
-        var data = await res.json();
-        var el = function(id){ return document.getElementById(id); };
-        if (el('ga-today-visitors')) el('ga-today-visitors').textContent = data.today_visitors || 0;
-        if (el('ga-today-views'))    el('ga-today-views').textContent    = data.today_views || 0;
-        if (el('ga-today-conv'))     el('ga-today-conv').textContent     = data.today_conversions || 0;
-        if (el('ga-month-visitors')) el('ga-month-visitors').textContent = data.month_views || 0;
+        var r1   = await fetch(API_BASE + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d1   = await r1.json();
+        if (el('ga-today-visitors')) el('ga-today-visitors').textContent = (d1.today_visitors || 0).toLocaleString();
+        if (el('ga-today-views'))    el('ga-today-views').textContent    = (d1.today_views    || 0).toLocaleString();
+        if (el('ga-today-conv'))     el('ga-today-conv').textContent     = (d1.today_conversions || 0).toLocaleString();
+        if (el('ga-month-visitors')) el('ga-month-visitors').textContent = (d1.month_views    || 0).toLocaleString();
         var topEl = el('ga-top-entities');
         if (topEl) {
-          var top = data.top_entities || [];
-          if (!top.length) { topEl.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No page view data yet. Add the tracking pixel to your GCR pages.</p>'; return; }
-          topEl.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
-            top.map(function(t,i) {
-              var name = (t.entity && t.entity.name) || t.entity_id || 'Unknown';
-              return '<tr style="border-bottom:1px solid var(--card-border);">' +
-                '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + (i+1) + '</td>' +
-                '<td style="padding:10px 8px;font-size:14px;font-weight:600;">' + escHtml(name) + '</td>' +
-                '<td style="padding:10px 8px;font-size:14px;text-align:right;font-weight:700;color:var(--primary);">' + t.count + ' views</td>' +
-              '</tr>';
-            }).join('') + '</table>';
+          var top = d1.top_entities || [];
+          topEl.innerHTML = top.length
+            ? '<table style="width:100%;border-collapse:collapse;">' + top.map(function(t, i) {
+                var name = (t.entity && t.entity.name) || t.entity_id || 'Unknown';
+                return '<tr style="border-bottom:1px solid var(--card-border);">' +
+                  '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);width:28px;">' + (i+1) + '</td>' +
+                  '<td style="padding:10px 8px;font-size:14px;font-weight:600;">' + escHtml(name) + '</td>' +
+                  '<td style="padding:10px 8px;font-size:14px;text-align:right;font-weight:700;color:var(--primary);">' + t.count.toLocaleString() + ' views</td>' +
+                '</tr>';
+              }).join('') + '</table>'
+            : '<p style="color:var(--text-muted);font-size:14px;">No entity view data yet.</p>';
         }
       } catch(e) {
-        var topEl2 = document.getElementById('ga-top-entities');
-        if (topEl2) topEl2.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Analytics tables not yet created — run the GCR dashboard migration SQL first.</p>';
+        if (el('ga-top-entities')) el('ga-top-entities').innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Could not load entity analytics.</p>';
       }
+
+      // ── 2. Platform tracking data (new gcr_page_views + booking_funnel) ──
+      try {
+        var days = 30;
+        var r2   = await fetch(API_BASE + '/api/admin/platform-analytics?days=' + days, { headers: { 'Authorization': 'Bearer ' + token } });
+        var d2   = await r2.json();
+
+        // Inject new sections if the placeholders exist
+        _renderPlatformAnalytics(d2);
+      } catch(e) {
+        var ph = el('ga-platform-wrap');
+        if (ph) ph.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Platform analytics unavailable — run the add-gcr-tracking migration first.</p>';
+      }
+    }
+
+    function _renderPlatformAnalytics(d) {
+      var wrap = document.getElementById('ga-platform-wrap');
+      if (!wrap) return;
+
+      var totalViews  = (d.total_views    || 0).toLocaleString();
+      var uniqSess    = (d.unique_sessions || 0).toLocaleString();
+      var todayViews  = (d.today_views    || 0).toLocaleString();
+      var gcrV        = (d.gcr_views      || 0).toLocaleString();
+      var tsV         = (d.tripswipe_views || 0).toLocaleString();
+      var tourists    = (d.tourists       || 0).toLocaleString();
+      var saves       = (d.total_saves    || 0).toLocaleString();
+      var dev         = d.devices || {};
+      var devTotal    = (dev.mobile||0) + (dev.desktop||0) + (dev.other||0) || 1;
+      var mobPct      = Math.round(((dev.mobile||0)/devTotal)*100);
+      var deskPct     = Math.round(((dev.desktop||0)/devTotal)*100);
+
+      // Daily sparkline
+      var daily   = d.daily || [];
+      var maxDay  = Math.max(...daily.map(function(x){return x.views;}), 1);
+      var spark   = daily.map(function(x) {
+        var h = Math.max(4, Math.round((x.views / maxDay) * 60));
+        var short = x.date.slice(5); // MM-DD
+        return '<div title="' + x.date + ': ' + x.views + ' views" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+          '<div style="width:100%;background:var(--primary);border-radius:3px 3px 0 0;height:' + h + 'px;opacity:.8;"></div>' +
+          '<div style="font-size:9px;color:var(--text-muted);white-space:nowrap;">' + (x.date.slice(8)) + '</div>' +
+        '</div>';
+      }).join('');
+
+      // Top pages
+      var pages   = (d.top_pages || []).slice(0, 8);
+      var maxPg   = pages.length ? Math.max(...pages.map(function(p){return p.views;})) : 1;
+      var pagesHtml = pages.map(function(p) {
+        var pct = Math.round((p.views / maxPg) * 100);
+        var label = p.page.replace(/^\//, '') || 'home';
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+          '<div style="font-size:12px;color:var(--text);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + escHtml(p.page) + '">' + escHtml(label) + '</div>' +
+          '<div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;"><div style="height:5px;width:' + pct + '%;background:#0ea5e9;border-radius:3px;"></div></div>' +
+          '<div style="font-size:12px;color:var(--text-muted);width:40px;text-align:right;">' + p.views + '</div>' +
+        '</div>';
+      }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No page data yet — run SQL migration.</div>';
+
+      // Traffic sources
+      var srcs    = (d.top_sources || []).slice(0, 8);
+      var maxSrc  = srcs.length ? Math.max(...srcs.map(function(s){return s.views;})) : 1;
+      var srcsHtml = srcs.map(function(s) {
+        var pct = Math.round((s.views / maxSrc) * 100);
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+          '<div style="font-size:12px;color:var(--text);width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(s.source) + '</div>' +
+          '<div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;"><div style="height:5px;width:' + pct + '%;background:#22c55e;border-radius:3px;"></div></div>' +
+          '<div style="font-size:12px;color:var(--text-muted);width:40px;text-align:right;">' + s.views + '</div>' +
+        '</div>';
+      }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No UTM data yet — share links with utm_source params.</div>';
+
+      // Booking funnel
+      var funnel  = d.funnel || [];
+      var maxF    = funnel.length ? Math.max(...funnel.map(function(f){return f.count;})) : 1;
+      var funnelHtml = funnel.length
+        ? funnel.map(function(f) {
+            var pct = Math.round((f.count / maxF) * 100);
+            var label = (f.step_name || '').replace(/_/g, ' ');
+            return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+              '<div style="font-size:12px;color:var(--text);width:150px;flex-shrink:0;text-transform:capitalize;">' + escHtml(label) + '</div>' +
+              '<div style="flex:1;height:18px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;">' +
+                '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#7c6af7,#0ea5e9);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11px;font-weight:700;color:white;min-width:24px;transition:width .5s;">' + f.count + '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('')
+        : '<div style="color:var(--text-muted);font-size:13px;">No booking funnel data yet.</div>';
+
+      wrap.innerHTML =
+        // ── Platform Traffic Stats ──
+        '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin:24px 0 12px;">── Platform Traffic (Last 30 Days)</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">' +
+          '<div class="card" style="padding:16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Total Views</div><div style="font-size:26px;font-weight:900;">' + totalViews + '</div></div>' +
+          '<div class="card" style="padding:16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Unique Sessions</div><div style="font-size:26px;font-weight:900;">' + uniqSess + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Today: ' + todayViews + '</div></div>' +
+          '<div class="card" style="padding:16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Source Split</div><div style="display:flex;gap:14px;margin-top:6px;"><div><div style="font-size:18px;font-weight:900;color:#0ea5e9;">' + gcrV + '</div><div style="font-size:10px;color:var(--text-muted);">GCR</div></div><div><div style="font-size:18px;font-weight:900;color:#7c6af7;">' + tsV + '</div><div style="font-size:10px;color:var(--text-muted);">TripSwipe</div></div></div></div>' +
+          '<div class="card" style="padding:16px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;">Tourists / Saves</div><div style="font-size:26px;font-weight:900;">' + tourists + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + saves + ' total saves</div></div>' +
+        '</div>' +
+
+        // ── Daily trend ──
+        '<div class="card" style="padding:20px;margin-bottom:14px;">' +
+          '<div style="font-size:13px;font-weight:700;margin-bottom:14px;">Daily Views — Last 14 Days</div>' +
+          '<div style="display:flex;align-items:flex-end;gap:3px;height:64px;">' + spark + '</div>' +
+        '</div>' +
+
+        // ── Top Pages + Sources ──
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">' +
+          '<div class="card" style="padding:18px;"><div style="font-size:13px;font-weight:700;margin-bottom:12px;">Top Pages</div>' + pagesHtml + '</div>' +
+          '<div class="card" style="padding:18px;"><div style="font-size:13px;font-weight:700;margin-bottom:12px;">Traffic Sources</div>' + srcsHtml + '</div>' +
+        '</div>' +
+
+        // ── Device split ──
+        '<div class="card" style="padding:18px;margin-bottom:14px;">' +
+          '<div style="font-size:13px;font-weight:700;margin-bottom:12px;">Device Split</div>' +
+          '<div style="display:flex;gap:20px;">' +
+            '<div style="flex:1;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>📱 Mobile</span><span style="font-weight:700;">' + mobPct + '%</span></div><div style="background:rgba(255,255,255,.07);border-radius:4px;height:7px;"><div style="background:var(--primary);height:7px;border-radius:4px;width:' + mobPct + '%;transition:width .5s;"></div></div></div>' +
+            '<div style="flex:1;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>🖥 Desktop</span><span style="font-weight:700;">' + deskPct + '%</span></div><div style="background:rgba(255,255,255,.07);border-radius:4px;height:7px;"><div style="background:#0ea5e9;height:7px;border-radius:4px;width:' + deskPct + '%;transition:width .5s;"></div></div></div>' +
+          '</div>' +
+        '</div>' +
+
+        // ── Booking Funnel ──
+        '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin:20px 0 12px;">── Booking Funnel</div>' +
+        '<div class="card" style="padding:20px;">' + funnelHtml + '</div>';
     }
 
     // ── GCR Social / Connections ────────────────────────────
@@ -13031,48 +13155,71 @@
     }
 
     // ── Analytics ──
-    function loadTSAnalytics() {
-      document.getElementById('ts-an-total').textContent = '0';
-      document.getElementById('ts-an-likes').textContent = '0';
-      document.getElementById('ts-an-nopes').textContent = '0';
-      document.getElementById('ts-an-rate').textContent = '—%';
-      // Category breakdown
-      var cats = ['Food & Drink','Activities','Nightlife','Shopping','Events'];
-      var catHtml = cats.map(function(c) {
-        var pct = Math.floor(10 + Math.random() * 60);
-        return '<div style="display:flex;align-items:center;gap:10px;">' +
-          '<div style="font-size:13px;color:var(--text);width:110px;flex-shrink:0;">' + c + '</div>' +
-          '<div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;">' +
-            '<div style="height:100%;width:' + pct + '%;background:#7c6af7;border-radius:3px;"></div>' +
-          '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);width:32px;text-align:right;">' + pct + '%</div>' +
-        '</div>';
-      }).join('');
-      document.getElementById('ts-cat-breakdown').innerHTML = catHtml;
-      // Top liked
-      if (_tsAllBusinesses.length) {
-        var topHtml = _tsAllBusinesses.slice(0,4).map(function(b) {
-          return '<div style="display:flex;align-items:center;gap:10px;font-size:13px;">' +
-            '<span style="color:#22c55e;">♥</span>' +
-            '<span style="color:var(--text);flex:1;">' + (b.name||'Business') + '</span>' +
-            '<span style="color:var(--text-muted);">' + Math.floor(40+Math.random()*120) + ' likes</span>' +
-          '</div>';
-        }).join('');
-        document.getElementById('ts-top-liked').innerHTML = topHtml;
-        var skipHtml = _tsAllBusinesses.slice(2,6).map(function(b) {
-          return '<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.1);border-radius:10px;">' +
-            '<span style="font-size:18px;">⚠️</span>' +
-            '<div style="flex:1;">' +
-              '<div style="font-size:13px;font-weight:700;color:var(--text);">' + (b.name||'Business') + '</div>' +
-              '<div style="font-size:12px;color:#fca5a5;margin-top:2px;">High skip rate — needs better photos or description</div>' +
-            '</div>' +
-            '<button onclick="showPage(\'tripswipe-ai\')" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);color:#fca5a5;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;">Fix →</button>' +
-          '</div>';
-        }).join('');
-        document.getElementById('ts-most-skipped').innerHTML = skipHtml;
-      } else {
-        document.getElementById('ts-top-liked').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No swipe data yet</div>';
-        document.getElementById('ts-most-skipped').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No swipe data yet</div>';
+    async function loadTSAnalytics() {
+      var period = (document.getElementById('ts-analytics-period') || {}).value || 'month';
+      var token  = getAuthToken();
+      var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+      set('ts-an-total','…'); set('ts-an-likes','…'); set('ts-an-nopes','…'); set('ts-an-rate','…');
+
+      try {
+        var r    = await fetch(API_BASE + '/api/admin/tripswipe-analytics?period=' + period, { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await r.json();
+
+        // ── Stats ──
+        set('ts-an-total', (data.total_seen  || 0).toLocaleString());
+        set('ts-an-likes', (data.total_likes || 0).toLocaleString());
+        set('ts-an-nopes', (data.total_nopes || 0).toLocaleString());
+        set('ts-an-rate',  (data.like_rate   || 0) + '%');
+
+        // ── Category breakdown ──
+        var cats = data.categories || [];
+        var maxCat = cats.length ? Math.max(...cats.map(function(c){ return c.count; })) : 1;
+        document.getElementById('ts-cat-breakdown').innerHTML = cats.length
+          ? cats.map(function(c) {
+              var pct = maxCat > 0 ? Math.round((c.count / maxCat) * 100) : 0;
+              return '<div style="display:flex;align-items:center;gap:10px;">' +
+                '<div style="font-size:13px;color:var(--text);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(c.cat) + '</div>' +
+                '<div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;">' +
+                  '<div style="height:100%;width:' + pct + '%;background:#7c6af7;border-radius:3px;transition:width .4s;"></div>' +
+                '</div>' +
+                '<div style="font-size:12px;color:var(--text-muted);width:56px;text-align:right;">' + c.count.toLocaleString() + '</div>' +
+              '</div>';
+            }).join('')
+          : '<div style="color:var(--text-muted);font-size:13px;">No save data yet for this period</div>';
+
+        // ── Top liked ──
+        var liked = data.top_liked || [];
+        document.getElementById('ts-top-liked').innerHTML = liked.length
+          ? liked.map(function(b) {
+              return '<div style="display:flex;align-items:center;gap:10px;font-size:13px;">' +
+                (b.image ? '<img src="' + b.image + '" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">' : '<div style="width:36px;height:36px;border-radius:8px;background:rgba(124,106,247,.2);flex-shrink:0;"></div>') +
+                '<span style="color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(b.name || b.slug) + '</span>' +
+                '<span style="color:#22c55e;font-weight:700;flex-shrink:0;">♥ ' + b.count + '</span>' +
+              '</div>';
+            }).join('')
+          : '<div style="color:var(--text-muted);font-size:13px;">No saves yet</div>';
+
+        // ── Most skipped ──
+        var skipped = data.most_skipped || [];
+        document.getElementById('ts-most-skipped').innerHTML = skipped.length
+          ? skipped.map(function(b) {
+              return '<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.1);border-radius:10px;">' +
+                '<span style="font-size:18px;">⚠️</span>' +
+                '<div style="flex:1;">' +
+                  '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(b.name || b.slug) + '</div>' +
+                  '<div style="font-size:12px;color:#fca5a5;margin-top:2px;">' + b.saves + ' save' + (b.saves !== 1 ? 's' : '') + ' total — needs better photos or description</div>' +
+                '</div>' +
+                '<button onclick="showPage(\'tripswipe-ai\')" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);color:#fca5a5;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;">Fix →</button>' +
+              '</div>';
+            }).join('')
+          : '<div style="color:var(--text-muted);font-size:13px;">No data yet</div>';
+
+      } catch(e) {
+        console.error('loadTSAnalytics', e);
+        ['ts-cat-breakdown','ts-top-liked','ts-most-skipped'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Failed to load — check console</div>';
+        });
       }
     }
 
