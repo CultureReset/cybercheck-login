@@ -8,6 +8,7 @@ class BusinessAIAssistant {
     this.recognition = null;
     this.open = false;
     this.pendingImage = null; // { base64, mimeType, preview }
+    this.conversationId = localStorage.getItem('cc_ai_conv_id') || null;
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
@@ -39,7 +40,11 @@ class BusinessAIAssistant {
       el.style.display = 'flex';
       fab.classList.add('hidden');
       if (this.history.length === 0) {
-        this._addMsg('assistant', "Hey! I'm your AI assistant — like having ChatGPT built into your dashboard.\n\nI can **answer anything**, **analyze images** 📎, **read websites** (paste a URL), and make real changes to your business data.\n\nWhat can I help with?");
+        if (this.conversationId) {
+          this.loadHistory();
+        } else {
+          this._addMsg('assistant', "Hey! I'm your AI assistant — like having ChatGPT built into your dashboard, but I **remember everything** you've told me about your business.\n\nI can **answer anything**, **analyze images** 📎, **read websites** (paste a URL), and make real changes to your data.\n\nWhat can I help with?");
+        }
       }
       setTimeout(() => { const i = document.getElementById('ai-input'); if (i) i.focus(); }, 100);
     } else {
@@ -146,6 +151,7 @@ class BusinessAIAssistant {
       const body = {
         message: msg || 'What do you see in this image?',
         history: this.history.slice(-10),
+        ...(this.conversationId ? { conversation_id: this.conversationId } : {}),
         ...(image ? { image: { base64: image.base64, mimeType: image.mimeType } } : {}),
         ...(url   ? { url } : {})
       };
@@ -161,6 +167,12 @@ class BusinessAIAssistant {
 
       const data = await res.json();
       this._removeTyping();
+
+      // Capture conversation_id from first turn so subsequent messages stay threaded
+      if (data.conversation_id && !this.conversationId) {
+        this.conversationId = data.conversation_id;
+        localStorage.setItem('cc_ai_conv_id', data.conversation_id);
+      }
 
       if (data.tool_results && data.tool_results.length) {
         this._showToolResults(data.tool_results);
@@ -214,6 +226,9 @@ class BusinessAIAssistant {
       if (r.tool === 'delete_menu_item')   return `<span class="ai-tool-badge ai-tool-warn">🗑 Removed: ${r.deleted_name}</span>`;
       if (r.tool === 'update_menu_item')   return `<span class="ai-tool-badge">✏️ Updated: ${r.updated_name}</span>`;
       if (r.tool === 'update_hh_schedule') return `<span class="ai-tool-badge">✅ Happy Hour: ${r.schedule.days} ${r.schedule.start}–${r.schedule.end}</span>`;
+      if (r.tool === 'save_memory')        return `<span class="ai-tool-badge ai-tool-memory">🧠 Remembered: ${r.category}/${r.saved_key}</span>`;
+      if (r.tool === 'update_memory')      return `<span class="ai-tool-badge ai-tool-memory">🧠 Updated memory: ${r.updated_key}</span>`;
+      if (r.tool === 'delete_memory')      return `<span class="ai-tool-badge ai-tool-warn">🧠 Forgot: ${r.deleted_key}</span>`;
       return '';
     }).join(' ');
     div.innerHTML = `<div class="ai-message-content" style="background:transparent;box-shadow:none;">${badges}</div>`;
@@ -245,7 +260,35 @@ class BusinessAIAssistant {
     const el = document.getElementById('ai-chat-messages');
     if (el) el.innerHTML = '';
     this.history = [];
-    this._addMsg('assistant', 'Chat cleared. What can I help with?');
+    this.conversationId = null;
+    localStorage.removeItem('cc_ai_conv_id');
+    this._addMsg('assistant', 'Started a new chat. What can I help with? *(I still remember things you\'ve told me before across all chats.)*');
+  }
+
+  async loadHistory() {
+    if (!this.conversationId) return;
+    try {
+      const API   = window.CC_API_BASE || '';
+      const token = window.CC && CC.getToken ? CC.getToken() : localStorage.getItem('cc_token');
+      const res   = await fetch(`${API}/api/dashboard/ai-chat/conversations/${this.conversationId}`, {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      });
+      if (!res.ok) {
+        // conversation no longer exists — start fresh
+        this.conversationId = null;
+        localStorage.removeItem('cc_ai_conv_id');
+        return;
+      }
+      const data = await res.json();
+      const container = document.getElementById('ai-chat-messages');
+      if (container) container.innerHTML = '';
+      this.history = [];
+      (data.messages || []).forEach(m => {
+        this._addMsg(m.role === 'assistant' ? 'assistant' : 'user', m.content);
+        this.history.push({ role: m.role, content: m.content });
+        if (m.tool_results && m.tool_results.length) this._showToolResults(m.tool_results);
+      });
+    } catch (e) { /* silent */ }
   }
 
   // ── Private ──

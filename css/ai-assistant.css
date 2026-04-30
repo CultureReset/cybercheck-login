@@ -284,7 +284,8 @@
   font-weight: 600;
   margin: 2px;
 }
-.ai-tool-badge.ai-tool-warn { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+.ai-tool-badge.ai-tool-warn   { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+.ai-tool-badge.ai-tool-memory { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
 
 /* ── Markdown elements ── */
 .ai-message-content .ai-h  { font-weight: 700; margin: 10px 0 4px; line-height: 1.3; }
