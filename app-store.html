@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Store — CyberCheck</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    .store-header{padding:32px 0 24px;border-bottom:1px solid var(--card-border);margin-bottom:28px;}
+    .store-header h1{font-size:28px;font-weight:800;margin-bottom:6px;}
+    .store-header p{font-size:14px;color:var(--text-muted);}
+    .store-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap;}
+    .store-search{flex:1;min-width:220px;padding:10px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;outline:none;}
+    .store-search:focus{border-color:var(--primary);}
+    .filter-chips{display:flex;gap:8px;flex-wrap:wrap;}
+    .chip{padding:7px 14px;border:1px solid var(--card-border);border-radius:20px;background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+    .chip:hover{border-color:var(--primary);color:var(--primary);}
+    .chip.active{border-color:var(--primary);color:var(--primary);background:rgba(0,173,168,.08);}
+    .apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+    .app-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;transition:border-color .15s;}
+    .app-card.installed{border-color:var(--primary);}
+    .app-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+    .app-icon{font-size:32px;flex-shrink:0;}
+    .app-name{font-size:15px;font-weight:700;margin-bottom:2px;}
+    .app-cat{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+    .app-desc{font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:14px;}
+    .app-footer{display:flex;align-items:center;justify-content:space-between;}
+    .app-price{font-size:12px;color:var(--text-dim);}
+    .app-installed-badge{font-size:11px;color:var(--primary);font-weight:700;}
+    .btn-add{background:var(--primary);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+    .btn-add:hover{background:var(--primary-hover);}
+    .btn-add:disabled{opacity:.5;cursor:not-allowed;}
+    .btn-remove{background:transparent;color:var(--danger);border:1px solid var(--danger);padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+    .btn-remove:hover{background:var(--danger);color:#fff;}
+    .section-tabs{display:flex;gap:0;border-bottom:1px solid var(--card-border);margin-bottom:28px;}
+    .section-tab{padding:12px 20px;font-size:14px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+    .section-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+    .empty{text-align:center;padding:80px 20px;color:var(--text-muted);}
+    .empty-icon{font-size:56px;opacity:.3;margin-bottom:16px;}
+    #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;display:none;}
+    #toast.show{display:block;}
+    #toast.success{background:#064e3b;color:#6ee7b7;border:1px solid #065f46;}
+    #toast.error{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d;}
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar reuse -->
+  <aside class="sidebar" id="sidebar" style="width:220px;">
+    <div class="sidebar-header">
+      <div style="font-size:11px;font-weight:700;color:var(--primary);letter-spacing:1px;margin-bottom:6px;">CYBERCHECK</div>
+      <h2 id="sidebar-biz-name" style="font-size:14px;">Loading...</h2>
+    </div>
+    <nav style="padding:8px 0;">
+      <div class="nav-item" onclick="location.href='app-dashboard.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M3 9l2.45-4.9A2 2 0 017.24 3h9.52a2 2 0 011.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+        <span>App Store</span>
+      </div>
+    </nav>
+    <div style="padding:14px 16px;border-top:1px solid var(--card-border);margin-top:auto;">
+      <button onclick="doLogout()" style="width:100%;padding:8px;background:transparent;border:1px solid var(--card-border);border-radius:6px;color:var(--text-muted);font-size:13px;cursor:pointer;">Sign Out</button>
+    </div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <header style="height:var(--topbar-height);background:var(--sidebar-bg);border-bottom:1px solid var(--card-border);display:flex;align-items:center;padding:0 32px;">
+      <span style="font-weight:700;font-size:16px;">App Store</span>
+      <span style="flex:1;"></span>
+      <a href="app-dashboard.html" style="font-size:13px;color:var(--primary);text-decoration:none;">← Back to Dashboard</a>
+    </header>
+
+    <main style="flex:1;overflow-y:auto;padding:0 32px 40px;">
+
+      <div class="store-header">
+        <h1>App Store</h1>
+        <p>Add tools to your dashboard. Installed apps appear in your sidebar and on your public page.</p>
+      </div>
+
+      <!-- Tabs: All Apps / Installed -->
+      <div class="section-tabs">
+        <div class="section-tab active" id="tab-all" onclick="switchTab('all')">All Apps</div>
+        <div class="section-tab" id="tab-installed" onclick="switchTab('installed')">Installed <span id="installed-count" style="background:var(--primary);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;margin-left:6px;">0</span></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="store-toolbar">
+        <input type="text" class="store-search" id="store-search" placeholder="Search apps..." oninput="renderGrid()">
+        <div class="filter-chips" id="filter-chips"></div>
+      </div>
+
+      <!-- Grid -->
+      <div class="apps-grid" id="apps-grid">
+        <div style="color:var(--text-muted);padding:40px;grid-column:1/-1;text-align:center;">Loading apps...</div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/cc.js"></script>
+<script>
+  window.CC_API_BASE = 'https://cybercheck-api-database.vercel.app';
+
+  var _apps = [];
+  var _cat = 'all';
+  var _tab = 'all';
+
+  async function init() {
+    var session = await CC.getSession();
+    if (!session || !session.user) { window.location.href = 'login.html'; return; }
+    if (session.business) document.getElementById('sidebar-biz-name').textContent = session.business.name;
+    await loadApps();
+  }
+
+  async function loadApps() {
+    var token = CC.getToken();
+    if (!token) return;
+    try {
+      var r = await fetch(window.CC_API_BASE + '/api/apps', { headers: { 'Authorization': 'Bearer ' + token } });
+      if (!r.ok) return;
+      _apps = await r.json();
+      buildFilters();
+      renderGrid();
+      updateInstalledCount();
+    } catch(e) { console.warn('Could not load apps:', e); }
+  }
+
+  function buildFilters() {
+    var cats = ['all'];
+    _apps.forEach(function(a){ if (a.category && cats.indexOf(a.category) === -1) cats.push(a.category); });
+    document.getElementById('filter-chips').innerHTML = cats.map(function(c) {
+      return '<button class="chip' + (c==='all'?' active':'') + '" onclick="setCat(\'' + c + '\',this)">' + capitalize(c) + '</button>';
+    }).join('');
+  }
+
+  function setCat(cat, btn) {
+    _cat = cat;
+    document.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
+    btn.classList.add('active');
+    renderGrid();
+  }
+
+  function switchTab(tab) {
+    _tab = tab;
+    document.querySelectorAll('.section-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.getElementById('tab-' + tab).classList.add('active');
+    renderGrid();
+  }
+
+  function renderGrid() {
+    var search = (document.getElementById('store-search').value || '').toLowerCase();
+    var list = _apps.filter(function(a) {
+      if (_tab === 'installed' && !a.installed) return false;
+      if (_cat !== 'all' && a.category !== _cat) return false;
+      if (search && !(a.name||'').toLowerCase().includes(search) && !(a.description||'').toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    var grid = document.getElementById('apps-grid');
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>' + (_tab === 'installed' ? 'No apps installed yet. Browse All Apps to get started.' : 'No apps found.') + '</p></div>';
+      return;
+    }
+
+    grid.innerHTML = list.map(function(a) {
+      var price = a.monthly_price > 0 ? '$' + Number(a.monthly_price).toFixed(0) + '/mo' : 'Free';
+      var actionBtn = a.installed
+        ? '<button class="btn-remove" onclick="removeApp(\'' + esc(a.app_id) + '\',this)">Remove</button>'
+        : '<button class="btn-add" onclick="addApp(\'' + esc(a.app_id) + '\',this)">+ Add</button>';
+      return '<div class="app-card' + (a.installed?' installed':'') + '" id="card-' + esc(a.app_id) + '">' +
+        '<div class="app-card-top">' +
+          '<div class="app-icon">' + (a.icon||'📦') + '</div>' +
+          '<div style="flex:1">' +
+            '<div class="app-name">' + esc(a.name) + '</div>' +
+            '<div class="app-cat">' + esc(a.category||'') + '</div>' +
+          '</div>' +
+          (a.installed ? '<div class="app-installed-badge">✓ Installed</div>' : '') +
+        '</div>' +
+        '<div class="app-desc">' + esc(a.description||'') + '</div>' +
+        '<div class="app-footer"><div class="app-price">' + price + '</div>' + actionBtn + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function addApp(appId, btn) {
+    btn.disabled = true; btn.textContent = 'Adding...';
+    var token = CC.getToken();
+    try {
+      var r = await fetch(window.CC_API_BASE + '/api/apps/install', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: appId })
+      });
+      var d = await r.json();
+      if (d.error) { toast(d.error, 'error'); btn.disabled = false; btn.textContent = '+ Add'; return; }
+      var app = _apps.find(function(a){ return a.app_id === appId; });
+      if (app) app.installed = true;
+      updateInstalledCount();
+      renderGrid();
+      toast((app ? app.name : 'App') + ' added to your dashboard', 'success');
+    } catch(e) { toast('Failed', 'error'); btn.disabled = false; btn.textContent = '+ Add'; }
+  }
+
+  async function removeApp(appId, btn) {
+    if (!confirm('Remove this app from your dashboard?')) return;
+    btn.disabled = true; btn.textContent = 'Removing...';
+    var token = CC.getToken();
+    try {
+      var r = await fetch(window.CC_API_BASE + '/api/apps/uninstall/' + appId, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      var d = await r.json();
+      if (d.error) { toast(d.error, 'error'); btn.disabled = false; btn.textContent = 'Remove'; return; }
+      var app = _apps.find(function(a){ return a.app_id === appId; });
+      if (app) app.installed = false;
+      updateInstalledCount();
+      renderGrid();
+      toast((app ? app.name : 'App') + ' removed', 'success');
+    } catch(e) { toast('Failed', 'error'); btn.disabled = false; btn.textContent = 'Remove'; }
+  }
+
+  function updateInstalledCount() {
+    var count = _apps.filter(function(a){ return a.installed; }).length;
+    document.getElementById('installed-count').textContent = count;
+  }
+
+  function doLogout() { CC.logout(); window.location.href = 'login.html'; }
+
+  function toast(msg, type) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + (type||'');
+    setTimeout(function(){ el.className = ''; }, 3000);
+  }
+
+  function capitalize(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  init();
+</script>
+</body>
+</html>
