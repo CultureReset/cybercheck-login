@@ -27,6 +27,7 @@ async function loadCustomers() {
         firstSeen: c.created_at || '',
         notes: c.notes || '',
         tags: c.tags || [],
+        photo_url: c.photo_url || '',
         _apiId: c.id
       };
     });
@@ -70,7 +71,8 @@ function buildCustomerListFromBookings() {
           lastBooking: null,
           firstSeen: b.date,
           notes: '',
-          tags: []
+          tags: [],
+          photo_url: ''
         };
       }
       map[key].totalBookings++;
@@ -153,6 +155,7 @@ function renderCustomerFilters() {
   // Actions
   html += '<div style="display:flex;gap:6px;">';
   html += '<button class="btn btn-outline btn-sm" onclick="exportCustomersCsv()">Export CSV</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="openScanCardModal()" title="Snap or upload a business card">Scan Card</button>';
   html += '<button class="btn btn-primary btn-sm" onclick="openAddCustomerModal()">Add Customer</button>';
   html += '</div>';
 
@@ -209,7 +212,11 @@ function renderCustomerList() {
     html += '<tr>';
     html += '<td>';
     html += '<div style="display:flex;align-items:center;gap:10px;">';
-    html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">' + (c.name || '?').charAt(0).toUpperCase() + '</div>';
+    if (c.photo_url) {
+      html += '<img src="' + escHtml(c.photo_url) + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">';
+    } else {
+      html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">' + (c.name || '?').charAt(0).toUpperCase() + '</div>';
+    }
     html += '<div><div style="font-weight:600;font-size:14px;">' + escHtml(c.name) + '</div>';
     html += '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(c.email || c.phone) + '</div></div>';
     html += '</div></td>';
@@ -257,7 +264,15 @@ function viewCustomerDetail(id) {
 
   // Customer header
   html += '<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">';
-  html += '<div style="width:56px;height:56px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;">' + (c.name || '?').charAt(0).toUpperCase() + '</div>';
+  html += '<div style="position:relative;width:56px;height:56px;flex-shrink:0;cursor:pointer;" onclick="document.getElementById(\'cust-photo-input-' + c.id + '\').click()" title="Upload or snap a photo">';
+  if (c.photo_url) {
+    html += '<img id="cust-photo-' + c.id + '" src="' + escHtml(c.photo_url) + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML=\'<div id=\\\"cust-photo-' + c.id + '\\\" style=\\\"width:56px;height:56px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;\\\">' + (c.name || '?').charAt(0).toUpperCase() + '</div>\'">';
+  } else {
+    html += '<div id="cust-photo-' + c.id + '" style="width:56px;height:56px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;">' + (c.name || '?').charAt(0).toUpperCase() + '</div>';
+  }
+  html += '<div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;line-height:1;">+</div>';
+  html += '<input type="file" id="cust-photo-input-' + c.id + '" accept="image/*" capture="environment" style="display:none;" onchange="uploadCustomerPhoto(\'' + c.id + '\',this)">';
+  html += '</div>';
   html += '<div style="flex:1;">';
   html += '<div style="font-size:20px;font-weight:700;color:var(--text);">' + escHtml(c.name) + '</div>';
   html += '<div style="font-size:13px;color:var(--text-muted);">' + escHtml(c.email) + (c.phone ? ' | ' + escHtml(c.phone) : '') + '</div>';
@@ -398,7 +413,8 @@ async function saveNewCustomer() {
     lastBooking: null,
     firstSeen: new Date().toISOString().split('T')[0],
     notes: notes,
-    tags: []
+    tags: [],
+    photo_url: ''
   };
 
   // Push to API
@@ -436,6 +452,106 @@ function exportCustomersCsv() {
   a.click();
   URL.revokeObjectURL(url);
   toast('CSV exported!');
+}
+
+function openScanCardModal() {
+  var html = '<div style="padding:20px;text-align:center;">';
+  html += '<p style="color:var(--text-muted);font-size:13px;margin:0 0 16px;">Snap or upload a business card — AI will read the name, email, phone, company, and more.</p>';
+  html += '<label style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--primary);color:white;border-radius:var(--radius);cursor:pointer;font-size:14px;font-weight:600;">';
+  html += '<span>Choose Photo / Take Photo</span>';
+  html += '<input type="file" accept="image/*" capture="environment" style="display:none;" onchange="runCardScan(this)">';
+  html += '</label>';
+  html += '<div id="card-scan-status" style="margin-top:16px;font-size:13px;color:var(--text-muted);"></div>';
+  html += '</div>';
+
+  document.getElementById('customer-modal-title').textContent = 'Scan Business Card';
+  document.getElementById('customer-detail-body').innerHTML = html;
+  openModal('modal-customer');
+}
+
+async function runCardScan(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  var file = input.files[0];
+  var status = document.getElementById('card-scan-status');
+  if (status) status.textContent = 'Reading card...';
+
+  // Convert to base64
+  var base64 = await new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      resolve(e.target.result.split(',')[1]);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  try {
+    var API = window.CC_API_BASE || '';
+    var token = window.CC && CC.getToken ? CC.getToken() : localStorage.getItem('cc_token');
+    var res = await fetch(API + '/api/dashboard/contacts/scan-card', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      },
+      body: JSON.stringify({ image_base64: base64, mime_type: file.type || 'image/jpeg' })
+    });
+
+    var data = await res.json();
+    if (!res.ok) { toast(data.error || 'Scan failed', 'error'); if (status) status.textContent = ''; return; }
+
+    closeModal('modal-customer');
+    openAddCustomerModal();
+
+    // Pre-fill the form with extracted data
+    setTimeout(function() {
+      var fields = {
+        'new-cust-name':  data.name,
+        'new-cust-email': data.email,
+        'new-cust-phone': data.phone,
+        'new-cust-notes': [data.title, data.company, data.website, data.address, data.phone2, data.notes]
+          .filter(Boolean).join('\n')
+      };
+      Object.keys(fields).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && fields[id]) el.value = fields[id];
+      });
+      document.getElementById('customer-modal-title').textContent = 'New Contact from Card';
+      toast('Card read — review and save!', 'success');
+    }, 50);
+
+  } catch (err) {
+    toast('Scan error — check connection', 'error');
+    if (status) status.textContent = '';
+  }
+}
+
+async function uploadCustomerPhoto(id, input) {
+  var c = _customers.find(function(x) { return x.id === id; });
+  if (!c || !input || !input.files || !input.files[0]) return;
+
+  toast('Uploading photo...');
+  var url = await uploadToSupabase(input.files[0], 'customers');
+  if (!url) return;
+
+  c.photo_url = url;
+  saveCustomers();
+
+  if (c._apiId) {
+    CC.dashboard.updateCustomer(c._apiId, { photo_url: url });
+  }
+
+  // Swap the avatar in the open modal without closing it
+  var photoEl = document.getElementById('cust-photo-' + id);
+  if (photoEl) {
+    var img = document.createElement('img');
+    img.id = 'cust-photo-' + id;
+    img.src = url;
+    img.style.cssText = 'width:56px;height:56px;border-radius:50%;object-fit:cover;';
+    photoEl.parentNode.replaceChild(img, photoEl);
+  }
+
+  renderCustomerList();
+  toast('Photo saved!', 'success');
 }
 
 if (typeof escHtml === 'undefined') {

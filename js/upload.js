@@ -18,7 +18,8 @@ var _folderResizeConfig = {
   feature:  { maxW: 2000, maxH: 2000, q: 0.95 },
   location: { maxW: 2400, maxH: 2400, q: 0.95 },
   about:    { maxW: 2400, maxH: 2400, q: 0.95 },
-  logo:     { maxW: 400,  maxH: 400,  q: 0.95 }
+  logo:      { maxW: 400,  maxH: 400,  q: 0.95 },
+  customers: { maxW: 400,  maxH: 400,  q: 0.92 }
 };
 var _defaultResizeConfig = { maxW: 2400, maxH: 2400, q: 0.95 };
 
