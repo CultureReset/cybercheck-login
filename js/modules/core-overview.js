@@ -44,8 +44,33 @@ CC.modules.register({
         actions.innerHTML =
           '<button onclick="CC.modules.show(\'__appstore\')" style="background:var(--primary);color:#fff;border:none;padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">🛍️ App Store</button>' +
           '<button onclick="CC.modules.show(\'core-profile\')" style="background:var(--card-border);color:var(--text);border:none;padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">✏️ Edit Profile</button>';
-        if (biz && biz.subdomain) {
-          actions.innerHTML += '<a href="/wavegent/' + biz.subdomain + '" target="_blank" style="background:var(--card-border);color:var(--text);border:none;padding:9px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🌐 View My Page</a>';
+      }
+
+      // Public pages section
+      if (biz && biz.subdomain) {
+        var slug = biz.subdomain;
+        var linksUrl = 'https://cybercheck-links.vercel.app/' + slug + '/links';
+        var menuUrl  = 'https://cybercheck-links.vercel.app/' + slug + '/menu';
+        var panel = document.getElementById('overview-panel');
+        if (panel) {
+          var pagesHtml = '<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-top:20px;">' +
+            '<div style="font-weight:600;margin-bottom:14px;">🔗 Your Public Pages</div>' +
+            '<div style="display:flex;flex-direction:column;gap:10px;">' +
+            [
+              { label:'Links Page (Bio / Mini-Site)', url: linksUrl, icon:'🔗' },
+              { label:'Menu / QR Page', url: menuUrl, icon:'🍽️' }
+            ].map(function(p) {
+              return '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+                '<span style="font-size:20px">' + p.icon + '</span>' +
+                '<div style="flex:1;overflow:hidden;">' +
+                  '<div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">' + p.label + '</div>' +
+                  '<a href="' + p.url + '" target="_blank" style="font-size:13px;font-weight:600;color:var(--primary);text-decoration:none;word-break:break-all;">' + p.url + '</a>' +
+                '</div>' +
+                '<button onclick="navigator.clipboard.writeText(\'' + p.url + '\').then(function(){this.textContent=\'✓\';setTimeout(function(){document.querySelectorAll(\'.copy-btn\').forEach(function(b){b.textContent=\'Copy\';});},1500);}.bind(this))" class="copy-btn" style="background:var(--primary);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Copy</button>' +
+              '</div>';
+            }).join('') +
+            '</div></div>';
+          panel.insertAdjacentHTML('beforeend', pagesHtml);
         }
       }
     });
