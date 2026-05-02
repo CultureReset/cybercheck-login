@@ -975,6 +975,15 @@
           <form id="editBusinessForm">
             <input type="hidden" id="editBusinessId">
 
+            <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:10px;padding:16px;margin-bottom:20px;">
+              <div style="font-weight:700;font-size:14px;margin-bottom:10px;">✨ Auto-Fill with AI</div>
+              <div style="display:flex;gap:8px;">
+                <input type="url" id="editAutoFillUrl" class="form-input" placeholder="Paste business website URL..." style="flex:1;">
+                <button type="button" class="btn-primary" onclick="autoFillBusiness('edit')" id="editAutoFillBtn">Auto-Fill</button>
+              </div>
+              <div style="font-size:12px;color:#666;margin-top:6px;">Paste the business URL and AI will fill in everything — name, hours, menu, social links, and more.</div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Business Name</label>
               <input type="text" id="editName" class="form-input" required>
@@ -1060,6 +1069,16 @@
         </div>
 
         <div style="display: grid; gap: 20px;">
+          <!-- Auto-Fill -->
+          <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:10px;padding:16px;">
+            <div style="font-weight:700;font-size:14px;margin-bottom:10px;">✨ Auto-Fill with AI</div>
+            <div style="display:flex;gap:8px;">
+              <input type="url" id="newAutoFillUrl" class="form-input" placeholder="Paste business website URL..." style="flex:1;">
+              <button type="button" class="btn-primary" onclick="autoFillBusiness('new')" id="newAutoFillBtn">Auto-Fill</button>
+            </div>
+            <div style="font-size:12px;color:#666;margin-top:6px;">Paste URL and AI fills everything automatically. Or fill in manually below.</div>
+          </div>
+
           <!-- Basic Info -->
           <div class="form-group">
             <label class="form-label">Business Name *</label>
@@ -1179,6 +1198,13 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 24px; font-weight: 700;">Advanced Business Editor</h2>
           <button onclick="closeAdvancedEditor()" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #999;">×</button>
+        </div>
+
+        <!-- Auto-Fill -->
+        <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:10px;padding:14px;margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span style="font-weight:700;font-size:14px;">✨ Auto-Fill with AI</span>
+          <input type="url" id="advAutoFillUrl" class="form-input" placeholder="Paste business URL to auto-fill menu, drinks, events..." style="flex:1;min-width:200px;">
+          <button type="button" class="btn-primary" onclick="autoFillBusiness('advanced')" id="advAutoFillBtn">Auto-Fill</button>
         </div>
 
         <!-- Tab Navigation -->
@@ -2614,6 +2640,66 @@
       specials: [],
       events: []
     };
+
+    // Auto-Fill business data from URL using AI
+    async function autoFillBusiness(context) {
+      const urlMap = { edit: 'editAutoFillUrl', new: 'newAutoFillUrl', advanced: 'advAutoFillUrl' };
+      const btnMap = { edit: 'editAutoFillBtn', new: 'newAutoFillBtn', advanced: 'advAutoFillBtn' };
+      const url = document.getElementById(urlMap[context])?.value?.trim();
+      if (!url || !url.startsWith('http')) return alert('Enter a valid URL starting with http');
+
+      const btn = document.getElementById(btnMap[context]);
+      btn.textContent = 'Scanning...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${GCR_API_URL}/admin/ai-scrape-url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('adminToken') || '') },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.structured) throw new Error(data.error || 'No data returned');
+        const s = data.structured;
+
+        if (context === 'edit' || context === 'new') {
+          const prefix = context === 'edit' ? 'edit' : 'newBiz';
+          const setVal = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+          if (context === 'edit') {
+            setVal('editName',        s.name);
+            setVal('editCategory',    s.entity_subtype || s.category);
+            setVal('editDescription', s.description);
+            setVal('editPhone',       s.phone);
+            setVal('editWebsite',     s.website_url);
+            setVal('editAddress',     s.address_line_1);
+            setVal('editHours',       Array.isArray(s.hours) ? s.hours.map(h => `${h.day_name}: ${h.open_time}–${h.close_time}`).join(', ') : s.hours);
+          } else {
+            setVal('newBizName',        s.name);
+            setVal('newBizCategory',    s.entity_subtype || s.category);
+            setVal('newBizDescription', s.description);
+            setVal('newBizAbout',       s.description);
+            setVal('newBizPhone',       s.phone);
+            setVal('newBizWebsite',     s.website_url);
+            setVal('newBizAddress',     s.address_line_1);
+          }
+        }
+
+        if (context === 'advanced' || context === 'edit') {
+          if (s.menu_sections?.length)     { advancedData.menu        = s.menu_sections.flatMap(sec => (sec.items||[]).map(i => ({...i, category: sec.section_name}))); renderMenuItems(); }
+          if (s.drink_sections?.length)    { advancedData.drinks      = s.drink_sections.flatMap(sec => (sec.items||[]).map(i => ({...i, category: sec.section_name}))); renderDrinkItems(); }
+          if (s.happy_hour_items?.length)  { advancedData.happy_hour  = s.happy_hour_items; renderHappyHourItems(); }
+          if (s.specials?.length)          { advancedData.specials    = s.specials; renderSpecialItems(); }
+          if (s.events?.length)            { advancedData.events      = s.events; renderEventItems(); }
+        }
+
+        showSuccess(`Auto-filled from ${s.name || url} using ${data.provider || 'AI'}!`);
+      } catch (e) {
+        alert('Auto-fill failed: ' + e.message);
+      } finally {
+        btn.textContent = 'Auto-Fill';
+        btn.disabled = false;
+      }
+    }
 
     // Open advanced editor
     function openAdvancedEditor() {
