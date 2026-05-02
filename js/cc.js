@@ -52,7 +52,7 @@ const CC = (function() {
         var { data, error } = await supabase.auth.signInWithPassword({ email: email, password: password });
         if (!error && data && data.session) {
           clearSupabaseCache();
-          await getSupabaseBusiness();
+          var biz = await getSupabaseBusiness();
           // Fetch role from API so admin redirect works
           try {
             var roleRes = await fetch(API_BASE + '/api/auth/verify', {
@@ -61,7 +61,7 @@ const CC = (function() {
             var roleData = await roleRes.json();
             if (roleData && roleData.user && roleData.user.role) data.user.role = roleData.user.role;
           } catch(e) {}
-          return { token: data.session.access_token, user: data.user };
+          return { token: data.session.access_token, user: data.user, business: biz };
         }
       } catch (e) { /* fall through to Express fallback */ }
     }
@@ -75,7 +75,7 @@ const CC = (function() {
       var data = await res.json();
       if (!res.ok) return { error: data.error || 'Invalid credentials' };
       setToken(data.token, remember !== false);
-      return { token: data.token, user: data.user };
+      return { token: data.token, user: data.user, business: data.business };
     } catch (e) {
       return { error: e.message || 'Login failed — check your connection and try again' };
     }
@@ -119,9 +119,25 @@ const CC = (function() {
       var biz = await getSupabaseBusiness();
       return { user: session.user, business: biz };
     }
-    // Fallback: accept legacy Express JWT token as valid session
+    // Fallback: decode legacy Express JWT token and fetch business
     var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
     if (legacyToken) {
+      try {
+        // Decode JWT (third part is the payload, base64url encoded)
+        var parts = legacyToken.split('.');
+        if (parts.length === 3) {
+          var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          if (payload.siteId) {
+            // Fetch business using siteId from token
+            var { data: biz } = await supabase.from('businesses').select('*').eq('site_id', payload.siteId).single();
+            if (biz) {
+              return { user: { id: payload.userId, email: '' }, business: biz, legacy: true };
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to decode legacy token:', e);
+      }
       return { user: { id: 'legacy', email: '' }, business: null, legacy: true };
     }
     return null;

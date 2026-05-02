@@ -398,7 +398,11 @@
           if (result && result.error) { showErr(result.error); btn.disabled = false; btn.textContent = 'Create Account'; return; }
           // Auto login after signup
           var loginResult = await login(email, password);
-          if (loginResult && !loginResult.error) { window.location.href = 'app-dashboard.html'; return; }
+          if (loginResult && !loginResult.error) {
+            var subdomain = (loginResult.business && loginResult.business.subdomain) || '';
+            window.location.href = 'app-dashboard.html' + (subdomain ? '?user=' + encodeURIComponent(subdomain) : '');
+            return;
+          }
           showErr('Account created — please log in.');
           showTab('login');
           document.getElementById('email').value = email;
@@ -410,7 +414,8 @@
             try { localStorage.setItem('cc_admin_token', result.token); localStorage.setItem('cc_user_role', 'admin'); localStorage.removeItem('cc_token'); } catch(e) {}
             window.location.href = 'admin.html';
           } else {
-            window.location.href = 'app-dashboard.html';
+            var subdomain = (result.business && result.business.subdomain) || '';
+            window.location.href = 'app-dashboard.html' + (subdomain ? '?user=' + encodeURIComponent(subdomain) : '');
           }
         }
       } catch(err) {
@@ -461,7 +466,8 @@
         var data = await res.json();
         if (data.error) { showErr(data.error); btn.disabled = false; btn.textContent = 'Create My Dashboard'; return; }
         if (data.token) localStorage.setItem('cc_token', data.token);
-        window.location.href = 'app-dashboard.html';
+        var subdomain = (data.business && data.business.subdomain) || '';
+        window.location.href = 'app-dashboard.html' + (subdomain ? '?user=' + encodeURIComponent(subdomain) : '');
       } catch(e) {
         showErr('Setup failed: ' + e.message);
         btn.disabled = false;

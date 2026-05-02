@@ -1738,6 +1738,13 @@
       // Load real session from API (falls back to hardcoded config if offline)
       await initConfig();
 
+      // Rewrite URL to include username if not already there
+      var params = new URLSearchParams(window.location.search);
+      if (!params.has('user') && session.business && session.business.subdomain) {
+        var newUrl = window.location.pathname + '?user=' + encodeURIComponent(session.business.subdomain) + window.location.hash;
+        window.history.replaceState(null, '', newUrl);
+      }
+
       _business = {
         id: USER_CONFIG.business_id,
         type: USER_CONFIG.business_type,

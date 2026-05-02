@@ -432,7 +432,44 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/cc.js"></script>
   <script>
+    // Auth guard — admin only
+    (async function() {
+      var session = await CC.getSession();
+      if (!session || !session.user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      // For Supabase users, check role from getSupabaseSession
+      var sbSession = await getSupabaseSession();
+      if (sbSession && sbSession.user && sbSession.user.user_metadata && sbSession.user.user_metadata.role !== 'admin') {
+        window.location.href = 'login.html?error=admin_only';
+        return;
+      }
+      // For legacy Express JWT users, check role from token
+      if (session.legacy && session.user) {
+        try {
+          var token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+          if (token) {
+            var parts = token.split('.');
+            if (parts.length === 3) {
+              var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+              if (payload.role !== 'admin') {
+                window.location.href = 'login.html?error=admin_only';
+                return;
+              }
+            }
+          }
+        } catch(e) {
+          window.location.href = 'login.html';
+          return;
+        }
+      }
+    })();
+
     let currentModel = 'chatgpt';
 
     function selectModel(model) {
