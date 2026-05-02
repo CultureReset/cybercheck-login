@@ -35,9 +35,27 @@ const CC = (function() {
     }
   }
 
+  function setSession(userData) {
+    if (userData && userData.business) {
+      try {
+        localStorage.setItem('cc_session_business', JSON.stringify(userData.business));
+      } catch(e) {}
+    }
+  }
+
+  function getStoredBusiness() {
+    try {
+      var stored = localStorage.getItem('cc_session_business');
+      return stored ? JSON.parse(stored) : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
   function clearToken() {
     localStorage.removeItem('cc_token');
     sessionStorage.removeItem('cc_token');
+    localStorage.removeItem('cc_session_business');
     if (typeof clearSupabaseCache === 'function') clearSupabaseCache();
   }
 
@@ -61,6 +79,7 @@ const CC = (function() {
             var roleData = await roleRes.json();
             if (roleData && roleData.user && roleData.user.role) data.user.role = roleData.user.role;
           } catch(e) {}
+          setSession({ business: biz });
           return { token: data.session.access_token, user: data.user, business: biz };
         }
       } catch (e) { /* fall through to Express fallback */ }
@@ -75,6 +94,7 @@ const CC = (function() {
       var data = await res.json();
       if (!res.ok) return { error: data.error || 'Invalid credentials' };
       setToken(data.token, remember !== false);
+      setSession(data);
       return { token: data.token, user: data.user, business: data.business };
     } catch (e) {
       return { error: e.message || 'Login failed — check your connection and try again' };
@@ -119,7 +139,7 @@ const CC = (function() {
       var biz = await getSupabaseBusiness();
       return { user: session.user, business: biz };
     }
-    // Fallback: decode legacy Express JWT token and fetch business
+    // Fallback: use legacy Express JWT
     var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
     if (legacyToken) {
       try {
@@ -127,18 +147,23 @@ const CC = (function() {
         var parts = legacyToken.split('.');
         if (parts.length === 3) {
           var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-          if (payload.siteId) {
-            // Fetch business using siteId from token
-            var { data: biz } = await supabase.from('businesses').select('*').eq('site_id', payload.siteId).single();
-            if (biz) {
-              return { user: { id: payload.userId, email: '' }, business: biz, legacy: true };
-            }
+          // Try stored business data first (set at login time)
+          var biz = getStoredBusiness();
+          if (!biz && payload.siteId) {
+            // If not in storage, try to fetch from Supabase
+            var { data: fetchedBiz } = await supabase.from('businesses').select('*').eq('site_id', payload.siteId).single();
+            biz = fetchedBiz;
+          }
+          if (biz) {
+            return { user: { id: payload.userId, email: '' }, business: biz, legacy: true };
           }
         }
       } catch (e) {
-        console.error('Failed to decode legacy token:', e);
+        console.error('Failed to handle legacy token:', e);
       }
-      return { user: { id: 'legacy', email: '' }, business: null, legacy: true };
+      // Last resort: return whatever stored business we have, even if incomplete
+      var storedBiz = getStoredBusiness();
+      return { user: { id: 'legacy', email: '' }, business: storedBiz, legacy: true };
     }
     return null;
   }
