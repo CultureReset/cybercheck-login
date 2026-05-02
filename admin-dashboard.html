@@ -1528,6 +1528,57 @@
           <button type="submit" class="btn-primary">Save Backend Settings</button>
         </form>
       </div>
+
+      <!-- AI Provider -->
+      <div class="settings-section">
+        <h2 class="section-title">🤖 AI Provider <span id="aiProviderStatus" class="api-status disconnected">Loading...</span></h2>
+        <p class="section-description">Control which AI powers the GCR Concierge, RAG search, and all AI features. Change provider anytime — no code deploys needed.</p>
+
+        <div class="form-group">
+          <label class="form-label">Provider</label>
+          <select class="form-input" id="aiProvider" onchange="updateAIModelOptions()">
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="grok">Grok (xAI)</option>
+            <option value="groq">Groq (Llama)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Model</label>
+          <select class="form-input" id="aiModel">
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — Fast & cheap (recommended for chat)</option>
+            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — Balanced (recommended for RAG)</option>
+            <option value="claude-opus-4-7">Claude Opus 4.7 — Most powerful</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <div class="input-wrapper">
+            <input type="password" class="form-input" id="aiApiKey" placeholder="Paste your API key here">
+            <span class="toggle-password" onclick="toggleVisibility('aiApiKey')">👁️</span>
+          </div>
+          <div class="form-help" id="aiKeyHelp">Get your key from the Anthropic console</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Concierge System Prompt (optional override)</label>
+          <textarea class="form-input" id="aiSystemPrompt" rows="4" placeholder="Leave blank to use the default Gulf Coast Concierge prompt"></textarea>
+          <div class="form-help">Customize the AI's personality and instructions. Leave blank for the default.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px;">
+          <label style="font-size:14px;font-weight:600;">RAG Search Enabled</label>
+          <input type="checkbox" id="aiRagEnabled" style="width:18px;height:18px;cursor:pointer;">
+          <span style="font-size:12px;color:#666;">Powers the smart /ask endpoint with vector search</span>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button class="btn-primary" onclick="saveAISettings()">💾 Save AI Settings</button>
+          <button class="btn-secondary" onclick="loadAISettings()">↺ Reload</button>
+        </div>
+      </div>
     </div>
 
     <!-- Pricing Tab -->
@@ -1888,7 +1939,91 @@
       if (platformSettings.defaultPlan) {
         document.getElementById('defaultPlan').value = platformSettings.defaultPlan;
       }
+
+      loadAISettings();
     });
+
+    const AI_MODELS = {
+      anthropic: [
+        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 — Fast & cheap (recommended for chat)' },
+        { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 — Balanced (recommended for RAG)' },
+        { value: 'claude-opus-4-7',            label: 'Claude Opus 4.7 — Most powerful' },
+      ],
+      openai: [
+        { value: 'gpt-4o-mini',  label: 'GPT-4o mini — Fast & cheap' },
+        { value: 'gpt-4o',       label: 'GPT-4o — Balanced' },
+        { value: 'o1-mini',      label: 'o1-mini — Reasoning' },
+      ],
+      grok: [
+        { value: 'grok-3-mini',  label: 'Grok 3 Mini — Fast' },
+        { value: 'grok-3',       label: 'Grok 3 — Balanced' },
+      ],
+      groq: [
+        { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B — Fast open source' },
+        { value: 'mixtral-8x7b-32768',      label: 'Mixtral 8x7B — Efficient' },
+      ],
+    };
+
+    const AI_KEY_HELP = {
+      anthropic: 'Get your key from console.anthropic.com',
+      openai:    'Get your key from platform.openai.com',
+      grok:      'Get your key from console.x.ai',
+      groq:      'Get your key from console.groq.com',
+    };
+
+    function updateAIModelOptions() {
+      const provider = document.getElementById('aiProvider').value;
+      const modelSelect = document.getElementById('aiModel');
+      const current = modelSelect.value;
+      modelSelect.innerHTML = (AI_MODELS[provider] || []).map(m =>
+        `<option value="${m.value}" ${m.value === current ? 'selected' : ''}>${m.label}</option>`
+      ).join('');
+      document.getElementById('aiKeyHelp').textContent = AI_KEY_HELP[provider] || '';
+    }
+
+    async function loadAISettings() {
+      const statusEl = document.getElementById('aiProviderStatus');
+      try {
+        const res = await fetch(`${GCR_API_URL}/admin/ai-settings`, { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('adminToken') || '') } });
+        if (!res.ok) throw new Error('Not found');
+        const s = await res.json();
+        document.getElementById('aiProvider').value = s.chat_provider || 'anthropic';
+        updateAIModelOptions();
+        document.getElementById('aiModel').value = s.chat_model || 'claude-haiku-4-5-20251001';
+        document.getElementById('aiApiKey').value = s.chat_api_key ? '••••••••' : '';
+        document.getElementById('aiSystemPrompt').value = s.system_prompt || '';
+        document.getElementById('aiRagEnabled').checked = s.rag_enabled !== false;
+        statusEl.textContent = (s.chat_provider || 'anthropic') + ' active';
+        statusEl.className = 'api-status connected';
+      } catch(e) {
+        statusEl.textContent = 'Not configured';
+        statusEl.className = 'api-status disconnected';
+        updateAIModelOptions();
+      }
+    }
+
+    async function saveAISettings() {
+      const provider  = document.getElementById('aiProvider').value;
+      const model     = document.getElementById('aiModel').value;
+      const apiKeyVal = document.getElementById('aiApiKey').value;
+      const prompt    = document.getElementById('aiSystemPrompt').value;
+      const rag       = document.getElementById('aiRagEnabled').checked;
+      const body = { chat_provider: provider, chat_model: model, system_prompt: prompt || null, rag_enabled: rag };
+      if (apiKeyVal && !apiKeyVal.startsWith('•')) body.chat_api_key = apiKeyVal;
+      try {
+        const res = await fetch(`${GCR_API_URL}/admin/ai-settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('adminToken') || '') },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        showSuccess('AI settings saved! All AI features now use ' + provider + ' / ' + model);
+        document.getElementById('aiProviderStatus').textContent = provider + ' active';
+        document.getElementById('aiProviderStatus').className = 'api-status connected';
+      } catch(e) {
+        alert('Error saving AI settings: ' + e.message);
+      }
+    }
 
     // ========================================
     // GCR BUSINESSES MANAGEMENT
