@@ -2029,6 +2029,7 @@
       document.getElementById('editAddress').value = business.address || business.vicinity || '';
       document.getElementById('editHours').value = business.hours || '';
       document.getElementById('editStatus').value = business.status || 'active';
+      document.getElementById('editTemplate').value = business.gcr_template || '';
 
       document.getElementById('editBusinessModal').style.display = 'block';
     }
@@ -2396,7 +2397,8 @@
         website: document.getElementById('editWebsite').value,
         address: document.getElementById('editAddress').value,
         hours: document.getElementById('editHours').value,
-        status: document.getElementById('editStatus').value
+        status: document.getElementById('editStatus').value,
+        gcr_template: document.getElementById('editTemplate').value || null
       };
 
       try {
