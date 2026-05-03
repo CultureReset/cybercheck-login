@@ -2947,38 +2947,125 @@
       <!-- ── TRIP SWIPE: BUSINESSES ── -->
       <div id="page-tripswipe-businesses" class="page-content" style="display:none;">
         <div class="page-header">
-          <h1>Businesses in Swipe Deck</h1>
+          <h1>❤️ TripSwipe Business Manager</h1>
           <div style="display:flex;gap:10px;align-items:center;">
             <input id="ts-biz-search" type="text" placeholder="Search businesses..." oninput="filterTSBusinesses()" style="padding:8px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;width:220px;">
+            <button onclick="tsBulkToggle()" style="background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:#c4b5fd;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">📤 Bulk Images</button>
             <button onclick="loadTSBusinesses()" style="background:var(--primary);color:white;padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;">↻ Reload</button>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;gap:12px;">
+            <div style="font-size:24px;">🏢</div>
+            <div><div style="font-size:20px;font-weight:800;color:var(--text);" id="ts-stat-total">—</div><div style="font-size:11px;color:var(--text-muted);">Total Businesses</div></div>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;gap:12px;">
+            <div style="font-size:24px;">✅</div>
+            <div><div style="font-size:20px;font-weight:800;color:#22c55e;" id="ts-stat-active">—</div><div style="font-size:11px;color:var(--text-muted);">Active on TripSwipe</div></div>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;gap:12px;">
+            <div style="font-size:24px;">🖼️</div>
+            <div><div style="font-size:20px;font-weight:800;color:#7c6af7;" id="ts-stat-custom-img">—</div><div style="font-size:11px;color:var(--text-muted);">Custom Images Set</div></div>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;gap:12px;">
+            <div style="font-size:24px;">⚠️</div>
+            <div><div style="font-size:20px;font-weight:800;color:#f97316;" id="ts-stat-no-img">—</div><div style="font-size:11px;color:var(--text-muted);">No Image</div></div>
+          </div>
+        </div>
+
+        <!-- Bulk Image Upload (collapsible) -->
+        <div id="ts-bulk-upload-panel" style="display:none;margin-bottom:20px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;">
+          <h3 style="font-size:15px;font-weight:700;margin:0 0 14px;color:var(--text);">📤 Bulk Image Upload for TripSwipe</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Upload images and assign them to businesses. These images only appear on TripSwipe — GCR is not affected.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">SELECT BUSINESS</label>
+              <select id="ts-bulk-biz-select" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+                <option value="">-- Choose a business --</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">IMAGE URL</label>
+              <div style="display:flex;gap:8px;">
+                <input type="url" id="ts-bulk-img-url" placeholder="https://..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+                <button onclick="tsBulkAddImage()" style="background:var(--primary);color:white;padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Add Image</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">OR PASTE MULTIPLE IMAGE URLS (one per line)</label>
+            <textarea id="ts-bulk-img-urls" rows="4" placeholder="https://image1.jpg&#10;https://image2.jpg&#10;https://image3.jpg" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+              <button onclick="tsBulkToggle()" style="background:var(--bg);border:1px solid var(--card-border);color:var(--text-muted);padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;">Cancel</button>
+              <button onclick="tsBulkSaveImages()" style="background:var(--primary);color:white;padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;">💾 Save Images to Business</button>
+            </div>
           </div>
         </div>
 
         <!-- Filter Tabs -->
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
           <button class="ts-filter-btn active" onclick="filterTSByStatus('all',this)">All</button>
-          <button class="ts-filter-btn" onclick="filterTSByStatus('active',this)">Active in Deck</button>
-          <button class="ts-filter-btn" onclick="filterTSByStatus('featured',this)">Featured</button>
-          <button class="ts-filter-btn" onclick="filterTSByStatus('no-agent',this)">No AI Agent</button>
+          <button class="ts-filter-btn" onclick="filterTSByStatus('active',this)">✅ On TripSwipe</button>
+          <button class="ts-filter-btn" onclick="filterTSByStatus('inactive',this)">🚫 Off</button>
+          <button class="ts-filter-btn" onclick="filterTSByStatus('custom-img',this)">🖼️ Custom Image</button>
+          <button class="ts-filter-btn" onclick="filterTSByStatus('no-img',this)">⚠️ No Image</button>
         </div>
 
-        <div class="card" style="padding:0;overflow:hidden;">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr style="background:var(--bg);border-bottom:1px solid var(--card-border);">
-                <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Business</th>
-                <th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Category</th>
-                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">In Deck</th>
-                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Featured</th>
-                <th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">AI Agent</th>
-                <th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Swipes</th>
-                <th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ts-businesses-body">
-              <tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading businesses from GCR...</td></tr>
-            </tbody>
-          </table>
+        <!-- Business Grid -->
+        <div id="ts-businesses-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+          <div style="grid-column:1/-1;padding:60px;text-align:center;color:var(--text-muted);">Loading businesses from GCR...</div>
+        </div>
+      </div>
+
+      <!-- TripSwipe Edit Image Modal -->
+      <div id="ts-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;overflow-y:auto;">
+        <div style="max-width:580px;margin:40px auto;background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0;" id="ts-modal-title">Edit TripSwipe Images</h2>
+            <button onclick="tsCloseModal()" style="background:none;border:none;font-size:24px;color:var(--text-muted);cursor:pointer;line-height:1;">×</button>
+          </div>
+
+          <!-- Current Image Preview -->
+          <div style="margin-bottom:20px;">
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">CURRENT SWIPE CARD IMAGE</label>
+            <div style="position:relative;border-radius:12px;overflow:hidden;height:160px;background:linear-gradient(135deg,#1a3a5c,#0ea5e9);">
+              <img id="ts-modal-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+              <div id="ts-modal-no-img" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:13px;">No image set — using GCR default</div>
+            </div>
+          </div>
+
+          <!-- Set Custom Hero Image -->
+          <div style="margin-bottom:20px;">
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">SET CUSTOM HERO IMAGE FOR TRIPSWIPE</label>
+            <div style="display:flex;gap:8px;">
+              <input type="url" id="ts-modal-hero-url" placeholder="https://..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <button onclick="tsPreviewHero()" style="background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.3);color:#7dd3fc;padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;">Preview</button>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">This image shows on the swipe card. Does not affect GCR.</div>
+          </div>
+
+          <!-- Additional Images -->
+          <div style="margin-bottom:20px;">
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">ADDITIONAL IMAGES (shown in detail view)</label>
+            <textarea id="ts-modal-extra-urls" rows="3" placeholder="One image URL per line..." style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
+          </div>
+
+          <!-- Show on TripSwipe toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg);border-radius:10px;margin-bottom:20px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Show on TripSwipe</div>
+              <div style="font-size:11px;color:var(--text-muted);">Toggle off to hide this business from the swipe deck</div>
+            </div>
+            <button id="ts-modal-deck-btn" onclick="tsToggleModalDeck()" style="padding:8px 18px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#22c55e;color:white;">ON</button>
+          </div>
+
+          <input type="hidden" id="ts-modal-slug">
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="tsCloseModal()" style="background:var(--bg);border:1px solid var(--card-border);color:var(--text-muted);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+            <button onclick="tsSaveBusinessSettings()" style="background:var(--primary);color:white;padding:10px 20px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;">💾 Save TripSwipe Settings</button>
+          </div>
         </div>
       </div>
 
@@ -12977,91 +13064,208 @@
     var _tsAllBusinesses = [];
 
     // ── Load GCR businesses into Trip Swipe table ──
+    // TripSwipe settings stored separately — does not affect GCR
+    var _tsSettings = {}; // keyed by slug: { enabled, hero_image, extra_images }
+    var _tsCurrentFilter = 'all';
+
     async function loadTSBusinesses() {
       var token = getAuthToken();
+      var grid = document.getElementById('ts-businesses-grid');
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:60px;text-align:center;color:var(--text-muted);">Loading businesses from GCR...</div>';
       try {
-        var res = await fetch(API_BASE + '/api/gcr/entities?limit=500', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        var data = res.ok ? await res.json() : [];
+        // Load GCR businesses
+        var res = await fetch(API_BASE + '/api/gcr/entities?limit=1000', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = res.ok ? await res.json() : {};
         _tsAllBusinesses = Array.isArray(data) ? data : (data.entities || data.data || []);
-        renderTSBusinesses(_tsAllBusinesses);
-        populateTSBizSelect();
+
+        // Load TripSwipe-specific settings (separate from GCR)
+        try {
+          var sr = await fetch(API_BASE + '/api/admin/tripswipe/settings', { headers: { 'Authorization': 'Bearer ' + token } });
+          if (sr.ok) {
+            var sd = await sr.json();
+            (sd.settings || sd || []).forEach(function(s) { _tsSettings[s.slug] = s; });
+          }
+        } catch(e) {}
+
+        renderTSGrid(_tsAllBusinesses);
+        tsPopulateBulkSelect();
       } catch(e) {
-        document.getElementById('ts-businesses-body').innerHTML =
-          '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load GCR businesses</td></tr>';
+        grid.innerHTML = '<div style="grid-column:1/-1;padding:60px;text-align:center;color:#ef4444;">Failed to load businesses</div>';
       }
     }
 
-    function renderTSBusinesses(list) {
-      var tbody = document.getElementById('ts-businesses-body');
-      if (!list || !list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No businesses found</td></tr>';
+    function renderTSGrid(list) {
+      var grid = document.getElementById('ts-businesses-grid');
+      var q = (document.getElementById('ts-biz-search').value || '').toLowerCase();
+      var filtered = list.filter(function(b) {
+        var matchQ = !q || (b.name||'').toLowerCase().includes(q) || (b.city||'').toLowerCase().includes(q);
+        var s = _tsSettings[b.slug] || {};
+        var enabled = s.enabled !== false;
+        var hasCustomImg = !!(s.hero_image);
+        var hasAnyImg = !!(s.hero_image || b.hero_image_url);
+        if (_tsCurrentFilter === 'active') return matchQ && enabled;
+        if (_tsCurrentFilter === 'inactive') return matchQ && !enabled;
+        if (_tsCurrentFilter === 'custom-img') return matchQ && hasCustomImg;
+        if (_tsCurrentFilter === 'no-img') return matchQ && !hasAnyImg;
+        return matchQ;
+      });
+
+      var active = list.filter(function(b){ return (_tsSettings[b.slug]||{}).enabled !== false; }).length;
+      var customImg = list.filter(function(b){ return !!(_tsSettings[b.slug]||{}).hero_image; }).length;
+      var noImg = list.filter(function(b){ return !(_tsSettings[b.slug]||{}).hero_image && !b.hero_image_url; }).length;
+      document.getElementById('ts-stat-total').textContent = list.length;
+      document.getElementById('ts-stat-active').textContent = active;
+      document.getElementById('ts-stat-custom-img').textContent = customImg;
+      document.getElementById('ts-stat-no-img').textContent = noImg;
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;padding:60px;text-align:center;color:var(--text-muted);">No businesses match this filter</div>';
         return;
       }
-      var html = list.map(function(b) {
-        var swipes = Math.floor(Math.random() * 200); // placeholder until Supabase swipe_sessions live
-        var likeRate = Math.floor(55 + Math.random() * 40);
-        return '<tr class="ts-biz-row" style="border-bottom:1px solid var(--card-border);">' +
-          '<td style="padding:12px 16px;">' +
-            '<div style="display:flex;align-items:center;gap:10px;">' +
-              (b.hero_image_url || b.logo_url ? '<img src="' + (b.hero_image_url || b.logo_url) + '" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;">' : '<div style="width:40px;height:40px;border-radius:8px;background:rgba(124,106,247,.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;">🏢</div>') +
-              '<div>' +
-                '<div style="font-size:13px;font-weight:700;color:var(--text);">' + (b.name || 'Unnamed') + '</div>' +
-                '<div style="font-size:11px;color:var(--text-muted);">' + (b.city || '') + (b.state ? ', ' + b.state : '') + '</div>' +
-              '</div>' +
+
+      grid.innerHTML = filtered.map(function(b) {
+        var s = _tsSettings[b.slug] || {};
+        var enabled = s.enabled !== false;
+        var img = s.hero_image || b.hero_image_url || '';
+        var hasCustom = !!s.hero_image;
+        return '<div class="card" style="padding:0;overflow:hidden;border:2px solid ' + (enabled ? 'rgba(34,197,94,.3)' : 'var(--card-border)') + ';">' +
+          '<div style="position:relative;height:140px;background:linear-gradient(135deg,#1a3a5c,#0ea5e9);">' +
+            (img ? '<img src="' + img + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">' : '') +
+            (hasCustom ? '<div style="position:absolute;top:8px;left:8px;background:#7c6af7;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;">CUSTOM IMG</div>' : '') +
+            '<div style="position:absolute;top:8px;right:8px;">' +
+              '<button onclick="tsQuickToggle(\'' + (b.slug||b.id) + '\',this)" style="padding:5px 12px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:' + (enabled ? '#22c55e' : '#ef4444') + ';color:white;">' + (enabled ? 'ON' : 'OFF') + '</button>' +
             '</div>' +
-          '</td>' +
-          '<td style="padding:12px 16px;font-size:12px;color:var(--text-muted);text-transform:capitalize;">' + (b.type || b.entity_subtype || '—') + '</td>' +
-          '<td style="padding:12px 16px;text-align:center;"><button class="ts-toggle on" onclick="toggleTSDeck(this)">ON</button></td>' +
-          '<td style="padding:12px 16px;text-align:center;"><button class="ts-toggle off" onclick="toggleTSFeatured(this)">—</button></td>' +
-          '<td style="padding:12px 16px;text-align:center;"><button class="ts-toggle off" onclick="assignTSAgent(\'' + (b.id || b.slug) + '\',this)">Set Up</button></td>' +
-          '<td style="padding:12px 16px;text-align:right;font-size:13px;font-weight:700;color:var(--text);">' + swipes + ' <span style="font-size:11px;color:#22c55e;font-weight:600;">(' + likeRate + '%)</span></td>' +
-          '<td style="padding:12px 16px;text-align:right;">' +
-            '<button onclick="viewTSBizDetail(\'' + (b.id || b.slug) + '\')" style="background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.25);color:#c4b5fd;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">Details</button>' +
-          '</td>' +
-        '</tr>';
+          '</div>' +
+          '<div style="padding:12px 14px;">' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (b.name||'Unnamed') + '</div>' +
+            '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' + (b.entity_subtype||b.entity_type||'') + (b.city ? ' · ' + b.city : '') + '</div>' +
+            '<button onclick="tsOpenModal(\'' + (b.slug||b.id) + '\')" style="width:100%;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.25);color:#c4b5fd;padding:7px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🖼️ Edit TripSwipe Images</button>' +
+          '</div>' +
+        '</div>';
       }).join('');
-      tbody.innerHTML = html;
-      document.getElementById('ts-stat-businesses').textContent = list.length;
     }
 
-    function filterTSBusinesses() {
-      var q = (document.getElementById('ts-biz-search').value || '').toLowerCase();
-      var filtered = _tsAllBusinesses.filter(function(b) {
-        return (b.name || '').toLowerCase().includes(q) || (b.city || '').toLowerCase().includes(q);
-      });
-      renderTSBusinesses(filtered);
-    }
+    function filterTSBusinesses() { renderTSGrid(_tsAllBusinesses); }
 
     function filterTSByStatus(status, btn) {
-      document.querySelectorAll('.ts-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.ts-filter-btn').forEach(function(b){ b.classList.remove('active'); });
       btn.classList.add('active');
+      _tsCurrentFilter = status;
+      renderTSGrid(_tsAllBusinesses);
     }
 
-    function toggleTSDeck(btn) {
+    async function tsQuickToggle(slug, btn) {
+      var current = (_tsSettings[slug] || {}).enabled !== false;
+      var newVal = !current;
+      if (!_tsSettings[slug]) _tsSettings[slug] = {};
+      _tsSettings[slug].enabled = newVal;
+      btn.textContent = newVal ? 'ON' : 'OFF';
+      btn.style.background = newVal ? '#22c55e' : '#ef4444';
+      btn.closest('.card').style.borderColor = newVal ? 'rgba(34,197,94,.3)' : 'var(--card-border)';
+      await tsSaveSettings(slug);
+    }
+
+    function tsOpenModal(slug) {
+      var b = _tsAllBusinesses.find(function(x){ return (x.slug||x.id) === slug; }) || {};
+      var s = _tsSettings[slug] || {};
+      document.getElementById('ts-modal-slug').value = slug;
+      document.getElementById('ts-modal-title').textContent = '🖼️ ' + (b.name || slug);
+      var hero = s.hero_image || b.hero_image_url || '';
+      var preview = document.getElementById('ts-modal-preview');
+      var noImg = document.getElementById('ts-modal-no-img');
+      document.getElementById('ts-modal-hero-url').value = s.hero_image || '';
+      document.getElementById('ts-modal-extra-urls').value = (s.extra_images || []).join('\n');
+      if (hero) { preview.src = hero; preview.style.display = 'block'; noImg.style.display = 'none'; }
+      else { preview.style.display = 'none'; noImg.style.display = 'flex'; }
+      var deckBtn = document.getElementById('ts-modal-deck-btn');
+      var enabled = s.enabled !== false;
+      deckBtn.textContent = enabled ? 'ON' : 'OFF';
+      deckBtn.style.background = enabled ? '#22c55e' : '#ef4444';
+      document.getElementById('ts-edit-modal').style.display = 'block';
+    }
+
+    function tsCloseModal() { document.getElementById('ts-edit-modal').style.display = 'none'; }
+
+    function tsPreviewHero() {
+      var url = document.getElementById('ts-modal-hero-url').value.trim();
+      var preview = document.getElementById('ts-modal-preview');
+      var noImg = document.getElementById('ts-modal-no-img');
+      if (url) { preview.src = url; preview.style.display = 'block'; noImg.style.display = 'none'; }
+    }
+
+    function tsToggleModalDeck() {
+      var btn = document.getElementById('ts-modal-deck-btn');
       var isOn = btn.textContent === 'ON';
       btn.textContent = isOn ? 'OFF' : 'ON';
-      btn.classList.toggle('on', !isOn);
-      btn.classList.toggle('off', isOn);
+      btn.style.background = isOn ? '#ef4444' : '#22c55e';
     }
 
-    function toggleTSFeatured(btn) {
-      var isOn = btn.textContent === 'YES';
-      btn.textContent = isOn ? '—' : 'YES';
-      btn.classList.toggle('on', !isOn);
-      btn.classList.toggle('off', isOn);
+    async function tsSaveBusinessSettings() {
+      var slug = document.getElementById('ts-modal-slug').value;
+      var hero = document.getElementById('ts-modal-hero-url').value.trim();
+      var extras = document.getElementById('ts-modal-extra-urls').value.trim().split('\n').map(function(u){ return u.trim(); }).filter(Boolean);
+      var enabled = document.getElementById('ts-modal-deck-btn').textContent === 'ON';
+      if (!_tsSettings[slug]) _tsSettings[slug] = {};
+      _tsSettings[slug].hero_image = hero || null;
+      _tsSettings[slug].extra_images = extras;
+      _tsSettings[slug].enabled = enabled;
+      await tsSaveSettings(slug);
+      tsCloseModal();
+      renderTSGrid(_tsAllBusinesses);
+      toast('✅ TripSwipe settings saved', 'success');
     }
 
-    function assignTSAgent(bizId, btn) {
-      btn.textContent = 'Active';
-      btn.classList.add('on'); btn.classList.remove('off');
-      toast('✅ AI agent activated for this business', 'success');
+    async function tsSaveSettings(slug) {
+      var token = getAuthToken();
+      var s = _tsSettings[slug] || {};
+      try {
+        await fetch(API_BASE + '/api/admin/tripswipe/settings/' + encodeURIComponent(slug), {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: s.enabled !== false, hero_image: s.hero_image || null, extra_images: s.extra_images || [] })
+        });
+      } catch(e) {}
     }
 
-    function viewTSBizDetail(bizId) {
-      showPage('tripswipe-analytics');
+    function tsBulkToggle() {
+      var panel = document.getElementById('ts-bulk-upload-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     }
+
+    function tsPopulateBulkSelect() {
+      var sel = document.getElementById('ts-bulk-biz-select');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Choose a business --</option>' +
+        _tsAllBusinesses.map(function(b){ return '<option value="' + (b.slug||b.id) + '">' + (b.name||'Unnamed') + '</option>'; }).join('');
+    }
+
+    async function tsBulkAddImage() {
+      var slug = document.getElementById('ts-bulk-biz-select').value;
+      var url = document.getElementById('ts-bulk-img-url').value.trim();
+      if (!slug || !url) { toast('Select a business and enter an image URL', 'error'); return; }
+      if (!_tsSettings[slug]) _tsSettings[slug] = {};
+      _tsSettings[slug].hero_image = url;
+      await tsSaveSettings(slug);
+      document.getElementById('ts-bulk-img-url').value = '';
+      renderTSGrid(_tsAllBusinesses);
+      toast('✅ Image set for ' + slug, 'success');
+    }
+
+    async function tsBulkSaveImages() {
+      var slug = document.getElementById('ts-bulk-biz-select').value;
+      var urls = document.getElementById('ts-bulk-img-urls').value.trim().split('\n').map(function(u){ return u.trim(); }).filter(Boolean);
+      if (!slug || !urls.length) { toast('Select a business and enter at least one URL', 'error'); return; }
+      if (!_tsSettings[slug]) _tsSettings[slug] = {};
+      _tsSettings[slug].hero_image = urls[0];
+      _tsSettings[slug].extra_images = urls.slice(1);
+      await tsSaveSettings(slug);
+      document.getElementById('ts-bulk-img-urls').value = '';
+      renderTSGrid(_tsAllBusinesses);
+      tsBulkToggle();
+      toast('✅ ' + urls.length + ' image(s) saved to ' + slug, 'success');
+    }
+
+    function viewTSBizDetail(bizId) { tsOpenModal(bizId); }
 
     // ── Overview ──
     async function loadTSOverview() {
