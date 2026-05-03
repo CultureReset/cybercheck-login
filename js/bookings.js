@@ -259,7 +259,7 @@ function renderBookingsStats() {
   var today = new Date().toISOString().split('T')[0];
   var upcoming = _bookings.filter(function(b) { return b.date >= today && b.status !== 'cancelled'; });
   var todayBookings = _bookings.filter(function(b) { return b.date === today && b.status !== 'cancelled'; });
-  var totalRevenue = _bookings.filter(function(b) { return b.status !== 'cancelled'; })
+  var totalRevenue = _bookings.filter(function(b) { return b.status !== 'cancelled' && b.paymentStatus === 'paid'; })
     .reduce(function(sum, b) { return sum + (parseFloat(b.total) || 0); }, 0);
   var pending = _bookings.filter(function(b) { return b.status === 'pending'; });
 
@@ -361,8 +361,11 @@ function renderBookingsTable() {
     return true;
   });
 
-  // Sort: upcoming first, then by date
+  // Sort: paid first, unpaid pushed to bottom; then by status, then by date
   filtered.sort(function(a, b) {
+    var aPaid = a.paymentStatus === 'paid' || a.paymentStatus === 'deposit_paid' ? 0 : 1;
+    var bPaid = b.paymentStatus === 'paid' || b.paymentStatus === 'deposit_paid' ? 0 : 1;
+    if (aPaid !== bPaid) return aPaid - bPaid;
     var statusOrder = { pending: 0, confirmed: 1, completed: 2, cancelled: 3 };
     if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
     return a.date > b.date ? 1 : -1;
@@ -378,13 +381,25 @@ function renderBookingsTable() {
   html += '<th>ID</th><th>Customer</th><th>Date</th><th>Time Slot</th><th>Boats</th><th>Guests</th><th>Total</th><th>Status</th><th>Payment</th><th>Source</th><th>Actions</th>';
   html += '</tr></thead><tbody>';
 
+  var seenUnpaidDivider = false;
   filtered.forEach(function(b) {
     var statusBadge = getStatusBadge(b.status);
     var payBadge = getPaymentBadge(b.paymentStatus);
     var boatSummary = b.boats.map(function(bt) { return bt.qty + 'x ' + bt.type.replace(' Circle Boat', ''); }).join(', ');
     var dateFormatted = formatBookingDate(b.date);
+    var isUnpaid = b.paymentStatus !== 'paid' && b.paymentStatus !== 'deposit_paid';
 
-    html += '<tr style="cursor:pointer;" onclick="viewBookingDetail(\'' + b.id + '\')">';
+    if (isUnpaid && !seenUnpaidDivider) {
+      seenUnpaidDivider = true;
+      html += '<tr><td colspan="11" style="padding:14px 12px;background:#fef3c7;border-top:2px solid #f59e0b;border-bottom:2px solid #f59e0b;font-size:12px;font-weight:600;color:#92400e;">';
+      html += '&#9888;&#65039; Awaiting / Failed Payment — these bookings have NOT been paid and are not counted in revenue';
+      html += '</td></tr>';
+    }
+
+    var rowStyle = isUnpaid
+      ? 'cursor:pointer;background:rgba(254,243,199,0.4);border-left:3px solid #f59e0b;opacity:0.85;'
+      : 'cursor:pointer;';
+    html += '<tr style="' + rowStyle + '" onclick="viewBookingDetail(\'' + b.id + '\')">';
     html += '<td style="font-family:\'SF Mono\',monospace;font-size:12px;color:var(--text-dim);">' + b.id + '</td>';
     html += '<td><strong>' + escHtml(b.customerName) + '</strong><br><span style="font-size:11px;color:var(--text-dim);">' + escHtml(b.customerEmail) + '</span></td>';
     html += '<td>' + dateFormatted + '</td>';
@@ -728,7 +743,11 @@ async function sendWaiverLink(id) {
     });
     var data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Failed');
-    toast('Waiver link sent to customer!', 'success');
+    if (data.already_signed) {
+      toast('Waiver already signed by this customer.', 'info');
+    } else {
+      toast('Waiver link sent to customer!', 'success');
+    }
   } catch(e) {
     toast(e.message || 'Send failed', 'error');
   }
