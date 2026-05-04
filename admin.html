@@ -189,6 +189,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/></svg>
           <span>Swipe Questions 🤖</span>
         </div>
+        <div class="nav-item" data-page="community-photos" onclick="showPage('community-photos');loadCommunityPhotos('pending')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Guest Photos 📸</span>
+        </div>
 
         <!-- ── PLATFORM ── -->
         <div class="nav-section-label">🛍️ App Store</div>
@@ -275,7 +279,7 @@
           </div>
           <div class="card" style="padding:24px;text-align:center;">
             <div style="font-size:32px;font-weight:700;color:#22c55e;" id="stat-gcr">—</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">GCR Listings</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Live on GCR</div>
           </div>
           <div class="card" style="padding:24px;text-align:center;">
             <div style="font-size:32px;font-weight:700;color:#f59e0b;" id="stat-users">—</div>
@@ -767,7 +771,10 @@
               <h2 style="margin:0;font-size:20px;" id="biz-editor-title">Edit Business</h2>
               <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="biz-editor-subtitle"></div>
             </div>
-            <button onclick="closeBizEditor()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button onclick="deleteBusinessCompletely()" style="background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">🗑 Delete Business</button>
+              <button onclick="closeBizEditor()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+            </div>
           </div>
 
           <!-- Tabs -->
@@ -3223,6 +3230,27 @@
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── COMMUNITY PHOTOS ── -->
+      <div id="page-community-photos" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>📸 Guest Photos</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Photos submitted by TripSwipe users from their experiences. Approve to show on profiles and swipe cards.</div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+          <button onclick="loadCommunityPhotos('pending')" id="cp-tab-pending" class="cp-tab active" style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.35);color:#fcd34d;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">⏳ Pending</button>
+          <button onclick="loadCommunityPhotos('approved')" id="cp-tab-approved" class="cp-tab" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:var(--text-muted);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">✅ Approved</button>
+          <button onclick="loadCommunityPhotos('rejected')" id="cp-tab-rejected" class="cp-tab" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--text-muted);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">✕ Rejected</button>
+          <button onclick="loadCommunityPhotos('all')" id="cp-tab-all" class="cp-tab" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text-muted);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">All</button>
+        </div>
+
+        <div id="cp-stats" style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;"></div>
+
+        <div id="cp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+          <div style="color:var(--text-muted);font-size:14px;padding:40px;text-align:center;grid-column:1/-1;">Loading…</div>
+        </div>
+      </div>
+
       <!-- ── END TRIP SWIPE PAGES ───────────────────────────────────── -->
       <!-- ═══════════════════════════════════════════════════════════════ -->
 
@@ -4383,11 +4411,15 @@
         var gcr = res.ok ? await res.json() : [];
         if (!Array.isArray(gcr)) gcr = [];
 
-        var active = gcr.filter(function(b){ return b.is_active; }).length;
         var featured = gcr.filter(function(b){ return b.featured; }).length;
 
+        // Live GCR count = entities actually showing on public GCR pages
+        var liveRes = await fetch(API_BASE.replace('/api/admin','') + '/api/gcr/entities?_t=' + Date.now());
+        var liveData = liveRes.ok ? await liveRes.json() : {};
+        var liveEntities = liveData.businesses || liveData.entities || (Array.isArray(liveData) ? liveData : []);
+
         document.getElementById('stat-businesses').textContent = gcr.length;
-        document.getElementById('stat-gcr').textContent = active;
+        document.getElementById('stat-gcr').textContent = liveEntities.length;
         document.getElementById('stat-users').textContent = featured;
         document.getElementById('stat-bookings').textContent = '—';
 
@@ -4443,7 +4475,7 @@
     var _allGCRClaims = [];
 
     async function deleteGCRBusiness(entityId, name) {
-      if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+      if (!confirm('Permanently delete "' + name + '" from the database?\n\nThis removes ALL linked data (tags, menus, events, specials) and cannot be undone.')) return;
       var token = getAuthToken();
       try {
         var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
@@ -4452,7 +4484,7 @@
         });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
-        toast('Deleted: ' + name);
+        toast('Permanently deleted: ' + name);
         loadGCRBusinesses();
       } catch(err) { toast('Error: ' + err.message, 'error'); }
     }
@@ -5857,6 +5889,32 @@
     }
 
     function closeBizEditor() { document.getElementById('bizEditorModal').style.display = 'none'; }
+
+    async function deleteBusinessCompletely() {
+      if (!_bizEditorSiteId) return;
+      var name = document.getElementById('biz-editor-title').textContent || _bizEditorSiteId;
+      var confirm1 = confirm('DELETE "' + name + '" permanently?\n\nThis removes ALL data: bookings, customers, media, AI memory, users — everything. This cannot be undone.');
+      if (!confirm1) return;
+      var confirm2 = confirm('Are you absolutely sure? Type-check: this deletes every database record and storage file for this business.');
+      if (!confirm2) return;
+
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Delete failed');
+        toast('Business "' + (data.deleted || name) + '" permanently deleted.', 'success');
+        closeBizEditor();
+        // Refresh whichever list is visible
+        if (typeof loadBusinesses === 'function') loadBusinesses();
+        if (typeof loadGCRBusinesses === 'function') loadGCRBusinesses();
+      } catch (err) {
+        toast('Delete failed: ' + err.message, 'error');
+      }
+    }
 
     // ── MENU ITEMS ───────────────────────────────────
     function menuItemRow(item, index, isDrink) {
@@ -13545,6 +13603,101 @@
         el.innerHTML = 'Platform ready — ' + _tsAllBusinesses.length + ' businesses loaded from GCR. Launch the tourist app to start collecting swipe data.';
       }
     }
+    // ── Community Photos ──
+    var _cpCurrentStatus = 'pending';
+
+    async function loadCommunityPhotos(status) {
+      _cpCurrentStatus = status || 'pending';
+      // Update tab styles
+      ['pending','approved','rejected','all'].forEach(function(s) {
+        var btn = document.getElementById('cp-tab-' + s);
+        if (!btn) return;
+        var isActive = s === _cpCurrentStatus;
+        btn.style.color = isActive ? (s === 'pending' ? '#fcd34d' : s === 'approved' ? '#86efac' : s === 'rejected' ? '#fca5a5' : '#fff') : 'var(--text-muted)';
+        btn.style.opacity = isActive ? '1' : '0.65';
+      });
+      var grid = document.getElementById('cp-grid');
+      if (!grid) return;
+      grid.innerHTML = '<div style="color:var(--text-muted);font-size:14px;padding:40px;text-align:center;grid-column:1/-1;">Loading…</div>';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/community-photos?status=' + _cpCurrentStatus, {
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        var d = r.ok ? await r.json() : {};
+        var photos = d.photos || [];
+        // Stats
+        var statsEl = document.getElementById('cp-stats');
+        if (statsEl) {
+          var pending = photos.filter(function(p) { return p.status === 'pending'; }).length;
+          var approved = photos.filter(function(p) { return p.status === 'approved'; }).length;
+          var rejected = photos.filter(function(p) { return p.status === 'rejected'; }).length;
+          if (_cpCurrentStatus === 'all') {
+            statsEl.innerHTML = '<span style="font-size:13px;color:var(--text-muted);">' + photos.length + ' total · ' + pending + ' pending · ' + approved + ' approved · ' + rejected + ' rejected</span>';
+          } else {
+            statsEl.innerHTML = '<span style="font-size:13px;color:var(--text-muted);">' + photos.length + ' ' + _cpCurrentStatus + ' photo' + (photos.length !== 1 ? 's' : '') + '</span>';
+          }
+        }
+        if (!photos.length) {
+          grid.innerHTML = '<div style="color:var(--text-muted);font-size:14px;padding:60px;text-align:center;grid-column:1/-1;">No ' + _cpCurrentStatus + ' photos yet.</div>';
+          return;
+        }
+        grid.innerHTML = photos.map(function(p) {
+          var date = new Date(p.submitted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+          var statusColor = p.status === 'approved' ? '#86efac' : p.status === 'rejected' ? '#fca5a5' : '#fcd34d';
+          return '<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;overflow:hidden;">' +
+            '<div style="position:relative;">' +
+              '<img src="' + p.image_url + '" style="width:100%;height:200px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">' +
+              '<span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);color:' + statusColor + ';padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;">' + p.status + '</span>' +
+            '</div>' +
+            '<div style="padding:14px;">' +
+              '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">' + (p.entity_slug || '—') + '</div>' +
+              (p.caption ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic;">"' + p.caption + '"</div>' : '') +
+              '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">' +
+                (p.uploader_name ? p.uploader_name + ' · ' : '') + date +
+              '</div>' +
+              (p.status === 'pending' ? (
+                '<div style="display:flex;gap:8px;">' +
+                  '<button onclick="reviewCommunityPhoto(\'' + p.id + '\',\'approved\')" style="flex:1;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#86efac;padding:8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">✓ Approve</button>' +
+                  '<button onclick="reviewCommunityPhoto(\'' + p.id + '\',\'rejected\')" style="flex:1;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">✕ Reject</button>' +
+                '</div>'
+              ) : (
+                '<div style="display:flex;gap:8px;">' +
+                  (p.status === 'approved' ? '<button onclick="reviewCommunityPhoto(\'' + p.id + '\',\'rejected\')" style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;">✕ Reject</button>' : '<button onclick="reviewCommunityPhoto(\'' + p.id + '\',\'approved\')" style="flex:1;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;">✓ Approve</button>') +
+                  '<button onclick="deleteCommunityPhoto(\'' + p.id + '\')" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5;padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;">🗑</button>' +
+                '</div>'
+              )) +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        grid.innerHTML = '<div style="color:#fca5a5;font-size:14px;padding:40px;text-align:center;grid-column:1/-1;">Error loading photos: ' + e.message + '</div>';
+      }
+    }
+
+    async function reviewCommunityPhoto(id, status) {
+      try {
+        var r = await fetch(API_BASE + '/api/admin/community-photos/' + id, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status })
+        });
+        if (!r.ok) { var d = await r.json(); alert(d.error || 'Failed'); return; }
+        loadCommunityPhotos(_cpCurrentStatus);
+      } catch(e) { alert(e.message); }
+    }
+
+    async function deleteCommunityPhoto(id) {
+      if (!confirm('Delete this photo permanently?')) return;
+      try {
+        var r = await fetch(API_BASE + '/api/admin/community-photos/' + id, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!r.ok) { var d = await r.json(); alert(d.error || 'Failed'); return; }
+        loadCommunityPhotos(_cpCurrentStatus);
+      } catch(e) { alert(e.message); }
+    }
+
   </script>
 
   <script>
