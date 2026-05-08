@@ -766,6 +766,7 @@
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="nav-tab" onclick="switchTab('gcr-signups')">🌊 GCR Signups</button>
       <button class="nav-tab" onclick="switchTab('gcr-businesses')">🏖️ GCR Businesses</button>
       <button class="nav-tab" onclick="switchTab('bulk-events')">📅 Bulk Events</button>
       <button class="nav-tab" onclick="switchTab('api-keys')">🔑 API Keys</button>
@@ -828,6 +829,43 @@
             <div class="quick-link-icon">🏠</div>
             <div class="quick-link-title">Homepage</div>
           </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- GCR Signups Tab -->
+    <div id="gcr-signups" class="tab-content">
+      <div class="settings-section">
+        <h2 class="section-title">🌊 GCR Countdown Launch Signups</h2>
+        <p class="section-description">People who signed up for the launch countdown</p>
+
+        <div style="margin-bottom: 16px; display: flex; gap: 12px;">
+          <input type="text" id="gcrSignupSearch" placeholder="Search by name or email..." style="flex: 1; padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+          <button onclick="loadGCRSignups()" class="btn-primary">🔄 Refresh</button>
+          <button onclick="exportGCRSignups()" class="btn-secondary">📥 Export</button>
+        </div>
+
+        <div id="gcrSignupsContainer" style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Name</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Phone</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Arrival</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Departure</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Days</th>
+                <th style="padding: 12px; text-align: center; font-weight: 600;">Email ✓</th>
+                <th style="padding: 12px; text-align: center; font-weight: 600;">SMS ✓</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600;">Signed Up</th>
+              </tr>
+            </thead>
+            <tbody id="gcrSignupsTable">
+              <tr>
+                <td colspan="9" style="padding: 24px; text-align: center; color: #999;">Loading signups...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1034,6 +1072,12 @@
                 <option value="hidden">Hidden</option>
                 <option value="draft">Draft</option>
               </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Listing Position (sort_order)</label>
+              <input type="number" id="editSortOrder" class="form-input" min="0" placeholder="0 = top, higher numbers appear lower">
+              <div style="font-size:12px;color:#666;margin-top:4px;">Controls where this business appears on its category listing page. Lower numbers appear first (0 = top).</div>
             </div>
 
             <div class="form-group">
@@ -2070,6 +2114,125 @@
     // ========================================
     // GCR BUSINESSES MANAGEMENT
     // ========================================
+    // GCR COUNTDOWN SIGNUPS
+    // ========================================
+
+    let allGCRSignups = [];
+
+    async function loadGCRSignups() {
+      try {
+        const response = await fetch('/api/leads?filter=GCR Countdown');
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.data)) {
+          allGCRSignups = data.data.filter(lead =>
+            lead.product_interest && lead.product_interest.includes('GCR Countdown')
+          );
+          displayGCRSignups(allGCRSignups);
+        } else {
+          document.getElementById('gcrSignupsTable').innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #666;">No signups yet</td></tr>';
+        }
+      } catch (err) {
+        console.error('Load GCR signups error:', err);
+        document.getElementById('gcrSignupsTable').innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #999;">Error loading signups</td></tr>';
+      }
+    }
+
+    function displayGCRSignups(signups) {
+      const tbody = document.getElementById('gcrSignupsTable');
+
+      if (!signups || signups.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #666;">No signups yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = signups.map((lead, idx) => {
+        const notes = lead.notes || '';
+        const emailMatch = notes.match(/Email: ([^\n]+)/);
+        const phoneMatch = notes.match(/Phone: ([^\n]+)/);
+        const arrivalMatch = notes.match(/Arrival: ([^\n]+)/);
+        const departureMatch = notes.match(/Departure: ([^\n]+)/);
+        const daysMatch = notes.match(/Days: (\d+)/);
+        const emailOptinMatch = notes.match(/Email Opt-in: (Yes|No)/);
+        const smsOptinMatch = notes.match(/SMS Opt-in: (Yes|No)/);
+
+        const email = emailMatch ? emailMatch[1] : '—';
+        const phone = phoneMatch ? phoneMatch[1] : '—';
+        const arrival = arrivalMatch ? arrivalMatch[1] : '—';
+        const departure = departureMatch ? departureMatch[1] : '—';
+        const days = daysMatch ? daysMatch[1] : '—';
+        const emailOptin = emailOptinMatch && emailOptinMatch[1] === 'Yes';
+        const smsOptin = smsOptinMatch && smsOptinMatch[1] === 'Yes';
+
+        return `
+          <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
+            <td style="padding: 12px;">${lead.lead_name}</td>
+            <td style="padding: 12px;">${email}</td>
+            <td style="padding: 12px;">${phone}</td>
+            <td style="padding: 12px;">${arrival}</td>
+            <td style="padding: 12px;">${departure}</td>
+            <td style="padding: 12px;">${days}</td>
+            <td style="padding: 12px; text-align: center;">${emailOptin ? '✅' : '❌'}</td>
+            <td style="padding: 12px; text-align: center;">${smsOptin ? '✅' : '❌'}</td>
+            <td style="padding: 12px; color: #666; font-size: 12px;">${new Date(lead.created_at || Date.now()).toLocaleDateString()}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportGCRSignups() {
+      if (allGCRSignups.length === 0) {
+        alert('No signups to export');
+        return;
+      }
+
+      const csv = [
+        ['Name', 'Email', 'Phone', 'Arrival', 'Departure', 'Days', 'Email Opt-in', 'SMS Opt-in', 'Signed Up'].join(','),
+        ...allGCRSignups.map(lead => {
+          const notes = lead.notes || '';
+          const emailMatch = notes.match(/Email: ([^\n]+)/);
+          const phoneMatch = notes.match(/Phone: ([^\n]+)/);
+          const arrivalMatch = notes.match(/Arrival: ([^\n]+)/);
+          const departureMatch = notes.match(/Departure: ([^\n]+)/);
+          const daysMatch = notes.match(/Days: (\d+)/);
+          const emailOptinMatch = notes.match(/Email Opt-in: (Yes|No)/);
+          const smsOptinMatch = notes.match(/SMS Opt-in: (Yes|No)/);
+
+          return [
+            `"${lead.lead_name}"`,
+            `"${emailMatch ? emailMatch[1] : ''}"`,
+            `"${phoneMatch ? phoneMatch[1] : ''}"`,
+            arrivalMatch ? arrivalMatch[1] : '',
+            departureMatch ? departureMatch[1] : '',
+            daysMatch ? daysMatch[1] : '',
+            emailOptinMatch ? emailOptinMatch[1] : 'No',
+            smsOptinMatch ? smsOptinMatch[1] : 'No',
+            new Date(lead.created_at || Date.now()).toLocaleDateString()
+          ].join(',');
+        })
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gcr-signups-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Load GCR signups when tab is clicked
+    const originalSwitchTab = switchTab;
+    switchTab = function(tabName) {
+      if (tabName === 'gcr-signups') {
+        loadGCRSignups();
+      }
+      return originalSwitchTab(tabName);
+    };
+
+    // ========================================
+    // GCR BUSINESSES MANAGEMENT
+    // ========================================
 
     const GCR_API_URL = 'http://localhost:3002/api';
     let allGCRBusinesses = [];
@@ -2207,6 +2370,7 @@
       document.getElementById('editHours').value = business.hours || '';
       document.getElementById('editStatus').value = business.status || 'active';
       document.getElementById('editTemplate').value = business.gcr_template || '';
+      document.getElementById('editSortOrder').value = business.sort_order ?? '';
 
       document.getElementById('editBusinessModal').style.display = 'block';
     }
@@ -2575,7 +2739,8 @@
         address: document.getElementById('editAddress').value,
         hours: document.getElementById('editHours').value,
         status: document.getElementById('editStatus').value,
-        gcr_template: document.getElementById('editTemplate').value || null
+        gcr_template: document.getElementById('editTemplate').value || null,
+        sort_order: document.getElementById('editSortOrder').value !== '' ? parseInt(document.getElementById('editSortOrder').value) : null
       };
 
       try {
