@@ -62,6 +62,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
           <span>QR Tracker</span>
         </div>
+        <div class="nav-item" data-page="reviews" onclick="showPage('reviews')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Reviews ⭐</span>
+        </div>
         <div class="nav-item" data-page="referral-partners" onclick="showPage('referral-partners')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           <span>Referral Partners 💰</span>
@@ -188,6 +192,14 @@
         <div class="nav-item" data-page="trip-swipe-questions" onclick="showPage('trip-swipe-questions')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/></svg>
           <span>Swipe Questions 🤖</span>
+        </div>
+        <div class="nav-item" data-page="tripswipe-sponsored" onclick="showPage('tripswipe-sponsored');loadSponsored()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Sponsored ⭐</span>
+        </div>
+        <div class="nav-item" data-page="tripswipe-tonight" onclick="showPage('tripswipe-tonight');loadTonightCards()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Tonight Cards 📅</span>
         </div>
         <div class="nav-item" data-page="community-photos" onclick="showPage('community-photos');loadCommunityPhotos('pending')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -575,6 +587,16 @@
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Website URL</label><input id="ent-website" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Directions URL</label><input id="ent-directions" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Booking URL <span style="color:var(--primary);font-size:11px;">(Book Now button)</span></label><input id="ent-booking" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Reservation URL</label><input id="ent-reservation" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Order Online URL</label><input id="ent-order" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Menu URL</label><input id="ent-menu-url" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="grid-column:1/-1;border-top:1px solid var(--card-border);padding-top:14px;margin-top:2px;"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">Social Media</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Instagram URL</label><input id="ent-instagram" type="text" placeholder="https://instagram.com/..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Facebook URL</label><input id="ent-facebook" type="text" placeholder="https://facebook.com/..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">TikTok URL</label><input id="ent-tiktok" type="text" placeholder="https://tiktok.com/..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price Range</label><select id="ent-price-range" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><option value="">— select —</option><option value="$">$ Under $15</option><option value="$$">$$ $15–30</option><option value="$$$">$$$ $30–60</option><option value="$$$$">$$$$ $60+</option></select></div>
+                </div></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Google Places ID</label><input id="ent-google-places-id" type="text" placeholder="ChIJ..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Address</label><input id="ent-address" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">City</label><input id="ent-city" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">State</label><input id="ent-state" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -712,22 +734,26 @@
 
             <!-- WAVEGENT TAB -->
             <div id="enttab-wavegent-content" style="display:none;">
-              <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Generate a shareable mobile page from this business's GCR data.</p>
-              <div style="display:flex;gap:12px;margin-bottom:20px;">
-                <button onclick="generateWavegentPage()" class="btn btn-primary" id="wg-generate-btn">✨ Generate Page</button>
-                <span id="wg-status" style="font-size:13px;color:var(--text-muted);align-self:center;">Ready</span>
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 4px;">Describe how you want the QR menu to look — colors, layout, which sections to show — and AI will apply it live.</p>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;"><em>Example: "Dark background with gold accents, hide the drinks tab, put specials first"</em></p>
+
+              <!-- Quick preview link -->
+              <div id="wg-preview-bar" style="display:none;margin-bottom:14px;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:12px;color:var(--text-muted);flex:1;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="wg-menu-url-text"></span>
+                <button onclick="window.open(document.getElementById('wg-menu-url-text').textContent,'_blank')" class="btn btn-outline btn-sm">👁 Preview</button>
               </div>
-              <div id="wg-url-section" style="display:none;margin-bottom:20px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Shareable URL:</div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input id="wg-url-input" type="text" readonly style="flex:1;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;font-family:monospace;">
-                  <button onclick="copyWavegentURL()" class="btn btn-outline btn-sm">📋 Copy</button>
-                  <button onclick="openWavegentURL()" class="btn btn-outline btn-sm">🔗 Open</button>
-                </div>
+
+              <!-- Chat messages -->
+              <div id="wg-chat-msgs" style="min-height:160px;max-height:340px;overflow-y:auto;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px;">
+                <div style="text-align:center;color:var(--text-muted);font-size:13px;">Describe the style you want for this menu.</div>
               </div>
-              <div id="wg-preview-section" style="display:none;">
-                <h4 style="margin:0 0 12px;font-size:13px;">Live Preview</h4>
-                <iframe id="wg-preview-frame" style="width:100%;height:600px;border:1px solid var(--card-border);border-radius:8px;" src=""></iframe>
+
+              <!-- Input row -->
+              <div style="display:flex;gap:8px;">
+                <input id="wg-chat-input" type="text" placeholder="e.g. Dark mode, teal and gold, show menu and specials only…"
+                  style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;color:var(--text);font-size:14px;"
+                  onkeydown="if(event.key==='Enter')wgSend()">
+                <button onclick="wgSend()" class="btn btn-primary" id="wg-send-btn" style="flex-shrink:0;">Apply ✨</button>
               </div>
             </div>
 
@@ -1917,6 +1943,7 @@
             <h3 style="margin:0;">Generate QR Codes</h3>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button class="btn btn-outline" style="font-size:13px;" onclick="openQRSingle()">+ Single Code</button>
+              <button class="btn btn-outline" style="font-size:13px;" onclick="openQRMulti()">+ Multi-URL</button>
               <button class="btn btn-primary" style="font-size:13px;" onclick="openQRBatch()">+ Batch (Sticker Roll)</button>
             </div>
           </div>
@@ -1938,12 +1965,41 @@
                 <option value="location">Location</option>
               </select></div>
             </div>
-            <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Destination URL (optional — leave blank for CyberCheck landing page)</label><input type="url" id="qr-s-dest" placeholder="https://... or leave blank" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px;color:var(--text-muted);">Destination URL (leave blank for CyberCheck landing page)</label>
+              <input type="url" id="qr-s-dest" placeholder="https://..." style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+              <!-- GCR menu quick-pick -->
+              <div style="margin-top:8px;position:relative;">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Or quick-pick a GCR menu:</div>
+                <input type="text" id="qr-menu-search" placeholder="Search business name…" oninput="qrMenuSearch()" autocomplete="off"
+                  style="width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+                <div id="qr-menu-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:8px;z-index:200;max-height:200px;overflow-y:auto;margin-top:2px;box-shadow:0 8px 24px rgba(0,0,0,.3);"></div>
+              </div>
+            </div>
             <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Assign to Business (optional)</label><input type="text" id="qr-s-biz" placeholder="Business name or site_id" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+
+            <!-- Location section -->
+            <div style="margin-bottom:12px;padding:12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);">
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">📍 Location</div>
+              <div style="margin-bottom:8px;"><label style="font-size:11px;color:var(--text-muted);">Address or Place Name</label><input type="text" id="qr-s-location" placeholder="e.g. 26251 Canal Rd, Orange Beach or Beach Chair Row 3" style="width:100%;margin-top:3px;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                <div><label style="font-size:11px;color:var(--text-muted);">Latitude (optional)</label><input type="text" id="qr-s-lat" placeholder="30.2460" style="width:100%;margin-top:3px;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+                <div><label style="font-size:11px;color:var(--text-muted);">Longitude (optional)</label><input type="text" id="qr-s-lng" placeholder="-87.6003" style="width:100%;margin-top:3px;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" onclick="qrDropPin()" style="font-size:12px;padding:6px 12px;border:1px solid var(--card-border);border-radius:6px;background:none;color:#38bdf8;cursor:pointer;">📍 Use My Current Location</button>
+                <button type="button" onclick="qrPasteGoogleMaps()" style="font-size:12px;padding:6px 12px;border:1px solid var(--card-border);border-radius:6px;background:none;color:var(--text-muted);cursor:pointer;">🗺 Paste Google Maps Link</button>
+              </div>
+              <div id="qr-pin-status" style="font-size:11px;color:#4ade80;margin-top:6px;display:none;"></div>
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-              <div><label style="font-size:12px;color:var(--text-muted);">Physical Location / Notes</label><input type="text" id="qr-s-location" placeholder="e.g. Table 5 by window, Fridge door unit 3B" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
               <div><label style="font-size:12px;color:var(--text-muted);">Portable or Fixed?</label><select id="qr-s-placement" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"><option value="fixed">Fixed Location</option><option value="portable">Portable (hand-out)</option></select></div>
             </div>
+
+            <!-- Notes -->
+            <div style="margin-bottom:14px;"><label style="font-size:12px;color:var(--text-muted);">Notes <span style="font-weight:400;">(private — only you see this)</span></label><textarea id="qr-s-notes" rows="3" placeholder="e.g. Placed on the front door of unit 3B, given to John at table 5, ad runs until June 30, rotate to menu URL in July..." style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;resize:vertical;box-sizing:border-box;"></textarea></div>
+
             <button class="btn btn-primary" onclick="generateSingleQR()" style="font-size:13px;padding:9px 20px;width:auto;">Generate Code</button>
           </div>
           <!-- Batch form -->
@@ -1962,8 +2018,27 @@
               </select></div>
             </div>
             <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Default Destination URL (optional)</label><input type="url" id="qr-b-dest" placeholder="https://... or leave blank" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
-            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Will create codes numbered from the next available sequence number. Each sticker on the roll gets a unique QR URL.</p>
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Location / Place (applied to all in batch)</label><input type="text" id="qr-b-location" placeholder="e.g. Orange Beach Pier, Condo Unit 3B, Hwy 59 Strip" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Creates codes numbered from the next global sequence number. Each gets a unique QR URL. Max 5,000 per batch.</p>
             <button class="btn btn-primary" onclick="generateBatchQR()" style="font-size:13px;padding:9px 20px;width:auto;">Generate Batch</button>
+          </div>
+
+          <!-- Multi-URL form -->
+          <div id="qr-form-multi" style="display:none;border-top:1px solid var(--card-border);padding-top:16px;">
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Each line = one QR code with its own URL and sequential number. Edit any code after creation. No limit on total codes.</p>
+            <div style="margin-bottom:10px;">
+              <label style="font-size:12px;color:var(--text-muted);">URLs — one per line (paste as many as you want)</label>
+              <textarea id="qr-m-urls" rows="8" placeholder="https://gulfcoastradar.com/cobalt-the-restaurant&#10;https://gulfcoastradar.com/lulus-sunset-grill&#10;https://cybercheck-links.vercel.app/doc-rs-seafood/menu&#10;https://yourwebsite.com/promo&#10;…add as many as you need" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+              <div><label style="font-size:12px;color:var(--text-muted);">Label Prefix (optional)</label><input type="text" id="qr-m-prefix" placeholder="e.g. Restaurant, Ad, Flyer" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text-muted);">Type</label><select id="qr-m-type" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"><option value="general">General</option><option value="menu">Menu</option><option value="ad">Advertisement</option><option value="card">Business Card</option><option value="location">Location</option></select></div>
+            </div>
+            <div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);">Notes (applied to all — optional)</label><input type="text" id="qr-m-notes" placeholder="e.g. Summer 2026 promo run" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;"></div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="generateMultiQR()" id="qr-m-btn" style="font-size:13px;padding:9px 20px;">Generate All Codes</button>
+              <span id="qr-m-status" style="font-size:13px;color:var(--text-muted);"></span>
+            </div>
           </div>
         </div>
 
@@ -1996,6 +2071,8 @@
               <div>
                 <h3 id="scan-modal-title" style="margin:0;font-size:16px;"></h3>
                 <div id="scan-modal-url" style="font-size:12px;color:var(--primary,#38bdf8);margin-top:4px;font-family:monospace;word-break:break-all;"></div>
+                <div id="scan-modal-location" style="display:none;font-size:12px;color:var(--text-muted);margin-top:4px;"></div>
+                <div id="scan-modal-notes" style="display:none;font-size:12px;color:var(--text-muted);margin-top:4px;font-style:italic;"></div>
               </div>
               <button onclick="closeQRModal()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:0 4px;">&times;</button>
             </div>
@@ -2018,7 +2095,116 @@
               <button onclick="copyScanUrl()" style="padding:8px 14px;background:var(--card-border);border:none;border-radius:6px;color:var(--text);font-size:12px;cursor:pointer;">Copy</button>
             </div>
             <div id="scan-modal-qr" style="text-align:center;margin-bottom:16px;"></div>
+            <!-- Alert phone setting -->
+            <div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px;margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:8px;">🔔 SMS Alerts for this QR</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="smd-alert-phone" type="tel" placeholder="+1 (555) 000-0000" style="flex:1;padding:8px 10px;background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                <button onclick="saveQRAlertPhone()" style="padding:8px 14px;background:var(--primary,#38bdf8);border:none;border-radius:6px;color:#0f172a;font-size:12px;font-weight:600;cursor:pointer;">Save</button>
+                <button onclick="clearQRAlertPhone()" style="padding:8px 10px;background:none;border:1px solid var(--card-border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;">Off</button>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Enter a phone number to receive an SMS each time this QR is scanned.</div>
+            </div>
             <div id="scan-modal-list" style="max-height:320px;overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Reviews Page ── -->
+      <div id="page-reviews" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>⭐ Reviews</h1>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:14px;">Authentic reviews from real customers. Positive feedback is public. Critical feedback stays internal so you can follow up.</p>
+        </div>
+
+        <!-- Business review page links -->
+        <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:10px;padding:18px;margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;">📋 Business Review Page Links</div>
+          <div id="rv-business-links" style="display:flex;flex-direction:column;gap:10px;">
+            <p style="font-size:13px;color:var(--text-muted);">Loading businesses…</p>
+          </div>
+        </div>
+
+        <!-- Stats bar -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;" id="reviews-stats-bar">
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:10px;padding:16px;text-align:center;">
+            <div style="font-size:26px;font-weight:800;" id="rv-stat-total">—</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Total Reviews</div>
+          </div>
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:10px;padding:16px;text-align:center;">
+            <div style="font-size:26px;font-weight:800;color:#f59e0b;" id="rv-stat-avg">—</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Avg Rating</div>
+          </div>
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:10px;padding:16px;text-align:center;">
+            <div style="font-size:26px;font-weight:800;color:#4ade80;" id="rv-stat-public">—</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Public Reviews</div>
+          </div>
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:10px;padding:16px;text-align:center;">
+            <div style="font-size:26px;font-weight:800;color:#38bdf8;" id="rv-stat-requests">—</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Requests Sent</div>
+          </div>
+        </div>
+
+        <!-- Tabs + Send button -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;gap:8px;">
+            <button onclick="rvFilter('all')" id="rv-tab-all" style="padding:7px 16px;border-radius:8px;border:1px solid var(--card-border);background:var(--primary,#38bdf8);color:#0f172a;font-size:13px;font-weight:600;cursor:pointer;">All</button>
+            <button onclick="rvFilter('positive')" id="rv-tab-positive" style="padding:7px 16px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text);font-size:13px;cursor:pointer;">⭐ 4–5</button>
+            <button onclick="rvFilter('critical')" id="rv-tab-critical" style="padding:7px 16px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text);font-size:13px;cursor:pointer;">⚠️ 1–3</button>
+            <button onclick="showPage('rv-requests')" id="rv-tab-requests" style="padding:7px 16px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text);font-size:13px;cursor:pointer;">Sent Requests</button>
+          </div>
+          <button onclick="openSendReviewRequest()" style="padding:8px 18px;background:var(--primary,#38bdf8);color:#0f172a;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">+ Send Review Request</button>
+        </div>
+
+        <div id="reviews-list" style="display:flex;flex-direction:column;gap:14px;">
+          <p style="color:var(--text-muted);font-size:14px;">Loading reviews…</p>
+        </div>
+
+        <!-- Send request modal -->
+        <div id="rv-send-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px;">
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:12px;max-width:480px;margin:60px auto;padding:28px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <h3 style="font-size:16px;margin:0;">Send Review Request</h3>
+              <button onclick="document.getElementById('rv-send-modal').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">&times;</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Customer Phone *</label>
+                <input id="rv-req-phone" type="tel" placeholder="+1 (555) 000-0000" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Customer Name</label>
+                <input id="rv-req-name" type="text" placeholder="Maria" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Items Ordered (one per line)</label>
+                <textarea id="rv-req-items" placeholder="Gulf Shrimp Tacos&#10;Frozen Margarita" style="width:100%;min-height:80px;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Visit Date</label>
+                  <input id="rv-req-date" type="date" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Table #</label>
+                  <input id="rv-req-table" type="text" placeholder="7" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <button onclick="sendReviewRequest()" style="width:100%;padding:12px;background:var(--primary,#38bdf8);color:#0f172a;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;">Send SMS Request</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reply modal -->
+        <div id="rv-reply-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px;">
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:12px;max-width:480px;margin:60px auto;padding:28px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h3 style="font-size:16px;margin:0;">Reply to Review</h3>
+              <button onclick="document.getElementById('rv-reply-modal').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;">&times;</button>
+            </div>
+            <div id="rv-reply-context" style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--text-muted);"></div>
+            <textarea id="rv-reply-text" placeholder="Write your reply…" style="width:100%;min-height:100px;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;margin-bottom:10px;"></textarea>
+            <button onclick="submitReply()" style="width:100%;padding:12px;background:var(--primary,#38bdf8);color:#0f172a;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">Save Reply</button>
           </div>
         </div>
       </div>
@@ -3275,6 +3461,139 @@
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── SPONSORED CARDS ── -->
+      <div id="page-tripswipe-sponsored" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>⭐ Sponsored Cards</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Businesses that inject into the swipe deck every N cards with rotating promo images. Always links to the real business profile.</div>
+        </div>
+
+        <!-- Add / Edit Form -->
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 16px;" id="sp-form-title">➕ Add Sponsored Business</h3>
+          <input type="hidden" id="sp-edit-id">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">BUSINESS SLUG *</label>
+              <input type="text" id="sp-slug" placeholder="bolo-steak-seafood" oninput="spLookupBiz()" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <div id="sp-biz-match" style="font-size:11px;color:#86efac;margin-top:4px;"></div>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">INJECT EVERY N CARDS</label>
+              <input type="number" id="sp-frequency" value="10" min="3" max="50" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">e.g. 10 = appears every 10 swipes</div>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">PRIORITY (higher = first)</label>
+              <input type="number" id="sp-priority" value="0" min="0" max="100" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+          </div>
+
+          <!-- Image manager -->
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:8px;">PROMO IMAGES (cycles through these — each appearance shows the next one)</label>
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <input type="url" id="sp-img-input" placeholder="https://..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;" onkeydown="if(event.key==='Enter'){spAddImage();event.preventDefault()}">
+              <button onclick="spAddImage()" style="padding:9px 18px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">+ Add Image</button>
+            </div>
+            <div id="sp-images-grid" style="display:flex;flex-wrap:wrap;gap:10px;min-height:60px;padding:10px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:10px;">
+              <div style="color:var(--text-muted);font-size:12px;align-self:center;padding:0 4px;">No images added yet</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:16px;justify-content:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;">
+              <input type="checkbox" id="sp-active" checked style="width:16px;height:16px;accent-color:var(--primary);">
+              Active (live in deck)
+            </label>
+            <button onclick="spClear()" style="padding:10px 20px;background:var(--bg);border:1px solid var(--card-border);color:var(--text-muted);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Clear</button>
+            <button onclick="spSave()" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">💾 Save Sponsor</button>
+          </div>
+        </div>
+
+        <!-- Sponsored List -->
+        <div id="sp-list" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── TONIGHT CARDS ── -->
+      <div id="page-tripswipe-tonight" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>📅 Tonight Cards</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Time-based promo cards that appear at the top of the swipe deck on a specific date. Great for events, specials, and same-day promotions.</div>
+        </div>
+
+        <!-- Add Card Form -->
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 16px;">➕ Add / Edit Tonight Card</h3>
+          <input type="hidden" id="tc-edit-id">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">TITLE *</label>
+              <input type="text" id="tc-title" placeholder="Thursday Prime Rib Night" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">SHOW DATE</label>
+              <input type="date" id="tc-date" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">IMAGE URL</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="url" id="tc-image" placeholder="https://..." style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+              <div id="tc-img-preview" style="width:60px;height:60px;border-radius:8px;background:var(--bg);border:1px solid var(--card-border);overflow:hidden;flex-shrink:0;">
+                <img id="tc-img-thumb" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+              </div>
+              <button onclick="tcPreviewImg()" style="padding:9px 14px;background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.3);color:#7dd3fc;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;">Preview</button>
+            </div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">DESCRIPTION (shows on card)</label>
+            <textarea id="tc-desc" rows="2" placeholder="Tonight only — $26 Prime Rib until it runs out!" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">CTA BUTTON LABEL</label>
+              <input type="text" id="tc-cta-label" placeholder="Book Now" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">CTA URL (optional)</label>
+              <input type="url" id="tc-cta-url" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">LINK TO BUSINESS SLUG</label>
+              <input type="text" id="tc-linked-slug" placeholder="bolo-steak-seafood" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">CITY (shown on card)</label>
+              <input type="text" id="tc-city" placeholder="Gulf Shores, AL" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">ACTIVE</label>
+              <select id="tc-active" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+                <option value="true">✅ Active (shows in deck)</option>
+                <option value="false">🚫 Inactive (hidden)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="tcClear()" style="padding:10px 20px;background:var(--bg);border:1px solid var(--card-border);color:var(--text-muted);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Clear</button>
+            <button onclick="tcSave()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">💾 Save Card</button>
+          </div>
+        </div>
+
+        <!-- Cards List -->
+        <div id="tc-cards-list" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
       <!-- ── COMMUNITY PHOTOS ── -->
       <div id="page-community-photos" class="page-content" style="display:none;">
         <div class="page-header">
@@ -4440,6 +4759,7 @@
       if (page === 'qr-menus' && !_qrMenusLoaded) { _qrMenusLoaded = true; loadQRMenus(); }
       if (page === 'trip-swipe-questions' && !_tsqLoaded) { _tsqLoaded = true; tsqLoad(); }
       if (page === 'qr-tracker') loadQRCodes();
+      if (page === 'reviews') loadReviews();
       if (page === 'referral-partners') loadReferralPartners();
       if (page === 'menu-builder' && document.getElementById('mb-tab-promotions')?.classList.contains('active')) mbLoadPromos();
       if (page === 'tripswipe-tourists' && !_rpLoaded) loadTSTourists();
@@ -4447,6 +4767,7 @@
       if (page === 'tripswipe-businesses' && !_tsBusinessesLoaded) { _tsBusinessesLoaded = true; loadTSBusinesses(); }
       if (page === 'tripswipe-tourists') loadTSTourists();
       if (page === 'tripswipe-analytics') loadTSAnalytics();
+      if (page === 'tripswipe-tonight') loadTonightCards();
       if (page === 'tripswipe-ai') populateTSBizSelect();
       if (page === 'gcr-entity-editor' && !_entityPageLoaded) { _entityPageLoaded = true; loadEntities(); }
       if (page === 'gcr-site-editor' && !_siteEditorLoaded) { _siteEditorLoaded = true; loadSiteEditor(); }
@@ -5006,6 +5327,178 @@
 
     // ── GCR EVENTS ────────────────────────────────────
     // ── AI Event & Special Extraction ────────────────────────────
+    // ── Reviews ────────────────────────────────────────────────────
+    var _rvFilter = 'all';
+    var _currentReplyId = null;
+
+    async function loadReviews() {
+      try {
+        const [rvRes, statsRes, reqRes, bizRes] = await Promise.all([
+          fetch(API_BASE + '/api/reviews', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
+          fetch(API_BASE + '/api/reviews/stats', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
+          fetch(API_BASE + '/api/reviews/requests', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
+          fetch(API_BASE + '/api/admin/gcr/entities?limit=200', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
+        ]);
+        const reviews  = rvRes.ok    ? await rvRes.json()   : [];
+        const stats    = statsRes.ok ? await statsRes.json() : {};
+        const requests = reqRes.ok   ? await reqRes.json()  : [];
+        const entities = bizRes.ok   ? await bizRes.json()  : [];
+
+        document.getElementById('rv-stat-total').textContent    = stats.total || 0;
+        document.getElementById('rv-stat-avg').textContent      = stats.avg ? stats.avg + '★' : '—';
+        document.getElementById('rv-stat-public').textContent   = stats.public_count || 0;
+        document.getElementById('rv-stat-requests').textContent = requests.length || 0;
+
+        renderReviewLinks(entities);
+        renderReviews(reviews);
+      } catch(e) {
+        document.getElementById('reviews-list').innerHTML = '<p style="color:#f87171;font-size:13px;">Failed to load reviews</p>';
+      }
+    }
+
+    function renderReviewLinks(entities) {
+      var el = document.getElementById('rv-business-links');
+      if (!entities || !entities.length) {
+        el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">No businesses found.</p>';
+        return;
+      }
+      el.innerHTML = entities.map(function(e) {
+        var reviewUrl = 'https://cybercheck-links.vercel.app/reviews/' + e.id;
+        var webhookUrl = 'https://cybercheck-api-database.vercel.app/api/reviews/webhook/pos?site_id=' + e.id;
+        return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 14px;">' +
+          '<div style="font-size:13px;font-weight:700;margin-bottom:8px;">' + escHtml(e.name) + '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:6px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<span style="font-size:11px;color:var(--text-muted);width:80px;flex-shrink:0;">Review Page</span>' +
+              '<input type="text" readonly value="' + reviewUrl + '" style="flex:1;padding:5px 8px;background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:6px;color:var(--primary,#38bdf8);font-size:11px;font-family:monospace;" onclick="this.select()">' +
+              '<a href="' + reviewUrl + '" target="_blank" style="font-size:11px;color:var(--primary,#38bdf8);white-space:nowrap;">Open ↗</a>' +
+              '<button onclick="navigator.clipboard.writeText(\'' + reviewUrl + '\').then(function(){toast(\'Copied!\',\'success\')})" style="padding:4px 10px;background:none;border:1px solid var(--card-border);border-radius:6px;color:var(--text-muted);font-size:11px;cursor:pointer;white-space:nowrap;">Copy</button>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<span style="font-size:11px;color:var(--text-muted);width:80px;flex-shrink:0;">POS Webhook</span>' +
+              '<input type="text" readonly value="' + webhookUrl + '" style="flex:1;padding:5px 8px;background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:6px;color:var(--text-muted);font-size:11px;font-family:monospace;" onclick="this.select()">' +
+              '<button onclick="navigator.clipboard.writeText(\'' + webhookUrl + '\').then(function(){toast(\'Copied!\',\'success\')})" style="padding:4px 10px;background:none;border:1px solid var(--card-border);border-radius:6px;color:var(--text-muted);font-size:11px;cursor:pointer;white-space:nowrap;">Copy</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function rvFilter(f) {
+      _rvFilter = f;
+      ['all','positive','critical'].forEach(t => {
+        var btn = document.getElementById('rv-tab-' + t);
+        if (btn) btn.style.background = (t === f) ? 'var(--primary,#38bdf8)' : 'none';
+        if (btn) btn.style.color = (t === f) ? '#0f172a' : 'var(--text)';
+      });
+      loadReviews();
+    }
+
+    function renderReviews(all) {
+      var list = document.getElementById('reviews-list');
+      var filtered = all.filter(function(r) {
+        if (_rvFilter === 'positive') return r.rating >= 4;
+        if (_rvFilter === 'critical') return r.rating <= 3;
+        return true;
+      });
+      if (!filtered.length) { list.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No reviews yet.</p>'; return; }
+
+      var starColors = { 5:'#f59e0b', 4:'#f59e0b', 3:'#94a3b8', 2:'#f87171', 1:'#f87171' };
+      list.innerHTML = filtered.map(function(r) {
+        var stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        var dt = new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        var req = r.review_requests;
+        var itemsBadge = req && req.items_ordered && req.items_ordered.length
+          ? '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">🍽️ ' + req.items_ordered.slice(0,3).map(function(i){return escHtml(i.name||i.item_name||i);}).join(', ') + '</div>'
+          : '';
+        var tableBadge = req && req.table_number ? '<span style="font-size:11px;color:var(--text-muted);margin-left:10px;">Table ' + escHtml(req.table_number) + '</span>' : '';
+        var isPublic = r.is_public;
+        var badge = isPublic
+          ? '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.2);">Public</span>'
+          : '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.2);">Internal</span>';
+        var replySection = r.owner_reply
+          ? '<div style="margin-top:10px;padding:10px;background:rgba(56,189,248,0.05);border-left:2px solid var(--primary,#38bdf8);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-muted);"><strong style="color:var(--primary,#38bdf8);">Your reply:</strong> ' + escHtml(r.owner_reply) + '</div>'
+          : '';
+        return '<div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:10px;padding:18px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">' +
+            '<div>' +
+              '<span style="font-size:18px;color:' + (starColors[r.rating]||'#94a3b8') + ';letter-spacing:1px;">' + stars + '</span>' +
+              '<span style="font-size:13px;color:var(--text-muted);margin-left:10px;">' + dt + '</span>' + tableBadge +
+              '<div style="font-size:13px;font-weight:600;margin-top:4px;">' + escHtml(r.customer_name || r.customer_phone || 'Anonymous') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:8px;align-items:center;">' + badge +
+              '<button onclick="openReply(\'' + r.id + '\',\'' + escHtml((r.text||'').replace(/'/g,"\\'")) + '\')" style="padding:5px 12px;border:1px solid var(--card-border);border-radius:6px;background:none;color:var(--text);font-size:12px;cursor:pointer;">' + (r.owner_reply ? 'Edit Reply' : 'Reply') + '</button>' +
+              '<button onclick="togglePublic(\'' + r.id + '\',' + (!isPublic) + ')" style="padding:5px 12px;border:1px solid var(--card-border);border-radius:6px;background:none;color:var(--text-muted);font-size:12px;cursor:pointer;">' + (isPublic ? 'Make Private' : 'Make Public') + '</button>' +
+            '</div>' +
+          '</div>' +
+          (r.text ? '<div style="font-size:14px;line-height:1.6;color:var(--text);">"' + escHtml(r.text) + '"</div>' : '<div style="font-size:13px;color:var(--text-muted);font-style:italic;">No written review</div>') +
+          itemsBadge + replySection +
+        '</div>';
+      }).join('');
+    }
+
+    function openSendReviewRequest() {
+      document.getElementById('rv-req-phone').value = '';
+      document.getElementById('rv-req-name').value = '';
+      document.getElementById('rv-req-items').value = '';
+      document.getElementById('rv-req-date').value = '';
+      document.getElementById('rv-req-table').value = '';
+      document.getElementById('rv-send-modal').style.display = '';
+    }
+
+    async function sendReviewRequest() {
+      var phone = document.getElementById('rv-req-phone').value.trim();
+      var name  = document.getElementById('rv-req-name').value.trim();
+      var items = document.getElementById('rv-req-items').value.trim().split('\n').filter(Boolean).map(function(s){ return { name: s.trim() }; });
+      var date  = document.getElementById('rv-req-date').value;
+      var table = document.getElementById('rv-req-table').value.trim();
+      if (!phone) { toast('Phone number required', 'error'); return; }
+      try {
+        var res = await fetch(API_BASE + '/api/reviews/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ customer_phone: phone, customer_name: name || null, items: items, visit_date: date || null, table_number: table || null })
+        });
+        if (!res.ok) { var d = await res.json(); throw new Error(d.error); }
+        document.getElementById('rv-send-modal').style.display = 'none';
+        toast('Review request sent!', 'success');
+        loadReviews();
+      } catch(e) { toast('Failed: ' + e.message, 'error'); }
+    }
+
+    function openReply(id, existingText) {
+      _currentReplyId = id;
+      document.getElementById('rv-reply-text').value = existingText || '';
+      document.getElementById('rv-reply-modal').style.display = '';
+    }
+
+    async function submitReply() {
+      var text = document.getElementById('rv-reply-text').value.trim();
+      if (!_currentReplyId) return;
+      try {
+        var res = await fetch(API_BASE + '/api/reviews/' + _currentReplyId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ owner_reply: text })
+        });
+        if (!res.ok) throw new Error('Failed');
+        document.getElementById('rv-reply-modal').style.display = 'none';
+        toast('Reply saved!', 'success');
+        loadReviews();
+      } catch(e) { toast('Failed to save reply', 'error'); }
+    }
+
+    async function togglePublic(id, makePublic) {
+      try {
+        await fetch(API_BASE + '/api/reviews/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ is_public: makePublic })
+        });
+        loadReviews();
+      } catch(e) { toast('Failed', 'error'); }
+    }
+
     // ── Referral Partners ─────────────────────────────────────────
     var _rpLoaded = false;
     async function loadReferralPartners() {
@@ -7960,8 +8453,9 @@
       var token = getAuthToken();
       try {
         var ent = _allEntities.find(function(e){ return e.id === entityId; });
-        if (!ent) { toast('Entity not found', 'error'); return; }
-        var res = await fetch(API_BASE + '/api/gcr/entity/' + ent.slug);
+        // Fall back to ID lookup if not in local cache (works by slug, UUID, or Google Places ID)
+        var lookup = (ent && ent.slug) ? ent.slug : entityId;
+        var res = await fetch(API_BASE + '/api/gcr/entity/' + encodeURIComponent(lookup));
         var data = await res.json();
         var e = data.entity;
         document.getElementById('ent-editor-title').textContent = e.name;
@@ -7972,6 +8466,10 @@
         sv('ent-subtype', e.entity_subtype); sv('ent-icon', e.icon); sv('ent-phone', e.phone);
         sv('ent-rating', e.rating); sv('ent-review-count', e.review_count);
         sv('ent-hero', e.hero_image_url); sv('ent-website', e.website_url); sv('ent-directions', e.directions_url); sv('ent-booking', e.booking_url);
+        sv('ent-reservation', e.reservation_url); sv('ent-order', e.order_url); sv('ent-menu-url', e.menu_url);
+        sv('ent-instagram', e.social_instagram); sv('ent-facebook', e.social_facebook); sv('ent-tiktok', e.social_tiktok);
+        sv('ent-google-places-id', e.google_places_id);
+        var prEl = document.getElementById('ent-price-range'); if (prEl) prEl.value = e.price_range || '';
         sv('ent-address', e.address_line_1); sv('ent-city', e.city); sv('ent-state', e.state); sv('ent-zip', e.zip);
         document.getElementById('ent-active').checked = e.is_active !== false;
         document.getElementById('ent-sponsored').checked = e.is_sponsored === true;
@@ -8054,6 +8552,14 @@
         website_url: document.getElementById('ent-website').value,
         directions_url: document.getElementById('ent-directions').value,
         booking_url: document.getElementById('ent-booking').value || null,
+        reservation_url: document.getElementById('ent-reservation').value || null,
+        order_url: document.getElementById('ent-order').value || null,
+        menu_url: document.getElementById('ent-menu-url').value || null,
+        social_instagram: document.getElementById('ent-instagram').value || null,
+        social_facebook: document.getElementById('ent-facebook').value || null,
+        social_tiktok: document.getElementById('ent-tiktok').value || null,
+        price_range: document.getElementById('ent-price-range').value || null,
+        google_places_id: document.getElementById('ent-google-places-id').value || null,
         address_line_1: document.getElementById('ent-address').value,
         city: document.getElementById('ent-city').value,
         state: document.getElementById('ent-state').value,
@@ -8078,9 +8584,10 @@
       _currentEntityId = null;
       document.getElementById('ent-editor-title').textContent = 'New Entity';
       document.getElementById('ent-editor-slug').textContent = '';
-      ['ent-name','ent-slug','ent-subtitle','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions','ent-booking'].forEach(function(id) {
+      ['ent-name','ent-slug','ent-subtitle','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions','ent-booking','ent-reservation','ent-order','ent-menu-url','ent-instagram','ent-facebook','ent-tiktok','ent-google-places-id','ent-address','ent-city','ent-state','ent-zip','ent-description'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
       });
+      var prEl = document.getElementById('ent-price-range'); if (prEl) prEl.value = '';
       _currentEntityTags = []; _currentEntityFeatures = []; _currentEntityPF = []; _currentEntitySections = [];
       renderEntTags(); renderEntFeatures(); renderEntPF(); renderEntSections();
       document.getElementById('entEditorModal').style.display = 'block';
@@ -8194,6 +8701,43 @@
         toast('Deleted', 'success');
         await reloadEntContent();
       } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function saveMenuItemImage(id, url, table, inputEl) {
+      if (!id) return;
+      try {
+        var token = getAuthToken();
+        var r = await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ image_url: url })
+        });
+        if (!r.ok) throw new Error((await r.json()).error || 'Save failed');
+        toast('Image saved', 'success');
+        // Update thumbnail next to the input
+        if (inputEl) {
+          var thumb = inputEl.closest('div[style*="flex-shrink:0"]') || inputEl.parentNode.parentNode.querySelector('[style*="width:56px"]');
+          if (thumb && url) thumb.innerHTML = '<img src="' + escHtml(url) + '" style="width:100%;height:100%;object-fit:cover;">';
+        }
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function uploadMenuItemImage(fileInput, id, table) {
+      if (!id || !fileInput.files[0]) return;
+      try {
+        var token = getAuthToken();
+        var formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        // Upload to entity photos endpoint, then use URL for menu item
+        var r = await fetch(API_BASE + '/api/admin/gcr/upload-photo', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Upload failed');
+        var url = d.url || d.image_url || '';
+        if (url) await saveMenuItemImage(id, url, table, null);
+        await reloadEntContent();
+      } catch(err) { toast('Upload: ' + err.message, 'error'); }
     }
 
     async function entAIExtract(input, type) {
@@ -8688,10 +9232,18 @@
       var menuEl = document.getElementById('ent-content-menu'); if (!menuEl) return;
       var menuItems = (c.menu && c.menu.items) || [];
       var menuItemRows = menuItems.map(function(item) {
-        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--card-border);">' +
-          '<div style="flex:1;"><span style="font-size:14px;">' + escHtml(item.item_name||item.name||'') + '</span>' +
-          (item.description ? '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</div>' : '') + '</div>' +
-          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
+        var imgId = 'menu-img-' + (item.id||Math.random().toString(36).slice(2));
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--card-border);">' +
+          '<div style="flex-shrink:0;width:56px;height:48px;border-radius:8px;overflow:hidden;background:var(--bg);border:1px solid var(--card-border);cursor:pointer;" onclick="document.getElementById(\'' + imgId + '\').click()" title="Click to set image">' +
+            (item.image_url ? '<img src="' + escHtml(item.image_url) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'🍽️\';">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🍽️</div>') +
+          '</div>' +
+          '<input type="file" id="' + imgId + '" accept="image/*" style="display:none" onchange="uploadMenuItemImage(this,' + (item.id||'null') + ',\'menu-items\')">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:14px;font-weight:600;">' + escHtml(item.item_name||item.name||'') + '</div>' +
+            (item.description ? '<div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(item.description) + '</div>' : '') +
+            '<input type="text" value="' + escHtml(item.image_url||'') + '" placeholder="Image URL…" onchange="saveMenuItemImage(' + (item.id||'null') + ',this.value,\'menu-items\',this)" style="margin-top:4px;width:100%;padding:4px 8px;font-size:11px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);box-sizing:border-box;">' +
+          '</div>' +
+          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;flex-shrink:0;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
           '<button onclick="deleteEntContentItem(\'menu-items\',' + (item.id||'null') + ')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">×</button>' +
           '</div>';
       }).join('');
@@ -8719,10 +9271,18 @@
       var drinksEl = document.getElementById('ent-content-drinks'); if (!drinksEl) return;
       var drinkItems = (c.drinks && c.drinks.items) || [];
       var drinkItemRows = drinkItems.map(function(item) {
-        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--card-border);">' +
-          '<div style="flex:1;"><span style="font-size:14px;">' + escHtml(item.item_name||item.name||'') + '</span>' +
-          (item.description ? '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</div>' : '') + '</div>' +
-          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
+        var imgId = 'drink-img-' + (item.id||Math.random().toString(36).slice(2));
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--card-border);">' +
+          '<div style="flex-shrink:0;width:56px;height:48px;border-radius:8px;overflow:hidden;background:var(--bg);border:1px solid var(--card-border);cursor:pointer;" onclick="document.getElementById(\'' + imgId + '\').click()" title="Click to set image">' +
+            (item.image_url ? '<img src="' + escHtml(item.image_url) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'🥂\';">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;">🥂</div>') +
+          '</div>' +
+          '<input type="file" id="' + imgId + '" accept="image/*" style="display:none" onchange="uploadMenuItemImage(this,' + (item.id||'null') + ',\'drink-items\')">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:14px;font-weight:600;">' + escHtml(item.item_name||item.name||'') + '</div>' +
+            (item.description ? '<div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(item.description) + '</div>' : '') +
+            '<input type="text" value="' + escHtml(item.image_url||'') + '" placeholder="Image URL…" onchange="saveMenuItemImage(' + (item.id||'null') + ',this.value,\'drink-items\',this)" style="margin-top:4px;width:100%;padding:4px 8px;font-size:11px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);box-sizing:border-box;">' +
+          '</div>' +
+          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;flex-shrink:0;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
           '<button onclick="deleteEntContentItem(\'drink-items\',' + (item.id||'null') + ')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">×</button>' +
           '</div>';
       }).join('');
@@ -11026,14 +11586,67 @@
     function openQRSingle() {
       var s = document.getElementById('qr-form-single');
       var b = document.getElementById('qr-form-batch');
+      var m = document.getElementById('qr-form-multi');
       s.style.display = s.style.display === 'none' ? '' : 'none';
       b.style.display = 'none';
+      m.style.display = 'none';
     }
     function openQRBatch() {
       var b = document.getElementById('qr-form-batch');
       var s = document.getElementById('qr-form-single');
+      var m = document.getElementById('qr-form-multi');
       b.style.display = b.style.display === 'none' ? '' : 'none';
       s.style.display = 'none';
+      m.style.display = 'none';
+    }
+
+    function openQRMulti() {
+      var m = document.getElementById('qr-form-multi');
+      var s = document.getElementById('qr-form-single');
+      var b = document.getElementById('qr-form-batch');
+      m.style.display = m.style.display === 'none' ? '' : 'none';
+      s.style.display = 'none';
+      b.style.display = 'none';
+    }
+
+    async function generateMultiQR() {
+      var raw   = (document.getElementById('qr-m-urls').value || '').trim();
+      var prefix= (document.getElementById('qr-m-prefix').value || '').trim();
+      var type  = document.getElementById('qr-m-type').value;
+      var notes = (document.getElementById('qr-m-notes').value || '').trim();
+      var urls  = raw.split('\n').map(function(u){ return u.trim(); }).filter(function(u){ return u.length > 0; });
+      if (!urls.length) { alert('Paste at least one URL'); return; }
+
+      var btn    = document.getElementById('qr-m-btn');
+      var status = document.getElementById('qr-m-status');
+      btn.disabled = true;
+      var token = getAuthToken();
+      var created = 0, failed = 0;
+
+      for (var i = 0; i < urls.length; i++) {
+        var url = urls[i];
+        status.textContent = 'Creating ' + (i + 1) + ' of ' + urls.length + '…';
+        // Auto-label from URL hostname + path if no prefix set
+        var autoLabel = prefix ? prefix + ' #' + (i + 1) : (function(u) {
+          try { var p = new URL(u); return (p.hostname + p.pathname).replace(/\/$/, '').split('/').pop() || p.hostname; }
+          catch(e) { return 'Code ' + (i + 1); }
+        })(url);
+        try {
+          var res = await fetch(API_BASE + '/api/qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ label: autoLabel, type: type, destination_url: url, notes: notes || null })
+          });
+          if (res.ok) created++; else failed++;
+        } catch(e) { failed++; }
+      }
+
+      btn.disabled = false;
+      status.textContent = '';
+      document.getElementById('qr-m-urls').value = '';
+      document.getElementById('qr-form-multi').style.display = 'none';
+      toast('Created ' + created + ' codes' + (failed ? ' (' + failed + ' failed)' : ''), failed ? 'error' : 'success');
+      loadQRCodes();
     }
 
     async function generateSingleQR() {
@@ -11042,6 +11655,9 @@
       var dest     = document.getElementById('qr-s-dest').value.trim();
       var location = document.getElementById('qr-s-location').value.trim();
       var placement= document.getElementById('qr-s-placement').value;
+      var notes    = document.getElementById('qr-s-notes').value.trim();
+      var lat      = parseFloat(document.getElementById('qr-s-lat').value) || null;
+      var lng      = parseFloat(document.getElementById('qr-s-lng').value) || null;
       var bizRaw   = (document.getElementById('qr-s-biz').value || '').trim();
       if (!label) { alert('Label is required'); return; }
       var siteId = null;
@@ -11060,7 +11676,9 @@
         }
       }
       try {
-        var payload = { label: label, type: type, destination_url: dest || null, location: location || null, placement: placement };
+        var metadata = {};
+        if (lat && lng) { metadata.lat = lat; metadata.lng = lng; }
+        var payload = { label, type, destination_url: dest || null, location: location || null, placement, notes: notes || null, metadata };
         if (siteId) payload.site_id = siteId;
         var res = await fetch(API_BASE + '/api/qr', {
           method: 'POST',
@@ -11068,14 +11686,107 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) { var e = await res.json(); alert('Error: ' + e.error); return; }
-        document.getElementById('qr-s-label').value = '';
-        document.getElementById('qr-s-dest').value  = '';
-        document.getElementById('qr-s-location').value = '';
-        document.getElementById('qr-s-biz').value   = '';
+        ['qr-s-label','qr-s-dest','qr-s-location','qr-s-biz','qr-s-notes','qr-s-lat','qr-s-lng'].forEach(function(id) {
+          var el = document.getElementById(id); if (el) el.value = '';
+        });
         document.getElementById('qr-form-single').style.display = 'none';
         toast('QR code created!', 'success');
         loadQRCodes();
       } catch(e) { alert('Request failed'); }
+    }
+
+    var _qrMenuCache = [];
+    async function qrMenuSearch() {
+      var q = (document.getElementById('qr-menu-search').value || '').trim();
+      var drop = document.getElementById('qr-menu-drop');
+      if (!q) { drop.style.display = 'none'; return; }
+
+      // Load from cache or fetch
+      if (!_qrMenuCache.length) {
+        var res = await fetch(API_BASE + '/api/gcr/entities?limit=500').catch(function(){ return null; });
+        if (res && res.ok) {
+          var d = await res.json();
+          _qrMenuCache = (d.entities || d.businesses || []).filter(function(e){ return e.slug; });
+        }
+      }
+
+      var matches = _qrMenuCache.filter(function(e) {
+        return (e.name || '').toLowerCase().includes(q.toLowerCase());
+      }).slice(0, 8);
+
+      if (!matches.length) { drop.style.display = 'none'; return; }
+
+      drop.innerHTML = matches.map(function(e) {
+        var menuUrl = 'https://cybercheck-links.vercel.app/' + e.slug + '/menu';
+        return '<div onclick="qrMenuPick(' + JSON.stringify(menuUrl) + ',' + JSON.stringify(e.name) + ')" ' +
+          'style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--card-border);font-size:13px;" ' +
+          'onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'">' +
+          '<div style="font-weight:600;">' + escHtml(e.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + escHtml(menuUrl) + '</div>' +
+        '</div>';
+      }).join('');
+      drop.style.display = '';
+    }
+
+    function qrMenuPick(url, name) {
+      document.getElementById('qr-s-dest').value = url;
+      document.getElementById('qr-menu-search').value = '';
+      document.getElementById('qr-menu-drop').style.display = 'none';
+      // Auto-fill label if empty
+      var lbl = document.getElementById('qr-s-label');
+      if (!lbl.value) lbl.value = name + ' Menu';
+      // Auto-fill biz field
+      var biz = document.getElementById('qr-s-biz');
+      if (!biz.value) biz.value = name;
+      if (typeof toast === 'function') toast('Menu URL set for ' + name, 'success');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      var drop = document.getElementById('qr-menu-drop');
+      if (drop && !drop.contains(e.target) && e.target.id !== 'qr-menu-search') {
+        drop.style.display = 'none';
+      }
+    });
+
+    function qrDropPin() {
+      var status = document.getElementById('qr-pin-status');
+      status.textContent = 'Getting location…'; status.style.display = '';
+      if (!navigator.geolocation) { status.textContent = '⚠️ Geolocation not supported'; return; }
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        var lat = pos.coords.latitude.toFixed(6);
+        var lng = pos.coords.longitude.toFixed(6);
+        document.getElementById('qr-s-lat').value = lat;
+        document.getElementById('qr-s-lng').value = lng;
+        if (!document.getElementById('qr-s-location').value) {
+          document.getElementById('qr-s-location').value = lat + ', ' + lng;
+        }
+        status.textContent = '✅ Pin set: ' + lat + ', ' + lng + ' — open in Google Maps';
+        status.innerHTML = '✅ Pin set: ' + lat + ', ' + lng + ' · <a href="https://maps.google.com/?q=' + lat + ',' + lng + '" target="_blank" style="color:#38bdf8;">View on map →</a>';
+      }, function(err) {
+        status.textContent = '⚠️ ' + err.message;
+      });
+    }
+
+    function qrPasteGoogleMaps() {
+      var url = prompt('Paste a Google Maps URL (e.g. from "Share → Copy link"):');
+      if (!url) return;
+      var status = document.getElementById('qr-pin-status');
+      // Try to extract @lat,lng or ?q=lat,lng from the URL
+      var match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        document.getElementById('qr-s-lat').value = match[1];
+        document.getElementById('qr-s-lng').value = match[2];
+        if (!document.getElementById('qr-s-location').value) {
+          document.getElementById('qr-s-location').value = match[1] + ', ' + match[2];
+        }
+        status.style.display = '';
+        status.innerHTML = '✅ Coordinates extracted: ' + match[1] + ', ' + match[2];
+      } else {
+        // Store the URL itself as metadata
+        status.style.display = '';
+        status.textContent = '⚠️ Could not extract coordinates — paste the short share link or copy the URL from the address bar while the pin is shown.';
+      }
     }
 
     async function generateBatchQR() {
@@ -11083,13 +11794,14 @@
       var prefix = document.getElementById('qr-b-prefix').value.trim() || 'Sticker';
       var type   = document.getElementById('qr-b-type').value;
       var dest   = document.getElementById('qr-b-dest').value.trim();
-      if (count < 1 || count > 500) { alert('Count must be 1–500'); return; }
+      if (count < 1 || count > 5000) { alert('Count must be 1–5,000'); return; }
       var btn = event.target; btn.disabled = true; btn.textContent = 'Generating…';
       try {
+        var batchLoc = (document.getElementById('qr-b-location').value || '').trim();
         var res = await fetch(API_BASE + '/api/qr/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-          body: JSON.stringify({ count, label_prefix: prefix, type, destination_url: dest || null })
+          body: JSON.stringify({ count, label_prefix: prefix, type, destination_url: dest || null, location: batchLoc || null })
         });
         if (!res.ok) { var e = await res.json(); alert('Error: ' + e.error); return; }
         var d = await res.json();
@@ -11151,14 +11863,17 @@
           '<td style="padding:10px 8px;font-weight:600;color:#38bdf8;">#' + (c.seq_number||'—') + '</td>' +
           '<td style="padding:10px 8px;">' +
             '<div style="font-weight:500;font-size:13px;">' + esc(c.label) + '</div>' +
-            (c.location ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + placementIcon + ' ' + esc(c.location) + '</div>' : '') +
+            (c.location ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + placementIcon + ' ' + esc(c.location) +
+              (c.metadata && c.metadata.lat && c.metadata.lng ? ' <a href="https://maps.google.com/?q=' + c.metadata.lat + ',' + c.metadata.lng + '" target="_blank" style="color:#38bdf8;font-size:10px;text-decoration:none;">📍 Map</a>' : '') +
+            '</div>' : '') +
+            (c.notes ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;font-style:italic;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(c.notes) + '">📝 ' + esc(c.notes) + '</div>' : '') +
           '</td>' +
           '<td style="padding:10px 8px;"><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(148,163,184,0.15);color:var(--text-muted);">' + esc(c.type||'general') + '</span></td>' +
           '<td style="padding:10px 8px;"><span style="font-weight:700;color:' + heatColor(c.scan_count||0) + ';">' + (c.scan_count||0) + '</span></td>' +
           '<td style="padding:10px 8px;font-size:11px;color:var(--text-muted);">' + esc(c.active ? 'Active' : 'Off') + '</td>' +
           '<td style="padding:10px 8px;">' +
             '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-              '<button onclick="viewQRScans(\'' + c.id + '\',\'' + esc(c.label) + '\',' + (c.scan_count||0) + ',\'' + scanUrl + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Scans</button>' +
+              '<button onclick="viewQRScans(\'' + c.id + '\',\'' + esc(c.label).replace(/'/g,"\\'") + '\',' + (c.scan_count||0) + ',\'' + scanUrl + '\',\'' + esc(c.location||'').replace(/'/g,"\\'") + '\',\'' + esc(c.notes||'').replace(/'/g,"\\'") + '\',' + JSON.stringify(c.metadata||{}) + ',\'' + esc(c.alert_phone||'').replace(/'/g,"\\'") + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Scans</button>' +
               '<button onclick="copyQRUrl(\'' + scanUrl + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Copy</button>' +
               '<button onclick="toggleQRActive(\'' + c.id + '\',' + c.active + ')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:' + (c.active ? '#f87171' : '#4ade80') + ';cursor:pointer;">' + (c.active ? 'Disable' : 'Enable') + '</button>' +
             '</div>' +
@@ -11177,14 +11892,27 @@
         '</tr></thead><tbody>' + rows + '</tbody></table></div>';
     }
 
-    async function viewQRScans(id, label, totalScans, scanUrl) {
+    var _currentQRCodeId = null;
+
+    async function viewQRScans(id, label, totalScans, scanUrl, location, notes, metadata, alertPhone) {
       _activeQRId = id;
+      _currentQRCodeId = id;
+      document.getElementById('smd-alert-phone').value = alertPhone || '';
       document.getElementById('scan-modal-title').textContent = label;
       document.getElementById('scan-modal-url').textContent = scanUrl;
       document.getElementById('scan-modal-url-input').value = scanUrl;
       document.getElementById('smd-scans').textContent = totalScans;
       document.getElementById('smd-leads').textContent = '…';
       document.getElementById('smd-mobile').textContent = '…';
+      var locEl = document.getElementById('scan-modal-location');
+      var notesEl = document.getElementById('scan-modal-notes');
+      if (location) {
+        var mapLink = (metadata && metadata.lat && metadata.lng) ? ' <a href="https://maps.google.com/?q=' + metadata.lat + ',' + metadata.lng + '" target="_blank" style="color:#38bdf8;">View on map →</a>' : '';
+        locEl.innerHTML = '📍 ' + escHtml(location) + mapLink;
+        locEl.style.display = '';
+      } else { locEl.style.display = 'none'; }
+      if (notes) { notesEl.textContent = '📝 ' + notes; notesEl.style.display = ''; }
+      else { notesEl.style.display = 'none'; }
       document.getElementById('scan-modal-list').innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">Loading scans…</p>';
       var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(scanUrl) + '&bgcolor=1e293b&color=38bdf8&format=png';
       document.getElementById('scan-modal-qr').innerHTML = '<img src="' + qrImg + '" style="width:140px;height:140px;border-radius:8px;" alt="QR"><br><a href="' + qrImg + '" download="qr-' + id + '.png" style="font-size:12px;color:#38bdf8;text-decoration:none;">Download QR Image</a>';
@@ -11202,17 +11930,52 @@
           document.getElementById('scan-modal-list').innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No scans yet — share this QR code to start tracking.</p>';
           return;
         }
+        // Also fetch post-scan events
+        var eventsRes = await fetch(API_BASE + '/api/qr/' + id + '/events', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var allEvents = eventsRes.ok ? await eventsRes.json() : [];
+
+        var tierColors = { on_fire: '#f97316', warm: '#eab308', interested: '#38bdf8', cold: '#64748b' };
+        var tierEmoji  = { on_fire: '🔥', warm: '🌡️', interested: '👀', cold: '❄️' };
+
         var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
-          '<thead><tr style="border-bottom:1px solid var(--card-border);"><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Time</th><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Phone</th><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Name</th><th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Device</th></tr></thead><tbody>';
+          '<thead><tr style="border-bottom:1px solid var(--card-border);">' +
+            '<th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Time</th>' +
+            '<th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Device</th>' +
+            '<th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Lead</th>' +
+            '<th style="text-align:left;padding:6px 8px;color:var(--text-muted);">Score</th>' +
+            '<th style="text-align:left;padding:6px 8px;color:var(--text-muted);">After Scan</th>' +
+          '</tr></thead><tbody>';
         scans.forEach(function(s) {
           var isLead = !!s.scanner_phone;
           var dt = new Date(s.scanned_at);
           var timeStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+          var tier = s.lead_tier || 'cold';
+          var tierColor = tierColors[tier] || '#64748b';
+          var tierTag = tierEmoji[tier] + ' ' + tier.replace('_',' ');
+          var score = s.lead_score || 0;
+          var timeSec = s.time_on_page || 0;
+          var timeDisp = timeSec >= 60 ? Math.floor(timeSec/60) + 'm ' + (timeSec%60) + 's' : timeSec + 's';
+          // Match events to this scan by scan_id
+          var scanEvents = allEvents.filter(function(e) { return e.scan_id === s.id; });
+          var evHtml = scanEvents.length
+            ? scanEvents.map(function(e) {
+                var ePage = e.page_url ? e.page_url.replace(/^https?:\/\/[^\/]+/, '').split('?')[0] || '/' : '';
+                var eTitle = e.page_title || ePage || e.event_type;
+                return '<div style="font-size:10px;color:#38bdf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="' + escHtml(e.page_url||'') + '">→ ' + escHtml(eTitle) + '</div>';
+              }).join('')
+            : '<span style="color:var(--text-muted);font-size:10px;">—</span>';
           html += '<tr style="border-top:1px solid var(--card-border);">' +
-            '<td style="padding:6px 8px;color:var(--text-muted);">' + timeStr + '</td>' +
-            '<td style="padding:6px 8px;font-weight:' + (isLead?'600':'400') + ';color:' + (isLead?'#4ade80':'var(--text-muted)') + ';">' + (s.scanner_phone || '—') + '</td>' +
-            '<td style="padding:6px 8px;">' + esc(s.scanner_name || '—') + '</td>' +
-            '<td style="padding:6px 8px;color:var(--text-muted);">' + esc(s.device_type || '—') + '</td>' +
+            '<td style="padding:6px 8px;color:var(--text-muted);white-space:nowrap;">' + timeStr + '</td>' +
+            '<td style="padding:6px 8px;color:var(--text-muted);">' + escHtml(s.device_type || '—') + '</td>' +
+            '<td style="padding:6px 8px;">' +
+              '<div style="color:' + tierColor + ';font-weight:600;font-size:11px;">' + tierTag + '</div>' +
+              (s.scanner_phone ? '<div style="color:#4ade80;font-size:10px;">' + escHtml(s.scanner_phone) + (s.scanner_name ? ' · ' + escHtml(s.scanner_name) : '') + '</div>' : '') +
+            '</td>' +
+            '<td style="padding:6px 8px;white-space:nowrap;">' +
+              '<span style="font-weight:600;color:' + tierColor + ';">' + score + '</span>' +
+              (timeSec > 0 ? '<div style="font-size:10px;color:var(--text-muted);">⏱ ' + timeDisp + '</div>' : '') +
+            '</td>' +
+            '<td style="padding:6px 8px;">' + evHtml + '</td>' +
           '</tr>';
         });
         html += '</tbody></table>';
@@ -11221,6 +11984,24 @@
     }
 
     function closeQRModal() { document.getElementById('qr-scan-modal').style.display = 'none'; }
+
+    async function saveQRAlertPhone() {
+      var phone = document.getElementById('smd-alert-phone').value.trim();
+      if (!_currentQRCodeId) return;
+      try {
+        await fetch(API_BASE + '/api/qr/' + _currentQRCodeId + '/alert', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ alert_phone: phone })
+        });
+        toast(phone ? 'SMS alert saved!' : 'Alert cleared', 'success');
+      } catch(e) { toast('Failed to save', 'error'); }
+    }
+
+    async function clearQRAlertPhone() {
+      document.getElementById('smd-alert-phone').value = '';
+      await saveQRAlertPhone();
+    }
 
     function copyQRUrl(url) {
       navigator.clipboard.writeText(url).then(function(){ toast('URL copied!', 'success'); });
@@ -13873,6 +14654,273 @@
           if (el) el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Failed to load — check console</div>';
         });
       }
+    }
+
+    // ── Sponsored Cards ──
+    var _spList = [];
+    var _spImages = []; // images being edited in the form
+
+    async function loadSponsored() {
+      var token = getAuthToken();
+      var el = document.getElementById('sp-list');
+      if (!el) return;
+      el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/tripswipe/sponsored', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = r.ok ? await r.json() : { sponsored: [] };
+        _spList = d.sponsored || [];
+        renderSpList();
+      } catch(e) {
+        el.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;">Failed to load</div>';
+      }
+    }
+
+    function renderSpList() {
+      var el = document.getElementById('sp-list');
+      if (!el) return;
+      if (!_spList.length) {
+        el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">No sponsored businesses yet.</div>';
+        return;
+      }
+      el.innerHTML = _spList.map(function(s) {
+        var imgs = s.images || [];
+        return '<div class="card" style="padding:16px;">' +
+          '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+                '<div style="font-size:15px;font-weight:700;color:var(--text);">' + (s.business_name || s.slug) + '</div>' +
+                '<code style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px;">' + s.slug + '</code>' +
+                (s.active ? '<span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;padding:2px 8px;border-radius:10px;font-weight:700;">ACTIVE</span>' : '<span style="font-size:10px;background:rgba(239,68,68,.15);color:#fca5a5;padding:2px 8px;border-radius:10px;font-weight:700;">OFF</span>') +
+              '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Every <strong style="color:var(--text);">' + s.frequency + '</strong> cards · Priority <strong style="color:var(--text);">' + s.priority + '</strong> · <strong style="color:var(--text);">' + imgs.length + '</strong> promo image' + (imgs.length !== 1 ? 's' : '') + '</div>' +
+              (imgs.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+                imgs.map(function(img, i) {
+                  return '<div style="position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#4f46e5,#7c3aed);">' +
+                    '<img src="' + img + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">' +
+                    '<div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,.7);font-weight:700;">#' + (i+1) + '</div>' +
+                  '</div>';
+                }).join('') +
+              '</div>' : '<div style="font-size:12px;color:#f97316;">⚠️ No images — will use GCR hero image</div>') +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+              '<button onclick="spEdit(\'' + s.id + '\')" style="padding:7px 14px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:#c4b5fd;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Edit</button>' +
+              '<button onclick="spDelete(\'' + s.id + '\')" style="padding:7px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;border-radius:8px;font-size:12px;cursor:pointer;">✕</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function spAddImage() {
+      var url = (document.getElementById('sp-img-input').value || '').trim();
+      if (!url) return;
+      _spImages.push(url);
+      document.getElementById('sp-img-input').value = '';
+      renderSpImagesGrid();
+    }
+
+    function spRemoveImage(i) {
+      _spImages.splice(i, 1);
+      renderSpImagesGrid();
+    }
+
+    function renderSpImagesGrid() {
+      var grid = document.getElementById('sp-images-grid');
+      if (!grid) return;
+      if (!_spImages.length) {
+        grid.innerHTML = '<div style="color:var(--text-muted);font-size:12px;align-self:center;padding:0 4px;">No images added yet</div>';
+        return;
+      }
+      grid.innerHTML = _spImages.map(function(img, i) {
+        return '<div style="position:relative;flex-shrink:0;">' +
+          '<div style="width:80px;height:80px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#1a3a5c,#0ea5e9);border:2px solid rgba(124,106,247,.3);">' +
+            '<img src="' + img + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">' +
+          '</div>' +
+          '<div style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,.8);font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.8);">#' + (i+1) + '</div>' +
+          '<button onclick="spRemoveImage(' + i + ')" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:white;font-size:9px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    function spLookupBiz() {
+      var slug = (document.getElementById('sp-slug').value || '').trim();
+      var match = (_tsAllBusinesses || []).find(function(b){ return b.slug === slug; });
+      var el = document.getElementById('sp-biz-match');
+      if (!el) return;
+      if (match) el.textContent = '✓ ' + match.name;
+      else el.textContent = slug ? 'Not found in loaded businesses' : '';
+    }
+
+    async function spSave() {
+      var token = getAuthToken();
+      var id = document.getElementById('sp-edit-id').value;
+      var slug = document.getElementById('sp-slug').value.trim();
+      if (!slug) { alert('Business slug required'); return; }
+      var match = (_tsAllBusinesses || []).find(function(b){ return b.slug === slug; });
+      var payload = {
+        slug: slug,
+        business_name: match ? match.name : slug,
+        images: _spImages.slice(),
+        frequency: parseInt(document.getElementById('sp-frequency').value) || 10,
+        priority: parseInt(document.getElementById('sp-priority').value) || 0,
+        active: document.getElementById('sp-active').checked,
+      };
+      var url = API_BASE + '/api/admin/tripswipe/sponsored' + (id ? '/' + id : '');
+      var method = id ? 'PUT' : 'POST';
+      try {
+        var r = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!r.ok) throw new Error(await r.text());
+        spClear();
+        await loadSponsored();
+      } catch(e) { alert('Save failed: ' + e.message); }
+    }
+
+    function spEdit(id) {
+      var s = _spList.find(function(x){ return x.id === id; });
+      if (!s) return;
+      document.getElementById('sp-edit-id').value = s.id;
+      document.getElementById('sp-slug').value = s.slug;
+      document.getElementById('sp-frequency').value = s.frequency;
+      document.getElementById('sp-priority').value = s.priority;
+      document.getElementById('sp-active').checked = s.active;
+      _spImages = (s.images || []).slice();
+      renderSpImagesGrid();
+      spLookupBiz();
+      document.getElementById('sp-form-title').textContent = '✏️ Editing: ' + (s.business_name || s.slug);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function spDelete(id) {
+      if (!confirm('Remove this sponsored business?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/tripswipe/sponsored/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await loadSponsored();
+    }
+
+    function spClear() {
+      document.getElementById('sp-edit-id').value = '';
+      document.getElementById('sp-slug').value = '';
+      document.getElementById('sp-frequency').value = '10';
+      document.getElementById('sp-priority').value = '0';
+      document.getElementById('sp-active').checked = true;
+      document.getElementById('sp-form-title').textContent = '➕ Add Sponsored Business';
+      document.getElementById('sp-biz-match').textContent = '';
+      _spImages = [];
+      renderSpImagesGrid();
+    }
+
+    // ── Tonight Cards ──
+    var _tcCards = [];
+
+    async function loadTonightCards() {
+      var token = getAuthToken();
+      var list = document.getElementById('tc-cards-list');
+      if (!list) return;
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/tripswipe/promo-cards', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = r.ok ? await r.json() : { cards: [] };
+        _tcCards = d.cards || [];
+        renderTCList();
+      } catch(e) {
+        list.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;">Failed to load</div>';
+      }
+    }
+
+    function renderTCList() {
+      var list = document.getElementById('tc-cards-list');
+      if (!list) return;
+      if (!_tcCards.length) {
+        list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">No tonight cards yet — add one above.</div>';
+        return;
+      }
+      list.innerHTML = _tcCards.map(function(c) {
+        var dateStr = c.show_date ? new Date(c.show_date + 'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'Any day';
+        var isToday = c.show_date === new Date().toISOString().slice(0,10);
+        return '<div class="card" style="padding:16px;display:flex;gap:14px;align-items:flex-start;">' +
+          '<div style="width:80px;height:80px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#4f46e5,#7c3aed);flex-shrink:0;">' +
+            (c.image_url ? '<img src="' + c.image_url + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">' : '') +
+          '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+              '<div style="font-size:14px;font-weight:700;color:var(--text);">' + c.title + '</div>' +
+              (c.active ? '<span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;padding:2px 8px;border-radius:10px;font-weight:700;">ACTIVE</span>' : '<span style="font-size:10px;background:rgba(239,68,68,.15);color:#fca5a5;padding:2px 8px;border-radius:10px;font-weight:700;">OFF</span>') +
+              (isToday ? '<span style="font-size:10px;background:rgba(245,158,11,.2);color:#fcd34d;padding:2px 8px;border-radius:10px;font-weight:700;">📅 TODAY</span>' : '') +
+            '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">📅 ' + dateStr + (c.city ? ' · 📍 ' + c.city : '') + '</div>' +
+            (c.description ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + c.description + '</div>' : '') +
+            (c.cta_label ? '<div style="font-size:11px;color:#7dd3fc;">🔗 ' + (c.cta_label || 'CTA') + (c.linked_slug ? ' · 🏢 ' + c.linked_slug : '') + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+            '<button onclick="tcEdit(\'' + c.id + '\')" style="padding:7px 14px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:#c4b5fd;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Edit</button>' +
+            '<button onclick="tcDelete(\'' + c.id + '\')" style="padding:7px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;border-radius:8px;font-size:12px;cursor:pointer;">✕</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function tcSave() {
+      var token = getAuthToken();
+      var id = document.getElementById('tc-edit-id').value;
+      var payload = {
+        title: document.getElementById('tc-title').value.trim(),
+        image_url: document.getElementById('tc-image').value.trim() || null,
+        description: document.getElementById('tc-desc').value.trim() || null,
+        show_date: document.getElementById('tc-date').value || null,
+        cta_label: document.getElementById('tc-cta-label').value.trim() || 'Learn More',
+        cta_url: document.getElementById('tc-cta-url').value.trim() || null,
+        linked_slug: document.getElementById('tc-linked-slug').value.trim() || null,
+        city: document.getElementById('tc-city').value.trim() || null,
+        active: document.getElementById('tc-active').value === 'true',
+      };
+      if (!payload.title) { alert('Title is required'); return; }
+      var url = API_BASE + '/api/admin/tripswipe/promo-cards' + (id ? '/' + id : '');
+      var method = id ? 'PUT' : 'POST';
+      try {
+        var r = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!r.ok) throw new Error(await r.text());
+        tcClear();
+        await loadTonightCards();
+      } catch(e) { alert('Save failed: ' + e.message); }
+    }
+
+    function tcEdit(id) {
+      var c = _tcCards.find(function(x){ return x.id === id; });
+      if (!c) return;
+      document.getElementById('tc-edit-id').value = c.id;
+      document.getElementById('tc-title').value = c.title || '';
+      document.getElementById('tc-image').value = c.image_url || '';
+      document.getElementById('tc-desc').value = c.description || '';
+      document.getElementById('tc-date').value = c.show_date || '';
+      document.getElementById('tc-cta-label').value = c.cta_label || '';
+      document.getElementById('tc-cta-url').value = c.cta_url || '';
+      document.getElementById('tc-linked-slug').value = c.linked_slug || '';
+      document.getElementById('tc-city').value = c.city || '';
+      document.getElementById('tc-active').value = c.active ? 'true' : 'false';
+      tcPreviewImg();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    async function tcDelete(id) {
+      if (!confirm('Delete this card?')) return;
+      var token = getAuthToken();
+      await fetch(API_BASE + '/api/admin/tripswipe/promo-cards/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await loadTonightCards();
+    }
+
+    function tcClear() {
+      ['tc-edit-id','tc-title','tc-image','tc-desc','tc-date','tc-cta-label','tc-cta-url','tc-linked-slug','tc-city'].forEach(function(id){ document.getElementById(id).value = ''; });
+      document.getElementById('tc-active').value = 'true';
+      var thumb = document.getElementById('tc-img-thumb');
+      if (thumb) thumb.style.display = 'none';
+    }
+
+    function tcPreviewImg() {
+      var url = document.getElementById('tc-image').value.trim();
+      var thumb = document.getElementById('tc-img-thumb');
+      if (!thumb) return;
+      if (url) { thumb.src = url; thumb.style.display = 'block'; }
+      else { thumb.style.display = 'none'; }
     }
 
     // ── AI Feedback ──
