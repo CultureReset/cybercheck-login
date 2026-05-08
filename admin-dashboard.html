@@ -909,6 +909,18 @@
               <div id="topCampaigns"></div>
             </div>
 
+            <!-- Countries -->
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">
+              <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;">🌍 Top Countries</h3>
+              <div id="topCountries"></div>
+            </div>
+
+            <!-- Cities -->
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">
+              <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;">📍 Top Cities</h3>
+              <div id="topCities"></div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -1954,19 +1966,40 @@
         document.getElementById('topCampaigns').innerHTML = d.top_campaigns.length
           ? renderList(d.top_campaigns, d.total_pageviews, '#d97706')
           : '<div style="color:#888;font-size:13px;">No UTM campaigns tracked yet.<br>Add ?utm_campaign=name to your ad links.</div>';
+        // Countries
+        document.getElementById('topCountries').innerHTML = (d.top_countries && d.top_countries.length)
+          ? renderList(d.top_countries, d.total_pageviews, '#0369a1')
+          : '<div style="color:#888;font-size:13px;">No location data yet</div>';
+        // Cities
+        document.getElementById('topCities').innerHTML = (d.top_cities && d.top_cities.length)
+          ? renderList(d.top_cities, d.total_pageviews, '#7c3aed')
+          : '<div style="color:#888;font-size:13px;">No city data yet</div>';
 
         document.getElementById('analyticsLoading').style.display = 'none';
         document.getElementById('analyticsSummary').style.display = 'block';
 
-        // Load saved tracking IDs
-        const savedGA4 = localStorage.getItem('gcr_ga4_id');
-        const savedMeta = localStorage.getItem('gcr_meta_pixel_id');
-        if (savedGA4) document.getElementById('ga4Id').value = savedGA4;
-        if (savedMeta) document.getElementById('metaPixelId').value = savedMeta;
-        if (savedGA4 || savedMeta) {
-          document.getElementById('trackingIdsStatus').style.display = 'block';
-          document.getElementById('trackingIdsStatus').textContent =
-            `✅ Tracking active — GA4: ${savedGA4 || 'not set'} · Meta Pixel: ${savedMeta || 'not set'}`;
+        // Load saved tracking IDs from DB, fallback to localStorage
+        try {
+          const [ga4Res, metaRes] = await Promise.all([
+            fetch(`${GCR_API_BASE}/settings/ga4_id`),
+            fetch(`${GCR_API_BASE}/settings/meta_pixel_id`)
+          ]);
+          const ga4Data = await ga4Res.json();
+          const metaData = await metaRes.json();
+          const savedGA4 = ga4Data.value || localStorage.getItem('gcr_ga4_id') || '';
+          const savedMeta = metaData.value || localStorage.getItem('gcr_meta_pixel_id') || '';
+          if (savedGA4) document.getElementById('ga4Id').value = savedGA4;
+          if (savedMeta) document.getElementById('metaPixelId').value = savedMeta;
+          if (savedGA4 || savedMeta) {
+            document.getElementById('trackingIdsStatus').style.display = 'block';
+            document.getElementById('trackingIdsStatus').textContent =
+              `✅ Tracking active — GA4: ${savedGA4 || 'not set'} · Meta Pixel: ${savedMeta || 'not set'}`;
+          }
+        } catch(_) {
+          const savedGA4 = localStorage.getItem('gcr_ga4_id');
+          const savedMeta = localStorage.getItem('gcr_meta_pixel_id');
+          if (savedGA4) document.getElementById('ga4Id').value = savedGA4;
+          if (savedMeta) document.getElementById('metaPixelId').value = savedMeta;
         }
       } catch(e) {
         document.getElementById('analyticsLoading').textContent = 'Error loading analytics: ' + e.message;
@@ -1990,18 +2023,30 @@
       }).join('');
     }
 
-    function saveTrackingIds() {
+    async function saveTrackingIds() {
       const ga4 = document.getElementById('ga4Id').value.trim();
       const meta = document.getElementById('metaPixelId').value.trim();
       if (!ga4 && !meta) { alert('Enter at least one tracking ID'); return; }
-      if (ga4) localStorage.setItem('gcr_ga4_id', ga4);
-      if (meta) localStorage.setItem('gcr_meta_pixel_id', meta);
       const status = document.getElementById('trackingIdsStatus');
       status.style.display = 'block';
-      status.textContent = `✅ IDs saved — GA4: ${ga4 || 'not set'} · Meta Pixel: ${meta || 'not set'}. Send these to your developer to add to all GCR pages.`;
-      status.style.background = '#f0fdf4';
-      status.style.borderColor = '#bbf7d0';
-      status.style.color = '#166534';
+      status.textContent = 'Saving…';
+      try {
+        const saves = [];
+        if (ga4) saves.push(fetch(`${GCR_API_BASE}/settings`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key: 'ga4_id', value: ga4 }) }));
+        if (meta) saves.push(fetch(`${GCR_API_BASE}/settings`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key: 'meta_pixel_id', value: meta }) }));
+        await Promise.all(saves);
+        if (ga4) localStorage.setItem('gcr_ga4_id', ga4);
+        if (meta) localStorage.setItem('gcr_meta_pixel_id', meta);
+        status.textContent = `✅ Saved & deployed — GA4: ${ga4 || 'not set'} · Meta Pixel: ${meta || 'not set'}. GCR pages will load these on next visit.`;
+        status.style.background = '#f0fdf4';
+        status.style.borderColor = '#bbf7d0';
+        status.style.color = '#166534';
+      } catch(e) {
+        status.textContent = `⚠️ Save failed: ${e.message}`;
+        status.style.background = '#fef2f2';
+        status.style.borderColor = '#fecaca';
+        status.style.color = '#991b1b';
+      }
     }
 
     // Toggle password visibility
