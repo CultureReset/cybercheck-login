@@ -547,8 +547,11 @@
           <!-- Entity Editor Tabs -->
           <div style="display:flex;gap:0;border-bottom:1px solid var(--card-border);overflow-x:auto;">
             <button onclick="switchEntTab('info')"     id="enttab-info"     style="padding:12px 18px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">Info</button>
+            <button onclick="switchEntTab('hours')"    id="enttab-hours"    style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🕐 Hours</button>
+            <button onclick="switchEntTab('photos')"   id="enttab-photos"   style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📸 Photos</button>
             <button onclick="switchEntTab('tags')"     id="enttab-tags"     style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Tags</button>
             <button onclick="switchEntTab('features')" id="enttab-features" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Features</button>
+            <button onclick="switchEntTab('content')"  id="enttab-content"  style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📋 Content</button>
             <button onclick="switchEntTab('sections')" id="enttab-sections" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Sections</button>
             <button onclick="switchEntTab('pages')"    id="enttab-pages"    style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📍 Pages</button>
             <button onclick="switchEntTab('wavegent')" id="enttab-wavegent" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🎨 Wavegent</button>
@@ -562,6 +565,7 @@
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Name</label><input id="ent-name" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Slug</label><input id="ent-slug" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Subtitle / Tagline</label><input id="ent-subtitle" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Description <span style="font-weight:400;">(shows on listing card)</span></label><textarea id="ent-description" rows="4" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Entity Subtype <span style="font-weight:400;color:var(--text-muted);">(primary category for page placement)</span></label><input id="ent-subtype" type="text" placeholder="restaurant, bar_grill, parasailing..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Icon (emoji)</label><input id="ent-icon" type="text" placeholder="🐬" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Phone</label><input id="ent-phone" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -639,6 +643,47 @@
                 <button onclick="openAddSectionModal()" class="btn btn-outline btn-sm">+ Add Section</button>
               </div>
               <div id="ent-sections-list"></div>
+            </div>
+
+            <!-- HOURS TAB -->
+            <div id="enttab-hours-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 20px;">Set open/close times for each day. Type "Closed" for days the business is closed. Format: <strong>10:00 AM – 9:00 PM</strong></p>
+              <div style="display:grid;gap:14px;">
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Monday</span><input id="ent-hours-mon-open" type="text" placeholder="10:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-mon-close" type="text" placeholder="9:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Tuesday</span><input id="ent-hours-tue-open" type="text" placeholder="10:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-tue-close" type="text" placeholder="9:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Wednesday</span><input id="ent-hours-wed-open" type="text" placeholder="10:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-wed-close" type="text" placeholder="9:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Thursday</span><input id="ent-hours-thu-open" type="text" placeholder="10:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-thu-close" type="text" placeholder="9:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Friday</span><input id="ent-hours-fri-open" type="text" placeholder="10:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-fri-close" type="text" placeholder="10:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Saturday</span><input id="ent-hours-sat-open" type="text" placeholder="10:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-sat-close" type="text" placeholder="10:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+                <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:10px;align-items:center;">
+                  <span style="font-size:13px;font-weight:600;">Sunday</span><input id="ent-hours-sun-open" type="text" placeholder="11:00 AM" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><input id="ent-hours-sun-close" type="text" placeholder="8:00 PM or Closed" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                </div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">← Open time &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Close time →</div>
+              <div style="margin-top:20px;"><button onclick="saveEntHours()" class="btn btn-primary">Save Hours</button></div>
+            </div>
+
+            <!-- PHOTOS TAB -->
+            <div id="enttab-photos-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Photos shown on the listing card and profile page. The first photo is the hero image on the card.</p>
+              <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <input id="ent-photo-url-input" type="url" placeholder="Paste photo URL (https://...)" style="flex:1;min-width:240px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <input id="ent-photo-caption-input" type="text" placeholder="Caption (optional)" style="width:180px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <button onclick="addEntPhoto()" class="btn btn-primary">Add Photo</button>
+              </div>
+              <div id="ent-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;"></div>
             </div>
 
             <!-- CONTENT TAB: menu, drinks, happy hour, events, specials -->
@@ -7914,6 +7959,27 @@
         sv('ent-address', e.address_line_1); sv('ent-city', e.city); sv('ent-state', e.state); sv('ent-zip', e.zip);
         document.getElementById('ent-active').checked = e.is_active !== false;
         document.getElementById('ent-sponsored').checked = e.is_sponsored === true;
+        sv('ent-description', e.description);
+        // Fill hours
+        var DAY_MAP = {Monday:'mon',Tuesday:'tue',Wednesday:'wed',Thursday:'thu',Friday:'fri',Saturday:'sat',Sunday:'sun'};
+        ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d) {
+          var o = document.getElementById('ent-hours-'+d+'-open'), c2 = document.getElementById('ent-hours-'+d+'-close');
+          if (o) o.value = ''; if (c2) c2.value = '';
+        });
+        (data.hours || e.hours || []).forEach(function(h) {
+          var key = h.day_of_week && DAY_MAP[h.day_of_week];
+          if (!key) return;
+          var o = document.getElementById('ent-hours-'+key+'-open'), c2 = document.getElementById('ent-hours-'+key+'-close');
+          if (h.is_closed) { if (o) o.value = 'Closed'; return; }
+          if (o && h.open_time)  o.value  = h.open_time;
+          if (c2 && h.close_time) c2.value = h.close_time;
+        });
+        // Fill happy hour fields
+        var hh = data.happy_hour || {};
+        sv('ent-hh-days', hh.days || e.hh_days);
+        sv('ent-hh-start', hh.start || e.hh_start);
+        sv('ent-hh-end', hh.end || e.hh_end);
+        var hhDesc = document.getElementById('ent-hh-desc'); if (hhDesc) hhDesc.value = hh.description || e.hh_description || '';
         // Tags / Features / Sections / Content
         _currentEntityTags     = data.tags        || [];
         _currentEntityFeatures = data.features    || [];
@@ -7930,7 +7996,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','tags','features','sections','content','pages','wavegent'].forEach(function(t) {
+      ['info','hours','photos','tags','features','content','sections','pages','wavegent'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -7942,9 +8008,12 @@
           con.style.display = 'none';
         }
       });
-      if (tab === 'pages' && _currentEntityId) loadEntPages();
+      if (tab === 'pages'  && _currentEntityId) loadEntPages();
       if (tab === 'wavegent' && _currentEntityId) loadWavegentTab();
+      if (tab === 'photos' && _currentEntityId) loadEntPhotos();
     }
+
+    var loadEntityForEdit = function(entityId) { openEntEditor(entityId); };
 
     // ── Save entity info ──────────────────────────────
 
@@ -7971,9 +8040,10 @@
         is_active: document.getElementById('ent-active').checked,
         is_sponsored: document.getElementById('ent-sponsored').checked,
         sort_order: document.getElementById('ent-sponsored').checked ? 0 : 999,
+        description: document.getElementById('ent-description') ? document.getElementById('ent-description').value : undefined,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         document.getElementById('ent-editor-title').textContent = payload.name;
         toast('Entity saved!', 'success');
@@ -8022,6 +8092,108 @@
         document.getElementById('ent-editor-body').querySelector('button.btn-primary').onclick = saveEntInfo;
         toast('Entity created!', 'success');
         loadEntities();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Save Hours ────────────────────────────────────
+    async function saveEntHours() {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      var days = [{key:'mon',label:'Monday'},{key:'tue',label:'Tuesday'},{key:'wed',label:'Wednesday'},
+                  {key:'thu',label:'Thursday'},{key:'fri',label:'Friday'},{key:'sat',label:'Saturday'},{key:'sun',label:'Sunday'}];
+      var schedule = days.map(function(d) {
+        var openVal  = (document.getElementById('ent-hours-'+d.key+'-open')  || {}).value || '';
+        var closeVal = (document.getElementById('ent-hours-'+d.key+'-close') || {}).value || '';
+        var closed   = openVal.toLowerCase() === 'closed';
+        return { day: d.label, open: closed ? null : openVal, close: closed ? null : closeVal, closed: closed };
+      });
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hours: { schedule: schedule } })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast('Hours saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Save Happy Hour ───────────────────────────────
+    async function saveEntHH() {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      var payload = {
+        days:        (document.getElementById('ent-hh-days')  || {}).value || '',
+        start:       (document.getElementById('ent-hh-start') || {}).value || '',
+        end:         (document.getElementById('ent-hh-end')   || {}).value || '',
+        description: (document.getElementById('ent-hh-desc')  || {}).value || '',
+      };
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ happyHour: payload })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast('Happy hour saved!', 'success');
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    // ── Photos ────────────────────────────────────────
+    async function loadEntPhotos() {
+      if (!_currentEntityId) return;
+      var grid = document.getElementById('ent-photos-grid'); if (!grid) return;
+      grid.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Loading…</span>';
+      try {
+        var ent = _allEntities.find(function(e){ return e.id === _currentEntityId; });
+        if (!ent) return;
+        var res = await fetch(API_BASE + '/api/gcr/entity/' + ent.slug);
+        var data = await res.json();
+        var photos = data.photos || [];
+        if (!photos.length) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No photos yet.</span>'; return; }
+        grid.innerHTML = photos.map(function(p, i) {
+          return '<div style="position:relative;border-radius:10px;overflow:hidden;background:#1a2332;">' +
+            '<img src="' + escHtml(p.image_url) + '" style="width:100%;height:120px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">' +
+            '<div style="padding:6px 8px;font-size:11px;color:var(--text-muted);">' + escHtml(p.caption||'') + '</div>' +
+            '<button onclick="deleteEntPhoto(' + (p.id||'null') + ', \'' + escHtml(p.image_url) + '\')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;">×</button>' +
+            '</div>';
+        }).join('');
+      } catch(err) { grid.innerHTML = '<span style="color:#e74c3c;font-size:13px;">' + escHtml(err.message) + '</span>'; }
+    }
+
+    async function addEntPhoto() {
+      if (!_currentEntityId) return;
+      var urlEl = document.getElementById('ent-photo-url-input');
+      var capEl = document.getElementById('ent-photo-caption-input');
+      var url = (urlEl || {}).value || '';
+      if (!url.startsWith('http')) { toast('Enter a valid photo URL', 'error'); return; }
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photos: { add: [{ image_url: url, caption: (capEl||{}).value || '' }] } })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        toast('Photo added!', 'success');
+        if (urlEl) urlEl.value = '';
+        if (capEl) capEl.value = '';
+        loadEntPhotos();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteEntPhoto(photoId, imageUrl) {
+      if (!_currentEntityId) return;
+      var token = getAuthToken();
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photos: { delete: [{ id: photoId, image_url: imageUrl }] } })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+        toast('Photo removed', 'success');
+        loadEntPhotos();
       } catch(err) { toast(err.message, 'error'); }
     }
 
@@ -8367,25 +8539,20 @@
       var drinksHtml = renderSectionItems(c.drinks, 'var(--primary)', 'item_name');
       drinksEl.innerHTML = drinksHtml || '<div style="color:var(--text-muted);padding:20px 0;">No drink sections found.</div>';
 
-      // Happy Hour
+      // Happy Hour — editable form
       var hhEl = document.getElementById('ent-content-hh'); if (!hhEl) return;
-      var hh = c.hh;
-      var hhSecs = hh && hh.sections && hh.sections.length;
-      var hhItems = hh && hh.items && hh.items.length;
-      if (!hh || (!hhSecs && !hhItems && !hh.description && !hh.days)) {
-        hhEl.innerHTML = '<div style="color:var(--text-muted);padding:20px 0;">No happy hour data found.</div>';
-      } else {
-        var hhHtml = '';
-        if (hh.days || hh.description || hh.start) {
-          hhHtml += '<div style="padding:14px;background:var(--bg);border-radius:10px;border-left:4px solid #f59e0b;margin-bottom:16px;">';
-          if (hh.days) hhHtml += '<div style="font-size:13px;margin-bottom:6px;"><strong>Days:</strong> ' + escHtml(hh.days) + '</div>';
-          if (hh.start && hh.end) hhHtml += '<div style="font-size:13px;margin-bottom:6px;"><strong>Hours:</strong> ' + escHtml(hh.start + ' – ' + hh.end) + '</div>';
-          if (hh.description) hhHtml += '<div style="font-size:13px;color:var(--text-muted);">' + escHtml(hh.description) + '</div>';
-          hhHtml += '</div>';
-        }
-        hhHtml += renderSectionItems(hh, '#f59e0b', 'item_name') || '';
-        hhEl.innerHTML = hhHtml || '<div style="color:var(--text-muted);padding:20px 0;">Happy hour set up but no items added yet.</div>';
-      }
+      var hh = c.hh || {};
+      var inp = function(id, label, val, ph) { return '<div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">' + label + '</label><input id="' + id + '" type="text" value="' + escHtml(val||'') + '" placeholder="' + ph + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"></div>'; };
+      hhEl.innerHTML =
+        '<p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Set the happy hour schedule — shows on the listing card as a "🍺 Happy Hour" badge.</p>' +
+        inp('ent-hh-days',  'Days (e.g. Mon–Fri)', hh.days,        'Mon–Fri') +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+        inp('ent-hh-start', 'Start Time',           hh.start,       '4:00 PM') +
+        inp('ent-hh-end',   'End Time',             hh.end,         '7:00 PM') +
+        '</div>' +
+        '<div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Description (optional)</label><textarea id="ent-hh-desc" rows="2" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;box-sizing:border-box;">' + escHtml(hh.description||'') + '</textarea></div>' +
+        '<button onclick="saveEntHH()" class="btn btn-primary">Save Happy Hour</button>' +
+        (hh.items && hh.items.length ? '<div style="margin-top:20px;border-top:1px solid var(--card-border);padding-top:16px;"><div style="font-weight:700;margin-bottom:10px;">Happy Hour Items</div>' + (renderSectionItems(hh,'#f59e0b','item_name')||'') + '</div>' : '');
 
       // Events
       var eventsEl = document.getElementById('ent-content-events'); if (!eventsEl) return;
