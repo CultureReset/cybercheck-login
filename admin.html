@@ -8160,6 +8160,140 @@
       } catch(err) { toast(err.message, 'error'); }
     }
 
+    // ── Content section helpers ───────────────────────
+    function toggleEntItemForm(type) {
+      var el = document.getElementById('ent-' + type + '-add-form');
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveEntContentItem(table, prefix) {
+      if (!_currentEntityId) return;
+      var nm = (document.getElementById(prefix + '-nm') || {}).value || '';
+      if (!nm) { toast('Name is required', 'error'); return; }
+      var pr = (document.getElementById(prefix + '-pr') || {}).value || '';
+      var dc = (document.getElementById(prefix + '-dc') || {}).value || '';
+      var price = pr.replace(/[^0-9.]/g,'');
+      var payload = { item_name: nm, price: price ? parseFloat(price) : null, description: dc || null };
+      try {
+        var token = getAuthToken();
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast('Item added!', 'success');
+        await reloadEntContent();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteEntContentItem(table, id) {
+      if (!id || !confirm('Delete this item?')) return;
+      try {
+        var token = getAuthToken();
+        await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        toast('Deleted', 'success');
+        await reloadEntContent();
+      } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function entAIExtract(input, type) {
+      var file = input.files[0]; if (!file) return;
+      var statusId = 'ent-' + (type === 'hh' ? 'hh' : type === 'events' ? 'ev' : type === 'specials' ? 'sp' : type) + '-ai-status';
+      var statusEl = document.getElementById(statusId);
+      if (statusEl) { statusEl.style.color = 'var(--text-muted)'; statusEl.textContent = '📷 Reading with AI...'; }
+      try {
+        var c = await CC.compressImage(file, 1280, 0.75);
+        var extractType = type === 'menu' ? 'menu' : type === 'drinks' ? 'menu' : type === 'hh' ? 'specials' : type;
+        var r = await fetch(API_BASE + '/api/dashboard/events/extract', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ image_base64: c.dataUrl, mime_type: c.mimeType, extract_type: extractType })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        var items = d.items || [];
+        if (type === 'menu' || type === 'drinks') {
+          if (!items.length) { if (statusEl) statusEl.textContent = '⚠️ No items found — try a clearer photo'; return; }
+          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ Found ' + items.length + ' items — saving...'; }
+          var token = getAuthToken();
+          var table = type === 'drinks' ? 'drink-items' : 'menu-items';
+          for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var pr = (item.price_text || '').replace(/[^0-9.]/g,'');
+            await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+              method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ item_name: item.name || item.item_name || '', price: pr ? parseFloat(pr) : null, description: item.description || null })
+            });
+          }
+          if (statusEl) statusEl.textContent = '✅ Added ' + items.length + ' items!';
+          await reloadEntContent();
+        } else if (type === 'hh') {
+          var hhText = items.map(function(i){ return i.name + (i.time ? ' ' + i.time : '') + (i.description ? ' — ' + i.description : ''); }).join(', ');
+          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ AI read: ' + (hhText || 'review form fields'); }
+          if (items[0]) {
+            var desc = document.getElementById('ent-hh-desc');
+            if (desc) desc.value = items.map(function(i){ return i.name + (i.description ? ': ' + i.description : ''); }).join('; ');
+          }
+        } else if (type === 'events') {
+          if (!items.length) { if (statusEl) statusEl.textContent = '⚠️ No events found'; return; }
+          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ Found ' + items.length + ' — opening form...'; }
+          openEntAddEvent();
+          setTimeout(function() {
+            var nm = document.getElementById('event-name'); if (nm) nm.value = items[0].name || '';
+            var ds = document.getElementById('event-description'); if (ds) ds.value = items[0].description || '';
+            var dt = document.getElementById('event-date'); if (dt) dt.value = items[0].date || '';
+            var st = document.getElementById('event-start-time'); if (st) st.value = items[0].time || '';
+          }, 200);
+        } else if (type === 'specials') {
+          if (!items.length) { if (statusEl) statusEl.textContent = '⚠️ No specials found'; return; }
+          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ Found ' + items.length + ' — opening form...'; }
+          openEntAddSpecial();
+          setTimeout(function() {
+            var nm = document.getElementById('special-name'); if (nm) nm.value = items[0].name || '';
+            var dc = document.getElementById('special-discount'); if (dc) dc.value = items[0].price_text || '';
+            var ds = document.getElementById('special-description'); if (ds) ds.value = items[0].description || '';
+          }, 200);
+        }
+      } catch(e) {
+        if (statusEl) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
+      }
+      input.value = '';
+    }
+
+    function openEntAddEvent() {
+      var ent = _allEntities.find(function(e){ return e.id === _currentEntityId; });
+      openAddEventModal();
+      setTimeout(function() {
+        var sl = document.getElementById('event-slug'); if (sl && ent) sl.value = ent.slug || '';
+      }, 100);
+    }
+
+    function openEntAddSpecial() {
+      var ent = _allEntities.find(function(e){ return e.id === _currentEntityId; });
+      openAddSpecialModal();
+      setTimeout(function() {
+        var sl = document.getElementById('special-slug'); if (sl && ent) sl.value = ent.slug || '';
+        var eid = document.getElementById('special-entity-id'); if (eid && ent) eid.value = ent.id || '';
+      }, 100);
+    }
+
+    async function deleteGCREvent(id) {
+      if (!confirm('Delete this event?')) return;
+      try {
+        await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        toast('Event deleted.', 'success');
+        await reloadEntContent();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function deleteGCRSpecial(id) {
+      if (!confirm('Delete this special?')) return;
+      try {
+        await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        toast('Special deleted.', 'success');
+        await reloadEntContent();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
     // ── Photos ────────────────────────────────────────
     async function loadEntPhotos() {
       if (!_currentEntityId) return;
@@ -8552,19 +8686,76 @@
 
       // Menu
       var menuEl = document.getElementById('ent-content-menu'); if (!menuEl) return;
-      var menuHtml = renderSectionItems(c.menu, 'var(--primary)', 'item_name');
-      menuEl.innerHTML = menuHtml || '<div style="color:var(--text-muted);padding:20px 0;">No menu data found. Upload via Menu Upload in the sidebar.</div>';
+      var menuItems = (c.menu && c.menu.items) || [];
+      var menuItemRows = menuItems.map(function(item) {
+        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--card-border);">' +
+          '<div style="flex:1;"><span style="font-size:14px;">' + escHtml(item.item_name||item.name||'') + '</span>' +
+          (item.description ? '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</div>' : '') + '</div>' +
+          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
+          '<button onclick="deleteEntContentItem(\'menu-items\',' + (item.id||'null') + ')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">×</button>' +
+          '</div>';
+      }).join('');
+      menuEl.innerHTML =
+        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+          '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-menu-img\').click()">📷 AI Extract from Photo</button>' +
+          '<input type="file" id="ent-menu-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'menu\')">' +
+          '<button class="btn btn-primary btn-sm" onclick="toggleEntItemForm(\'menu\')">+ Add Item</button>' +
+        '</div>' +
+        '<div id="ent-menu-ai-status" style="font-size:13px;margin-bottom:8px;"></div>' +
+        '<div id="ent-menu-add-form" style="display:none;padding:14px;border:1px solid var(--card-border);border-radius:10px;margin-bottom:14px;background:var(--bg);">' +
+          '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+            '<input id="ent-menu-nm" type="text" placeholder="Item name" style="flex:1;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+            '<input id="ent-menu-pr" type="text" placeholder="$0.00" style="width:90px;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+          '</div>' +
+          '<input id="ent-menu-dc" type="text" placeholder="Description (optional)" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;margin-bottom:8px;">' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="btn btn-primary btn-sm" onclick="saveEntContentItem(\'menu-items\',\'ent-menu\')">Save</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="toggleEntItemForm(\'menu\')">Cancel</button>' +
+          '</div>' +
+        '</div>' +
+        (menuItemRows || '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No items yet. Upload a photo or add manually.</div>');
 
       // Drinks
       var drinksEl = document.getElementById('ent-content-drinks'); if (!drinksEl) return;
-      var drinksHtml = renderSectionItems(c.drinks, 'var(--primary)', 'item_name');
-      drinksEl.innerHTML = drinksHtml || '<div style="color:var(--text-muted);padding:20px 0;">No drink sections found.</div>';
+      var drinkItems = (c.drinks && c.drinks.items) || [];
+      var drinkItemRows = drinkItems.map(function(item) {
+        return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--card-border);">' +
+          '<div style="flex:1;"><span style="font-size:14px;">' + escHtml(item.item_name||item.name||'') + '</span>' +
+          (item.description ? '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item.description) + '</div>' : '') + '</div>' +
+          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
+          '<button onclick="deleteEntContentItem(\'drink-items\',' + (item.id||'null') + ')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">×</button>' +
+          '</div>';
+      }).join('');
+      drinksEl.innerHTML =
+        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+          '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-drink-img\').click()">📷 AI Extract from Photo</button>' +
+          '<input type="file" id="ent-drink-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'drinks\')">' +
+          '<button class="btn btn-primary btn-sm" onclick="toggleEntItemForm(\'drink\')">+ Add Item</button>' +
+        '</div>' +
+        '<div id="ent-drink-ai-status" style="font-size:13px;margin-bottom:8px;"></div>' +
+        '<div id="ent-drink-add-form" style="display:none;padding:14px;border:1px solid var(--card-border);border-radius:10px;margin-bottom:14px;background:var(--bg);">' +
+          '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+            '<input id="ent-drink-nm" type="text" placeholder="Drink name" style="flex:1;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+            '<input id="ent-drink-pr" type="text" placeholder="$0.00" style="width:90px;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
+          '</div>' +
+          '<input id="ent-drink-dc" type="text" placeholder="Description (optional)" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;margin-bottom:8px;">' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="btn btn-primary btn-sm" onclick="saveEntContentItem(\'drink-items\',\'ent-drink\')">Save</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="toggleEntItemForm(\'drink\')">Cancel</button>' +
+          '</div>' +
+        '</div>' +
+        (drinkItemRows || '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No drinks yet. Upload a photo or add manually.</div>');
 
       // Happy Hour — editable form
       var hhEl = document.getElementById('ent-content-hh'); if (!hhEl) return;
       var hh = c.hh || {};
       var inp = function(id, label, val, ph) { return '<div style="margin-bottom:12px;"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">' + label + '</label><input id="' + id + '" type="text" value="' + escHtml(val||'') + '" placeholder="' + ph + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"></div>'; };
       hhEl.innerHTML =
+        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+          '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-hh-img\').click()">📷 AI Fill from Sign/Photo</button>' +
+          '<input type="file" id="ent-hh-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'hh\')">' +
+        '</div>' +
+        '<div id="ent-hh-ai-status" style="font-size:13px;margin-bottom:8px;"></div>' +
         '<p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Set the happy hour schedule — shows on the listing card as a "🍺 Happy Hour" badge.</p>' +
         inp('ent-hh-days',  'Days (e.g. Mon–Fri)', hh.days,        'Mon–Fri') +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
@@ -8577,32 +8768,42 @@
 
       // Events
       var eventsEl = document.getElementById('ent-content-events'); if (!eventsEl) return;
-      if (!c.events || !c.events.length) {
-        eventsEl.innerHTML = '<div style="color:var(--text-muted);padding:20px 0;">No events found.</div>';
-      } else {
-        eventsEl.innerHTML = c.events.map(function(ev) {
-          return '<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-border);margin-bottom:10px;">' +
-            '<div style="font-weight:700;font-size:15px;">' + escHtml(ev.event_name||ev.title||ev.name||'') + '</div>' +
-            (ev.event_date||ev.date ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escHtml(ev.event_date||ev.date||'') + (ev.start_time ? ' at ' + escHtml(ev.start_time) : '') + '</div>' : '') +
-            (ev.description ? '<div style="font-size:13px;margin-top:6px;">' + escHtml(ev.description) + '</div>' : '') +
-            '</div>';
-        }).join('');
-      }
+      var evToolbar = '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+        '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-ev-img\').click()">📷 AI Extract from Flyer</button>' +
+        '<input type="file" id="ent-ev-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'events\')">' +
+        '<button class="btn btn-primary btn-sm" onclick="openEntAddEvent()">+ Add Event</button>' +
+      '</div><div id="ent-ev-ai-status" style="font-size:13px;margin-bottom:8px;"></div>';
+      var evCards = (c.events || []).map(function(ev) {
+        return '<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-border);margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;">' +
+          '<div style="flex:1;">' +
+          '<div style="font-weight:700;font-size:15px;">' + escHtml(ev.event_name||ev.title||ev.name||'') + '</div>' +
+          (ev.event_date||ev.date ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escHtml(ev.event_date||ev.date||'') + (ev.start_time ? ' at ' + escHtml(ev.start_time) : '') + '</div>' : '') +
+          (ev.description ? '<div style="font-size:13px;margin-top:6px;">' + escHtml(ev.description) + '</div>' : '') +
+          '</div>' +
+          (ev.id ? '<button onclick="deleteGCREvent(' + ev.id + ')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;margin-left:8px;flex-shrink:0;">×</button>' : '') +
+          '</div>';
+      }).join('');
+      eventsEl.innerHTML = evToolbar + (evCards || '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No events yet.</div>');
 
       // Specials
       var specialsEl = document.getElementById('ent-content-specials'); if (!specialsEl) return;
-      if (!c.specials || !c.specials.length) {
-        specialsEl.innerHTML = '<div style="color:var(--text-muted);padding:20px 0;">No specials found.</div>';
-      } else {
-        specialsEl.innerHTML = c.specials.map(function(sp) {
-          return '<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-border);margin-bottom:10px;">' +
-            '<div style="font-weight:700;font-size:15px;">' + escHtml(sp.special_name||sp.title||sp.name||'') + '</div>' +
-            (sp.discount_text ? '<div style="font-size:13px;font-weight:600;color:#f59e0b;margin-top:4px;">' + escHtml(sp.discount_text) + '</div>' : '') +
-            (sp.days ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escHtml(sp.days) + '</div>' : '') +
-            (sp.description ? '<div style="font-size:13px;margin-top:6px;">' + escHtml(sp.description) + '</div>' : '') +
-            '</div>';
-        }).join('');
-      }
+      var spToolbar = '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
+        '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-sp-img\').click()">📷 AI Extract from Photo</button>' +
+        '<input type="file" id="ent-sp-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'specials\')">' +
+        '<button class="btn btn-primary btn-sm" onclick="openEntAddSpecial()">+ Add Special</button>' +
+      '</div><div id="ent-sp-ai-status" style="font-size:13px;margin-bottom:8px;"></div>';
+      var spCards = (c.specials || []).map(function(sp) {
+        return '<div style="padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--card-border);margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;">' +
+          '<div style="flex:1;">' +
+          '<div style="font-weight:700;font-size:15px;">' + escHtml(sp.special_name||sp.title||sp.name||'') + '</div>' +
+          (sp.discount_text ? '<div style="font-size:13px;font-weight:600;color:#f59e0b;margin-top:4px;">' + escHtml(sp.discount_text) + '</div>' : '') +
+          (sp.days ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + escHtml(sp.days) + '</div>' : '') +
+          (sp.description ? '<div style="font-size:13px;margin-top:6px;">' + escHtml(sp.description) + '</div>' : '') +
+          '</div>' +
+          (sp.id ? '<button onclick="deleteGCRSpecial(' + sp.id + ')" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;margin-left:8px;flex-shrink:0;">×</button>' : '') +
+          '</div>';
+      }).join('');
+      specialsEl.innerHTML = spToolbar + (spCards || '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No specials yet.</div>');
     }
 
     function switchContentSection(section) {
