@@ -3355,6 +3355,22 @@
             </div>
           </div>
 
+          <!-- Business selector bar -->
+          <div style="flex-shrink:0;padding:10px 16px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:10px;background:var(--bg);">
+            <span style="font-size:13px;font-weight:600;white-space:nowrap;color:var(--text-muted);">📍 Business:</span>
+            <div style="position:relative;flex:1;max-width:380px;">
+              <input id="aichat-biz-search" type="text" placeholder="Search business name…" autocomplete="off"
+                style="width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;box-sizing:border-box;"
+                oninput="aichatBizSearch()" onfocus="aichatBizSearch()"
+                onblur="setTimeout(function(){var d=document.getElementById('aichat-biz-drop');if(d)d.style.display='none'},200)">
+              <div id="aichat-biz-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:220px;overflow-y:auto;z-index:300;box-shadow:0 8px 24px rgba(0,0,0,.18);margin-top:4px;"></div>
+            </div>
+            <input type="hidden" id="aichat-biz-id">
+            <div id="aichat-biz-badge" style="display:none;padding:5px 10px;background:#0b7a75;color:#fff;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;"></div>
+            <button onclick="aichatClearBiz()" id="aichat-biz-clear" style="display:none;padding:5px 8px;background:var(--card-border);border:none;border-radius:6px;color:var(--text-muted);cursor:pointer;font-size:12px;">✕ Clear</button>
+            <span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">or leave blank to work platform-wide</span>
+          </div>
+
           <!-- Wake word bar -->
           <div id="aichat-wake-bar" style="display:none;padding:6px 16px;background:#1e3a5f;font-size:12px;color:#93c5fd;flex-shrink:0;">
             👂 Listening for <strong>"hey"</strong> — say it to activate, then speak your question
@@ -13876,6 +13892,50 @@
   <script>
   // ── Standalone AI Chat page ───────────────────────────────────
   var _aichatApiBase = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+
+  // ── Business search bar ──
+  var _aichatBizSearchTimer = null;
+  function aichatBizSearch() {
+    clearTimeout(_aichatBizSearchTimer);
+    _aichatBizSearchTimer = setTimeout(async function() {
+      var q = (document.getElementById('aichat-biz-search') || {}).value || '';
+      var drop = document.getElementById('aichat-biz-drop');
+      if (!drop) return;
+      if (q.length < 2) { drop.style.display = 'none'; return; }
+      drop.style.display = 'block';
+      drop.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text-muted);">Searching…</div>';
+      try {
+        var r = await fetch(_aichatApiBase + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=12', {
+          headers: { 'Authorization': 'Bearer ' + _aichatGetToken() }
+        });
+        var d = await r.json();
+        var items = d.entities || d.data || [];
+        if (!items.length) { drop.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text-muted);">No results</div>'; return; }
+        drop.innerHTML = items.map(function(b) {
+          return '<div onclick="aichatSelectBiz(\'' + b.id + '\',\'' + (b.name||'').replace(/'/g,"\\'") + '\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--card-border);font-size:13px;" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"><strong>' + escHtml(b.name||'') + '</strong><span style="font-size:11px;color:var(--text-muted);margin-left:8px;">' + escHtml(b.city||b.entity_subtype||'') + '</span></div>';
+        }).join('');
+      } catch(e) { drop.innerHTML = '<div style="padding:10px;font-size:12px;color:#fca5a5;">Error: '+e.message+'</div>'; }
+    }, 280);
+  }
+  function aichatSelectBiz(id, name) {
+    document.getElementById('aichat-biz-id').value = id;
+    document.getElementById('aichat-biz-search').value = '';
+    document.getElementById('aichat-biz-drop').style.display = 'none';
+    var badge = document.getElementById('aichat-biz-badge');
+    badge.textContent = '📍 ' + name;
+    badge.style.display = 'block';
+    document.getElementById('aichat-biz-clear').style.display = 'block';
+    // Inject context message into chat
+    aichatAppend('system', '<em style="color:#38bdf8;">Business set to <strong>' + escHtml(name) + '</strong> — all edits now target this listing.</em>');
+    _aichatHistory = []; // fresh context per business switch
+  }
+  function aichatClearBiz() {
+    document.getElementById('aichat-biz-id').value = '';
+    document.getElementById('aichat-biz-search').value = '';
+    document.getElementById('aichat-biz-badge').style.display = 'none';
+    document.getElementById('aichat-biz-clear').style.display = 'none';
+    aichatAppend('system', '<em style="color:var(--text-muted);">Business cleared — now in platform-wide mode.</em>');
+  }
   function _aichatGetToken() {
     try {
       var sbKey = Object.keys(localStorage).find(function(k){ return k.startsWith('sb-') && k.endsWith('-auth-token'); });
@@ -13980,6 +14040,7 @@
     try {
       var prov = (document.getElementById('aichat-provider') || {}).value || 'anthropic';
       var model = (document.getElementById('aichat-model') || {}).value || 'claude-sonnet-4-6';
+      var selectedEntityId = (document.getElementById('aichat-biz-id') || {}).value || '';
       var res = await fetch(_aichatApiBase + '/api/admin/gcr/grok-chat', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + _aichatGetToken(), 'Content-Type': 'application/json' },
@@ -13991,6 +14052,7 @@
           history: _aichatHistory.slice(-10),
           provider: prov,
           model: model,
+          entity_id: selectedEntityId || undefined,
         })
       });
       var d = await res.json();
