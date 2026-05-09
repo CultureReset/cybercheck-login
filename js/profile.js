@@ -80,6 +80,29 @@ async function loadProfile() {
       if (content.zip) _profileData.zip = content.zip;
       if (content.social_links) _profileData.socials = Object.assign({}, _profileData.socials, content.social_links);
       if (content.hours) _profileData.hours = content.hours;
+      // Load GCR entity fields
+      if (content.tagline) _profileData.tagline = content.tagline;
+      if (content.hero_image_url) _profileData.hero_image_url = content.hero_image_url;
+      if (content.directions_url) _profileData.directions_url = content.directions_url;
+      if (content.booking_url) _profileData.booking_url = content.booking_url;
+      if (content.reservation_url) _profileData.reservation_url = content.reservation_url;
+      if (content.price_range) _profileData.price_range = content.price_range;
+      if (content.social_instagram) _profileData.social_instagram = content.social_instagram;
+      if (content.social_facebook) _profileData.social_facebook = content.social_facebook;
+      if (content.social_tiktok) _profileData.social_tiktok = content.social_tiktok;
+      // Load amenity booleans
+      _profileData.outdoor_seating = content.outdoor_seating || false;
+      _profileData.live_music = content.live_music || false;
+      _profileData.delivery = content.delivery || false;
+      _profileData.dine_in = content.dine_in || false;
+      _profileData.takeout = content.takeout || false;
+      _profileData.good_for_groups = content.good_for_groups || false;
+      _profileData.good_for_children = content.good_for_children || false;
+      _profileData.wheelchair_accessible = content.wheelchair_accessible || false;
+      _profileData.parking = content.parking || false;
+      _profileData.serves_beer = content.serves_beer || false;
+      _profileData.serves_wine = content.serves_wine || false;
+      _profileData.serves_cocktails = content.serves_cocktails || false;
       // Load HH schedule from businesses.metadata
       if (biz.metadata && biz.metadata.hh_schedule) {
         var hh = biz.metadata.hh_schedule;
@@ -106,6 +129,11 @@ async function loadProfile() {
   document.getElementById('prof-city').value = p.city || '';
   document.getElementById('prof-state').value = p.state || '';
   document.getElementById('prof-zip').value = p.zip || '';
+  document.getElementById('prof-tagline').value = p.tagline || '';
+  document.getElementById('prof-price-range').value = p.price_range || '';
+  document.getElementById('prof-directions-url').value = p.directions_url || '';
+  document.getElementById('prof-booking-url').value = p.booking_url || '';
+  document.getElementById('prof-reservation-url').value = p.reservation_url || '';
 
   document.getElementById('prof-social-facebook').value = p.socials.facebook || '';
   document.getElementById('prof-social-instagram').value = p.socials.instagram || '';
@@ -114,11 +142,36 @@ async function loadProfile() {
   document.getElementById('prof-social-google').value = p.socials.google || '';
   document.getElementById('prof-social-twitter').value = p.socials.twitter || '';
 
+  if (p.hero_image_url) {
+    var heroPreview = document.getElementById('prof-hero-preview');
+    if (heroPreview) {
+      heroPreview.src = p.hero_image_url;
+      heroPreview.style.display = 'block';
+    }
+    var heroUrl = document.getElementById('prof-hero-url');
+    if (heroUrl) heroUrl.value = p.hero_image_url;
+  }
+
   if (p.logo) {
     var preview = document.getElementById('prof-logo-preview');
-    preview.src = p.logo;
-    preview.style.display = 'block';
+    if (preview) {
+      preview.src = p.logo;
+      preview.style.display = 'block';
+    }
   }
+
+  document.getElementById('prof-outdoor-seating').checked = p.outdoor_seating || false;
+  document.getElementById('prof-live-music').checked = p.live_music || false;
+  document.getElementById('prof-delivery').checked = p.delivery || false;
+  document.getElementById('prof-dine-in').checked = p.dine_in || false;
+  document.getElementById('prof-takeout').checked = p.takeout || false;
+  document.getElementById('prof-good-for-groups').checked = p.good_for_groups || false;
+  document.getElementById('prof-good-for-children').checked = p.good_for_children || false;
+  document.getElementById('prof-wheelchair').checked = p.wheelchair_accessible || false;
+  document.getElementById('prof-parking').checked = p.parking || false;
+  document.getElementById('prof-serves-beer').checked = p.serves_beer || false;
+  document.getElementById('prof-serves-wine').checked = p.serves_wine || false;
+  document.getElementById('prof-serves-cocktails').checked = p.serves_cocktails || false;
 
   // Ensure hours is properly initialized
   if (!_profileData.hours || typeof _profileData.hours !== 'object') {
@@ -176,6 +229,12 @@ async function saveProfile() {
   _profileData.city = document.getElementById('prof-city').value;
   _profileData.state = document.getElementById('prof-state').value;
   _profileData.zip = document.getElementById('prof-zip').value;
+  _profileData.tagline = document.getElementById('prof-tagline').value;
+  _profileData.price_range = document.getElementById('prof-price-range').value;
+  _profileData.directions_url = document.getElementById('prof-directions-url').value;
+  _profileData.booking_url = document.getElementById('prof-booking-url').value;
+  _profileData.reservation_url = document.getElementById('prof-reservation-url').value;
+  _profileData.hero_image_url = document.getElementById('prof-hero-url').value;
 
   _profileData.socials.facebook = document.getElementById('prof-social-facebook').value;
   _profileData.socials.instagram = document.getElementById('prof-social-instagram').value;
@@ -183,6 +242,19 @@ async function saveProfile() {
   _profileData.socials.yelp = document.getElementById('prof-social-yelp').value;
   _profileData.socials.google = document.getElementById('prof-social-google').value;
   _profileData.socials.twitter = document.getElementById('prof-social-twitter').value;
+
+  _profileData.outdoor_seating = document.getElementById('prof-outdoor-seating').checked;
+  _profileData.live_music = document.getElementById('prof-live-music').checked;
+  _profileData.delivery = document.getElementById('prof-delivery').checked;
+  _profileData.dine_in = document.getElementById('prof-dine-in').checked;
+  _profileData.takeout = document.getElementById('prof-takeout').checked;
+  _profileData.good_for_groups = document.getElementById('prof-good-for-groups').checked;
+  _profileData.good_for_children = document.getElementById('prof-good-for-children').checked;
+  _profileData.wheelchair_accessible = document.getElementById('prof-wheelchair').checked;
+  _profileData.parking = document.getElementById('prof-parking').checked;
+  _profileData.serves_beer = document.getElementById('prof-serves-beer').checked;
+  _profileData.serves_wine = document.getElementById('prof-serves-wine').checked;
+  _profileData.serves_cocktails = document.getElementById('prof-serves-cocktails').checked;
 
   var days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   days.forEach(function(day) {
@@ -215,7 +287,25 @@ async function saveProfile() {
         state: _profileData.state,
         zip: _profileData.zip,
         social_links: _profileData.socials,
-        hours: _profileData.hours
+        hours: _profileData.hours,
+        tagline: _profileData.tagline,
+        hero_image_url: _profileData.hero_image_url,
+        directions_url: _profileData.directions_url,
+        booking_url: _profileData.booking_url,
+        reservation_url: _profileData.reservation_url,
+        price_range: _profileData.price_range,
+        outdoor_seating: _profileData.outdoor_seating,
+        live_music: _profileData.live_music,
+        delivery: _profileData.delivery,
+        dine_in: _profileData.dine_in,
+        takeout: _profileData.takeout,
+        good_for_groups: _profileData.good_for_groups,
+        good_for_children: _profileData.good_for_children,
+        wheelchair_accessible: _profileData.wheelchair_accessible,
+        parking: _profileData.parking,
+        serves_beer: _profileData.serves_beer,
+        serves_wine: _profileData.serves_wine,
+        serves_cocktails: _profileData.serves_cocktails
       }
     });
     toast('Profile saved!', 'success');
@@ -246,6 +336,30 @@ async function uploadLogo(input) {
     toast('Logo upload failed', 'error');
   }
   } catch (e) { console.error('Logo upload error:', e); toast('Upload failed', 'error'); }
+}
+
+async function uploadHeroImage(input) {
+  try {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if (!file.type.startsWith('image/')) { toast('Please select an image file', 'error'); return; }
+
+  toast('Uploading hero image...');
+  var url = await uploadToSupabase(file, 'hero-images');
+  if (url) {
+    _profileData.hero_image_url = url;
+    var preview = document.getElementById('prof-hero-preview');
+    if (preview) {
+      preview.src = url;
+      preview.style.display = 'block';
+    }
+    var urlInput = document.getElementById('prof-hero-url');
+    if (urlInput) urlInput.value = url;
+    toast('Hero image uploaded and saved');
+  } else {
+    toast('Hero image upload failed', 'error');
+  }
+  } catch (e) { console.error('Hero image upload error:', e); toast('Upload failed', 'error'); }
 }
 
 // ===== LIVE PREVIEW =====
