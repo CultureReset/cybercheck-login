@@ -9053,62 +9053,67 @@
     }
 
     async function entAIExtract(input, type) {
-      var file = input.files[0]; if (!file) return;
+      var files = Array.from(input.files || []); if (!files.length) return;
       var statusId = 'ent-' + (type === 'hh' ? 'hh' : type === 'events' ? 'ev' : type === 'specials' ? 'sp' : type) + '-ai-status';
       var statusEl = document.getElementById(statusId);
-      if (statusEl) { statusEl.style.color = 'var(--text-muted)'; statusEl.textContent = '📷 Reading with AI...'; }
+      var extractType = type === 'menu' ? 'menu' : type === 'drinks' ? 'menu' : type === 'hh' ? 'specials' : type;
+      var totalAdded = 0;
       try {
-        var c = await CC.compressImage(file, 1280, 0.75);
-        var extractType = type === 'menu' ? 'menu' : type === 'drinks' ? 'menu' : type === 'hh' ? 'specials' : type;
-        var r = await fetch(API_BASE + '/api/dashboard/events/extract', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-          body: JSON.stringify({ image_base64: c.dataUrl, mime_type: c.mimeType, extract_type: extractType })
-        });
-        var d = await r.json();
-        if (!r.ok) throw new Error(d.error);
-        var items = d.items || [];
-        if (type === 'menu' || type === 'drinks') {
-          if (!items.length) { if (statusEl) statusEl.textContent = '⚠️ No items found — try a clearer photo'; return; }
-          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ Found ' + items.length + ' items — saving...'; }
-          var token = getAuthToken();
-          var table = type === 'drinks' ? 'drink-items' : 'menu-items';
-          for (var i = 0; i < items.length; i++) {
-            var item = items[i];
-            var pr = (item.price_text || '').replace(/[^0-9.]/g,'');
-            await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
-              method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ item_name: item.name || item.item_name || '', price: pr ? parseFloat(pr) : null, description: item.description || null })
-            });
+        for (var fi = 0; fi < files.length; fi++) {
+          var file = files[fi];
+          if (statusEl) { statusEl.style.color = 'var(--text-muted)'; statusEl.textContent = '📷 Reading image ' + (fi + 1) + ' of ' + files.length + ' with AI...'; }
+          var c = await CC.compressImage(file, 1280, 0.75);
+          var r = await fetch(API_BASE + '/api/dashboard/events/extract', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+            body: JSON.stringify({ image_base64: c.dataUrl, mime_type: c.mimeType, extract_type: extractType })
+          });
+          var d = await r.json();
+          if (!r.ok) throw new Error(d.error);
+          var items = d.items || [];
+          if (type === 'menu' || type === 'drinks') {
+            var table = type === 'drinks' ? 'drink-items' : 'menu-items';
+            var token = getAuthToken();
+            for (var i = 0; i < items.length; i++) {
+              var item = items[i];
+              var pr = (item.price_text || '').replace(/[^0-9.]/g,'');
+              await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_name: item.name || item.item_name || '', price: pr ? parseFloat(pr) : null, description: item.description || null })
+              });
+              totalAdded++;
+            }
+          } else if (type === 'hh') {
+            if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ AI read — review fields below'; }
+            if (items[0]) {
+              var desc = document.getElementById('ent-hh-desc');
+              if (desc) desc.value = items.map(function(i){ return i.name + (i.description ? ': ' + i.description : ''); }).join('; ');
+            }
+          } else if (type === 'events') {
+            if (items.length) {
+              openEntAddEvent();
+              setTimeout(function() {
+                var nm = document.getElementById('event-name'); if (nm) nm.value = items[0].name || '';
+                var ds = document.getElementById('event-description'); if (ds) ds.value = items[0].description || '';
+                var dt = document.getElementById('event-date'); if (dt) dt.value = items[0].date || '';
+                var st = document.getElementById('event-start-time'); if (st) st.value = items[0].time || '';
+              }, 200);
+            }
+          } else if (type === 'specials') {
+            if (items.length) {
+              openEntAddSpecial();
+              setTimeout(function() {
+                var nm = document.getElementById('special-name'); if (nm) nm.value = items[0].name || '';
+                var dc = document.getElementById('special-discount'); if (dc) dc.value = items[0].price_text || '';
+                var ds = document.getElementById('special-description'); if (ds) ds.value = items[0].description || '';
+              }, 200);
+            }
           }
-          if (statusEl) statusEl.textContent = '✅ Added ' + items.length + ' items!';
-          await reloadEntContent();
-        } else if (type === 'hh') {
-          var hhText = items.map(function(i){ return i.name + (i.time ? ' ' + i.time : '') + (i.description ? ' — ' + i.description : ''); }).join(', ');
-          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ AI read: ' + (hhText || 'review form fields'); }
-          if (items[0]) {
-            var desc = document.getElementById('ent-hh-desc');
-            if (desc) desc.value = items.map(function(i){ return i.name + (i.description ? ': ' + i.description : ''); }).join('; ');
-          }
-        } else if (type === 'events') {
-          if (!items.length) { if (statusEl) statusEl.textContent = '⚠️ No events found'; return; }
-          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ Found ' + items.length + ' — opening form...'; }
-          openEntAddEvent();
-          setTimeout(function() {
-            var nm = document.getElementById('event-name'); if (nm) nm.value = items[0].name || '';
-            var ds = document.getElementById('event-description'); if (ds) ds.value = items[0].description || '';
-            var dt = document.getElementById('event-date'); if (dt) dt.value = items[0].date || '';
-            var st = document.getElementById('event-start-time'); if (st) st.value = items[0].time || '';
-          }, 200);
-        } else if (type === 'specials') {
-          if (!items.length) { if (statusEl) statusEl.textContent = '⚠️ No specials found'; return; }
-          if (statusEl) { statusEl.style.color = '#4ade80'; statusEl.textContent = '✅ Found ' + items.length + ' — opening form...'; }
-          openEntAddSpecial();
-          setTimeout(function() {
-            var nm = document.getElementById('special-name'); if (nm) nm.value = items[0].name || '';
-            var dc = document.getElementById('special-discount'); if (dc) dc.value = items[0].price_text || '';
-            var ds = document.getElementById('special-description'); if (ds) ds.value = items[0].description || '';
-          }, 200);
         }
+        if ((type === 'menu' || type === 'drinks') && statusEl) {
+          statusEl.style.color = totalAdded ? '#4ade80' : 'var(--text-muted)';
+          statusEl.textContent = totalAdded ? '✅ Added ' + totalAdded + ' items from ' + files.length + ' photo' + (files.length > 1 ? 's' : '') + '!' : '⚠️ No items found — try clearer photos';
+        }
+        if (type === 'menu' || type === 'drinks') await reloadEntContent();
       } catch(e) {
         if (statusEl) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
       }
@@ -9562,7 +9567,7 @@
       menuEl.innerHTML =
         '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
           '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-menu-img\').click()">📷 AI Extract from Photo</button>' +
-          '<input type="file" id="ent-menu-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'menu\')">' +
+          '<input type="file" id="ent-menu-img" accept="image/*" multiple style="display:none" onchange="entAIExtract(this,\'menu\')">' +
           '<button class="btn btn-primary btn-sm" onclick="toggleEntItemForm(\'menu\')">+ Add Item</button>' +
         '</div>' +
         '<div id="ent-menu-ai-status" style="font-size:13px;margin-bottom:8px;"></div>' +
@@ -9601,7 +9606,7 @@
       drinksEl.innerHTML =
         '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
           '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-drink-img\').click()">📷 AI Extract from Photo</button>' +
-          '<input type="file" id="ent-drink-img" accept="image/*" style="display:none" onchange="entAIExtract(this,\'drinks\')">' +
+          '<input type="file" id="ent-drink-img" accept="image/*" multiple style="display:none" onchange="entAIExtract(this,\'drinks\')">' +
           '<button class="btn btn-primary btn-sm" onclick="toggleEntItemForm(\'drink\')">+ Add Item</button>' +
         '</div>' +
         '<div id="ent-drink-ai-status" style="font-size:13px;margin-bottom:8px;"></div>' +
