@@ -13,7 +13,12 @@ function initRouter() {
     });
   });
 
-  // Handle back/forward
+  // Handle browser back/forward buttons
+  window.addEventListener('popstate', (e) => {
+    const page = (e.state && e.state.page) || window.location.hash.slice(1).split('?')[0] || 'overview';
+    showPage(page);
+  });
+
   window.addEventListener('hashchange', () => {
     const page = window.location.hash.slice(1).split('?')[0] || 'overview';
     showPage(page);
@@ -27,7 +32,7 @@ function initRouter() {
 function navigateTo(page) {
   // Preserve ?biz= query param in the URL
   var search = window.location.search;
-  window.history.pushState(null, '', window.location.pathname + search + '#' + page);
+  window.history.pushState({ page: page }, '', window.location.pathname + search + '#' + page);
   showPage(page);
 }
 
