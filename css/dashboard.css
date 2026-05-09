@@ -131,7 +131,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* ---- Top Bar ---- */
@@ -221,7 +222,9 @@ body {
 .content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 28px;
+  min-height: 0;
 }
 
 .page-section {
