@@ -24,6 +24,30 @@ function loadEvents() {
   });
 }
 
+function evTableRows(evts) {
+  if (!evts.length) return '<tr><td colspan="5" style="color:var(--text-muted);font-size:13px;padding:10px;">None</td></tr>';
+  return evts.map(function(ev) {
+    var dateDisplay = '';
+    if (ev.event_date) {
+      var d = new Date(ev.event_date + 'T12:00:00');
+      dateDisplay = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    var time = [ev.start_time, ev.end_time].filter(Boolean).join(' – ');
+    var detail = [ev.artist_name, ev.cover_charge, ev.description].filter(Boolean).join(' · ');
+    var entityLabel = ev.entity ? (' <span style="font-size:11px;color:var(--text-muted);">@ ' + escEvHtml((ev.entity.name || '')) + '</span>') : '';
+    return '<tr>'
+      + '<td><strong>' + escEvHtml(ev.event_name || ev.artist_name || '') + '</strong>' + entityLabel + '</td>'
+      + '<td>' + escEvHtml(dateDisplay) + '</td>'
+      + '<td>' + escEvHtml(time) + '</td>'
+      + '<td style="font-size:12px;color:var(--text-muted);">' + escEvHtml(detail) + '</td>'
+      + '<td><div style="display:flex;gap:6px;">'
+      + '<button class="btn btn-outline btn-sm" onclick="openEventModal(\'' + ev.id + '\')">Edit</button>'
+      + '<button class="btn btn-danger btn-sm" onclick="deleteEvent(\'' + ev.id + '\')">Delete</button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+}
+
 function renderEvents() {
   var container = document.getElementById('events-list');
   if (!container) return;
@@ -33,27 +57,35 @@ function renderEvents() {
     return;
   }
 
-  var html = '<div class="table-wrap"><table><thead><tr><th>Event</th><th>Date / Day</th><th>Time</th><th>Details</th><th>Actions</th></tr></thead><tbody>';
-  _events.forEach(function(ev) {
-    var dateDisplay = '';
-    if (ev.event_date) {
-      var d = new Date(ev.event_date + 'T12:00:00');
-      dateDisplay = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    }
-    var time = [ev.start_time, ev.end_time].filter(Boolean).join(' – ');
-    var detail = [ev.cover_charge, ev.description].filter(Boolean).join(' · ');
-    html += '<tr>';
-    html += '<td><strong>' + escEvHtml(ev.event_name || '') + '</strong></td>';
-    html += '<td>' + escEvHtml(dateDisplay) + '</td>';
-    html += '<td>' + escEvHtml(time) + '</td>';
-    html += '<td style="font-size:12px;color:var(--text-muted);">' + escEvHtml(detail) + '</td>';
-    html += '<td><div style="display:flex;gap:6px;">';
-    html += '<button class="btn btn-outline btn-sm" onclick="openEventModal(\'' + ev.id + '\')">Edit</button>';
-    html += '<button class="btn btn-danger btn-sm" onclick="deleteEvent(\'' + ev.id + '\')">Delete</button>';
-    html += '</div></td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var todayStr = today.toISOString().split('T')[0];
+
+  var todayEvts    = _events.filter(function(e) { return e.event_date === todayStr; });
+  var upcomingEvts = _events.filter(function(e) { return e.event_date && e.event_date > todayStr; });
+  var pastEvts     = _events.filter(function(e) { return e.event_date && e.event_date < todayStr; })
+                            .sort(function(a, b) { return b.event_date.localeCompare(a.event_date); });
+  var noDateEvts   = _events.filter(function(e) { return !e.event_date; });
+
+  function section(title, color, evts, collapsed) {
+    var id = 'ev-section-' + title.replace(/\s+/g, '-').toLowerCase();
+    return '<div style="margin-bottom:18px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;" onclick="var b=document.getElementById(\'' + id + '\');b.style.display=b.style.display===\'none\'?\'\':\' none\';">'
+      + '<span style="font-size:13px;font-weight:700;color:' + color + ';">' + title + '</span>'
+      + '<span style="font-size:12px;color:var(--text-muted);">(' + evts.length + ')</span>'
+      + '<span style="font-size:11px;color:var(--text-muted);margin-left:auto;">▾ toggle</span>'
+      + '</div>'
+      + '<div id="' + id + '" style="display:' + (collapsed ? 'none' : '') + ';">'
+      + '<div class="table-wrap"><table><thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Details</th><th>Actions</th></tr></thead><tbody>'
+      + evTableRows(evts)
+      + '</tbody></table></div></div></div>';
+  }
+
+  var html = '';
+  if (todayEvts.length)    html += section('📅 Today', 'var(--primary)', todayEvts, false);
+  if (upcomingEvts.length) html += section('🔜 Upcoming', '#16a34a', upcomingEvts, false);
+  if (noDateEvts.length)   html += section('📌 No Date', '#d97706', noDateEvts, false);
+  if (pastEvts.length)     html += section('🕐 Past Events', 'var(--text-muted)', pastEvts, true);
+
   container.innerHTML = html;
 }
 
