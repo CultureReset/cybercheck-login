@@ -79,8 +79,8 @@
                     <div class="stat-label">Apps & Integrations</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-number">12K+</div>
-                    <div class="stat-label">Active Users</div>
+                    <div class="stat-number" id="gcr-live-count">—</div>
+                    <div class="stat-label">Live on GCR</div>
                 </div>
                 <div class="stat">
                     <div class="stat-number">100%</div>
@@ -597,5 +597,17 @@
     </footer>
 
 <script src="js/navbar.js"></script>
+<script>
+(function() {
+  fetch('/api/public/gcr-stats')
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(d) {
+      if (!d || !d.live_businesses) return;
+      var el = document.getElementById('gcr-live-count');
+      if (el) el.textContent = d.live_businesses + '+';
+    })
+    .catch(function() {});
+})();
+</script>
 </body>
 </html>

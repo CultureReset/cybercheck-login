@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading…</title>
+  <style>
+    :root {
+      --bg: #090e14;
+      --panel: #111923;
+      --card: #18232f;
+      --text: #f0f5fb;
+      --muted: #8fa4b8;
+      --line: rgba(255,255,255,.08);
+      --accent: #17c9a5;
+      --accent2: #74e7cf;
+      --gold: #f3c969;
+      --red: #ff6b6b;
+      --shadow: 0 16px 40px rgba(0,0,0,.4);
+      --r: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    .wrap { display: flex; justify-content: center; padding: 0 0 60px; }
+    .phone {
+      width: 100%; max-width: 430px;
+      background: var(--bg);
+    }
+
+    /* ── Loading / Error ── */
+    .loader {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; gap: 16px; color: var(--muted);
+    }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--line);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; min-height: 260px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 20px 18px 22px;
+      background: linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.82)),
+        #1a2535 center/cover;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 12px; border-radius: 999px; width: max-content;
+      background: rgba(23,201,165,.15); border: 1px solid rgba(23,201,165,.35);
+      color: #c9fff3; font-size: 12px; font-weight: 700; margin-bottom: 10px;
+    }
+    .hero h1 { font-size: 28px; font-weight: 900; letter-spacing: -.5px; line-height: 1.05; }
+    .hero-sub { margin-top: 8px; color: #ccd9e8; font-size: 14px; line-height: 1.45; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .hero-meta span {
+      padding: 7px 11px; border-radius: 999px;
+      background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.1);
+      font-size: 12px; color: #ddeaf5;
+    }
+    .hero-meta span.open { background: rgba(23,201,165,.15); color: var(--accent2); }
+
+    /* ── Quick nav ── */
+    .qnav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(9,14,20,.94); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto; white-space: nowrap; padding: 10px 14px;
+    }
+    .qnav::-webkit-scrollbar { display: none; }
+    .qnav a {
+      display: inline-block; text-decoration: none; color: var(--muted);
+      background: var(--panel); border: 1px solid var(--line);
+      padding: 9px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      margin-right: 8px; transition: color .15s, border-color .15s;
+    }
+    .qnav a:hover, .qnav a.active { color: var(--accent2); border-color: rgba(23,201,165,.35); }
+
+    /* ── Section wrapper ── */
+    .sec { padding: 18px; }
+    .sec-title {
+      display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px;
+    }
+    .sec-title h2 { font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
+    .sec-title small { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+
+    /* ── Artist card (venue page — tonight) ── */
+    .artist-card {
+      background: linear-gradient(135deg, #111f2b, #192a38);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 24px; padding: 16px; box-shadow: var(--shadow);
+    }
+    .artist-card .tiny {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--accent2); margin-bottom: 8px;
+    }
+    .artist-top { display: flex; gap: 14px; align-items: center; }
+    .artist-top img {
+      width: 72px; height: 72px; border-radius: 18px; object-fit: cover;
+      border: 2px solid rgba(255,255,255,.1);
+    }
+    .artist-top .avatar {
+      width: 72px; height: 72px; border-radius: 18px;
+      background: linear-gradient(135deg,#1e3040,#2a4560);
+      border: 2px solid rgba(255,255,255,.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .artist-name { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+    .artist-meta { font-size: 13px; color: var(--muted); line-height: 1.45; }
+    .artist-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      text-decoration: none; color: var(--text);
+      padding: 12px 14px; border-radius: 14px; font-weight: 700; font-size: 14px;
+      border: 1px solid var(--line); background: var(--card); cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn.primary { background: linear-gradient(135deg,var(--accent),#0ea98a); color: #062019; border: none; }
+    .btn.full { grid-column: 1/-1; }
+    .btn.gold { background: linear-gradient(135deg,var(--gold),#d9a93a); color: #1a0e00; border: none; }
+
+    /* ── Happy Hour banner ── */
+    .hh-banner {
+      background: linear-gradient(135deg,rgba(243,201,105,.13),rgba(255,255,255,.04));
+      border: 1px solid rgba(243,201,105,.2); border-radius: 22px; padding: 16px;
+    }
+    .hh-banner h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .hh-banner p { font-size: 13px; color: #e2d6b4; line-height: 1.45; }
+    .hh-time { font-size: 12px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+
+    /* ── Menu grid ── */
+    .menu-grid { display: grid; gap: 14px; }
+    .menu-item {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 20px; overflow: hidden;
+    }
+    .menu-item img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .menu-body { padding: 14px; }
+    .item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+    .item-name { font-size: 16px; font-weight: 800; line-height: 1.2; }
+    .item-price { font-size: 16px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+    .item-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tags span {
+      font-size: 11px; font-weight: 800; padding: 6px 9px; border-radius: 999px;
+      background: #182533; color: #d8f3ec; border: 1px solid rgba(255,255,255,.07);
+      text-transform: uppercase; letter-spacing: .3px;
+    }
+
+    /* ── Menu text list (no photos) ── */
+    .menu-list { display: grid; gap: 1px; }
+    .menu-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 12px 0; border-bottom: 1px solid var(--line); gap: 10px;
+    }
+    .menu-row:last-child { border-bottom: none; }
+    .menu-row-left { flex: 1; }
+    .menu-row-name { font-size: 15px; font-weight: 700; }
+    .menu-row-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .menu-row-price { font-size: 15px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+
+    /* ── Section tab strip ── */
+    .tab-strip { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+    .tab-strip::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 9px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      background: var(--panel); border: 1px solid var(--line); color: var(--muted);
+      white-space: nowrap; cursor: pointer; transition: all .15s;
+    }
+    .tab.active { background: rgba(23,201,165,.15); border-color: rgba(23,201,165,.35); color: var(--accent2); }
+
+    /* ── Lineup ── */
+    .lineup { display: grid; gap: 10px; }
+    .lineup-item {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; padding: 14px;
+      display: flex; justify-content: space-between; gap: 12px; align-items: center;
+    }
+    .lineup-item strong { display: block; font-size: 15px; font-weight: 800; }
+    .lineup-item small { color: var(--muted); font-size: 13px; margin-top: 2px; display: block; }
+    .pill {
+      padding: 7px 11px; border-radius: 999px; font-size: 12px; font-weight: 800;
+      background: rgba(23,201,165,.12); border: 1px solid rgba(23,201,165,.25); color: var(--accent2);
+      white-space: nowrap;
+    }
+    .pill.tonight { background: rgba(243,201,105,.12); border-color: rgba(243,201,105,.25); color: var(--gold); }
+    .lineup-link { color: inherit; text-decoration: none; display: block; }
+    .lineup-link:hover .lineup-item { border-color: rgba(23,201,165,.25); }
+
+    /* ── Specials ── */
+    .special-card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 14px;
+    }
+    .special-name { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+    .special-desc { font-size: 13px; color: var(--muted); line-height: 1.45; }
+    .special-time { font-size: 12px; color: var(--accent2); font-weight: 700; margin-top: 6px; }
+
+    /* ── Artist hero (artist pages) ── */
+    .artist-hero-photo {
+      width: 120px; height: 120px; border-radius: 28px; object-fit: cover;
+      border: 3px solid rgba(255,255,255,.12); margin-bottom: 14px;
+    }
+    .artist-hero-avatar {
+      width: 120px; height: 120px; border-radius: 28px;
+      background: linear-gradient(135deg,#1e3040,#2a4560);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; margin-bottom: 14px;
+    }
+    .genre-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .genre-chip {
+      padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      background: rgba(23,201,165,.12); border: 1px solid rgba(23,201,165,.25); color: var(--accent2);
+    }
+    .social-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .social-btn {
+      display: flex; align-items: center; gap: 7px; padding: 10px 14px; border-radius: 14px;
+      background: var(--card); border: 1px solid var(--line); color: var(--text);
+      text-decoration: none; font-size: 13px; font-weight: 700;
+    }
+
+    /* ── Two-col grid ── */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini-card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 14px;
+    }
+    .mini-card h3 { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+    .mini-card p { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    /* ── Booking / CTA ── */
+    .cta-box {
+      background: linear-gradient(135deg,rgba(23,201,165,.1),rgba(255,255,255,.03));
+      border: 1px solid rgba(23,201,165,.18); border-radius: 22px; padding: 18px;
+    }
+    .cta-box h3 { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+    .cta-box p { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 14px; }
+
+    /* ── Photos ── */
+    .photo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+    .photo-grid img { aspect-ratio: 1; object-fit: cover; border-radius: 12px; width: 100%; }
+
+    /* ── Hours ── */
+    .hours-list { display: grid; gap: 1px; }
+    .hours-row {
+      display: flex; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px;
+    }
+    .hours-row:last-child { border-bottom: none; }
+    .hours-row .day { color: var(--muted); font-weight: 600; }
+    .hours-row .time { font-weight: 700; }
+    .hours-row.today .day, .hours-row.today .time { color: var(--accent2); }
+
+    /* ── Hidden toggle ── */
+    .hidden { display: none !important; }
+
+    /* ── Section divider ── */
+    .divider { height: 1px; background: var(--line); margin: 4px 18px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <main class="phone" id="app">
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <span>Loading…</span>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'https://cybercheck-api-database.vercel.app/api/gcr';
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── URL helpers ──────────────────────────────────────────────────────────────
+function getParam(name) {
+  return new URLSearchParams(location.search).get(name);
+}
+
+// ── Date/time helpers ────────────────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0,10); }
+
+function toMinutes(timeStr) {
+  if (!timeStr) return null;
+  const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  let h = parseInt(m[1]); const min = parseInt(m[2]); const ampm = m[3].toUpperCase();
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h * 60 + min;
+}
+
+function nowMinutes() {
+  const n = new Date(); return n.getHours() * 60 + n.getMinutes();
+}
+
+function isHappyHourNow(days, start, end) {
+  if (!start || !end) return false;
+  const todayName = DAYS[new Date().getDay()];
+  if (days && !days.toLowerCase().includes(todayName.toLowerCase().slice(0,3))) return false;
+  const s = toMinutes(start), e = toMinutes(end), now = nowMinutes();
+  return s !== null && e !== null && now >= s && now <= e;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+function isToday(dateStr) { return dateStr === today(); }
+function isFuture(dateStr) { return dateStr >= today(); }
+
+function isArtistEntity(entity) {
+  const t = (entity.entity_type || '') + '/' + (entity.entity_subtype || '');
+  return /artist|performer|musician|band/i.test(t);
+}
+
+// ── Render helpers ───────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function socialIcon(platform) {
+  const icons = {
+    instagram:'📸', facebook:'👥', tiktok:'🎵', youtube:'▶️',
+    spotify:'🎧', twitter:'𝕏', x:'𝕏', soundcloud:'🎶', website:'🌐', booking:'📅',
+  };
+  return icons[platform?.toLowerCase()] || '🔗';
+}
+
+function formatPrice(p) {
+  if (!p) return '';
+  const n = parseFloat(p);
+  return isNaN(n) ? p : `$${n % 1 === 0 ? n : n.toFixed(2)}`;
+}
+
+// ── Section builders ─────────────────────────────────────────────────────────
+
+function buildHero(entity, events) {
+  const img = entity.hero_image_url
+    ? `style="background-image:linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.82)),url('${esc(entity.hero_image_url)}')"`
+    : '';
+  const city = [entity.city, entity.state].filter(Boolean).join(', ');
+  const todayEvents = events.filter(e => isToday(e.event_date));
+  const badge = todayEvents.length
+    ? `<div class="hero-badge">🎵 Live tonight · Music + Menu</div>`
+    : entity.entity_type?.includes('restaurant') || entity.entity_subtype?.includes('restaurant')
+    ? `<div class="hero-badge">🍴 Dine In · Order · Enjoy</div>`
+    : '';
+  const meta = [
+    city ? `<span>${esc(city)}</span>` : '',
+    entity.is_open_now ? `<span class="open">● Open Now</span>` : '',
+    entity.hh_start ? `<span>Happy Hour ${esc(entity.hh_start)}–${esc(entity.hh_end)}</span>` : '',
+  ].filter(Boolean).join('');
+
+  return `
+    <section class="hero" ${img}>
+      ${badge}
+      <h1>${esc(entity.name)}</h1>
+      ${entity.description ? `<p class="hero-sub">${esc(entity.description.slice(0,120))}${entity.description.length>120?'…':''}</p>` : ''}
+      ${meta ? `<div class="hero-meta">${meta}</div>` : ''}
+    </section>`;
+}
+
+function buildArtistHero(entity, tags) {
+  const genres = tags.filter(t => t.tag_category === 'genre' || t.tag_category === 'music_style').map(t => t.tag);
+  const socials = [
+    entity.social_instagram ? { platform:'instagram', url: entity.social_instagram.includes('http') ? entity.social_instagram : `https://instagram.com/${entity.social_instagram}` } : null,
+    entity.social_facebook  ? { platform:'facebook',  url: entity.social_facebook }  : null,
+    entity.social_tiktok    ? { platform:'tiktok',    url: entity.social_tiktok }    : null,
+    entity.website_url      ? { platform:'website',   url: entity.website_url }      : null,
+  ].filter(Boolean);
+
+  const photo = entity.hero_image_url
+    ? `<img class="artist-hero-photo" src="${esc(entity.hero_image_url)}" alt="${esc(entity.name)}" />`
+    : `<div class="artist-hero-avatar">🎸</div>`;
+
+  return `
+    <section class="sec" style="padding-top:24px">
+      ${photo}
+      <h1 style="font-size:26px;font-weight:900">${esc(entity.name)}</h1>
+      ${entity.subtitle ? `<p style="color:var(--muted);margin-top:6px;font-size:14px">${esc(entity.subtitle)}</p>` : ''}
+      ${genres.length ? `<div class="genre-chips">${genres.map(g=>`<span class="genre-chip">${esc(g)}</span>`).join('')}</div>` : ''}
+      ${entity.description ? `<p style="margin-top:14px;font-size:14px;color:var(--muted);line-height:1.55">${esc(entity.description)}</p>` : ''}
+      ${socials.length ? `
+        <div class="social-row">
+          ${socials.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener" class="social-btn">${socialIcon(s.platform)} ${s.platform.charAt(0).toUpperCase()+s.platform.slice(1)}</a>`).join('')}
+        </div>` : ''}
+    </section>`;
+}
+
+function buildTonightArtist(events) {
+  const now = events.filter(e => isToday(e.event_date));
+  if (!now.length) return '';
+  const e = now[0];
+  const time = [e.start_time, e.end_time].filter(Boolean).join(' – ');
+  const photo = e.image_url
+    ? `<img src="${esc(e.image_url)}" alt="${esc(e.artist_name||'')}" />`
+    : `<div class="avatar">🎸</div>`;
+  const artistSlug = e.artist_name ? encodeURIComponent(e.artist_name.toLowerCase().replace(/\s+/g,'-')) : '';
+  return `
+    <section class="sec">
+      <div class="artist-card">
+        <div class="tiny">🎵 Tonight's Artist</div>
+        <div class="artist-top">
+          ${photo}
+          <div>
+            <div class="artist-name">${esc(e.artist_name || e.event_name || 'Live Music')}</div>
+            <div class="artist-meta">${time ? `${esc(time)}<br>` : ''}${e.music_style ? esc(e.music_style) : 'Live performance'}</div>
+          </div>
+        </div>
+        <div class="artist-actions">
+          ${e.artist_name && artistSlug ? `<a href="page.html?s=${artistSlug}" class="btn primary">View Artist</a>` : '<div></div>'}
+          <a href="#lineup" class="btn">Full Lineup</a>
+        </div>
+      </div>
+    </section>`;
+}
+
+function buildQuickNav(sections) {
+  if (!sections.length) return '';
+  return `<nav class="qnav">${sections.map(s=>`<a href="#${s.id}">${s.label}</a>`).join('')}</nav>`;
+}
+
+function buildHappyHour(hh, entity) {
+  const items = hh.items || [];
+  const sections = hh.sections || [];
+  if (!items.length && !sections.length && !entity.hh_start) return '';
+  const active = isHappyHourNow(entity.hh_days, entity.hh_start, entity.hh_end);
+  return `
+    <section class="sec" id="happyhour">
+      <div class="hh-banner">
+        <div class="hh-time">${active?'🟡 HAPPENING NOW':'⏰'} Happy Hour${entity.hh_start ? ` · ${esc(entity.hh_start)} – ${esc(entity.hh_end)}` : ''}</div>
+        <h3>${entity.hh_description || 'Happy Hour Specials'}</h3>
+        ${items.length ? `<p style="margin-top:8px">${items.slice(0,3).map(i=>esc(i.name||(i.item_name)||'')).join(' · ')}</p>` : ''}
+      </div>
+    </section>`;
+}
+
+function buildMenuSection(label, items, id) {
+  if (!items.length) return '';
+  const hasPhotos = items.some(i => i.image_url);
+
+  if (hasPhotos) {
+    return `
+      <section class="sec" id="${id}">
+        <div class="sec-title"><h2>${esc(label)}</h2></div>
+        <div class="menu-grid">
+          ${items.map(item => `
+            <article class="menu-item">
+              ${item.image_url ? `<img src="${esc(item.image_url)}" alt="${esc(item.name||'')}" loading="lazy" />` : ''}
+              <div class="menu-body">
+                <div class="item-head">
+                  <div class="item-name">${esc(item.name||'')}</div>
+                  ${item.price ? `<div class="item-price">${formatPrice(item.price)}</div>` : ''}
+                </div>
+                ${item.description ? `<p class="item-desc">${esc(item.description)}</p>` : ''}
+                ${(item.tags||[]).length ? `<div class="tags">${item.tags.map(t=>`<span>${esc(t)}</span>`).join('')}</div>` : ''}
+              </div>
+            </article>`).join('')}
+        </div>
+      </section>`;
+  }
+
+  return `
+    <section class="sec" id="${id}">
+      <div class="sec-title"><h2>${esc(label)}</h2></div>
+      <div class="menu-list">
+        ${items.map(item => `
+          <div class="menu-row">
+            <div class="menu-row-left">
+              <div class="menu-row-name">${esc(item.name||'')}</div>
+              ${item.description ? `<div class="menu-row-desc">${esc(item.description)}</div>` : ''}
+            </div>
+            ${item.price ? `<div class="menu-row-price">${formatPrice(item.price)}</div>` : ''}
+          </div>`).join('')}
+      </div>
+    </section>`;
+}
+
+function buildFullMenu(menu, drinks) {
+  const parts = [];
+  const sections = menu.sections || [];
+  const items = menu.items || [];
+  const drinkSections = drinks.sections || [];
+  const drinkItems = drinks.items || [];
+
+  if (sections.length) {
+    sections.forEach(sec => {
+      const secItems = items.filter(i => i.menu_section_id === sec.id);
+      parts.push(buildMenuSection(sec.name || sec.label, secItems, `menu-${sec.id}`));
+    });
+  } else if (items.length) {
+    parts.push(buildMenuSection('Menu', items, 'menu'));
+  }
+
+  if (drinkSections.length) {
+    drinkSections.forEach(sec => {
+      const secItems = drinkItems.filter(i => i.drink_section_id === sec.id);
+      parts.push(buildMenuSection(sec.name || sec.label, secItems, `drinks-${sec.id}`));
+    });
+  } else if (drinkItems.length) {
+    parts.push(buildMenuSection('Drinks', drinkItems, 'drinks'));
+  }
+
+  return parts.join('<div class="divider"></div>');
+}
+
+function buildLineup(events) {
+  const upcoming = events.filter(e => isFuture(e.event_date)).slice(0, 10);
+  if (!upcoming.length) return '';
+  return `
+    <section class="sec" id="lineup">
+      <div class="sec-title"><h2>This Week's Music</h2><small>Auto-updated</small></div>
+      <div class="lineup">
+        ${upcoming.map(e => {
+          const slug = e.artist_name ? encodeURIComponent(e.artist_name.toLowerCase().replace(/\s+/g,'-')) : '';
+          const time = e.start_time || '';
+          const label = isToday(e.event_date) ? 'Tonight' : formatDate(e.event_date).split(' ').slice(0,1).join('');
+          const pillClass = isToday(e.event_date) ? 'pill tonight' : 'pill';
+          const inner = `
+            <div class="lineup-item">
+              <div>
+                <strong>${esc(e.artist_name || e.event_name || 'Live Music')}</strong>
+                <small>${e.music_style ? esc(e.music_style)+' · ' : ''}${esc(time)}</small>
+              </div>
+              <span class="${pillClass}">${esc(label)}</span>
+            </div>`;
+          return slug ? `<a class="lineup-link" href="page.html?s=${slug}">${inner}</a>` : inner;
+        }).join('')}
+      </div>
+    </section>`;
+}
+
+function buildSpecials(specials) {
+  if (!specials.length) return '';
+  return `
+    <section class="sec" id="specials">
+      <div class="sec-title"><h2>Specials</h2></div>
+      <div style="display:grid;gap:10px">
+        ${specials.slice(0,4).map(s=>`
+          <div class="special-card">
+            <div class="special-name">${esc(s.special_name||s.name||'')}</div>
+            ${s.description ? `<div class="special-desc">${esc(s.description)}</div>` : ''}
+            ${s.days ? `<div class="special-time">${esc(s.days)}</div>` : ''}
+          </div>`).join('')}
+      </div>
+    </section>`;
+}
+
+function buildPhotos(photos) {
+  if (!photos.length) return '';
+  return `
+    <section class="sec" id="photos">
+      <div class="sec-title"><h2>Gallery</h2></div>
+      <div class="photo-grid">
+        ${photos.slice(0,9).map(p=>`<img src="${esc(p.image_url||p.url||'')}" alt="" loading="lazy" />`).join('')}
+      </div>
+    </section>`;
+}
+
+function buildHours(hours) {
+  if (!hours.length) return '';
+  const todayIdx = new Date().getDay();
+  return `
+    <section class="sec" id="hours">
+      <div class="sec-title"><h2>Hours</h2></div>
+      <div class="hours-list">
+        ${hours.map(h => {
+          const isT = (h.day_of_week === todayIdx || h.day === DAYS[todayIdx]);
+          return `<div class="hours-row${isT?' today':''}">
+            <span class="day">${esc(h.day || DAYS[h.day_of_week] || '')}</span>
+            <span class="time">${h.closed ? 'Closed' : `${esc(h.open||h.open_time||'')} – ${esc(h.close||h.close_time||'')}`}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </section>`;
+}
+
+function buildBooking(entity) {
+  const links = [
+    entity.booking_url ? { label: 'Book a Table', url: entity.booking_url, cls: 'primary' } : null,
+    entity.reservation_url ? { label: 'Reserve', url: entity.reservation_url, cls: 'primary' } : null,
+    entity.order_url ? { label: 'Order Online', url: entity.order_url, cls: '' } : null,
+    entity.website_url ? { label: 'Visit Website', url: entity.website_url, cls: '' } : null,
+  ].filter(Boolean);
+  if (!links.length) return '';
+  return `
+    <section class="sec" id="booking">
+      <div class="cta-box">
+        <h3>Book, Order & More</h3>
+        <p>Reserve a table, order online, or explore what's available.</p>
+        <div style="display:grid;gap:10px">
+          ${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener" class="btn ${l.cls} full">${esc(l.label)}</a>`).join('')}
+        </div>
+      </div>
+    </section>`;
+}
+
+function buildArtistUpcomingShows(events) {
+  const upcoming = events.filter(e => isFuture(e.event_date)).slice(0,8);
+  if (!upcoming.length) return '';
+  return `
+    <section class="sec" id="shows">
+      <div class="sec-title"><h2>Upcoming Shows</h2></div>
+      <div class="lineup">
+        ${upcoming.map(e => `
+          <div class="lineup-item">
+            <div>
+              <strong>${esc(e.venue_location || e.event_name || 'Live Show')}</strong>
+              <small>${esc(formatDate(e.event_date))}${e.start_time ? ' · '+esc(e.start_time) : ''}</small>
+            </div>
+            <span class="${isToday(e.event_date)?'pill tonight':'pill'}">${isToday(e.event_date)?'Tonight':DAYS[new Date(e.event_date+'T00:00:00').getDay()].slice(0,3)}</span>
+          </div>`).join('')}
+      </div>
+    </section>`;
+}
+
+// ── Quick nav builder ─────────────────────────────────────────────────────────
+function buildNav(sections) {
+  return `<nav class="qnav">${sections.map(s=>`<a href="#${s.id}">${s.label}</a>`).join('')}</nav>`;
+}
+
+// ── Main render ───────────────────────────────────────────────────────────────
+function render(data) {
+  const { entity, events=[], menu={}, drinks={}, happy_hour={}, hours=[], photos=[], specials=[], tags=[] } = data;
+  const isArtist = isArtistEntity(entity);
+  document.title = entity.name;
+
+  const navSections = [];
+  const blocks = [];
+
+  if (isArtist) {
+    blocks.push(buildArtistHero(entity, tags));
+    if (events.length) { navSections.push({id:'shows',label:'Shows'}); blocks.push(buildArtistUpcomingShows(events)); }
+    if (photos.length) { navSections.push({id:'photos',label:'Gallery'}); blocks.push(buildPhotos(photos)); }
+    const bookBlock = buildBooking(entity);
+    if (bookBlock) { navSections.push({id:'booking',label:'Book'}); blocks.push(bookBlock); }
+  } else {
+    blocks.push(buildHero(entity, events));
+
+    // Tonight's artist
+    const tonightBlock = buildTonightArtist(events);
+    if (tonightBlock) blocks.push(tonightBlock);
+
+    // Nav items
+    const hasHH = (happy_hour.items||[]).length || (happy_hour.sections||[]).length || entity.hh_start;
+    const hasMenu = (menu.items||[]).length;
+    const hasDrinks = (drinks.items||[]).length;
+    const hasLineup = events.some(e => isFuture(e.event_date));
+    const hasSpecials = specials.length > 0;
+    const hasPhotos = photos.length > 0;
+    const hasBooking = !!(entity.booking_url || entity.reservation_url || entity.order_url);
+
+    if (hasHH)      navSections.push({id:'happyhour', label:'Happy Hour'});
+    if (hasMenu)    navSections.push({id:'menu',       label:'Menu'});
+    if (hasDrinks)  navSections.push({id:'drinks',     label:'Drinks'});
+    if (hasLineup)  navSections.push({id:'lineup',     label:'Music'});
+    if (hasSpecials)navSections.push({id:'specials',   label:'Specials'});
+    if (hasPhotos)  navSections.push({id:'photos',     label:'Photos'});
+    if (hasBooking) navSections.push({id:'booking',    label:'Reserve'});
+
+    if (hasHH)      blocks.push(buildHappyHour(happy_hour, entity));
+    if (hasMenu || hasDrinks) blocks.push(buildFullMenu(menu, drinks));
+    if (hasLineup)  blocks.push(buildLineup(events));
+    if (hasSpecials)blocks.push(buildSpecials(specials));
+    if (hasPhotos)  blocks.push(buildPhotos(photos));
+    blocks.push(buildHours(hours));
+    if (hasBooking) blocks.push(buildBooking(entity));
+  }
+
+  const nav = navSections.length ? buildNav(navSections) : '';
+  document.getElementById('app').innerHTML = blocks[0] + nav + blocks.slice(1).join('');
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function load() {
+  const slug = getParam('s') || getParam('slug') || getParam('id');
+  if (!slug) {
+    document.getElementById('app').innerHTML =
+      `<div class="loader"><span style="color:var(--red)">No page slug provided.<br><small>Use ?s=your-slug-here</small></span></div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/entity/${encodeURIComponent(slug)}`);
+    if (!res.ok) throw new Error(`${res.status}`);
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('app').innerHTML =
+      `<div class="loader"><span style="color:var(--red)">Page not found.<br><small>${esc(e.message)}</small></span></div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

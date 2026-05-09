@@ -1,79 +1,77 @@
-// ── Wavegent Page Generator ──────────────────────────────
+// ── QR Menu AI Design Chat ──────────────────────────────
 
-var _wavegentConfig = null;
-var _wavegentSlug = null;
+var _wgSlug = null;
+var _wgHistory = [];
 
 function loadWavegentTab() {
   if (!_currentEntityId) return;
-  const entity = _allEntities.find(e => e.id === _currentEntityId);
-  if (!entity) return;
-  _wavegentSlug = entity.slug;
-  // Show URL section if already generated
-  if (entity.slug) {
-    showWavegentURL(entity.slug);
+  var entity = _allEntities.find(function(e) { return e.id === _currentEntityId; });
+  _wgSlug = entity ? entity.slug : null;
+
+  // Show preview bar with live QR menu URL
+  var bar = document.getElementById('wg-preview-bar');
+  var urlText = document.getElementById('wg-menu-url-text');
+  if (bar && urlText && _wgSlug) {
+    urlText.textContent = 'https://cybercheck-links.vercel.app/' + _wgSlug + '/menu';
+    bar.style.display = 'flex';
   }
+
+  // Reset chat
+  _wgHistory = [];
+  var msgs = document.getElementById('wg-chat-msgs');
+  if (msgs) msgs.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;">Describe the style you want for this menu.</div>';
 }
 
-function showWavegentURL(slug) {
-  const urlSection = document.getElementById('wg-url-section');
-  const urlInput = document.getElementById('wg-url-input');
-  const previewFrame = document.getElementById('wg-preview-frame');
-  const domain = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'https://cybercheck-login.vercel.app';
-  const url = `${domain}/wavegent/${slug}`;
-  urlInput.value = url;
-  urlSection.style.display = 'block';
-  previewFrame.src = url;
-  document.getElementById('wg-preview-section').style.display = 'block';
-}
+async function wgSend() {
+  var input = document.getElementById('wg-chat-input');
+  var text = (input.value || '').trim();
+  if (!text || !_currentEntityId) return;
+  input.value = '';
 
-async function generateWavegentPage() {
-  if (!_currentEntityId || !_wavegentSlug) return;
+  var msgs = document.getElementById('wg-chat-msgs');
+  var btn  = document.getElementById('wg-send-btn');
 
-  const btn = document.getElementById('wg-generate-btn');
-  const status = document.getElementById('wg-status');
+  // Append user bubble
+  msgs.innerHTML += '<div style="align-self:flex-end;background:var(--primary);color:#fff;padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:14px;max-width:85%;">' + escHtml(text) + '</div>';
+  msgs.scrollTop = msgs.scrollHeight;
 
   btn.disabled = true;
-  status.textContent = 'Generating...';
+  btn.textContent = '…';
+
+  // Thinking bubble
+  var thinkId = 'wg-think-' + Date.now();
+  msgs.innerHTML += '<div id="' + thinkId + '" style="align-self:flex-start;background:var(--card-bg,#1e2533);color:var(--text-muted);padding:10px 14px;border-radius:14px 14px 14px 4px;font-size:13px;max-width:85%;">✨ Applying style…</div>';
+  msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    // Fetch entity data from GCR API
-    const entityRes = await fetch(
-      API_BASE + '/api/gcr/entity/' + _wavegentSlug,
-      { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }
-    );
+    var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+      body: JSON.stringify({
+        message: 'QR MENU DESIGN REQUEST: ' + text + '\n\nApply this style to the QR menu for this business. Use the set_qr_theme tool to save it. Generate appropriate colors, decide which modules to show, and set module_order based on what makes sense for the request. Respond with a short confirmation of what you applied.',
+        entity_id: _currentEntityId,
+        history: _wgHistory,
+      })
+    });
 
-    if (!entityRes.ok) {
-      throw new Error('Failed to fetch entity data');
-    }
+    var d = await res.json();
+    var reply = d.reply || d.message || 'Done!';
 
-    const entityData = await entityRes.json();
-    const entity = entityData.entity || entityData;
+    // Remove thinking bubble, add AI reply
+    var think = document.getElementById(thinkId);
+    if (think) think.remove();
+    msgs.innerHTML += '<div style="align-self:flex-start;background:var(--card-bg,#1e2533);color:var(--text);padding:10px 14px;border-radius:14px 14px 14px 4px;font-size:14px;max-width:85%;line-height:1.5;">' + escHtml(reply) + '</div>';
+    msgs.scrollTop = msgs.scrollHeight;
 
-    // Show success message
-    status.textContent = '✓ Generated!';
-    showWavegentURL(_wavegentSlug);
+    _wgHistory.push({ role: 'user', content: text });
+    _wgHistory.push({ role: 'assistant', content: reply });
 
+    if (typeof toast === 'function') toast('Menu style saved!', 'success');
   } catch (err) {
-    console.error('Wavegent generate error:', err);
-    status.textContent = '✗ Error: ' + err.message;
+    var think2 = document.getElementById(thinkId);
+    if (think2) think2.textContent = '⚠️ ' + err.message;
   } finally {
     btn.disabled = false;
+    btn.textContent = 'Apply ✨';
   }
-}
-
-function copyWavegentURL() {
-  const input = document.getElementById('wg-url-input');
-  input.select();
-  document.execCommand('copy');
-  const btn = event.target;
-  const orig = btn.textContent;
-  btn.textContent = '✓ Copied!';
-  setTimeout(() => { btn.textContent = orig; }, 2000);
-}
-
-function openWavegentURL() {
-  const url = document.getElementById('wg-url-input').value;
-  if (url) window.open(url, '_blank');
 }

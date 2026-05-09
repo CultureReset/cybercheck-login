@@ -96,7 +96,7 @@ async function uploadToSupabase(file, folder) {
   var publicUrl = urlData.publicUrl;
 
   // Record in media table
-  await supabase.from('media').insert({
+  var { error: insertError } = await supabase.from('media').insert({
     site_id: siteId,
     url: publicUrl,
     filename: file.name,
@@ -105,6 +105,14 @@ async function uploadToSupabase(file, folder) {
     folder: folder || 'general',
     title: file.name
   });
+
+  if (insertError) {
+    console.error('Media record failed:', insertError);
+    // Remove the orphaned file from storage so nothing is stranded
+    await supabase.storage.from('media').remove([data.path]);
+    toast('Upload failed — could not save file record.', 'error');
+    return null;
+  }
 
   return publicUrl;
 }

@@ -267,27 +267,23 @@ function showProcessing(message = 'Processing AI Training...') {
 }
 
 async function pollForProcessingComplete() {
-  const maxAttempts = 60; // 60 seconds max
-  let attempts = 0;
+  // Exponential backoff: 2s, 4s, 8s, 16s, 16s, 16s … capped at 16s, max 90s total
+  const DELAYS = [2000, 4000, 8000, 16000];
+  const MAX_WAIT_MS = 90000;
+  let elapsed = 0;
+  let attempt = 0;
 
   return new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      attempts++;
-
+    const poll = async () => {
       try {
         const response = await fetch(`${API_BASE}/items/${currentItemId}/ai-context`, {
-          headers: {
-            'Authorization': `Bearer ${getAuthToken()}`
-          }
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to check processing status');
-        }
+        if (!response.ok) throw new Error('Failed to check processing status');
 
         const data = await response.json();
 
-        // Update processing steps based on status
         if (data.ai_context_processing_status === 'processing') {
           const steps = document.querySelectorAll('#aiTrainingModal .processing-step');
           steps[1].classList.remove('active');
@@ -296,43 +292,42 @@ async function pollForProcessingComplete() {
         }
 
         if (data.ai_context_processing_status === 'completed' && data.ai_context_processed) {
-          clearInterval(interval);
-
-          // Mark all steps complete
           const steps = document.querySelectorAll('#aiTrainingModal .processing-step');
-          steps.forEach(step => {
-            step.classList.remove('active');
-            step.classList.add('complete');
-          });
+          steps.forEach(step => { step.classList.remove('active'); step.classList.add('complete'); });
+          setTimeout(() => { showAITraining(data.ai_context_processed); resolve(); }, 500);
+          return;
+        }
 
-          // Show result
-          setTimeout(() => {
-            showAITraining(data.ai_context_processed);
-            resolve();
-          }, 500);
-
-        } else if (data.ai_context_processing_status === 'failed') {
-          clearInterval(interval);
+        if (data.ai_context_processing_status === 'failed') {
           reject(new Error(data.ai_context_processing_error || 'Processing failed'));
           alert('AI training processing failed. Please try again.');
           closeAITrainingModal();
+          return;
         }
 
-        if (attempts >= maxAttempts) {
-          clearInterval(interval);
+        // Schedule next poll with backoff
+        const delay = DELAYS[Math.min(attempt, DELAYS.length - 1)];
+        elapsed += delay;
+        attempt++;
+
+        if (elapsed >= MAX_WAIT_MS) {
           reject(new Error('Processing timeout'));
           alert('Processing is taking longer than expected. Please check back in a moment.');
           closeAITrainingModal();
+          return;
         }
 
+        setTimeout(poll, delay);
+
       } catch (error) {
-        clearInterval(interval);
         reject(error);
         console.error('Error polling for completion:', error);
         alert('Error checking processing status. Please try again.');
         closeAITrainingModal();
       }
-    }, 1000); // Poll every second
+    };
+
+    setTimeout(poll, DELAYS[0]);
   });
 }
 
