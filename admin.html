@@ -213,6 +213,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
           <span>Button Config 🔗</span>
         </div>
+        <div class="nav-item" data-page="sms-settings" onclick="showPage('sms-settings');loadSmsConfig()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>SMS Settings 📱</span>
+        </div>
+        <div class="nav-item" data-page="sms-blasts" onclick="showPage('sms-blasts');loadBlastHistory()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>SMS Blasts 🚀</span>
+        </div>
         <div class="nav-item" data-page="community-photos" onclick="showPage('community-photos');loadCommunityPhotos('pending')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <span>Guest Photos 📸</span>
@@ -3753,6 +3761,151 @@
 
           <button onclick="saveButtonConfig()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Save Button Config</button>
           <span id="btn-save-status" style="font-size:13px;margin-left:12px;color:#4ade80;display:none;">✓ Saved</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── SMS SETTINGS ── -->
+      <div id="page-sms-settings" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>📱 SMS Settings</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Choose your SMS provider and control the opt-in popup inside Trip Swipe.</div>
+        </div>
+        <div style="max-width:580px;">
+
+          <!-- Provider -->
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">SMS Provider</div>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;margin-bottom:8px;" id="sms-opt-sendblue" onclick="showSmsProviderFields('sendblue')">
+              <input type="radio" name="sms_provider" value="sendblue" style="margin-top:3px;accent-color:#7c3aed;" onchange="showSmsProviderFields('sendblue')">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">SendBlue</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">iMessage, SMS, and RCS. No per-message fees on iMessage.</div>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;" id="sms-opt-twilio" onclick="showSmsProviderFields('twilio')">
+              <input type="radio" name="sms_provider" value="twilio" style="margin-top:3px;accent-color:#7c3aed;" onchange="showSmsProviderFields('twilio')">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">Twilio</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Existing platform integration. ~$0.01/message.</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- SendBlue keys -->
+          <div id="sms-field-sendblue" style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;display:none;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">API Key ID</label>
+            <input id="sb-key-id" type="text" placeholder="sb-api-key-id value"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">API Secret Key</label>
+            <input id="sb-secret" type="password" placeholder="sb-api-secret-key value"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);">
+          </div>
+
+          <!-- Twilio keys -->
+          <div id="sms-field-twilio" style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;display:none;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Account SID</label>
+            <input id="tw-sid" type="text" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Auth Token</label>
+            <input id="tw-token" type="password" placeholder="Auth token"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">From Number</label>
+            <input id="tw-from" type="text" placeholder="+12125551234"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);">
+          </div>
+
+          <!-- Opt-in popup -->
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div style="font-size:15px;font-weight:700;color:var(--text-primary);">Trip Swipe Opt-in Popup</div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <span style="font-size:13px;color:var(--text-muted);">On</span>
+                <div style="position:relative;width:44px;height:24px;">
+                  <input type="checkbox" id="popup-enabled" style="opacity:0;width:0;height:0;position:absolute;">
+                  <span onclick="document.getElementById('popup-enabled').click()" id="popup-toggle-track"
+                    style="position:absolute;inset:0;border-radius:999px;background:#334155;cursor:pointer;transition:background .2s;"></span>
+                  <span id="popup-toggle-thumb"
+                    style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;pointer-events:none;"></span>
+                </div>
+              </label>
+            </div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Show a bottom sheet asking tourists for their phone number to receive deals.</div>
+
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Trigger after</div>
+              <input id="popup-value" type="number" min="1" max="999" value="5"
+                style="width:64px;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text-primary);text-align:center;">
+              <select id="popup-trigger"
+                style="background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--text-primary);">
+                <option value="time">minutes of swiping</option>
+                <option value="swipes">swipes</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Automations -->
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Automations</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Auto-send SMS on these events (opt-in required from tourist).</div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+                <input type="checkbox" id="auto-welcome" style="accent-color:#7c3aed;width:16px;height:16px;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:var(--text-primary);">Welcome text</div>
+                  <div style="font-size:12px;color:var(--text-muted);">Sent immediately after tourist opts in.</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+                <input type="checkbox" id="auto-event-alert" style="accent-color:#7c3aed;width:16px;height:16px;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:var(--text-primary);">Event alerts</div>
+                  <div style="font-size:12px;color:var(--text-muted);">Text opted-in tourists when a new Tonight Card is published.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <button onclick="saveSmsConfig()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Save SMS Settings</button>
+          <span id="sms-save-status" style="font-size:13px;margin-left:12px;color:#4ade80;display:none;">✓ Saved</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── SMS BLASTS ── -->
+      <div id="page-sms-blasts" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🚀 SMS Blasts</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Send a deal or message to all opted-in tourists right now.</div>
+        </div>
+        <div style="max-width:560px;">
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Message</label>
+            <textarea id="blast-message" rows="4" maxlength="160" placeholder="🌊 Happy hour at The Pier starts in 1 hr — 2-for-1 cocktails. Show this text!"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;color:var(--text-primary);resize:vertical;"
+              oninput="document.getElementById('blast-chars').textContent=this.value.length+'/160'"></textarea>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;text-align:right;" id="blast-chars">0/160</div>
+
+            <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;">
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Send to:</div>
+              <select id="blast-audience" style="background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--text-primary);">
+                <option value="all">All opted-in tourists</option>
+              </select>
+            </div>
+
+            <div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <button onclick="sendBlast()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Send Now</button>
+              <span id="blast-status" style="font-size:13px;color:#4ade80;display:none;"></span>
+            </div>
+          </div>
+
+          <!-- History -->
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Blast History</div>
+          <div id="blast-history" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
+          </div>
         </div>
       </div>
 
@@ -15255,6 +15408,113 @@
         const s = document.getElementById('btn-save-status');
         s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2500);
       } catch(e) { alert('Save failed: ' + e.message); }
+    }
+
+    // ── SMS Settings ──────────────────────────────────────────
+    async function loadSmsConfig() {
+      try {
+        const r = await fetch(API_BASE + '/api/admin/sms-config');
+        const d = await r.json();
+        const provider = d.provider || 'sendblue';
+        document.querySelectorAll('input[name="sms_provider"]').forEach(el => el.checked = el.value === provider);
+        showSmsProviderFields(provider);
+        if (d.sendblue_key_id) document.getElementById('sb-key-id').value = d.sendblue_key_id;
+        if (d.sendblue_secret) document.getElementById('sb-secret').value = d.sendblue_secret;
+        if (d.twilio_sid) document.getElementById('tw-sid').value = d.twilio_sid;
+        if (d.twilio_token) document.getElementById('tw-token').value = d.twilio_token;
+        if (d.twilio_from) document.getElementById('tw-from').value = d.twilio_from;
+        const popupOn = d.popup_enabled !== false;
+        document.getElementById('popup-enabled').checked = popupOn;
+        updatePopupToggle(popupOn);
+        if (d.popup_trigger) document.getElementById('popup-trigger').value = d.popup_trigger;
+        if (d.popup_value) document.getElementById('popup-value').value = d.popup_value;
+        const auto = d.automations || {};
+        document.getElementById('auto-welcome').checked = !!auto.welcome;
+        document.getElementById('auto-event-alert').checked = !!auto.event_alert;
+      } catch(e) {}
+    }
+
+    function showSmsProviderFields(provider) {
+      document.getElementById('sms-field-sendblue').style.display = provider === 'sendblue' ? 'block' : 'none';
+      document.getElementById('sms-field-twilio').style.display = provider === 'twilio' ? 'block' : 'none';
+      ['sendblue','twilio'].forEach(p => {
+        const el = document.getElementById('sms-opt-' + p);
+        if (el) el.style.borderColor = p === provider ? '#7c3aed' : 'transparent';
+      });
+    }
+
+    function updatePopupToggle(on) {
+      document.getElementById('popup-toggle-track').style.background = on ? '#7c3aed' : '#334155';
+      document.getElementById('popup-toggle-thumb').style.left = on ? '23px' : '3px';
+    }
+
+    document.addEventListener('change', function(e) {
+      if (e.target.id === 'popup-enabled') updatePopupToggle(e.target.checked);
+    });
+
+    async function saveSmsConfig() {
+      const provider = document.querySelector('input[name="sms_provider"]:checked')?.value || 'sendblue';
+      const body = {
+        provider,
+        sendblue_key_id: document.getElementById('sb-key-id').value.trim() || null,
+        sendblue_secret: document.getElementById('sb-secret').value.trim() || null,
+        twilio_sid: document.getElementById('tw-sid').value.trim() || null,
+        twilio_token: document.getElementById('tw-token').value.trim() || null,
+        twilio_from: document.getElementById('tw-from').value.trim() || null,
+        popup_enabled: document.getElementById('popup-enabled').checked,
+        popup_trigger: document.getElementById('popup-trigger').value,
+        popup_value: parseInt(document.getElementById('popup-value').value) || 5,
+        automations: {
+          welcome: document.getElementById('auto-welcome').checked,
+          event_alert: document.getElementById('auto-event-alert').checked,
+        }
+      };
+      const token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/admin/sms-config', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const s = document.getElementById('sms-save-status');
+        s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2500);
+      } catch(e) { alert('Save failed: ' + e.message); }
+    }
+
+    // ── SMS Blasts ────────────────────────────────────────────
+    async function loadBlastHistory() {
+      const token = getAuthToken();
+      try {
+        const r = await fetch(API_BASE + '/api/admin/sms-blasts', { headers: { 'Authorization': 'Bearer ' + token } });
+        const blasts = await r.json();
+        const el = document.getElementById('blast-history');
+        if (!blasts.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No blasts sent yet.</div>'; return; }
+        el.innerHTML = blasts.map(b => `
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px;">
+            <div style="font-size:14px;color:var(--text-primary);margin-bottom:4px;">${b.message}</div>
+            <div style="font-size:12px;color:var(--text-muted);">Sent to ${b.sent_to} tourists · ${new Date(b.sent_at).toLocaleString()}</div>
+          </div>`).join('');
+      } catch(e) {}
+    }
+
+    async function sendBlast() {
+      const message = document.getElementById('blast-message').value.trim();
+      if (!message) return alert('Enter a message first.');
+      if (!confirm('Send this to all opted-in tourists now?')) return;
+      const token = getAuthToken();
+      const status = document.getElementById('blast-status');
+      try {
+        const r = await fetch(API_BASE + '/api/admin/sms-blast', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, audience: document.getElementById('blast-audience').value })
+        });
+        const d = await r.json();
+        status.textContent = `✓ Sent to ${d.sent} tourists`; status.style.display = 'inline';
+        document.getElementById('blast-message').value = '';
+        document.getElementById('blast-chars').textContent = '0/160';
+        loadBlastHistory();
+      } catch(e) { alert('Send failed: ' + e.message); }
     }
 
     var _spImages = []; // images being edited in the form
