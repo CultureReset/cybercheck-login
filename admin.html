@@ -3610,6 +3610,14 @@
             </label>
           </div>
 
+          <!-- button label -->
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Button Label</label>
+            <input id="btn-label" type="text" placeholder="💜 Try Trip Swipe"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);">
+            <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Text shown on the purple button. Leave blank to keep the default.</div>
+          </div>
+
           <!-- iframe / link URL field -->
           <div id="btn-field-url" style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;display:none;">
             <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">URL</label>
@@ -14897,6 +14905,7 @@
         });
         highlightBtnOption(type);
         showButtonFields(type);
+        if (d.label) document.getElementById('btn-label').value = d.label;
         if (d.url) document.getElementById('btn-url').value = d.url;
         if (d.title) document.getElementById('btn-app-title').value = d.title;
         if (d.description) document.getElementById('btn-app-desc').value = d.description;
@@ -14923,6 +14932,7 @@
       if (!type) return;
       const body = {
         type,
+        label: document.getElementById('btn-label').value.trim() || null,
         url: document.getElementById('btn-url').value.trim() || null,
         title: document.getElementById('btn-app-title').value.trim() || null,
         description: document.getElementById('btn-app-desc').value.trim() || null,
