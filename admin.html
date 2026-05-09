@@ -16286,12 +16286,29 @@
       var d = await res.json();
       var reply = d.reply || d.error || 'No response';
       _aichatHistory.push({ role: 'assistant', content: reply });
-      var formatted = reply
+      // Pull out ENTITY_REF:<uuid> markers so we can render dashboard buttons
+      var entityRefs = [];
+      var cleaned = reply.replace(/ENTITY_REF:([a-f0-9-]{8,})/gi, function(_, id){ entityRefs.push(id); return ''; }).trim();
+      var formatted = cleaned
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
         .replace(/\*(.*?)\*/g,'<em>$1</em>')
         .replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+      if (entityRefs.length) {
+        var btns = entityRefs.map(function(id){
+          return '<button data-aichat-open-entity="' + id + '" style="padding:8px 14px;background:#0b7a75;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;margin:8px 6px 0 0;">📂 Open in Admin Dashboard</button>';
+        }).join('');
+        formatted += '<br><br>' + btns;
+      }
       statusDiv.innerHTML = formatted;
+      statusDiv.querySelectorAll('[data-aichat-open-entity]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var id = btn.getAttribute('data-aichat-open-entity');
+          if (typeof openEditModal === 'function') { try { openEditModal(id); return; } catch(e) {} }
+          if (typeof openAdvancedEditor === 'function') { try { openAdvancedEditor(id); return; } catch(e) {} }
+          window.location.href = 'admin.html?edit=' + encodeURIComponent(id);
+        });
+      });
       if (_aichatVoiceReply) _aichatSpeak(reply);
     } catch(e) {
       statusDiv.innerHTML = '<span style="color:#fca5a5;">Error: ' + e.message + '</span>';
@@ -16322,33 +16339,50 @@
       var d = await res.json();
       if (!res.ok || d.error) throw new Error(d.error || 'Scrape failed');
       var structured = d.structured || d;
-      // Show preview with accept button
+      window._aichatPending = window._aichatPending || {};
+      var token = 't' + Date.now() + Math.random().toString(36).slice(2,8);
+      window._aichatPending[token] = structured;
+      var esc = function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
       var preview = '<div style="font-size:13px;line-height:1.8;">' +
         '<div style="font-weight:700;font-size:15px;margin-bottom:10px;">📋 Extracted Data — Review before saving</div>' +
-        (structured.name ? '<div><strong>Name:</strong> ' + structured.name + '</div>' : '') +
-        (structured.entity_subtype ? '<div><strong>Type:</strong> ' + structured.entity_subtype + '</div>' : '') +
-        (structured.subtitle ? '<div><strong>Tagline:</strong> ' + structured.subtitle + '</div>' : '') +
-        (structured.phone ? '<div><strong>Phone:</strong> ' + structured.phone + '</div>' : '') +
-        (structured.address_line_1 ? '<div><strong>Address:</strong> ' + structured.address_line_1 + ', ' + (structured.city||'') + '</div>' : '') +
-        (structured.website_url ? '<div><strong>Website:</strong> ' + structured.website_url + '</div>' : '') +
-        (structured.description ? '<div><strong>Description:</strong> ' + structured.description.slice(0,200) + '…</div>' : '') +
+        (structured.name ? '<div><strong>Name:</strong> ' + esc(structured.name) + '</div>' : '') +
+        (structured.entity_subtype ? '<div><strong>Type:</strong> ' + esc(structured.entity_subtype) + '</div>' : '') +
+        (structured.subtitle ? '<div><strong>Tagline:</strong> ' + esc(structured.subtitle) + '</div>' : '') +
+        (structured.phone ? '<div><strong>Phone:</strong> ' + esc(structured.phone) + '</div>' : '') +
+        (structured.address_line_1 ? '<div><strong>Address:</strong> ' + esc(structured.address_line_1) + ', ' + esc(structured.city||'') + '</div>' : '') +
+        (structured.website_url ? '<div><strong>Website:</strong> ' + esc(structured.website_url) + '</div>' : '') +
+        (structured.description ? '<div><strong>Description:</strong> ' + esc(String(structured.description).slice(0,200)) + '…</div>' : '') +
         (structured.menu_items && structured.menu_items.length ? '<div><strong>Menu items found:</strong> ' + structured.menu_items.length + '</div>' : '') +
         (structured.events && structured.events.length ? '<div><strong>Events found:</strong> ' + structured.events.length + '</div>' : '') +
         (structured.specials && structured.specials.length ? '<div><strong>Specials found:</strong> ' + structured.specials.length + '</div>' : '') +
         '<div style="display:flex;gap:8px;margin-top:14px;">' +
-          '<button onclick="aichatApprove(' + JSON.stringify(JSON.stringify(structured)) + ')" style="padding:9px 18px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">✅ Accept & Save</button>' +
-          '<button onclick="this.closest(\'div\').parentElement.remove()" style="padding:9px 14px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:13px;">Discard</button>' +
+          '<button data-aichat-approve="' + token + '" style="padding:9px 18px;background:#22c55e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">✅ Accept & Save</button>' +
+          '<button data-aichat-discard="' + token + '" style="padding:9px 14px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:13px;">Discard</button>' +
         '</div></div>';
       statusDiv.innerHTML = preview;
       statusDiv.style.maxWidth = '100%';
+      var approveBtn = statusDiv.querySelector('[data-aichat-approve="' + token + '"]');
+      var discardBtn = statusDiv.querySelector('[data-aichat-discard="' + token + '"]');
+      if (approveBtn) approveBtn.addEventListener('click', function(){
+        var data = window._aichatPending && window._aichatPending[token];
+        if (data) aichatApprove(data);
+      });
+      if (discardBtn) discardBtn.addEventListener('click', function(){
+        delete window._aichatPending[token];
+        statusDiv.remove();
+      });
     } catch(e) {
       statusDiv.innerHTML = '<span style="color:#fca5a5;">Could not extract data: ' + e.message + '</span>';
     }
   }
 
-  async function aichatApprove(structuredJson) {
+  async function aichatApprove(structuredOrJson) {
     var structured;
-    try { structured = JSON.parse(structuredJson); } catch(e) { return; }
+    if (typeof structuredOrJson === 'string') {
+      try { structured = JSON.parse(structuredOrJson); } catch(e) { return; }
+    } else {
+      structured = structuredOrJson;
+    }
     var statusDiv = aichatAppend('assistant', '<span style="color:#94a3b8;font-size:12px;">💾 Saving…</span>');
     try {
       var res = await fetch(_aichatApiBase + '/api/admin/ai-scrape-approve', {
