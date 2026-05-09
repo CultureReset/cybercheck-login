@@ -201,6 +201,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Tonight Cards 📅</span>
         </div>
+        <div class="nav-item" data-page="platform-auth" onclick="showPage('platform-auth');loadAuthConfig()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Auth Settings 🔐</span>
+        </div>
         <div class="nav-item" data-page="community-photos" onclick="showPage('community-photos');loadCommunityPhotos('pending')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <span>Guest Photos 📸</span>
@@ -3515,6 +3519,53 @@
         <!-- Sponsored List -->
         <div id="sp-list" style="display:flex;flex-direction:column;gap:12px;">
           <div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── AUTH SETTINGS ── -->
+      <div id="page-platform-auth" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🔐 Auth Settings</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Control which sign-in methods users see on GCR and Trip Swipe.</div>
+        </div>
+
+        <div style="max-width:500px;">
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Sign-in Method</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Choose what your users see when they tap "Save" or sign in.</div>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;margin-bottom:10px;" id="auth-opt-email">
+              <input type="radio" name="auth_mode" value="email" style="margin-top:3px;accent-color:#0ea5e9;">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">✉️ Email &amp; Password</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Classic sign up / sign in with email. Current default.</div>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;margin-bottom:10px;" id="auth-opt-phone-google">
+              <input type="radio" name="auth_mode" value="phone_google" style="margin-top:3px;accent-color:#0ea5e9;">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">📱 Phone (SMS) + Google</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">No password needed. Users get a 6-digit text or tap Google. Best for tourists.</div>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;" id="auth-opt-all">
+              <input type="radio" name="auth_mode" value="all" style="margin-top:3px;accent-color:#0ea5e9;">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">🔓 All Methods</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Show Phone, Google, and Email tabs — user picks what they prefer.</div>
+              </div>
+            </label>
+          </div>
+
+          <div style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:10px;padding:14px;font-size:13px;color:#7dd3fc;margin-bottom:20px;" id="auth-google-notice" style="display:none;">
+            ⚠️ Phone + Google requires Supabase Google OAuth to be enabled. <a href="https://supabase.com/dashboard/project/mhafixflyffflwjhcgfn/auth/providers" target="_blank" style="color:#38bdf8;">Configure in Supabase →</a>
+          </div>
+
+          <button onclick="saveAuthConfig()" style="background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Save Auth Settings</button>
+          <span id="auth-save-status" style="font-size:13px;margin-left:12px;color:#4ade80;display:none;">✓ Saved</span>
         </div>
       </div>
 
@@ -14658,6 +14709,54 @@
 
     // ── Sponsored Cards ──
     var _spList = [];
+    // ── Auth Config ───────────────────────────────────────────────
+    async function loadAuthConfig() {
+      try {
+        const r = await fetch(API_BASE + '/api/admin/auth-config');
+        const d = await r.json();
+        const mode = d.mode || 'email';
+        document.querySelectorAll('input[name="auth_mode"]').forEach(el => {
+          el.checked = el.value === mode;
+        });
+        highlightAuthOption(mode);
+        toggleGoogleNotice(mode);
+      } catch(e) {}
+    }
+
+    function highlightAuthOption(mode) {
+      ['email','phone_google','all'].forEach(m => {
+        const el = document.getElementById('auth-opt-' + m.replace('_','-'));
+        if (el) el.style.borderColor = m === mode ? '#0ea5e9' : 'transparent';
+      });
+    }
+
+    function toggleGoogleNotice(mode) {
+      const n = document.getElementById('auth-google-notice');
+      if (n) n.style.display = mode !== 'email' ? 'block' : 'none';
+    }
+
+    document.addEventListener('change', function(e) {
+      if (e.target.name === 'auth_mode') {
+        highlightAuthOption(e.target.value);
+        toggleGoogleNotice(e.target.value);
+      }
+    });
+
+    async function saveAuthConfig() {
+      const mode = document.querySelector('input[name="auth_mode"]:checked')?.value;
+      if (!mode) return;
+      const token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/admin/auth-config', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode })
+        });
+        const s = document.getElementById('auth-save-status');
+        s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2500);
+      } catch(e) { alert('Save failed: ' + e.message); }
+    }
+
     var _spImages = []; // images being edited in the form
 
     async function loadSponsored() {
