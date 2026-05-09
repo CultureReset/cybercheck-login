@@ -104,6 +104,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Specials 🤖</span>
         </div>
+        <div class="nav-item" data-page="gcr-ads" onclick="showPage('gcr-ads')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span>Ad Network</span>
+        </div>
         <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span>Coupons 🤖</span>
@@ -1549,6 +1553,75 @@
         </div>
       </div>
 
+      <!-- ── GCR AD NETWORK ────────────────────────────── -->
+      <div id="page-gcr-ads" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Ad Network</h1>
+          <button class="btn btn-primary" onclick="openAdModal()">+ New Ad</button>
+        </div>
+        <div class="card" style="padding:16px;margin-bottom:16px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);">
+          <div style="font-size:14px;color:#fbbf24;font-weight:600;margin-bottom:4px;">How it works</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">Ads rotate on every <strong style="color:var(--text);">free-tier</strong> QR menu throughout the page. Businesses pay you to appear on all free menus in the network. Set weight higher to show more often. Toggle active/inactive to run seasonal or paused campaigns.</div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="ads-list-body"><div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Add/Edit Ad Modal -->
+      <div id="adModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+        <div style="max-width:560px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;" id="ad-modal-title">New Ad</h2>
+            <button onclick="closeAdModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <input type="hidden" id="ad-id">
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Advertiser Name *</label>
+              <input type="text" id="ad-name" placeholder="Gulf Shores Marina" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Tagline</label>
+              <input type="text" id="ad-tagline" placeholder="Dolphin cruises daily at sunset" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Banner Image URL</label>
+              <input type="text" id="ad-image" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Logo URL (small square, shown if no banner)</label>
+              <input type="text" id="ad-logo" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Badge Text (optional, e.g. "20% OFF")</label>
+              <input type="text" id="ad-badge" placeholder="Book Now & Save" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">CTA Button Text</label>
+                <input type="text" id="ad-cta-text" placeholder="Learn More" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Weight (1–10, higher = more)</label>
+                <input type="number" id="ad-weight" min="1" max="10" value="1" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Destination URL</label>
+              <input type="text" id="ad-url" placeholder="https://yourbusiness.com" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="ad-active" checked style="width:16px;height:16px;"> Active (showing on all free menus)
+            </label>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:24px;">
+            <button class="btn btn-primary" onclick="saveAd()" style="flex:1;">Save Ad</button>
+            <button class="btn btn-outline" onclick="closeAdModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ── BULK UPLOAD ─────────────────────────────── -->
       <div id="page-bulk-upload" class="page-content" style="display:none;">
         <div class="page-header"><h1>Bulk Upload</h1></div>
@@ -2525,7 +2598,7 @@
             <div style="flex:1;min-width:220px;position:relative;">
               <input type="text" id="mb-biz-search" placeholder="🔍 Search businesses..." autocomplete="off"
                 style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
-                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},400)">
+                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},500)">
               <div id="mb-biz-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;max-height:240px;overflow-y:auto;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);margin-top:4px;"></div>
               <!-- hidden select kept for value/slug lookup -->
               <select id="mb-biz-select" style="display:none"></select>
@@ -4879,6 +4952,7 @@
       if (page === 'gcr-claims' && !_claimsLoaded) loadGCRClaims();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
+      if (page === 'gcr-ads' && !_adsLoaded) loadGCRAds();
       if (page === 'leads' && !_leadsLoaded) loadLeads();
       if (page === 'ar-hunts') renderHuntsGrid();
       if (page === 'users' && !_usersLoaded) loadUsers();
@@ -6015,6 +6089,116 @@
         toast('Special deleted.');
         _specialsLoaded = false;
         loadGCRSpecials();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── AD NETWORK ────────────────────────────────────
+    var _adsLoaded = false;
+
+    async function loadGCRAds() {
+      _adsLoaded = true;
+      var token = getAuthToken();
+      var body = document.getElementById('ads-list-body');
+      if (!body) return;
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await res.json();
+        var ads = d.ads || [];
+        if (!ads.length) {
+          body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">No ads yet. Create your first ad to start monetizing free menus.</div>';
+          return;
+        }
+        body.innerHTML = '<div style="display:grid;gap:12px;">' + ads.map(function(ad) {
+          return '<div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--card-border);border-radius:12px;background:var(--bg);">' +
+            (ad.image_url ? '<img src="' + escHtml(ad.image_url) + '" style="width:72px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display=\'none\'">' :
+             ad.logo_url  ? '<img src="' + escHtml(ad.logo_url)  + '" style="width:52px;height:52px;object-fit:contain;border-radius:8px;background:#fff;padding:4px;flex-shrink:0;" onerror="this.style.display=\'none\'">' :
+             '<div style="width:52px;height:52px;background:var(--card-border);border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;">📢</div>') +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:700;font-size:15px;">' + escHtml(ad.advertiser_name || '') + '</div>' +
+              (ad.tagline ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + escHtml(ad.tagline) + '</div>' : '') +
+              '<div style="display:flex;gap:10px;margin-top:6px;font-size:12px;color:var(--text-muted);">' +
+                '<span>👁 ' + (ad.impressions || 0) + ' impressions</span>' +
+                '<span>🖱 ' + (ad.clicks || 0) + ' clicks</span>' +
+                '<span>Weight: ' + (ad.weight || 1) + '</span>' +
+                (ad.badge_text ? '<span style="color:#fbbf24;">' + escHtml(ad.badge_text) + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">' +
+              '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;' + (ad.is_active ? 'background:rgba(74,222,128,.15);color:#4ade80;' : 'background:rgba(239,68,68,.1);color:#ef4444;') + '">' + (ad.is_active ? 'LIVE' : 'PAUSED') + '</span>' +
+              '<div style="display:flex;gap:6px;">' +
+                '<button class="btn btn-sm btn-outline" onclick="openAdModal(\'' + ad.id + '\')">Edit</button>' +
+                '<button class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;" onclick="deleteAd(\'' + ad.id + '\')">×</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+      } catch(e) { if (body) body.innerHTML = '<div style="color:#ef4444;padding:20px;">' + escHtml(e.message) + '</div>'; }
+    }
+
+    function openAdModal(id) {
+      document.getElementById('ad-id').value = id || '';
+      document.getElementById('ad-modal-title').textContent = id ? 'Edit Ad' : 'New Ad';
+      if (!id) {
+        ['ad-name','ad-tagline','ad-image','ad-logo','ad-badge','ad-cta-text','ad-url'].forEach(function(f){ document.getElementById(f).value = ''; });
+        document.getElementById('ad-weight').value = 1;
+        document.getElementById('ad-active').checked = true;
+      } else {
+        // find from existing DOM data — reload from API instead
+        fetch(API_BASE + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            var ad = (d.ads || []).find(function(a){ return a.id === id; });
+            if (!ad) return;
+            document.getElementById('ad-name').value = ad.advertiser_name || '';
+            document.getElementById('ad-tagline').value = ad.tagline || '';
+            document.getElementById('ad-image').value = ad.image_url || '';
+            document.getElementById('ad-logo').value = ad.logo_url || '';
+            document.getElementById('ad-badge').value = ad.badge_text || '';
+            document.getElementById('ad-cta-text').value = ad.cta_text || 'Learn More';
+            document.getElementById('ad-url').value = ad.cta_url || '';
+            document.getElementById('ad-weight').value = ad.weight || 1;
+            document.getElementById('ad-active').checked = !!ad.is_active;
+          });
+      }
+      document.getElementById('adModal').style.display = 'block';
+    }
+
+    function closeAdModal() { document.getElementById('adModal').style.display = 'none'; }
+
+    async function saveAd() {
+      var id = document.getElementById('ad-id').value;
+      var payload = {
+        advertiser_name: document.getElementById('ad-name').value.trim(),
+        tagline:         document.getElementById('ad-tagline').value.trim() || null,
+        image_url:       document.getElementById('ad-image').value.trim() || null,
+        logo_url:        document.getElementById('ad-logo').value.trim() || null,
+        badge_text:      document.getElementById('ad-badge').value.trim() || null,
+        cta_text:        document.getElementById('ad-cta-text').value.trim() || 'Learn More',
+        cta_url:         document.getElementById('ad-url').value.trim() || null,
+        weight:          parseInt(document.getElementById('ad-weight').value) || 1,
+        is_active:       document.getElementById('ad-active').checked,
+      };
+      if (!payload.advertiser_name) { toast('Advertiser name is required', 'error'); return; }
+      var token = getAuthToken();
+      try {
+        var method = id ? 'PUT' : 'POST';
+        var url = id ? API_BASE + '/api/admin/gcr/ads/' + id : API_BASE + '/api/admin/gcr/ads';
+        var res = await fetch(url, { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast(id ? 'Ad updated!' : 'Ad created!', 'success');
+        closeAdModal();
+        _adsLoaded = false;
+        loadGCRAds();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function deleteAd(id) {
+      if (!confirm('Delete this ad?')) return;
+      try {
+        await fetch(API_BASE + '/api/admin/gcr/ads/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        toast('Ad deleted', 'success');
+        _adsLoaded = false;
+        loadGCRAds();
       } catch(e) { toast(e.message, 'error'); }
     }
 
@@ -13437,7 +13621,8 @@
         }
         return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #334155;background:#1e293b;transition:.1s;" ' +
           'onmouseover="this.style.background=\'#273548\'" onmouseout="this.style.background=\'#1e293b\'" ' +
-          'onmousedown="event.preventDefault();mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
+          'onmousedown="event.preventDefault()" ' +
+          'onclick="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
           '<span>' + displayName + '</span>' +
           (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
           '</div>';
