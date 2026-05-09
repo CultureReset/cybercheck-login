@@ -10965,26 +10965,86 @@
 
     function renderTop5Editor(catId) {
       var body = document.getElementById('top5-editor-body');
-      if (!_top5Assignments.length) {
-        body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No businesses assigned to this page yet. Use the "Pages" tab in the Entity Editor to add businesses.</div>';
-        return;
+      var html = '';
+
+      if (_top5Assignments.length) {
+        html += '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">Check "Featured" and set a position (1–5) to pin a business at the top.</div>';
+        html += '<div style="display:grid;gap:8px;">';
+        _top5Assignments.forEach(function(a, i) {
+          var ent = a.entity || {};
+          html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">' +
+            '<input type="checkbox" id="top5-feat-' + i + '" ' + (a.is_featured ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--primary);">' +
+            (ent.hero_image_url ? '<img src="' + escHtml(ent.hero_image_url) + '" style="width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0;">' : '<div style="width:44px;height:44px;border-radius:6px;background:var(--card-border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">' + (ent.icon || '🏢') + '</div>') +
+            '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(ent.name || a.entity_name || 'Business') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(ent.entity_subtype || '') + (ent.city ? ' · ' + ent.city : '') + '</div></div>' +
+            '<label style="font-size:12px;color:var(--text-muted);">Pos:</label>' +
+            '<input type="number" id="top5-pos-' + i + '" value="' + (a.sort_order || 1) + '" min="1" max="5" style="width:52px;padding:6px 8px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;text-align:center;">' +
+            '</div>';
+        });
+        html += '</div>';
+        html += '<div style="margin-top:14px;"><button onclick="saveTop5(\'' + catId + '\')" class="btn btn-primary">Save Featured Order</button></div>';
+        html += '<hr style="border:none;border-top:1px solid var(--card-border);margin:20px 0;">';
       }
-      var html = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">Check "Featured" and set a position (1–5) to pin a business at the top. Uncheck to keep it on the page but not featured.</div>';
-      html += '<div style="display:grid;gap:8px;">';
-      _top5Assignments.forEach(function(a, i) {
-        var ent = a.entity || {};
-        html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">' +
-          '<input type="checkbox" id="top5-feat-' + i + '" ' + (a.is_featured ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--primary);">' +
-          (ent.hero_image_url ? '<img src="' + escHtml(ent.hero_image_url) + '" style="width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0;">' : '<div style="width:44px;height:44px;border-radius:6px;background:var(--card-border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">🏢</div>') +
-          '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(ent.name || 'Unknown') + '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(ent.entity_subtype || '') + (ent.city ? ' · ' + ent.city : '') + '</div></div>' +
-          '<label style="font-size:12px;color:var(--text-muted);">Pos:</label>' +
-          '<input type="number" id="top5-pos-' + i + '" value="' + (a.sort_order || 0) + '" min="1" max="5" style="width:52px;padding:6px 8px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;text-align:center;">' +
-          '</div>';
-      });
+
+      // ── Add Business picker ──────────────────────────────────
+      html += '<div>';
+      html += '<div style="font-size:13px;font-weight:700;margin-bottom:10px;">+ Add a Business to This Page</div>';
+      html += '<div style="position:relative;">';
+      html += '<input type="text" id="top5-search-input" placeholder="Search by business name…" oninput="top5SearchDebounce(\'' + catId + '\')" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">';
+      html += '<div id="top5-search-results" style="position:absolute;top:100%;left:0;right:0;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;margin-top:4px;max-height:280px;overflow-y:auto;z-index:100;display:none;box-shadow:0 8px 24px rgba(0,0,0,.18);"></div>';
       html += '</div>';
-      html += '<div style="margin-top:16px;"><button onclick="saveTop5(\'' + catId + '\')" class="btn btn-primary">Save Featured Order</button></div>';
+      html += '</div>';
+
       body.innerHTML = html;
+    }
+
+    var _top5SearchTimer = null;
+    function top5SearchDebounce(catId) {
+      clearTimeout(_top5SearchTimer);
+      _top5SearchTimer = setTimeout(function() { top5SearchEntities(catId); }, 280);
+    }
+
+    async function top5SearchEntities(catId) {
+      var q = (document.getElementById('top5-search-input') || {}).value || '';
+      var results = document.getElementById('top5-search-results');
+      if (!results) return;
+      if (q.length < 2) { results.style.display = 'none'; return; }
+      results.style.display = 'block';
+      results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);">Searching…</div>';
+      try {
+        var token = getAuthToken();
+        var res = await fetch(API_BASE + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = res.ok ? await res.json() : {};
+        var entities = d.entities || [];
+        if (!entities.length) { results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);">No results found.</div>'; return; }
+        var alreadyIds = new Set(_top5Assignments.map(function(a) { return a.entity_id; }));
+        results.innerHTML = entities.map(function(e) {
+          var already = alreadyIds.has(e.id);
+          return '<div onclick="' + (already ? '' : 'top5AddBusiness(\'' + catId + '\',\'' + e.id + '\',\'' + escHtml(e.name).replace(/'/g,'\\\'') + '\')') + '" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:' + (already ? 'default' : 'pointer') + ';border-bottom:1px solid var(--card-border);' + (already ? 'opacity:.5;' : '') + '" ' + (already ? '' : 'onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"') + '>' +
+            (e.hero_image_url ? '<img src="' + escHtml(e.hero_image_url) + '" style="width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;">' : '<div style="width:38px;height:38px;border-radius:6px;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + (e.icon || '🏢') + '</div>') +
+            '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(e.name) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-muted);">' + escHtml(e.entity_subtype || e.entity_type || '') + (e.city ? ' · ' + e.city : '') + '</div></div>' +
+            '<div style="font-size:11px;font-weight:700;color:' + (already ? 'var(--text-muted)' : 'var(--primary)') + ';white-space:nowrap;">' + (already ? 'Already added' : '+ Add') + '</div>' +
+            '</div>';
+        }).join('');
+      } catch(e) { results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:red;">Error: ' + e.message + '</div>'; }
+    }
+
+    async function top5AddBusiness(catId, entityId, entityName) {
+      var token = getAuthToken();
+      var nextPos = Math.min((_top5Assignments.length || 0) + 1, 5);
+      try {
+        var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId + '/order', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assignments: [{ entity_id: entityId, sort_order: nextPos, is_featured: true }] })
+        });
+        if (!res.ok) { toast('Failed to add business', 'error'); return; }
+        toast(entityName + ' added to ' + catId + ' (pos ' + nextPos + ')', 'success');
+        document.getElementById('top5-search-input').value = '';
+        document.getElementById('top5-search-results').style.display = 'none';
+        loadTop5Editor();
+      } catch(e) { toast(e.message, 'error'); }
     }
 
     async function saveTop5(catId) {
