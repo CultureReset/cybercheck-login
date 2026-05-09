@@ -205,6 +205,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>Auth Settings 🔐</span>
         </div>
+        <div class="nav-item" data-page="trip-swipe-button" onclick="showPage('trip-swipe-button');loadButtonConfig()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
+          <span>Button Config 🔗</span>
+        </div>
         <div class="nav-item" data-page="community-photos" onclick="showPage('community-photos');loadCommunityPhotos('pending')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <span>Guest Photos 📸</span>
@@ -3566,6 +3570,71 @@
 
           <button onclick="saveAuthConfig()" style="background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Save Auth Settings</button>
           <span id="auth-save-status" style="font-size:13px;margin-left:12px;color:#4ade80;display:none;">✓ Saved</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- ── TRIP SWIPE BUTTON CONFIG ── -->
+      <div id="page-trip-swipe-button" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🔗 Button Config</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Control what happens when visitors click the purple Trip Swipe button on the GCR home page.</div>
+        </div>
+
+        <div style="max-width:560px;">
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Button Action</div>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;margin-bottom:8px;" id="btn-opt-iframe" onclick="showButtonFields('iframe')">
+              <input type="radio" name="btn_type" value="iframe" style="margin-top:3px;accent-color:#7c3aed;" onchange="showButtonFields('iframe')">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">📱 Open in Popup (iframe)</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Trip Swipe slides up inside the GCR page as a full-screen overlay.</div>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;margin-bottom:8px;" id="btn-opt-link" onclick="showButtonFields('link')">
+              <input type="radio" name="btn_type" value="link" style="margin-top:3px;accent-color:#7c3aed;" onchange="showButtonFields('link')">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">🔗 Open URL</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Navigate to any URL — your app, an external page, a booking form, etc.</div>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:14px;padding:14px;border-radius:10px;border:2px solid transparent;cursor:pointer;" id="btn-opt-app_download" onclick="showButtonFields('app_download')">
+              <input type="radio" name="btn_type" value="app_download" style="margin-top:3px;accent-color:#7c3aed;" onchange="showButtonFields('app_download')">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">📲 Download App</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Pop-up with App Store + Google Play buttons (and optional tagline).</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- iframe / link URL field -->
+          <div id="btn-field-url" style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;display:none;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">URL</label>
+            <input id="btn-url" type="url" placeholder="https://gcr-trip-swipe.vercel.app/swipe/all"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);">
+          </div>
+
+          <!-- app download fields -->
+          <div id="btn-field-app" style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;display:none;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Popup Title</label>
+            <input id="btn-app-title" type="text" placeholder="Get Trip Swipe"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Tagline (optional)</label>
+            <input id="btn-app-desc" type="text" placeholder="Swipe your way to the perfect Gulf Coast trip"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">App Store URL</label>
+            <input id="btn-app-ios" type="url" placeholder="https://apps.apple.com/..."
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Google Play URL</label>
+            <input id="btn-app-android" type="url" placeholder="https://play.google.com/..."
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text-primary);">
+          </div>
+
+          <button onclick="saveButtonConfig()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Save Button Config</button>
+          <span id="btn-save-status" style="font-size:13px;margin-left:12px;color:#4ade80;display:none;">✓ Saved</span>
         </div>
       </div>
 
@@ -14813,6 +14882,61 @@
           body: JSON.stringify({ mode })
         });
         const s = document.getElementById('auth-save-status');
+        s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2500);
+      } catch(e) { alert('Save failed: ' + e.message); }
+    }
+
+    // ── Button Config ──────────────────────────────────────────
+    async function loadButtonConfig() {
+      try {
+        const r = await fetch(API_BASE + '/api/admin/trip-swipe-button');
+        const d = await r.json();
+        const type = d.type || 'iframe';
+        document.querySelectorAll('input[name="btn_type"]').forEach(el => {
+          el.checked = el.value === type;
+        });
+        highlightBtnOption(type);
+        showButtonFields(type);
+        if (d.url) document.getElementById('btn-url').value = d.url;
+        if (d.title) document.getElementById('btn-app-title').value = d.title;
+        if (d.description) document.getElementById('btn-app-desc').value = d.description;
+        if (d.app_store_url) document.getElementById('btn-app-ios').value = d.app_store_url;
+        if (d.play_store_url) document.getElementById('btn-app-android').value = d.play_store_url;
+      } catch(e) {}
+    }
+
+    function showButtonFields(type) {
+      document.getElementById('btn-field-url').style.display = (type === 'iframe' || type === 'link') ? 'block' : 'none';
+      document.getElementById('btn-field-app').style.display = type === 'app_download' ? 'block' : 'none';
+      highlightBtnOption(type);
+    }
+
+    function highlightBtnOption(type) {
+      ['iframe','link','app_download'].forEach(t => {
+        const el = document.getElementById('btn-opt-' + t);
+        if (el) el.style.borderColor = t === type ? '#7c3aed' : 'transparent';
+      });
+    }
+
+    async function saveButtonConfig() {
+      const type = document.querySelector('input[name="btn_type"]:checked')?.value;
+      if (!type) return;
+      const body = {
+        type,
+        url: document.getElementById('btn-url').value.trim() || null,
+        title: document.getElementById('btn-app-title').value.trim() || null,
+        description: document.getElementById('btn-app-desc').value.trim() || null,
+        app_store_url: document.getElementById('btn-app-ios').value.trim() || null,
+        play_store_url: document.getElementById('btn-app-android').value.trim() || null,
+      };
+      const token = getAuthToken();
+      try {
+        await fetch(API_BASE + '/api/admin/trip-swipe-button', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const s = document.getElementById('btn-save-status');
         s.style.display = 'inline'; setTimeout(() => s.style.display = 'none', 2500);
       } catch(e) { alert('Save failed: ' + e.message); }
     }
