@@ -6134,19 +6134,59 @@
           document.getElementById('gcr-events-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No events.</td></tr>';
           return;
         }
-        document.getElementById('gcr-events-body').innerHTML = events.map(function(ev) {
-          var biz = ev.entity ? ev.entity.name : '—';
-          var when = ev.recurring ? ('Every ' + (ev.day_of_week || '?')) : (ev.event_date || '—');
+
+        var todayStr = new Date().toISOString().split('T')[0];
+
+        function eventRow(ev) {
+          var biz  = ev.entity ? ev.entity.name : (ev.venue_location || '—');
+          var day  = ev.day_of_week ? ev.day_of_week.charAt(0).toUpperCase() + ev.day_of_week.slice(1) : '';
+          var date = ev.event_date || '';
+          // Always show day of week. Show date if available.
+          var when = '';
+          if (day && date) when = day + ', ' + date;
+          else if (day)    when = ev.recurring ? 'Every ' + day : day;
+          else if (date)   when = date;
+          else             when = '—';
+
+          var isPast = date && date < todayStr && !ev.recurring && !(ev.day_of_week||'').trim();
           return '<tr style="border-bottom:1px solid var(--card-border);">' +
             '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(ev.event_name || '—') + '</td>' +
             '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(biz) + '</td>' +
             '<td style="padding:10px 8px;font-size:13px;">' + escHtml(when) + '</td>' +
-            '<td style="padding:10px 8px;font-size:13px;">' + escHtml([ev.start_time, ev.end_time].filter(Boolean).join('–') || '—') + '</td>' +
+            '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml([ev.start_time, ev.end_time].filter(Boolean).join('–') || '—') + '</td>' +
             '<td style="padding:10px 8px;">' +
               '<button onclick="deleteEvent(\'' + ev.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
             '</td>' +
             '</tr>';
-        }).join('');
+        }
+
+        // Upcoming = today or future date, recurring, or day_of_week-only (no specific past date)
+        var upcoming = events.filter(function(ev) {
+          if (ev.recurring || (ev.day_of_week||'').trim()) return true;
+          var d = ev.event_date || '';
+          return !d || d >= todayStr;
+        });
+        // Past = specific past date, not recurring, no day_of_week
+        var past = events.filter(function(ev) {
+          if (ev.recurring || (ev.day_of_week||'').trim()) return false;
+          var d = ev.event_date || '';
+          return d && d < todayStr;
+        });
+
+        // Sort upcoming by date asc (nulls last), past by date desc
+        upcoming.sort(function(a,b){ return (a.event_date||'9999').localeCompare(b.event_date||'9999'); });
+        past.sort(function(a,b){ return (b.event_date||'').localeCompare(a.event_date||''); });
+
+        var html = '';
+        if (upcoming.length) {
+          html += '<tr><td colspan="5" style="padding:10px 8px 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);background:var(--bg);">Upcoming & Recurring (' + upcoming.length + ')</td></tr>';
+          html += upcoming.map(eventRow).join('');
+        }
+        if (past.length) {
+          html += '<tr><td colspan="5" style="padding:14px 8px 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ef4444;background:var(--bg);">Past Events (' + past.length + ')</td></tr>';
+          html += past.map(eventRow).join('');
+        }
+        document.getElementById('gcr-events-body').innerHTML = html;
       } catch(e) {
         document.getElementById('gcr-events-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
       }
