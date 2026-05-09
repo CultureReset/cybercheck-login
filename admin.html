@@ -5204,7 +5204,8 @@
     // ── OVERVIEW ──────────────────────────────────────
     async function loadOverview() {
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/businesses');
+        var token = getAuthToken();
+        var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
         var gcr = res.ok ? await res.json() : [];
         if (!Array.isArray(gcr)) gcr = [];
 
