@@ -2437,6 +2437,14 @@
     // ========================================
 
     const GCR_API_URL = 'https://cybercheck-api-database.vercel.app/api';
+
+    function fmt12(t) {
+      if (!t) return '';
+      const [h, m] = t.split(':').map(Number);
+      const ap = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return m ? `${h12}:${String(m).padStart(2, '0')} ${ap}` : `${h12} ${ap}`;
+    }
     let allGCRBusinesses = [];
     let filteredGCRBusinesses = [];
 
@@ -4051,7 +4059,7 @@
               <div style="padding: 12px; background: #fff; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb;">
                 <div style="font-weight: 600; color: #0369a1;">${event.name}</div>
                 <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
-                  📅 ${event.date} ${event.time ? '• ⏰ ' + event.time : ''} ${event.price ? '• 💵 ' + event.price : ''}
+                  📅 ${event.date} ${event.time ? '• ⏰ ' + fmt12(event.time) : ''} ${event.price ? '• 💵 ' + event.price : ''}
                 </div>
                 <div style="font-size: 13px; color: #475569; margin-top: 6px;">${event.description}</div>
               </div>
