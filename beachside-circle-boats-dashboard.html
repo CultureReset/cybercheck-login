@@ -42,6 +42,12 @@
         </div>
 
 
+        <!-- QR Codes -->
+        <div class="nav-item" data-page="qr-codes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
+          <span>My QR Codes</span>
+        </div>
+
         <!-- Rentals -->
         <div class="nav-section-label">Rentals</div>
         <div class="nav-item" data-page="inventory">
@@ -369,6 +375,31 @@
         </div>
 
         <!-- INVENTORY (Fleet) -->
+        <!-- QR CODES -->
+        <div class="page-section" id="page-qr-codes">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" class="qrc-stats-row">
+            <div class="card" style="margin:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:var(--primary)" id="qrc-stat-total">—</div><div style="font-size:12px;color:var(--text-muted);">Total Codes</div></div>
+            <div class="card" style="margin:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#4ade80" id="qrc-stat-scans">—</div><div style="font-size:12px;color:var(--text-muted);">Total Scans</div></div>
+            <div class="card" style="margin:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#f59e0b" id="qrc-stat-active">—</div><div style="font-size:12px;color:var(--text-muted);">Active</div></div>
+            <div class="card" style="margin:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#a78bfa" id="qrc-stat-leads">—</div><div style="font-size:12px;color:var(--text-muted);">Phone Leads</div></div>
+          </div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><h3>Generate QR Code</h3></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="qrc-gen-row">
+              <div class="form-group" style="margin:0;"><label>Label</label><input type="text" id="qrc-label" placeholder="e.g. Dock Sign, Business Card"></div>
+              <div class="form-group" style="margin:0;"><label>Type</label><select id="qrc-type" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;"><option value="general">General</option><option value="card">Business Card</option><option value="location">Location</option><option value="ad">Advertisement</option></select></div>
+              <div class="form-group" style="margin:0;"><label>Destination URL <span style="color:var(--text-muted);font-weight:400;">(leave blank for CyberCheck page)</span></label><input type="text" id="qrc-dest" placeholder="https://..."></div>
+              <div class="form-group" style="margin:0;"><label>Placement</label><select id="qrc-placement" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;"><option value="fixed">Fixed</option><option value="portable">Portable</option></select></div>
+              <div class="form-group" style="margin:0;grid-column:1/-1;"><label>Location / Notes</label><input type="text" id="qrc-notes" placeholder="e.g. Dock entrance, Table 4"></div>
+            </div>
+            <div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="QRC.generate()">Generate Code</button></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>My Codes</h3><div style="display:flex;gap:8px;align-items:center;"><input type="text" id="qrc-search" placeholder="Search..." style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;width:180px;" oninput="QRC.filter()"><button class="btn btn-outline btn-sm" onclick="QRC.exportCSV()">Export CSV</button></div></div>
+            <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">#</th><th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Label</th><th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Type</th><th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Scans</th><th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Status</th><th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Actions</th></tr></thead><tbody id="qrc-table-body"><tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody></table></div>
+          </div>
+        </div>
+
         <div class="page-section" id="page-inventory">
           <div class="card">
             <div class="card-header"><h3>Circle Boat Fleet</h3><button class="btn btn-primary btn-sm" onclick="openInventoryModal()">Add Boat</button></div>
