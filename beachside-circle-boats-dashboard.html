@@ -10,7 +10,7 @@
   <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-  <div class="layout">
+  <div class="layout sidebar-collapsed" id="layout">
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -41,24 +41,6 @@
           <span>Staff / Team</span>
         </div>
 
-        <!-- Food & Menu -->
-        <div class="nav-section-label">Food &amp; Menu</div>
-        <div class="nav-item" data-page="menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          <span>Menu Builder</span>
-        </div>
-        <div class="nav-item" data-page="qr-codes">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M21 14v4a3 3 0 01-3 3h-4"/></svg>
-          <span>My QR Codes</span>
-        </div>
-        <div class="nav-item" data-page="specials">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <span>Specials</span>
-        </div>
-        <div class="nav-item" data-page="events">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
-          <span>Events &amp; Live Music</span>
-        </div>
 
         <!-- Rentals -->
         <div class="nav-section-label">Rentals</div>
@@ -295,8 +277,7 @@
             <div class="card-header"><h3>✅ Amenities & Features</h3></div>
             <div style="display:flex;flex-wrap:wrap;gap:12px;">
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-outdoor-seating"> Outdoor Seating</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-live-music"> Live Music</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-delivery"> Delivery</label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-delivery"> Delivery</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-dine-in"> Dine-In</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-takeout"> Takeout</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-good-for-groups"> Good for Groups</label>
@@ -1069,187 +1050,6 @@
             <div id="social-analytics-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;"></div>
           </div>
         </div>
-
-        <!-- MENU BUILDER -->
-        <div class="page-section" id="page-menu">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;" class="menu-top-row">
-            <div class="card" style="margin:0;">
-              <div class="card-header">
-                <h3>AI Menu Scanner</h3>
-                <button class="btn btn-primary btn-sm" onclick="openMenuExtractModal()">Scan Photo</button>
-              </div>
-              <p style="color:var(--text-muted);font-size:13px;margin:0;">Upload any menu photo — printed, handwritten, chalkboard — and AI extracts all items automatically.</p>
-            </div>
-            <div class="card" style="margin:0;">
-              <div class="card-header"><h3>Table QR Code</h3></div>
-              <div id="menu-qr-wrap" style="text-align:center;">
-                <p style="color:var(--text-muted);font-size:13px;">Add menu items to generate your table QR code.</p>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header" style="flex-wrap:wrap;gap:10px;">
-              <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                <button class="btn btn-sm menu-section-tab active" id="tab-food"     onclick="switchMenuTab('food')"      style="border-radius:999px;">🍽️ Menu</button>
-                <button class="btn btn-sm menu-section-tab"        id="tab-drink"    onclick="switchMenuTab('drink')"     style="border-radius:999px;">🍹 Drinks</button>
-                <button class="btn btn-sm menu-section-tab"        id="tab-happy_hour" onclick="switchMenuTab('happy_hour')" style="border-radius:999px;">🍺 Happy Hour</button>
-              </div>
-              <div style="display:flex;gap:6px;margin-left:auto;">
-                <button class="btn btn-outline btn-sm" onclick="openCategoryModal()">+ Section</button>
-                <button class="btn btn-primary btn-sm" onclick="openMenuItemModal()">+ Item</button>
-              </div>
-            </div>
-            <div id="menu-empty" style="color:var(--text-muted);font-size:13px;padding:8px 0;">No items yet. Scan a photo above or add items manually.</div>
-            <div id="menu-categories-list"></div>
-          </div>
-        </div>
-
-        <!-- MY QR CODES -->
-        <div class="page-section" id="page-qr-codes">
-          <!-- Stats row -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" class="qrc-stats-row">
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:var(--primary)" id="qrc-stat-total">—</div>
-              <div style="font-size:12px;color:var(--text-muted);">Total Codes</div>
-            </div>
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:#4ade80" id="qrc-stat-scans">—</div>
-              <div style="font-size:12px;color:var(--text-muted);">Total Scans</div>
-            </div>
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:#f59e0b" id="qrc-stat-active">—</div>
-              <div style="font-size:12px;color:var(--text-muted);">Active</div>
-            </div>
-            <div class="card" style="margin:0;text-align:center;">
-              <div style="font-size:24px;font-weight:700;color:#a78bfa" id="qrc-stat-leads">—</div>
-              <div style="font-size:12px;color:var(--text-muted);">Phone Leads</div>
-            </div>
-          </div>
-
-          <!-- Generate new code -->
-          <div class="card" style="margin-bottom:16px;">
-            <div class="card-header"><h3>Generate QR Code</h3></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="qrc-gen-row">
-              <div class="form-group" style="margin:0;">
-                <label>Label <span style="color:var(--text-muted);font-weight:400;">(e.g. "Table 4", "My Card")</span></label>
-                <input type="text" id="qrc-label" placeholder="Label">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label>Type</label>
-                <select id="qrc-type" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
-                  <option value="general">General</option>
-                  <option value="table">Restaurant Table</option>
-                  <option value="card">Business Card</option>
-                  <option value="menu">Menu</option>
-                  <option value="ad">Advertisement</option>
-                  <option value="location">Location</option>
-                  <option value="event">Event</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label>Destination URL <span style="color:var(--text-muted);font-weight:400;">(leave blank for CyberCheck page)</span></label>
-                <input type="text" id="qrc-dest" placeholder="https://...">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label>Placement</label>
-                <select id="qrc-placement" style="width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
-                  <option value="fixed">Fixed (permanent location)</option>
-                  <option value="portable">Portable (moves around)</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0;grid-column:1/-1;">
-                <label>Location / Notes</label>
-                <input type="text" id="qrc-notes" placeholder="e.g. Back wall by entrance, Table 4 by window">
-              </div>
-            </div>
-            <div style="margin-top:12px;">
-              <button class="btn btn-primary btn-sm" onclick="QRC.generate()">Generate Code</button>
-            </div>
-          </div>
-
-          <!-- Codes table -->
-          <div class="card">
-            <div class="card-header">
-              <h3>My Codes</h3>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <input type="text" id="qrc-search" placeholder="Search..." style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;width:180px;" oninput="QRC.filter()">
-                <button class="btn btn-outline btn-sm" onclick="QRC.exportCSV()">Export CSV</button>
-              </div>
-            </div>
-            <div style="overflow-x:auto;">
-              <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead>
-                  <tr style="border-bottom:1px solid var(--border);">
-                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">#</th>
-                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Label</th>
-                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Type</th>
-                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Scans</th>
-                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Status</th>
-                    <th style="padding:10px 8px;text-align:left;color:var(--text-muted);font-weight:500;">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="qrc-table-body">
-                  <tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);">Loading...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- SPECIALS -->
-        <div class="page-section" id="page-specials">
-          <div class="card" style="margin-bottom:16px;">
-            <div class="card-header">
-              <h3>🔥 Specials</h3>
-              <button class="btn btn-primary btn-sm" onclick="openSpecialModal()">+ Add Special</button>
-            </div>
-            <div style="padding:0 0 12px;">
-              <input type="file" id="sp-file-input" accept="image/*" style="display:none;" onchange="spFileChanged(this)">
-              <button class="btn btn-outline" id="sp-extract-btn" onclick="spPickFile()" style="margin-bottom:12px;">
-                📸 Scan Specials Board
-              </button>
-              <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
-                Upload a photo of your specials chalkboard, menu insert, or sign — AI extracts the deals automatically.
-              </p>
-              <div id="sp-extract-preview"></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header"><h3>Current Specials</h3></div>
-            <div id="specials-list"><p style="color:var(--text-muted);font-size:13px;">Loading…</p></div>
-          </div>
-        </div>
-
-        <!-- EVENTS & LIVE MUSIC -->
-        <div class="page-section" id="page-events">
-          <!-- AI Extraction -->
-          <div class="card" style="margin-bottom:16px;">
-            <div class="card-header">
-              <h3>🎉 Events &amp; Live Music</h3>
-              <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ Add Event</button>
-            </div>
-            <div style="padding:0 0 12px;">
-              <input type="file" id="ev-file-input" accept="image/*" style="display:none;" onchange="evFileChanged(this)">
-              <button class="btn btn-outline" id="ev-extract-btn" onclick="evPickFile()" style="margin-bottom:12px;">
-                📸 Scan Flyer / Schedule
-              </button>
-              <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
-                Upload a photo of your weekly lineup, event flyer, or schedule — AI will extract the events automatically.
-              </p>
-              <div id="ev-extract-preview"></div>
-            </div>
-          </div>
-          <!-- Events list -->
-          <div class="card">
-            <div class="card-header"><h3>Upcoming Events</h3></div>
-            <div id="events-list"><p style="color:var(--text-muted);font-size:13px;">Loading…</p></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
   <!-- MODALS -->
 
   <!-- Page Modal -->
