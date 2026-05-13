@@ -73,6 +73,8 @@ const WC_SECTIONS = [
 // ─── Load ─────────────────────────────────────────────────────────────────────
 
 async function loadWebsiteContent() {
+  updateWebsiteSectionsForType();
+
   const panel = document.getElementById('wc-panel');
   if (panel) panel.innerHTML = '<p style="padding:32px;color:var(--text-muted);">Loading…</p>';
   try {
@@ -1820,4 +1822,75 @@ function saveFooter() {
 
 if (typeof onPageLoad === 'function') {
   onPageLoad('website-content', loadWebsiteContent);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPE-AWARE SECTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getWebsiteSectionsByType(bizType) {
+  const baseSections = [
+    { id: 'hero', label: '🌟 Hero' },
+    { id: 'about', label: 'ℹ️ About' },
+    { id: 'gallery', label: '🖼️ Gallery' },
+    { id: 'reviews', label: '💬 Reviews' },
+    { id: 'qna', label: '❓ FAQ' },
+    { id: 'contact', label: '📞 Contact' },
+    { id: 'footer', label: '📋 Footer' }
+  ];
+
+  const typeSpecificSections = {
+    'restaurant,bar,cafe,food_truck': [
+      { id: 'menu', label: '🍽️ Menu' },
+      { id: 'specials', label: '🔥 Specials & Happy Hour' },
+      { id: 'events', label: '🎉 Events & Live Music' },
+      { id: 'booking_settings', label: '💳 Reservations & Payment' }
+    ],
+    'boat_rental,charter,jet_ski_rental': [
+      { id: 'products', label: '🚤 Fleet & Pricing' },
+      { id: 'group_rate', label: '👥 Group Rates' },
+      { id: 'docks', label: '🛟 Docks & Locations' },
+      { id: 'addons', label: '🎁 Add-ons' },
+      { id: 'whats_included', label: '✅ What\'s Included' },
+      { id: 'booking_settings', label: '💳 Booking & Payment' }
+    ],
+    'photographer': [
+      { id: 'portfolio', label: '📸 Portfolio' },
+      { id: 'services', label: '💼 Services & Packages' },
+      { id: 'booking_settings', label: '💳 Bookings & Payment' }
+    ],
+    'salon,spa,retail': [
+      { id: 'services', label: '💇 Services & Products' },
+      { id: 'staff', label: '👥 Team' },
+      { id: 'booking_settings', label: '💳 Appointments & Payment' }
+    ],
+    'hotel,condo,vacation_rental': [
+      { id: 'rooms', label: '🛏️ Rooms & Rates' },
+      { id: 'amenities', label: '🏊 Amenities' },
+      { id: 'booking_settings', label: '💳 Bookings & Payment' }
+    ]
+  };
+
+  // Find matching type-specific sections
+  let typeSections = [];
+  for (const [types, sections] of Object.entries(typeSpecificSections)) {
+    if (types.split(',').includes(bizType)) {
+      typeSections = sections;
+      break;
+    }
+  }
+
+  return [...baseSections.slice(0, 2), ...typeSections, ...baseSections.slice(2)];
+}
+
+// Update wcSections based on business type on load
+function updateWebsiteSectionsForType() {
+  if (USER_CONFIG && USER_CONFIG.business_type) {
+    const newSections = getWebsiteSectionsByType(USER_CONFIG.business_type);
+    // Update the global wcSections array if it exists
+    if (typeof wcSections !== 'undefined') {
+      wcSections.length = 0;
+      wcSections.push(...newSections);
+    }
+  }
 }
