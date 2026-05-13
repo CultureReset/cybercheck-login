@@ -62,6 +62,19 @@
 
         <!-- Rentals -->
         <div class="nav-section-label" data-biz-type="boat_rental,charter,jet_ski_rental,kayak_rental">Rentals</div>
+        <div class="nav-item" data-page="portfolio" data-biz-type="photographer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Portfolio</span>
+        </div>
+        <div class="nav-item" data-page="services" data-biz-type="salon,spa,retail">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span>Services & Products</span>
+        </div>
+        <div class="nav-item" data-page="rooms" data-biz-type="hotel,condo,vacation_rental">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18v12H3z"/><path d="M3 16h18v4H3z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span>Rooms & Units</span>
+        </div>
+
         <div class="nav-item" data-page="inventory" data-biz-type="boat_rental,charter,jet_ski_rental,kayak_rental">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
           <span>Fleet</span>
@@ -388,7 +401,7 @@
         </div>
 
         <!-- INVENTORY (Fleet) -->
-        <div class="page-section" id="page-inventory">
+        <div class="page-section" id="page-inventory" data-biz-type="boat_rental,charter,jet_ski_rental,kayak_rental">
           <div class="card">
             <div class="card-header"><h3>Circle Boat Fleet</h3><button class="btn btn-primary btn-sm" onclick="openInventoryModal()">Add Boat</button></div>
             <div class="grid-3" id="inventory-grid"></div>
@@ -397,7 +410,34 @@
         </div>
 
         <!-- AVAILABILITY -->
-        <div class="page-section" id="page-availability">
+        <!-- PORTFOLIO -->
+        <div class="page-section" id="page-portfolio" data-biz-type="photographer">
+          <div class="card">
+            <div class="card-header"><h3>📸 Portfolio</h3><button class="btn btn-primary btn-sm" onclick="openPortfolioModal()">+ Add Photo</button></div>
+            <div id="portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:0 0 12px;"></div>
+            <div id="portfolio-empty" style="color:var(--text-muted);font-size:13px;padding:12px 0;">No portfolio items yet. Add your best work.</div>
+          </div>
+        </div>
+
+        <!-- SERVICES & PRODUCTS -->
+        <div class="page-section" id="page-services" data-biz-type="salon,spa,retail">
+          <div class="card">
+            <div class="card-header"><h3>💇 Services & Products</h3><button class="btn btn-primary btn-sm" onclick="openServiceModal()">+ Add Service</button></div>
+            <div id="services-list" style="padding:0 0 12px;"></div>
+            <div id="services-empty" style="color:var(--text-muted);font-size:13px;padding:12px 0;">No services yet. Add your offerings.</div>
+          </div>
+        </div>
+
+        <!-- ROOMS & UNITS -->
+        <div class="page-section" id="page-rooms" data-biz-type="hotel,condo,vacation_rental">
+          <div class="card">
+            <div class="card-header"><h3>🛏️ Rooms & Units</h3><button class="btn btn-primary btn-sm" onclick="openRoomModal()">+ Add Room</button></div>
+            <div id="rooms-list" style="padding:0 0 12px;"></div>
+            <div id="rooms-empty" style="color:var(--text-muted);font-size:13px;padding:12px 0;">No rooms yet. Add your accommodations.</div>
+          </div>
+        </div>
+
+        <div class="page-section" id="page-availability" data-biz-type="boat_rental,charter,jet_ski_rental,hotel,condo,vacation_rental">
           <div class="card">
             <div class="card-header">
               <h3>Availability Calendar</h3>
@@ -418,7 +458,7 @@
         </div>
 
         <!-- BLACKOUT DATES -->
-        <div class="page-section" id="page-blackout-dates">
+        <div class="page-section" id="page-blackout-dates" data-biz-type="boat_rental,charter,jet_ski_rental">
           <div class="card">
             <div class="card-header">
               <div>
@@ -484,7 +524,7 @@
         </div>
 
         <!-- ADD-ONS & DOCKS -->
-        <div class="page-section" id="page-addons">
+        <div class="page-section" id="page-addons" data-biz-type="boat_rental,charter,jet_ski_rental">
           <div class="card">
             <div class="card-header"><h3>Docks & Add-ons</h3><button class="btn btn-primary btn-sm" onclick="openAddonModal()">Add Item</button></div>
             <div id="addons-list"></div>
@@ -525,7 +565,7 @@
         </div>
 
         <!-- LOCATIONS -->
-        <div class="page-section" id="page-locations">
+        <div class="page-section" id="page-locations" data-biz-type="boat_rental,charter,jet_ski_rental">
           <div class="card">
             <div class="card-header"><h3>Pickup / Launch Locations</h3><button class="btn btn-primary btn-sm" onclick="openLocationModal()">Add Location</button></div>
             <div id="locations-list"></div>
@@ -597,7 +637,7 @@
         </div>
 
         <!-- BOOKINGS -->
-        <div class="page-section" id="page-bookings">
+        <div class="page-section" id="page-bookings" data-biz-type="boat_rental,charter,jet_ski_rental,photographer,salon,spa,retail,hotel,condo,vacation_rental">
           <div class="card" style="padding:0;overflow:visible;">
             <div id="bookings-stats" style="padding:20px 24px 0;"></div>
           </div>
@@ -742,7 +782,7 @@
         </div>
 
         <!-- WAIVERS -->
-        <div class="page-section" id="page-waivers">
+        <div class="page-section" id="page-waivers" data-biz-type="boat_rental,charter">
           <div class="card" style="padding:0;overflow:visible;">
             <div id="waiver-stats" style="padding:20px 24px 0;"></div>
           </div>
@@ -765,7 +805,7 @@
         </div>
 
         <!-- WAITLIST -->
-        <div class="page-section" id="page-waitlist">
+        <div class="page-section" id="page-waitlist" data-biz-type="boat_rental,charter,jet_ski_rental">
           <div class="card" style="padding:0;overflow:visible;">
             <div id="waitlist-stats" style="padding:20px 24px 0;"></div>
           </div>
@@ -1071,7 +1111,7 @@
         </div>
 
         <!-- MENU BUILDER -->
-        <div class="page-section" id="page-menu">
+        <div class="page-section" id="page-menu" data-biz-type="restaurant,bar,cafe,food_truck">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;" class="menu-top-row">
             <div class="card" style="margin:0;">
               <div class="card-header">
@@ -1105,7 +1145,7 @@
         </div>
 
         <!-- MY QR CODES -->
-        <div class="page-section" id="page-qr-codes">
+        <div class="page-section" id="page-qr-codes" data-biz-type="restaurant,bar,cafe,food_truck,boat_rental,charter,jet_ski_rental,photographer,salon,spa,retail,hotel,condo,vacation_rental">
           <!-- Stats row -->
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" class="qrc-stats-row">
             <div class="card" style="margin:0;text-align:center;">
@@ -1197,7 +1237,7 @@
         </div>
 
         <!-- SPECIALS -->
-        <div class="page-section" id="page-specials">
+        <div class="page-section" id="page-specials" data-biz-type="restaurant,bar,cafe,food_truck">
           <div class="card" style="margin-bottom:16px;">
             <div class="card-header">
               <h3>🔥 Specials</h3>
@@ -1221,7 +1261,7 @@
         </div>
 
         <!-- EVENTS & LIVE MUSIC -->
-        <div class="page-section" id="page-events">
+        <div class="page-section" id="page-events" data-biz-type="restaurant,bar,cafe,food_truck">
           <!-- AI Extraction -->
           <div class="card" style="margin-bottom:16px;">
             <div class="card-header">
