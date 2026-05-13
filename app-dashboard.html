@@ -1747,6 +1747,10 @@
   <script src="js/qr-codes.js?v=1"></script>
   <script src="js/specials.js?v=2"></script>
   <script src="js/events.js?v=1"></script>
+  <script src="js/payment-processor.js"></script>
+  <script src="js/portfolio.js?v=1"></script>
+  <script src="js/services.js?v=1"></script>
+  <script src="js/rooms.js?v=1"></script>
   <script>
     var _business = null;
 
@@ -1873,6 +1877,9 @@
       loadSocial();
       loadFAQ();
       loadSetupChecklist();
+      loadPortfolio();
+      loadServices();
+      loadRooms();
 
       // Update overview stats with real data
       (async function() {
