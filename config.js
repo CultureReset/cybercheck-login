@@ -1,5 +1,5 @@
 // CyberCheck Platform — Multi-tenant config
-// Loads from live session. No hardwired business data.
+// Loads from URL parameter first, then from session
 
 const USER_CONFIG = {
     user_id: '',
@@ -17,10 +17,53 @@ const USER_CONFIG = {
     _fromApi: false
 };
 
-// Try to load live session from backend API
-// If it works, overwrite USER_CONFIG with real data
-// If not, Beachside's hardcoded data stays as-is
+// Known business mappings (subdomain → site_id)
+const BUSINESS_MAP = {
+    'beachside-circle-boats': '22222222-2222-2222-2222-222222222222'
+};
+
 async function initConfig() {
+    // Priority 1: Check URL parameter for explicit business selection
+    const params = new URLSearchParams(window.location.search);
+    const userSubdomain = params.get('user');
+
+    if (userSubdomain && BUSINESS_MAP[userSubdomain]) {
+        const siteId = BUSINESS_MAP[userSubdomain];
+        USER_CONFIG.business_id = siteId;
+        USER_CONFIG._fromApi = true;
+
+        // Try to get business data from Supabase
+        if (window.supabase) {
+            try {
+                const { data: biz } = await window.supabase
+                    .from('businesses')
+                    .select('site_id, name, type')
+                    .eq('site_id', siteId)
+                    .single();
+
+                if (biz) {
+                    USER_CONFIG.business_name = biz.name;
+                    USER_CONFIG.business_type = biz.type || 'rental';
+                }
+            } catch(e) {
+                console.warn('Failed to load business details:', e);
+                USER_CONFIG.business_name = userSubdomain.replace(/-/g, ' ');
+                USER_CONFIG.business_type = 'rental';
+            }
+        }
+
+        const sidebarName = document.getElementById('sidebar-biz-name');
+        if (sidebarName) sidebarName.textContent = USER_CONFIG.business_name;
+
+        const sidebarType = document.getElementById('sidebar-biz-type');
+        if (sidebarType) sidebarType.textContent = USER_CONFIG.business_type.charAt(0).toUpperCase() + USER_CONFIG.business_type.slice(1);
+
+        syncToSharedStore();
+        console.log(`CC: Loaded business from URL: ${USER_CONFIG.business_name} (ID: ${USER_CONFIG.business_id})`);
+        return USER_CONFIG;
+    }
+
+    // Priority 2: Load from session
     const session = await CC.getSession();
     if (!session || !session.user) {
         console.log('CC: Using offline config (Beachside fallback)');

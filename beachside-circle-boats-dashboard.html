@@ -1612,6 +1612,12 @@
       // Load real session from API (falls back to hardcoded config if offline)
       await initConfig();
 
+      // Force _siteId to match the business from config (URL parameter takes priority)
+      if (USER_CONFIG.business_id) {
+        _siteId = USER_CONFIG.business_id;
+        _business = null; // Clear cache so it reloads with correct site_id
+      }
+
       // Rewrite URL to include username if not already there
       var params = new URLSearchParams(window.location.search);
       if (!params.has('user') && session.business && session.business.subdomain) {
