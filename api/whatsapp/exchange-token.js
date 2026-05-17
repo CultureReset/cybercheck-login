@@ -1,5 +1,5 @@
 // Exchange Meta short-lived code → long-lived token, store WABA credentials in Supabase
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mhafixflyffflwjhcgfn.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xbptmkpbiqzvxptjkfoi.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 async function sbPost(table, payload) {

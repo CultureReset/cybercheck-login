@@ -187,11 +187,15 @@ class BusinessAIAssistant {
 
       if (data.tool_results && data.tool_results.length) {
         data.tool_results.forEach(r => {
-          if (['add_menu_items','clear_menu_type','update_menu_item','delete_menu_item'].includes(r.tool)) {
+          if (['add_menu_items','clear_menu_type','update_menu_item','delete_menu_item','update_hh_item'].includes(r.tool)) {
             if (typeof loadMenu === 'function') loadMenu();
           }
-          if (r.tool === 'add_specials' && typeof loadSpecials === 'function') loadSpecials();
-          if (r.tool === 'add_events'   && typeof loadEvents   === 'function') loadEvents();
+          if (['add_specials','update_special','delete_special'].includes(r.tool) && typeof loadSpecials === 'function') loadSpecials();
+          if (['add_events','update_event','delete_event'].includes(r.tool)       && typeof loadEvents   === 'function') loadEvents();
+          if (r.tool === 'manage_faq'           && typeof loadFaqs    === 'function') loadFaqs();
+          if (r.tool === 'add_photo'            && typeof loadGallery === 'function') loadGallery();
+          if (r.tool === 'update_hours'         && typeof loadHours   === 'function') loadHours();
+          if (r.tool === 'update_business_profile' && typeof loadProfile === 'function') loadProfile();
         });
       }
     } catch (err) {
@@ -219,16 +223,28 @@ class BusinessAIAssistant {
     const div = document.createElement('div');
     div.className = 'ai-message ai-system';
     const badges = results.map(r => {
-      if (r.tool === 'add_menu_items')     return `<span class="ai-tool-badge">✅ Added ${r.count} item${r.count !== 1 ? 's' : ''}</span>`;
-      if (r.tool === 'clear_menu_type')    return `<span class="ai-tool-badge ai-tool-warn">🗑 Cleared ${r.cleared}</span>`;
-      if (r.tool === 'add_specials')       return `<span class="ai-tool-badge">✅ Added ${r.count} special${r.count !== 1 ? 's' : ''}</span>`;
-      if (r.tool === 'add_events')         return `<span class="ai-tool-badge">✅ Added ${r.count} event${r.count !== 1 ? 's' : ''}</span>`;
-      if (r.tool === 'delete_menu_item')   return `<span class="ai-tool-badge ai-tool-warn">🗑 Removed: ${r.deleted_name}</span>`;
-      if (r.tool === 'update_menu_item')   return `<span class="ai-tool-badge">✏️ Updated: ${r.updated_name}</span>`;
-      if (r.tool === 'update_hh_schedule') return `<span class="ai-tool-badge">✅ Happy Hour: ${r.schedule.days} ${r.schedule.start}–${r.schedule.end}</span>`;
-      if (r.tool === 'save_memory')        return `<span class="ai-tool-badge ai-tool-memory">🧠 Remembered: ${r.category}/${r.saved_key}</span>`;
-      if (r.tool === 'update_memory')      return `<span class="ai-tool-badge ai-tool-memory">🧠 Updated memory: ${r.updated_key}</span>`;
-      if (r.tool === 'delete_memory')      return `<span class="ai-tool-badge ai-tool-warn">🧠 Forgot: ${r.deleted_key}</span>`;
+      if (r.tool === 'add_menu_items')        return `<span class="ai-tool-badge">✅ Added ${r.count} item${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'clear_menu_type')       return `<span class="ai-tool-badge ai-tool-warn">🗑 Cleared ${r.cleared}</span>`;
+      if (r.tool === 'add_specials')          return `<span class="ai-tool-badge">✅ Added ${r.count} special${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'add_events')            return `<span class="ai-tool-badge">✅ Added ${r.count} event${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'delete_menu_item')      return `<span class="ai-tool-badge ai-tool-warn">🗑 Removed item: ${r.deleted_name}</span>`;
+      if (r.tool === 'update_menu_item')      return `<span class="ai-tool-badge">✏️ Updated item: ${r.updated_name}</span>`;
+      if (r.tool === 'update_hh_item')        return `<span class="ai-tool-badge">✏️ Updated HH item: ${r.updated}</span>`;
+      if (r.tool === 'update_hh_schedule')    return `<span class="ai-tool-badge">🍺 Happy Hour: ${r.schedule.days} ${r.schedule.start}–${r.schedule.end}</span>`;
+      if (r.tool === 'update_hours')          return `<span class="ai-tool-badge">🕐 Hours updated: ${(r.days_updated||[]).join(', ')}</span>`;
+      if (r.tool === 'add_specials')          return `<span class="ai-tool-badge">✅ Added ${r.count} special${r.count !== 1 ? 's' : ''}</span>`;
+      if (r.tool === 'update_special')        return `<span class="ai-tool-badge">✏️ Updated special: ${r.updated}</span>`;
+      if (r.tool === 'delete_special')        return `<span class="ai-tool-badge ai-tool-warn">🗑 Removed special: ${r.deleted_name}</span>`;
+      if (r.tool === 'update_event')          return `<span class="ai-tool-badge">✏️ Updated event: ${r.updated}</span>`;
+      if (r.tool === 'delete_event')          return `<span class="ai-tool-badge ai-tool-warn">🗑 Removed event: ${r.deleted_name}</span>`;
+      if (r.tool === 'update_business_profile') return `<span class="ai-tool-badge">✅ Profile updated: ${(r.updated||[]).join(', ')}</span>`;
+      if (r.tool === 'update_tags')           return `<span class="ai-tool-badge">🏷️ Tags — added: ${(r.added||[]).join(', ')||'none'} | removed: ${(r.removed||[]).join(', ')||'none'}</span>`;
+      if (r.tool === 'manage_faq')            return `<span class="ai-tool-badge">❓ FAQ ${r.action}: ${r.question}</span>`;
+      if (r.tool === 'add_photo')             return `<span class="ai-tool-badge">📸 Photo added to gallery${r.added_url ? ` — <a href="${r.added_url}" target="_blank">view</a>` : ''}</span>`;
+      if (r.tool === 'find_business')         return `<span class="ai-tool-badge">🔍 Found: ${(r.matches||[]).map(m=>m.name).join(', ')}</span>`;
+      if (r.tool === 'save_memory')           return `<span class="ai-tool-badge ai-tool-memory">🧠 Remembered: ${r.category}/${r.saved_key}</span>`;
+      if (r.tool === 'update_memory')         return `<span class="ai-tool-badge ai-tool-memory">🧠 Updated memory: ${r.updated_key}</span>`;
+      if (r.tool === 'delete_memory')         return `<span class="ai-tool-badge ai-tool-warn">🧠 Forgot: ${r.deleted_key}</span>`;
       return '';
     }).join(' ');
     div.innerHTML = `<div class="ai-message-content" style="background:transparent;box-shadow:none;">${badges}</div>`;

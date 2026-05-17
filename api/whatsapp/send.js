@@ -1,6 +1,6 @@
 // Send a WhatsApp notification using the business's connected WABA credentials.
 // Tries free-form text first; falls back to hello_world template outside 24h window.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mhafixflyffflwjhcgfn.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xbptmkpbiqzvxptjkfoi.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 module.exports = async function handler(req, res) {
