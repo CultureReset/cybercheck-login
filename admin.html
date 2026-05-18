@@ -3883,23 +3883,62 @@
       <div id="page-sms-blasts" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>🚀 SMS Blasts</h1>
-          <div style="font-size:13px;color:var(--text-muted);">Send a deal or message to all opted-in tourists right now.</div>
+          <div style="font-size:13px;color:var(--text-muted);">Send targeted SMS to tourists based on their preferences, or blast to all opted-in users.</div>
         </div>
-        <div style="max-width:560px;">
+        <div style="max-width:700px;">
           <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;">
+            <!-- Message -->
             <label style="font-size:13px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Message</label>
             <textarea id="blast-message" rows="4" maxlength="160" placeholder="🌊 Happy hour at The Pier starts in 1 hr — 2-for-1 cocktails. Show this text!"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;color:var(--text-primary);resize:vertical;"
               oninput="document.getElementById('blast-chars').textContent=this.value.length+'/160'"></textarea>
             <div style="font-size:12px;color:var(--text-muted);margin-top:4px;text-align:right;" id="blast-chars">0/160</div>
 
-            <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;">
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Send to:</div>
-              <select id="blast-audience" style="background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--text-primary);">
-                <option value="all">All opted-in tourists</option>
-              </select>
+            <!-- Mode Toggle -->
+            <div style="margin-top:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Campaign Type:</div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="radio" name="blast-mode" value="all" checked onchange="toggleBlastMode()"> All opted-in
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="radio" name="blast-mode" value="targeted" onchange="toggleBlastMode()"> Target by preference
+              </label>
             </div>
 
+            <!-- Targeted Preferences Section (hidden by default) -->
+            <div id="blast-targeting" style="display:none;margin-top:20px;padding:16px;background:rgba(124,106,247,.06);border:1px solid rgba(124,106,247,.2);border-radius:10px;">
+              <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:12px;">🎯 Target Users</div>
+
+              <div style="margin-bottom:14px;">
+                <label style="font-size:12px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Tags to target (comma-separated)</label>
+                <input type="text" id="blast-tags" placeholder="e.g. seafood, nightlife, fishing"
+                  style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text-primary);">
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Will match users who love/like any of these tags</div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Min Score Threshold</label>
+                  <select id="blast-min-score" style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text-primary);">
+                    <option value="0">Any score (≥ 0)</option>
+                    <option value="1">Likes only (1-19)</option>
+                    <option value="20" selected>Loves only (≥ 20)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-primary);display:block;margin-bottom:6px;">Match Type</label>
+                  <select id="blast-match-type" style="width:100%;box-sizing:border-box;background:var(--input-bg,#1e293b);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;color:var(--text-primary);">
+                    <option value="any" selected>Any tag matches (OR)</option>
+                    <option value="all">All tags match (AND)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button onclick="previewTargetedBlast()" style="background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.3);color:#c4b5fd;padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">👁️ Preview Recipients</button>
+              <div id="blast-preview" style="font-size:12px;color:var(--text-muted);margin-top:8px;"></div>
+            </div>
+
+            <!-- Send Button -->
             <div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
               <button onclick="sendBlast()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;">Send Now</button>
               <span id="blast-status" style="font-size:13px;color:#4ade80;display:none;"></span>
@@ -3907,7 +3946,7 @@
           </div>
 
           <!-- History -->
-          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Blast History</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Campaign History</div>
           <div id="blast-history" style="display:flex;flex-direction:column;gap:10px;">
             <div style="color:var(--text-muted);font-size:13px;">Loading...</div>
           </div>
@@ -15610,22 +15649,71 @@
       } catch(e) {}
     }
 
+    function toggleBlastMode() {
+      const mode = document.querySelector('input[name="blast-mode"]:checked').value;
+      const targeting = document.getElementById('blast-targeting');
+      if (mode === 'targeted') {
+        targeting.style.display = 'block';
+      } else {
+        targeting.style.display = 'none';
+      }
+    }
+
+    async function previewTargetedBlast() {
+      const tags = document.getElementById('blast-tags').value.split(',').map(t => t.trim()).filter(t => t);
+      if (!tags.length) return alert('Enter at least one tag to target');
+      const minScore = parseInt(document.getElementById('blast-min-score').value);
+      const matchType = document.getElementById('blast-match-type').value;
+      const token = getAuthToken();
+      const previewEl = document.getElementById('blast-preview');
+      previewEl.innerHTML = '⏳ Counting matching users...';
+      try {
+        const r = await fetch(API_BASE + '/api/admin/sms-campaign-preview', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tags, min_score: minScore, match_type: matchType })
+        });
+        const d = await r.json();
+        previewEl.innerHTML = d.count > 0
+          ? `✓ Will send to <strong style="color:#c4b5fd;">${d.count}</strong> tourists matching these preferences`
+          : '⚠️ No tourists match these criteria — try adjusting tags or score threshold';
+      } catch(e) {
+        previewEl.innerHTML = '❌ Preview failed: ' + e.message;
+      }
+    }
+
     async function sendBlast() {
       const message = document.getElementById('blast-message').value.trim();
       if (!message) return alert('Enter a message first.');
-      if (!confirm('Send this to all opted-in tourists now?')) return;
+      const mode = document.querySelector('input[name="blast-mode"]:checked').value;
       const token = getAuthToken();
       const status = document.getElementById('blast-status');
+      let payload = { message };
+
+      if (mode === 'targeted') {
+        const tags = document.getElementById('blast-tags').value.split(',').map(t => t.trim()).filter(t => t);
+        if (!tags.length) return alert('Enter tags to target');
+        payload.tags = tags;
+        payload.min_score = parseInt(document.getElementById('blast-min-score').value);
+        payload.match_type = document.getElementById('blast-match-type').value;
+        const confirmMsg = `Send to tourists matching tags: ${tags.join(', ')}?`;
+        if (!confirm(confirmMsg)) return;
+      } else {
+        if (!confirm('Send this to all opted-in tourists now?')) return;
+      }
+
       try {
         const r = await fetch(API_BASE + '/api/admin/sms-blast', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, audience: document.getElementById('blast-audience').value })
+          body: JSON.stringify(payload)
         });
         const d = await r.json();
         status.textContent = `✓ Sent to ${d.sent} tourists`; status.style.display = 'inline';
         document.getElementById('blast-message').value = '';
         document.getElementById('blast-chars').textContent = '0/160';
+        document.getElementById('blast-tags').value = '';
+        document.getElementById('blast-preview').innerHTML = '';
         loadBlastHistory();
       } catch(e) { alert('Send failed: ' + e.message); }
     }
