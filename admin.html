@@ -13931,6 +13931,7 @@
   }
 
   var _mbBizList = [];
+  var _mbPin = '';
 
   async function mbLoadBusinessSelector() {
     if (_mbBizList.length) return;
@@ -14055,6 +14056,7 @@
     _mbSlug   = (opt && opt.dataset.slug) || null;
     _mbItems  = [];
     _mbCats   = [];
+    _mbPin    = '';
 
     document.getElementById('mb-empty').textContent = _mbSiteId ? 'Loading...' : 'Select a business above to load their menu.';
     document.getElementById('mb-categories-list').innerHTML = '';
@@ -14091,9 +14093,13 @@
     }
     if (linkBtn) { linkBtn.style.display = ''; linkBtn.textContent = '🔗 Link to GCR'; linkBtn.disabled = false; }
     var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(_mbSlug);
+    if (_mbPin) menuUrl += '&pin=' + encodeURIComponent(_mbPin);
     var qrUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(menuUrl);
     card.innerHTML = '<img src="' + qrUrl + '" style="width:130px;height:130px;border-radius:8px;" alt="QR"><br>' +
       '<a href="' + menuUrl + '" target="_blank" style="color:var(--primary);font-size:12px;display:block;margin-top:8px;">View Live Menu ↗</a>' +
+      '<div style="margin-top:8px;"><input type="text" id="mb-pin-input" placeholder="Optional PIN (4+ digits)" maxlength="10" value="' + _mbPin + '" ' +
+      'style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;" ' +
+      'onchange="_mbPin=this.value;mbRenderQR()"></div>' +
       '<div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap;">' +
         '<button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="navigator.clipboard.writeText(\'' + menuUrl.replace(/'/g,"\\'") + '\').then(function(){toast(\'Copied!\',\'success\')})">Copy URL</button>' +
         '<a href="' + qrUrl.replace('150x150','400x400') + '" download="menu_qr.png" class="btn btn-outline" style="font-size:12px;padding:5px 10px;">Download QR</a>' +
