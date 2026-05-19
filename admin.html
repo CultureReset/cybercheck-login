@@ -13935,8 +13935,9 @@
   async function mbLoadBusinessSelector() {
     if (_mbBizList.length) return;
     try {
-      var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
-      var list = res.ok ? await res.json() : [];
+      var res = await fetch(API_BASE + '/api/gcr/entities?limit=500');
+      var data = res.ok ? await res.json() : {};
+      var list = (data.entities || data || []).map(function(e) { return { id: e.id, slug: e.slug, name: e.name, icon: e.icon }; });
       _mbBizList = list;
       // keep hidden select in sync for legacy code
       var sel = document.getElementById('mb-biz-select');
