@@ -5691,25 +5691,61 @@
       e.preventDefault();
       var token = getAuthToken();
       var entityId = document.getElementById('gcr-edit-site-id').value;
-      var entity = {
-        name: document.getElementById('gcr-edit-name').value,
-        entity_subtype: document.getElementById('gcr-edit-type').value,
-        is_active: document.getElementById('gcr-edit-status').value === 'active',
-        icon: document.getElementById('gcr-edit-emoji').value,
-        instagram: document.getElementById('gcr-edit-instagram').value,
-        facebook: document.getElementById('gcr-edit-facebook').value,
-        tiktok: document.getElementById('gcr-edit-tiktok').value,
-        featured: document.getElementById('gcr-edit-featured').checked
+
+      // Unified payload for all 18 standardized tables
+      var payload = {
+        entity: {
+          name: document.getElementById('gcr-edit-name').value,
+          entity_subtype: document.getElementById('gcr-edit-type').value,
+          is_active: document.getElementById('gcr-edit-status').value === 'active',
+          icon: document.getElementById('gcr-edit-emoji').value,
+          social_instagram: document.getElementById('gcr-edit-instagram').value,
+          social_facebook: document.getElementById('gcr-edit-facebook').value,
+          social_tiktok: document.getElementById('gcr-edit-tiktok').value,
+          featured: document.getElementById('gcr-edit-featured').checked
+        },
+        // Additional tables can be populated here when forms exist:
+        hours: undefined,
+        happyHour: undefined,
+        happyHourItems: undefined,
+        menuSections: undefined,
+        menuItems: undefined,
+        drinkSections: undefined,
+        drinkItems: undefined,
+        events: undefined,
+        specials: undefined,
+        tags: undefined,
+        features: undefined,
+        activities: undefined,
+        pricing: undefined,
+        bookingSlots: undefined,
+        sections: undefined,
+        sectionItems: undefined,
+        sectionBullets: undefined,
+        photos: undefined,
+        policies: undefined,
+        requirements: undefined,
+        qna: undefined
       };
+
+      // Remove undefined entries to keep payload clean
+      Object.keys(payload).forEach(function(key) {
+        if (payload[key] === undefined) delete payload[key];
+      });
+
       try {
         var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entity })
+          body: JSON.stringify(payload)
         });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
-        toast('Business saved!');
+        if (result.errors && result.errors.length) {
+          toast('Saved with errors: ' + result.errors.join('; '), 'warning');
+        } else {
+          toast('Business saved!');
+        }
         closeEditGCRModal();
         loadGCRBusinesses();
       } catch(err) { toast(err.message, 'error'); }
