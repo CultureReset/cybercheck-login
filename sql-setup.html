@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCR SQL Setup - Copy & Run</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.3);
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .btn-section {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-copy {
+            background: #22c55e;
+            color: white;
+        }
+        .btn-copy:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+        .btn-open-supabase {
+            background: #06b6d4;
+            color: white;
+        }
+        .btn-open-supabase:hover {
+            background: #0891b2;
+            transform: translateY(-2px);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,.05);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #22c55e;
+        }
+        .stat-box strong { color: #22c55e; }
+        .sql-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,.5);
+            margin-bottom: 20px;
+        }
+        .sql-header {
+            background: #2a2a2a;
+            padding: 12px 16px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+        #sqlContent {
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        #sqlContent::selection {
+            background: #22c55e;
+            color: #000;
+        }
+        .line-number {
+            color: #666;
+            margin-right: 16px;
+            user-select: none;
+        }
+        .comment { color: #6a9955; }
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .instructions {
+            background: rgba(34, 197, 94, .05);
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .instructions h3 {
+            color: #22c55e;
+            margin-bottom: 8px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            opacity: 0.9;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #22c55e;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            z-index: 9999;
+            animation: slideUp .3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,.3);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Gulf Coast Radar SQL Setup</h1>
+            <p>Complete database schema with all tables for restaurants, QR tracking, analytics, and more. Safe to run multiple times.</p>
+            <div class="stats">
+                <div class="stat-box"><strong>40+</strong> Tables</div>
+                <div class="stat-box"><strong>100+</strong> Indexes</div>
+                <div class="stat-box"><strong>Safe</strong> IF NOT EXISTS</div>
+                <div class="stat-box"><strong>~2min</strong> Runtime</div>
+            </div>
+            <div class="btn-section">
+                <button class="btn-copy" onclick="copySql()">📋 Copy All SQL</button>
+                <button class="btn-open-supabase" onclick="openSupabase()">🔗 Open Supabase</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📖 How to Run</h3>
+            <ol>
+                <li><strong>Copy the SQL:</strong> Click the blue "Copy All SQL" button</li>
+                <li><strong>Open Supabase:</strong> Click "Open Supabase" (or go to app.supabase.com)</li>
+                <li><strong>SQL Editor:</strong> Select your GCR project → SQL Editor → New Query</li>
+                <li><strong>Paste & Execute:</strong> Paste the SQL, click Execute (blue button)</li>
+                <li><strong>Done!</strong> You should see "Query executed successfully"</li>
+            </ol>
+        </div>
+
+        <div class="sql-box">
+            <div class="sql-header">
+                <span>RUN-THIS-MASTER-SCHEMA.sql (779 lines)</span>
+                <button class="btn-copy" style="margin: 0; padding: 6px 12px;" onclick="copySql()">Copy</button>
+            </div>
+            <div id="sqlContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load SQL content
+        const sqlContent = `-- ========================================
+-- GULF COAST RADAR — MASTER SCHEMA (SAFE TO RUN)
+-- ========================================
+-- This file uses CREATE TABLE IF NOT EXISTS
+-- Safe to run even if tables already exist
+-- ========================================
+
+-- ========================================
+-- CORE BUSINESS ENTITY
+-- ========================================
+CREATE TABLE IF NOT EXISTS entity (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    entity_type TEXT,
+    entity_subtype TEXT,
+    description TEXT,
+    short_description TEXT,
+    tagline TEXT,
+
+    -- Contact & Location
+    address_line_1 TEXT,
+    address_line_2 TEXT,
+    city TEXT,
+    state TEXT,
+    zip TEXT,
+    country TEXT DEFAULT 'USA',
+    latitude NUMERIC,
+    longitude NUMERIC,
+    plus_code TEXT,
+    phone TEXT,
+    international_phone TEXT,
+    email TEXT,
+
+    -- Web & Social
+    website_url TEXT,
+    booking_url TEXT,
+    reservation_url TEXT,
+    order_url TEXT,
+    directions_url TEXT,
+    call_url TEXT,
+
+    social_facebook TEXT,
+    social_instagram TEXT,
+    social_tiktok TEXT,
+    social_twitter TEXT,
+    social_linkedin TEXT,
+    social_youtube TEXT,
+
+    -- Hours & Operations
+    hours_text TEXT,
+    open_time TEXT,
+    close_time TEXT,
+
+    -- Happy Hour (stored at entity level)
+    hh_days TEXT,
+    hh_start TIME,
+    hh_end TIME,
+    hh_description TEXT,
+
+    -- Images
+    hero_image_url TEXT,
+    logo_url TEXT,
+    cover_url TEXT,
+    icon TEXT,
+
+    -- Ratings & Reviews
+    rating NUMERIC(3,2),
+    review_count INTEGER,
+
+    -- Google Data
+    google_places_id TEXT,
+    google_type TEXT,
+    google_types TEXT[],
+    google_maps_uri TEXT,
+    business_status TEXT,
+
+    -- Service Flags
+    dine_in BOOLEAN DEFAULT false,
+    takeout BOOLEAN DEFAULT false,
+    delivery BOOLEAN DEFAULT false,
+    reservable BOOLEAN DEFAULT false,
+
+    -- Amenities
+    wifi BOOLEAN DEFAULT false,
+    outdoor_seating BOOLEAN DEFAULT false,
+    parking BOOLEAN DEFAULT false,
+    wheelchair_accessible BOOLEAN DEFAULT false,
+    good_for_groups BOOLEAN DEFAULT false,
+    live_music BOOLEAN DEFAULT false,
+
+    -- Food & Drink
+    serves_breakfast BOOLEAN DEFAULT false,
+    serves_brunch BOOLEAN DEFAULT false,
+    serves_lunch BOOLEAN DEFAULT false,
+    serves_dinner BOOLEAN DEFAULT false,
+    serves_vegetarian BOOLEAN DEFAULT false,
+    serves_beer BOOLEAN DEFAULT false,
+    serves_wine BOOLEAN DEFAULT false,
+    serves_cocktails BOOLEAN DEFAULT false,
+
+    -- Pricing
+    price_level TEXT,
+    price_range TEXT,
+    price_from NUMERIC,
+    price_to NUMERIC,
+    price_unit TEXT,
+
+    -- Payment & Services
+    accepts_payment TEXT[],
+
+    -- Status & Organization
+    is_active BOOLEAN DEFAULT true,
+    gcr_listed BOOLEAN DEFAULT false,
+    gcr_verified BOOLEAN DEFAULT false,
+    featured BOOLEAN DEFAULT false,
+    sort_order INTEGER DEFAULT 0,
+
+    -- Extra Data
+    _sources TEXT,
+    _extra_photos TEXT,
+    metadata_json JSONB,
+
+    -- Theme & Design
+    theme_preset TEXT,
+    theme_bg TEXT,
+    theme_surface TEXT,
+    theme_primary TEXT,
+    theme_accent TEXT,
+    theme_text TEXT,
+    theme_border_radius TEXT,
+    custom_css TEXT,
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+
+    -- Admin
+    parent_entity_id UUID REFERENCES entity(id)
+);
+
+[... Full SQL content continues - 779 lines total ...]
+
+-- ========================================
+-- DONE - All tables created/updated safely
+-- ========================================`;
+
+        // Display SQL (truncated for demo)
+        document.getElementById('sqlContent').textContent = sqlContent.substring(0, 2000) + '\n\n[... Full SQL continues - 779 lines total ...]\n\nClick "Copy All SQL" to get the complete file';
+
+        function copySql() {
+            // Fetch the actual SQL from the file
+            fetch('/RUN-THIS-MASTER-SCHEMA.sql')
+                .then(r => r.text())
+                .then(text => {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('✅ All SQL copied! Ready to paste into Supabase');
+                    });
+                })
+                .catch(() => {
+                    // Fallback: copy from local file path
+                    const msg = 'Open this file and copy all content:\n\n/Users/owner/cybercheck-api-database/RUN-THIS-MASTER-SCHEMA.sql\n\nThen paste into Supabase SQL Editor';
+                    navigator.clipboard.writeText(msg).then(() => {
+                        showToast('File location copied to clipboard');
+                    });
+                });
+        }
+
+        function openSupabase() {
+            window.open('https://app.supabase.com', '_blank');
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
