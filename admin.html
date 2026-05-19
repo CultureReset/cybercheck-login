@@ -13984,10 +13984,9 @@
               escHtml(name.slice(idx + term.length));
           }
         }
-        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #334155;background:#1e293b;transition:.1s;" ' +
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #334155;background:#1e293b;transition:.1s;user-select:none;" ' +
           'onmouseover="this.style.background=\'#273548\'" onmouseout="this.style.background=\'#1e293b\'" ' +
-          'onmousedown="event.preventDefault()" ' +
-          'onclick="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
+          'onmousedown="event.preventDefault(); mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
           '<span>' + displayName + '</span>' +
           (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
           '</div>';
