@@ -12969,13 +12969,11 @@
         }
 
         _allQRMenus = entities.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
-
-      if (!_allQRMenus.length) {
-        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No restaurants found.</p>';
-        return;
+        renderQRMenusList();
+      } catch(e) {
+        console.error('Failed to load QR menus:', e);
+        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Error loading restaurants.</p>';
       }
-
-      renderQRMenusList();
     }
 
     function filterQRMenus() {
