@@ -15248,38 +15248,103 @@
     function viewTSBizDetail(bizId) { tsOpenModal(bizId); }
 
     // ── Overview ──
+    var _tsOverviewAnalytics = {};
+
     async function loadTSOverview() {
-      document.getElementById('ts-stat-swipes').textContent = '—';
-      document.getElementById('ts-stat-tourists').textContent = '—';
-      document.getElementById('ts-stat-itineraries').textContent = '—';
-      // Load GCR businesses count
+      ['ts-stat-swipes','ts-stat-tourists','ts-stat-itineraries','ts-stat-businesses'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
+      document.getElementById('ts-top-businesses').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+      var token = getAuthToken();
       if (!_tsAllBusinesses.length) await loadTSBusinesses();
-      // Mock stats until Supabase tables are live
-      document.getElementById('ts-stat-swipes').textContent = '0';
-      document.getElementById('ts-stat-tourists').textContent = '0';
-      document.getElementById('ts-stat-itineraries').textContent = '0';
+      try {
+        var [touristRes, analyticsRes] = await Promise.all([
+          fetch(API_BASE + '/api/admin/tourists', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(API_BASE + '/api/admin/tripswipe-analytics?period=week', { headers: { 'Authorization': 'Bearer ' + token } })
+        ]);
+        var td = touristRes.ok ? await touristRes.json() : {};
+        var ad = analyticsRes.ok ? await analyticsRes.json() : {};
+        _tsOverviewAnalytics = ad;
+        var tourists = td.tourists || [];
+        var withItinerary = tourists.filter(function(t){ return (t.itineraries_count||0) > 0; }).length;
+        var activeBusinesses = _tsAllBusinesses.filter(function(b){ return (_tsSettings[b.slug]||{}).enabled !== false; }).length;
+        var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+        set('ts-stat-tourists', tourists.length.toLocaleString());
+        set('ts-stat-itineraries', withItinerary.toLocaleString());
+        set('ts-stat-swipes', ((ad.total_likes||0)+(ad.total_nopes||0)).toLocaleString());
+        set('ts-stat-businesses', activeBusinesses.toLocaleString());
+      } catch(e) {
+        ['ts-stat-swipes','ts-stat-tourists','ts-stat-itineraries','ts-stat-businesses'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
+      }
       renderTSTopBusinesses();
     }
 
     function renderTSTopBusinesses() {
       var el = document.getElementById('ts-top-businesses');
       if (!_tsAllBusinesses.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Load businesses first</div>'; return; }
-      var html = _tsAllBusinesses.slice(0, 5).map(function(b, i) {
-        var swipes = Math.floor(180 - i * 30);
-        var pct = Math.floor(70 + Math.random() * 25);
-        return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--card-border);">' +
-          '<div style="font-size:18px;font-weight:800;color:var(--text-muted);width:24px;text-align:center;">' + (i+1) + '</div>' +
-          (b.hero_image_url ? '<img src="' + b.hero_image_url + '" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">' : '<div style="width:36px;height:36px;border-radius:8px;background:rgba(124,106,247,.2);"></div>') +
-          '<div style="flex:1;">' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);">' + (b.name||'Business') + '</div>' +
-            '<div style="font-size:11px;color:var(--text-muted);">' + swipes + ' swipes · ' + pct + '% like rate</div>' +
+      var topLiked = (_tsOverviewAnalytics && _tsOverviewAnalytics.top_liked) ? _tsOverviewAnalytics.top_liked : [];
+      var maxCount = topLiked.length ? topLiked[0].count : 1;
+      // Build slug→business map for image/name lookup
+      var bizMap = {};
+      _tsAllBusinesses.forEach(function(b){ bizMap[b.slug] = b; });
+      var rows = topLiked.length ? topLiked : _tsAllBusinesses.slice(0, 5).map(function(b){ return { slug: b.slug, name: b.name, count: 0 }; });
+      var html = rows.slice(0, 10).map(function(b, i) {
+        var biz = bizMap[b.slug] || {};
+        var name = b.name || biz.name || b.slug || 'Business';
+        var img = b.image || (_tsSettings[b.slug]||{}).hero_image || biz.hero_image_url || '';
+        var count = b.count || 0;
+        var pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--card-border);cursor:pointer;" onclick="showTouristsByBusiness(' + JSON.stringify(b.slug) + ',' + JSON.stringify(name) + ')">' +
+          '<div style="font-size:16px;font-weight:800;color:var(--text-muted);width:22px;text-align:center;">' + (i+1) + '</div>' +
+          (img ? '<img src="' + escHtml(img) + '" style="width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;">' : '<div style="width:38px;height:38px;border-radius:8px;background:rgba(124,106,247,.2);flex-shrink:0;"></div>') +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(name) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-muted);">' + (count > 0 ? '❤️ ' + count + ' saves this week' : 'No swipe data yet') + '</div>' +
           '</div>' +
-          '<div style="width:80px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;">' +
+          '<div style="width:70px;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;flex-shrink:0;">' +
             '<div style="height:100%;width:' + pct + '%;background:#22c55e;border-radius:3px;"></div>' +
           '</div>' +
         '</div>';
       }).join('');
-      el.innerHTML = html;
+      el.innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;">No swipe data yet this week</div>';
+    }
+
+    function showTouristsByBusiness(slug, bizName) {
+      var token = getAuthToken();
+      var modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML = '<div style="background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:80vh;overflow-y:auto;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+          '<h3 style="margin:0;font-size:16px;">❤️ Users who saved <span style="color:#7c6af7;">' + escHtml(bizName) + '</span></h3>' +
+          '<button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">&times;</button>' +
+        '</div>' +
+        '<div id="ts-biz-tourists-list" style="display:flex;flex-direction:column;gap:10px;"><div style="color:var(--text-muted);font-size:13px;">Loading...</div></div>' +
+      '</div>';
+      document.body.appendChild(modal);
+      fetch(API_BASE + '/api/admin/tourists', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var tourists = (d.tourists||[]).filter(function(t){ return (t.saves||[]).some(function(s){ return s.entity_slug===slug; }); });
+          var list = document.getElementById('ts-biz-tourists-list');
+          if (!list) return;
+          if (!tourists.length) { list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No users have saved this business yet</div>'; return; }
+          list.innerHTML = tourists.map(function(t){
+            var name = t.name || (t.email||'').split('@')[0] || 'Tourist';
+            var save = (t.saves||[]).find(function(s){ return s.entity_slug===slug; }) || {};
+            var superLike = save.is_super_like ? ' ⭐ Super Like' : '';
+            var savedAt = save.saved_at ? new Date(save.saved_at).toLocaleDateString() : '';
+            return '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--card-border);">' +
+              '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c6af7,#22c55e);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;flex-shrink:0;">' + escHtml(name[0].toUpperCase()) + '</div>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(name) + '</div>' +
+                '<div style="font-size:11px;color:var(--text-muted);">' + escHtml(t.email||'') + (t.destination ? ' · ✈️ ' + escHtml(t.destination) : '') + '</div>' +
+              '</div>' +
+              '<div style="text-align:right;flex-shrink:0;">' +
+                '<div style="font-size:12px;color:#22c55e;font-weight:700;">❤️ Saved' + escHtml(superLike) + '</div>' +
+                '<div style="font-size:11px;color:var(--text-muted);">' + escHtml(savedAt) + '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        })
+        .catch(function(){ var list=document.getElementById('ts-biz-tourists-list'); if(list) list.innerHTML='<div style="color:#ef4444;font-size:13px;">Failed to load</div>'; });
     }
 
     // ── Tourists ──
