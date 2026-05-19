@@ -14471,7 +14471,7 @@
         var item = items[ii];
         var itemMods = Array.isArray(item.modifiers) ? item.modifiers : [];
         var mods = itemMods.concat(sectionMods).map(function(m){ return { name: String(m.name||'').trim(), price: parseFloat(m.price)||0 }; }).filter(function(m){ return m.name; });
-        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, category: catName, description: item.description||'', tags: item.tags||[], modifiers: mods, site_id: _mbSiteId, sort_order: ii };
+        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, category: catName, description: item.description||'', tags: item.tags||[], modifiers: mods, site_id: _mbSiteId, entity_id: _mbSiteId, entity_slug: _mbSlug, sort_order: ii };
         try {
           var res = await fetch(API_BASE + '/api/dashboard/menu-items', {
             method: 'POST',
