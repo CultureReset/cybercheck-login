@@ -12956,32 +12956,19 @@
       var el = document.getElementById('qr-menus-list');
       el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading restaurants...</p>';
 
-      var entitiesP = fetch(API_BASE + '/api/gcr/entities?limit=500').catch(function(){ return null; });
-      var bizP      = fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }).catch(function(){ return null; });
-
-      var results = await Promise.all([entitiesP, bizP]);
-      var entities = [], siteIdBizzes = [];
-
-      if (results[0] && results[0].ok) {
-        var d = await results[0].json();
-        entities = (d.entities || d.businesses || [])
+      try {
+        var r = await fetch(API_BASE + '/api/gcr/entities?limit=500');
+        var d = r.ok ? await r.json() : {};
+        var entities = (d.entities || d.businesses || [])
           .filter(function(e) { return e && e.id && e.name && e.slug; })
           .map(function(e) { return Object.assign({ _url_type: 'slug' }, e); });
-      }
-      if (results[1] && results[1].ok) {
-        var list = await results[1].json();
-        siteIdBizzes = (list || [])
-          .filter(function(b) { return b && (b.site_id || b.id) && (b.name || b.business_name); })
-          .map(function(b) { return { id: b.site_id || b.id, site_id: b.site_id || b.id, name: b.name || b.business_name, icon: '🏪', _url_type: 'site_id' }; });
-      }
 
-      var seen = {};
-      _allQRMenus = entities.concat(siteIdBizzes).filter(function(b) {
-        var key = String(b.site_id || b.id || '');
-        if (!key || seen[key]) return false;
-        seen[key] = true;
-        return true;
-      }).sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+        if (!entities.length) {
+          el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;text-align:center;padding:40px;">No restaurants found.</p>';
+          return;
+        }
+
+        _allQRMenus = entities.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
 
       if (!_allQRMenus.length) {
         el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No restaurants found.</p>';
@@ -13950,19 +13937,19 @@
   async function mbLoadBusinessSelector() {
     if (_mbBizList.length) return;
     try {
-      var res = await fetch(API_BASE + '/api/admin/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+      var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
       var list = res.ok ? await res.json() : [];
       _mbBizList = list;
       // keep hidden select in sync for legacy code
       var sel = document.getElementById('mb-biz-select');
       list.forEach(function(b) {
         var o = document.createElement('option');
-        o.value = b.site_id || b.id;
-        o.textContent = b.name || b.business_name || b.site_id;
-        o.dataset.slug = b.entity_slug || b.slug || '';
+        o.value = b.id;
+        o.textContent = (b.icon || '') + ' ' + (b.name || b.id);
+        o.dataset.slug = b.slug || '';
         sel.appendChild(o);
       });
-    } catch(e) {}
+    } catch(e) { console.error('Failed to load GCR businesses:', e); }
   }
 
   function mbShowBizDropdown() {
