@@ -14063,7 +14063,7 @@
     if (!_mbSiteId) return;
 
     try {
-      var res = await fetch(API_BASE + '/api/dashboard/menu-items?site_id=' + encodeURIComponent(_mbSiteId), {
+      var res = await fetch(API_BASE + '/api/dashboard/menu-items?entity_id=' + encodeURIComponent(_mbSiteId), {
         headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
       _mbItems = res.ok ? await res.json() : [];
@@ -14090,7 +14090,7 @@
       return;
     }
     if (linkBtn) { linkBtn.style.display = ''; linkBtn.textContent = '🔗 Link to GCR'; linkBtn.disabled = false; }
-    var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(_mbSiteId);
+    var menuUrl = 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(_mbSlug);
     var qrUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(menuUrl);
     card.innerHTML = '<img src="' + qrUrl + '" style="width:130px;height:130px;border-radius:8px;" alt="QR"><br>' +
       '<a href="' + menuUrl + '" target="_blank" style="color:var(--primary);font-size:12px;display:block;margin-top:8px;">View Live Menu ↗</a>' +
