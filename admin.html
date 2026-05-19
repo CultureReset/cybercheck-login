@@ -13760,9 +13760,9 @@
       <div id="mb-ext-upload">
         <div style="border:2px dashed var(--card-border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;margin-bottom:16px;" onclick="document.getElementById('mb-ext-file').click()">
           <div style="font-size:32px;margin-bottom:8px;">📷</div>
-          <div style="font-weight:600;margin-bottom:4px;">Upload menu photo — AI does the rest</div>
-          <div style="font-size:13px;color:var(--text-muted);">Items extract and save automatically. Any menu: printed, handwritten, chalkboard.</div>
-          <input type="file" id="mb-ext-file" accept="image/*" style="display:none;" onchange="mbHandleExtractFile(this)">
+          <div style="font-weight:600;margin-bottom:4px;">Upload menu photos — Single or multi-page</div>
+          <div style="font-size:13px;color:var(--text-muted);">Upload 1 image, a PDF, or multiple pages. AI extracts all items automatically.</div>
+          <input type="file" id="mb-ext-file" accept="image/*,.pdf" multiple style="display:none;" onchange="mbHandleExtractFiles(this)">
         </div>
         <div id="mb-ext-preview-wrap" style="display:none;text-align:center;margin-bottom:16px;">
           <img id="mb-ext-preview-img" style="max-width:100%;max-height:240px;border-radius:8px;object-fit:contain;" alt="Menu preview">
@@ -14352,67 +14352,130 @@
     } catch (e) { /* keep default */ }
   }
 
-  function mbHandleExtractFile(input) {
-    var file = input.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById('mb-ext-preview-img').src = e.target.result;
-      document.getElementById('mb-ext-preview-wrap').style.display = '';
-    };
-    reader.readAsDataURL(file);
-    // Auto-start scan+import immediately
+  function mbHandleExtractFiles(input) {
+    var files = Array.from(input.files || []);
+    if (!files.length) return;
+
+    // Store all files for processing
+    _mbExtractFiles = files;
+
+    // Show first file preview
+    if (files[0].type.startsWith('image/')) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('mb-ext-preview-img').src = e.target.result;
+        document.getElementById('mb-ext-preview-wrap').style.display = '';
+      };
+      reader.readAsDataURL(files[0]);
+    } else if (files[0].type === 'application/pdf') {
+      document.getElementById('mb-ext-preview-wrap').style.display = 'none';
+    }
+
+    // Show file count if multiple
+    if (files.length > 1) {
+      document.getElementById('mb-ext-status').textContent = '📎 ' + files.length + ' files selected (will process all)';
+    }
+
+    // Auto-start scan
     mbRunExtraction();
   }
 
+  var _mbExtractFiles = [];
+
   async function mbRunExtraction() {
-    var file = document.getElementById('mb-ext-file').files[0];
-    if (!file) return;
-    document.getElementById('mb-ext-status').textContent = '⏳ AI is reading your menu — 5–15 seconds...';
+    var files = _mbExtractFiles.length ? _mbExtractFiles : Array.from(document.getElementById('mb-ext-file').files || []);
+    if (!files.length) return;
+
     document.getElementById('mb-ext-results').style.display = 'none';
     document.getElementById('mb-ext-scan-btn').style.display = 'none';
     document.getElementById('mb-ext-import-btn').style.display = 'none';
 
-    var base64, sendMime;
-    try {
-      var c = await CC.compressImage(file, 1280, 0.75);
-      base64 = c.dataUrl; sendMime = c.mimeType;
-    } catch (e) {
-      document.getElementById('mb-ext-status').textContent = '❌ Could not read image (' + (e.message || 'unknown error') + ').';
+    var totalItems = 0, totalSections = 0, totalErrors = 0;
+    var combinedCategories = [];
+    var pSel = document.getElementById('mb-ext-provider');
+    var prov = pSel ? pSel.value : '';
+
+    for (var fi = 0; fi < files.length; fi++) {
+      var file = files[fi];
+      var fileNum = fi + 1;
+      var fileTotal = files.length;
+      var fileStatus = fileTotal > 1 ? '  [File ' + fileNum + '/' + fileTotal + ']' : '';
+
+      document.getElementById('mb-ext-status').textContent = '⏳ AI is reading' + (fileTotal > 1 ? ' file ' + fileNum + '...' : ' your menu...') + ' (' + (fi + 1) + '/' + files.length + ')';
+
+      var base64, sendMime;
+      try {
+        if (file.type === 'application/pdf') {
+          // For PDFs, send as-is
+          var reader = new FileReader();
+          reader.readAsArrayBuffer(file);
+          await new Promise(function(resolve) { reader.onload = function() {
+            base64 = 'data:' + file.type + ';base64,' + btoa(String.fromCharCode.apply(null, new Uint8Array(reader.result)));
+            sendMime = file.type;
+            resolve();
+          }; });
+        } else {
+          // Compress images
+          var c = await CC.compressImage(file, 1280, 0.75);
+          base64 = c.dataUrl; sendMime = c.mimeType;
+        }
+      } catch (e) {
+        document.getElementById('mb-ext-status').textContent = '❌ File ' + fileNum + ': Could not read (' + (e.message || 'unknown error') + ').';
+        totalErrors++;
+        continue;
+      }
+
+      try {
+        console.log('[menu-scan] POST /api/dashboard/menu/extract file=' + file.name + ' provider=' + (prov || 'auto') + ' mime=' + sendMime);
+        var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ image_base64: base64, mime_type: sendMime, provider: prov || undefined })
+        });
+        var rawText = await res.text();
+        console.log('[menu-scan] file=' + file.name + ' status=' + res.status + ' body=' + rawText.slice(0, 400));
+        var data;
+        try { data = JSON.parse(rawText); }
+        catch (_) { data = { error: 'Non-JSON response: ' + rawText.slice(0, 120) }; }
+        if (!res.ok) {
+          console.warn('[menu-scan] File ' + fileNum + ' extraction failed:', data.error);
+          totalErrors++;
+          continue;
+        }
+
+        // Merge categories from this file
+        (data.categories || []).forEach(function(cat) {
+          var existing = combinedCategories.find(function(c) { return c.name.toLowerCase() === (cat.name || '').toLowerCase(); });
+          if (existing) {
+            existing.items = (existing.items || []).concat(cat.items || []);
+          } else {
+            combinedCategories.push(cat);
+          }
+        });
+
+        var fileItemCount = (data.categories||[]).reduce(function(s,c){return s+(c.items||[]).length;},0);
+        totalItems += fileItemCount;
+        totalSections += (data.categories||[]).length;
+      } catch(e) {
+        console.error('[menu-scan] network error on file', fileNum, e);
+        totalErrors++;
+      }
+    }
+
+    if (totalItems === 0) {
+      document.getElementById('mb-ext-status').textContent = '❌ No items found. Try a clearer photo or different menu.';
       document.getElementById('mb-ext-scan-btn').style.display = '';
       return;
     }
 
-    try {
-      var pSel = document.getElementById('mb-ext-provider');
-      var prov = pSel ? pSel.value : '';
-      console.log('[menu-scan] POST /api/dashboard/menu/extract provider=' + (prov || 'auto') + ' mime=' + sendMime + ' b64_len=' + (base64 ? base64.length : 0));
-      var res = await fetch(API_BASE + '/api/dashboard/menu/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-        body: JSON.stringify({ image_base64: base64, mime_type: sendMime, provider: prov || undefined })
-      });
-      var rawText = await res.text();
-      console.log('[menu-scan] status=' + res.status + ' body=' + rawText.slice(0, 400));
-      var data;
-      try { data = JSON.parse(rawText); }
-      catch (_) { data = { error: 'Non-JSON response: ' + rawText.slice(0, 120) }; }
-      if (!res.ok) {
-        document.getElementById('mb-ext-status').textContent = '❌ ' + res.status + ': ' + (data.error || 'Extraction failed');
-        document.getElementById('mb-ext-scan-btn').style.display = '';
-        return;
-      }
-      _mbExtracted = data;
-      var total = (data.categories||[]).reduce(function(s,c){return s+(c.items||[]).length;},0);
-      document.getElementById('mb-ext-status').textContent = '✅ Found ' + total + ' items across ' + (data.categories||[]).length + ' sections — review below then click Import.';
-      mbRenderExtractPreview();
-      document.getElementById('mb-ext-results').style.display = '';
-      document.getElementById('mb-ext-import-btn').style.display = '';
-    } catch(e) {
-      console.error('[menu-scan] network error', e);
-      document.getElementById('mb-ext-status').textContent = '❌ Network error: ' + (e.message || e);
-      document.getElementById('mb-ext-scan-btn').style.display = '';
-    }
+    _mbExtracted = { categories: combinedCategories };
+    var msg = '✅ Found ' + totalItems + ' items across ' + totalSections + ' sections';
+    if (totalErrors) msg += ' (' + totalErrors + ' file(s) had issues)';
+    msg += ' — review below then click Import.';
+    document.getElementById('mb-ext-status').textContent = msg;
+    mbRenderExtractPreview();
+    document.getElementById('mb-ext-results').style.display = '';
+    document.getElementById('mb-ext-import-btn').style.display = '';
   }
 
   function mbRenderExtractPreview() {
