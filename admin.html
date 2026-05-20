@@ -14682,23 +14682,37 @@
     for (var ci = 0; ci < _mbExtracted.categories.length; ci++) {
       var cat = _mbExtracted.categories[ci];
       var catName = (cat.name||'Menu Items').trim();
-      if (!_mbCats.find(function(c){return c.name===catName;})) _mbCats.push({name:catName});
+      var section = _mbCats.find(function(c){return c.name===catName;});
+      var sectionId = section ? section.id : null;
+
       var items = cat.items||[];
       var sectionMods = Array.isArray(cat.section_modifiers) ? cat.section_modifiers : [];
       for (var ii = 0; ii < items.length; ii++) {
         var item = items[ii];
         var itemMods = Array.isArray(item.modifiers) ? item.modifiers : [];
         var mods = itemMods.concat(sectionMods).map(function(m){ return { name: String(m.name||'').trim(), price: parseFloat(m.price)||0 }; }).filter(function(m){ return m.name; });
-        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, category: catName, description: item.description||'', tags: item.tags||[], modifiers: mods, site_id: _mbSiteId, entity_id: _mbSiteId, entity_slug: _mbSlug, sort_order: ii };
+        var payload = { name: item.name||'Item', price: parseFloat(item.price)||0, description: item.description||'', tags: item.tags||[], modifiers: mods };
+
+        // If no section exists yet, can't import (need to create section first)
+        if (!sectionId) {
+          console.warn('[menu-import] Section "' + catName + '" not found, skipping items');
+          errors++;
+          continue;
+        }
+
         try {
-          var res = await fetch(API_BASE + '/api/dashboard/menu-items', {
+          var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify(payload)
           });
-          if (res.ok) { var created = await res.json(); _mbItems.push(Object.assign({id:created.id},payload)); total++; }
+          if (res.ok) {
+            var created = await res.json();
+            _mbItems.push(Object.assign({id:created.id, section_id: sectionId, category: catName}, payload));
+            total++;
+          }
           else errors++;
-        } catch(e) { errors++; }
+        } catch(e) { console.error('[menu-import] error:', e); errors++; }
       }
     }
     mbCloseModal('mb-modal-extract');
