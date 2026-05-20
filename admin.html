@@ -3377,12 +3377,13 @@
         </div>
 
         <!-- Filter Tabs -->
-        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
           <button class="ts-filter-btn active" onclick="filterTSByStatus('all',this)">All</button>
           <button class="ts-filter-btn" onclick="filterTSByStatus('active',this)">✅ On TripSwipe</button>
           <button class="ts-filter-btn" onclick="filterTSByStatus('inactive',this)">🚫 Off</button>
           <button class="ts-filter-btn" onclick="filterTSByStatus('custom-img',this)">🖼️ Custom Image</button>
           <button class="ts-filter-btn" onclick="filterTSByStatus('no-img',this)">⚠️ No Image</button>
+          <button id="ts-bulk-off-btn" onclick="tsBulkOffNoImages()" style="display:none;margin-left:auto;background:#ef4444;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Turn All Off</button>
         </div>
 
         <!-- Business Grid -->
@@ -15280,7 +15281,26 @@
       document.querySelectorAll('.ts-filter-btn').forEach(function(b){ b.classList.remove('active'); });
       btn.classList.add('active');
       _tsCurrentFilter = status;
+      document.getElementById('ts-bulk-off-btn').style.display = status === 'no-img' ? 'block' : 'none';
       renderTSGrid(_tsAllBusinesses);
+    }
+
+    async function tsBulkOffNoImages() {
+      var noImgBusinesses = _tsAllBusinesses.filter(function(b){
+        return !b.hero_image_url || b.hero_image_url.trim() === '';
+      });
+      if (!noImgBusinesses.length) { toast('No businesses without images', 'info'); return; }
+      var count = 0;
+      for (var b of noImgBusinesses) {
+        if ((_tsSettings[b.slug] || {}).enabled !== false) {
+          if (!_tsSettings[b.slug]) _tsSettings[b.slug] = {};
+          _tsSettings[b.slug].enabled = false;
+          await tsSaveSettings(b.slug);
+          count++;
+        }
+      }
+      renderTSGrid(_tsAllBusinesses);
+      toast('✅ Turned off ' + count + ' business(es) without images', 'success');
     }
 
     async function tsQuickToggle(slug, btn) {
