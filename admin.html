@@ -7431,6 +7431,20 @@
     async function addPhotoByUrl() {
       var url = document.getElementById('be-photo-url').value.trim();
       if (!url) return;
+
+      if (!/^https?:\/\//.test(url)) {
+        toast('URL must start with http:// or https://', 'error');
+        return;
+      }
+
+      var validExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+      var urlLower = url.toLowerCase();
+      var hasValidExt = validExts.some(function(ext) { return urlLower.endsWith(ext); });
+      if (!hasValidExt) {
+        toast('URL must be an image file (.jpg, .png, .gif, .webp)', 'error');
+        return;
+      }
+
       var token = getAuthToken();
       try {
         await fetch(API_BASE + '/api/dashboard/gallery', {
@@ -7444,6 +7458,7 @@
     }
 
     async function deletePhoto(id, btn) {
+      if (!confirm('Delete this photo?')) return;
       var token = getAuthToken();
       try {
         await fetch(API_BASE + '/api/dashboard/gallery/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
