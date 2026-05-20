@@ -4129,6 +4129,7 @@
               </select>
               <button id="aichat-voice-btn" onclick="toggleAichatVoiceReply()" title="Speak replies" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">🔇</button>
               <button id="aichat-wake-btn" onclick="toggleAichatWakeWord()" title="Hey — wake word" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">👂</button>
+              <button onclick="aichatShowHistory()" title="Load past conversations" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">📚</button>
               <button onclick="aichatClear()" title="Clear chat" style="padding:6px 10px;background:var(--card-border);color:var(--text-muted);border:none;border-radius:8px;cursor:pointer;font-size:14px;">🗑</button>
             </div>
           </div>
@@ -7873,9 +7874,10 @@
         });
         for (var i = 0; i < allItems.length; i++) {
           var item = allItems[i];
-          var r = await fetch(API_BASE + '/api/dashboard/menu-items', {
+          var endpoint = item.item_type === 'drink' ? '/api/admin/gcr/entities/' + siteId + '/drink-items' : '/api/admin/gcr/entities/' + siteId + '/menu-items';
+          var r = await fetch(API_BASE + endpoint, {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-            body: JSON.stringify({ ...item, site_id: siteId })
+            body: JSON.stringify(item)
           });
           if (r.ok) saved.push(item.item_type === 'drink' ? 'drink' : 'menu item'); else errors.push('menu item');
         }
@@ -7883,9 +7885,9 @@
         var specials = _aoResult.specials || [];
         for (var j = 0; j < specials.length; j++) {
           var sp = specials[j];
-          var r2 = await fetch(API_BASE + '/api/dashboard/specials', {
+          var r2 = await fetch(API_BASE + '/api/admin/gcr/specials', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-            body: JSON.stringify({ special_name: sp.special_name||sp.name, discount_text: sp.discount_text||'', description: sp.description||'', days: sp.days||'', start_time: sp.start_time||null, end_time: sp.end_time||null, site_id: siteId })
+            body: JSON.stringify({ entity_id: siteId, special_name: sp.special_name||sp.name, discount_text: sp.discount_text||'', description: sp.description||'', days: sp.days||'', start_time: sp.start_time||null, end_time: sp.end_time||null })
           });
           if (r2.ok) saved.push('special'); else errors.push('special');
         }
@@ -14175,16 +14177,33 @@
     if (!_mbSiteId) return;
 
     try {
-      var res = await fetch(API_BASE + '/api/dashboard/menu-items?entity_id=' + encodeURIComponent(_mbSiteId), {
+      // Use slug to fetch from cybercheck-api
+      var slug = _mbSlug || _mbSiteId;
+      var res = await fetch(API_BASE + '/api/gcr/entity/' + encodeURIComponent(slug), {
         headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
-      _mbItems = res.ok ? await res.json() : [];
+      if (!res.ok) {
+        document.getElementById('mb-empty').textContent = 'Failed to load menu.';
+        return;
+      }
+      var data = await res.json();
 
-      // Derive categories
-      var seen = {};
-      _mbItems.forEach(function(i) {
-        var c = i.category || 'Uncategorized';
-        if (!seen[c]) { seen[c] = true; _mbCats.push({ name: c }); }
+      // Extract menu sections and items from the response
+      var sections = (data.menu && data.menu.sections) || [];
+      var items = (data.menu && data.menu.items) || [];
+
+      // Build categories from sections and attach sectionId to items
+      _mbCats = sections.map(function(s) {
+        return { id: s.id, name: s.name || 'Untitled', description: s.description };
+      });
+
+      // Attach sectionId to items for later use
+      _mbItems = items.map(function(item) {
+        var section = sections.find(function(s) { return s.id === item.section_id; });
+        return Object.assign({}, item, {
+          category: section ? section.name : 'Uncategorized',
+          section_id: item.section_id
+        });
       });
 
       mbRenderMenu();
@@ -14285,24 +14304,31 @@
     if (!name) { toast('Name required', 'error'); return; }
     var oldName = document.getElementById('mb-cat-old').value;
     if (oldName && oldName !== name) {
-      var toRename = _mbItems.filter(function(i) { return (i.category||'Uncategorized') === oldName; });
-      var promises = toRename.map(function(item) {
-        return fetch(API_BASE + '/api/dashboard/menu-items/' + item.id, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-          body: JSON.stringify({ category: name, site_id: _mbSiteId })
-        });
-      });
-      Promise.all(promises).then(function() {
-        _mbItems.forEach(function(i) { if ((i.category||'Uncategorized') === oldName) i.category = name; });
-        var c = _mbCats.find(function(c) { return c.name === oldName; });
-        if (c) c.name = name;
-        mbCloseModal('mb-modal-category');
-        mbRenderMenu();
-        toast('Category renamed');
-      });
+      // Rename existing section
+      var section = _mbCats.find(function(c) { return c.name === oldName; });
+      if (!section || !section.id) { toast('Section not found', 'error'); return; }
+
+      fetch(API_BASE + '/api/admin/gcr/entities/' + encodeURIComponent(_mbSiteId) + '/sections/' + encodeURIComponent(section.id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: JSON.stringify({ name: name })
+      }).then(function(res) {
+        if (res.ok) {
+          _mbItems.forEach(function(i) { if (i.category === oldName) i.category = name; });
+          section.name = name;
+          mbCloseModal('mb-modal-category');
+          mbRenderMenu();
+          toast('Category renamed');
+        } else {
+          toast('Failed to rename category', 'error');
+        }
+      }).catch(function(e) { toast('Request failed: ' + e.message, 'error'); });
     } else if (!oldName) {
-      if (!_mbCats.find(function(c) { return c.name === name; })) _mbCats.push({ name: name });
+      // Create new section - for now just add to list locally
+      // In a full implementation, this would POST to /api/admin/gcr/entities/:id/sections
+      if (!_mbCats.find(function(c) { return c.name === name; })) {
+        _mbCats.push({ name: name, id: 'temp_' + Date.now() });
+      }
       mbCloseModal('mb-modal-category');
       mbRenderMenu();
       toast('Category added');
@@ -14313,13 +14339,16 @@
 
   function mbDeleteCategory(name) {
     if (!confirm('Delete "' + name + '" and all its items?')) return;
-    var toDelete = _mbItems.filter(function(i) { return (i.category||'Uncategorized') === name; });
+    var section = _mbCats.find(function(c) { return c.name === name; });
+    if (!section || !section.id) { toast('Section not found', 'error'); return; }
+
+    var toDelete = _mbItems.filter(function(i) { return i.category === name; });
     Promise.all(toDelete.map(function(item) {
-      return fetch(API_BASE + '/api/dashboard/menu-items/' + item.id + '?site_id=' + encodeURIComponent(_mbSiteId), {
+      return fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(item.id), {
         method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
     })).then(function() {
-      _mbItems = _mbItems.filter(function(i) { return (i.category||'Uncategorized') !== name; });
+      _mbItems = _mbItems.filter(function(i) { return i.category !== name; });
       _mbCats  = _mbCats.filter(function(c) { return c.name !== name; });
       mbRenderMenu();
       toast('Category deleted');
@@ -14370,49 +14399,64 @@
     if (!name) { toast('Name required', 'error'); return; }
     if (isNaN(price) || price < 0) { toast('Valid price required', 'error'); return; }
 
+    var existingId = document.getElementById('mb-item-id').value;
+    var existingItem = existingId ? _mbItems.find(function(i) { return String(i.id) === String(existingId); }) : null;
+    var sectionId = existingItem ? existingItem.section_id : null;
+
+    // If no sectionId, try to find the section by category name
+    if (!sectionId) {
+      var section = _mbCats.find(function(c) { return c.name === cat; });
+      sectionId = section ? section.id : null;
+    }
+
+    if (!sectionId) { toast('Category/section not found', 'error'); return; }
+
     var payload = {
-      name: name, price: price, category: cat,
+      name: name,
+      price: price,
       description: document.getElementById('mb-item-desc').value.trim(),
       tags: document.getElementById('mb-item-tags').value.split(',').map(function(t){return t.trim();}).filter(Boolean),
-      photo_url: document.getElementById('mb-item-photo').value.trim() || null,
-      site_id: _mbSiteId, sort_order: 0
+      photo_url: document.getElementById('mb-item-photo').value.trim() || null
     };
 
-    var id = document.getElementById('mb-item-id').value;
     try {
       var res;
-      if (id) {
-        res = await fetch(API_BASE + '/api/dashboard/menu-items/' + id, {
+      if (existingId) {
+        // Update existing item
+        res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items/' + encodeURIComponent(existingId), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(payload)
         });
       } else {
-        res = await fetch(API_BASE + '/api/dashboard/menu-items', {
+        // Create new item in section
+        res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(payload)
         });
       }
-      if (!res.ok) { toast('Save failed', 'error'); return; }
+      if (!res.ok) { toast('Save failed: ' + res.status, 'error'); return; }
       var saved = await res.json();
-      if (id) {
-        var existing = _mbItems.find(function(i) { return String(i.id) === String(id); });
+      if (existingId) {
+        var existing = _mbItems.find(function(i) { return String(i.id) === String(existingId); });
         if (existing) Object.assign(existing, payload);
       } else {
-        if (!_mbCats.find(function(c) { return c.name === cat; })) _mbCats.push({ name: cat });
-        _mbItems.push(Object.assign({ id: saved.id }, payload));
+        _mbItems.push(Object.assign({ id: saved.id, section_id: sectionId, category: cat }, payload));
       }
       mbCloseModal('mb-modal-item');
       mbRenderMenu();
-      toast(id ? 'Item updated' : 'Item added', 'success');
-    } catch(e) { toast('Request failed', 'error'); }
+      toast(existingId ? 'Item updated' : 'Item added', 'success');
+    } catch(e) { toast('Request failed: ' + e.message, 'error'); }
   }
 
   async function mbDeleteItem(id) {
     if (!confirm('Delete this item?')) return;
     try {
-      var res = await fetch(API_BASE + '/api/dashboard/menu-items/' + id + '?site_id=' + encodeURIComponent(_mbSiteId), {
+      var item = _mbItems.find(function(i) { return String(i.id) === String(id); });
+      if (!item || !item.section_id) { toast('Item or section not found', 'error'); return; }
+
+      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(id), {
         method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
       if (res.ok) {
@@ -14420,7 +14464,7 @@
         mbRenderMenu();
         toast('Item deleted');
       }
-    } catch(e) {}
+    } catch(e) { toast('Delete failed: ' + e.message, 'error'); }
   }
 
   // ── AI Extraction ──
@@ -16696,9 +16740,74 @@
         });
       });
       if (_aichatVoiceReply) _aichatSpeak(reply);
+
+      // Auto-save conversation
+      aichatAutoSave();
     } catch(e) {
       statusDiv.innerHTML = '<span style="color:#fca5a5;">Error: ' + e.message + '</span>';
     }
+  }
+
+  // Auto-save conversation to database (called after each AI response)
+  async function aichatAutoSave() {
+    try {
+      var token = getAuthToken();
+      if (!token) return;
+      await fetch(API_BASE + '/api/admin/ai-chat-history/save', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: _aichatHistory,
+          title: 'AI Chat - ' + new Date().toLocaleDateString()
+        })
+      });
+    } catch(e) { console.error('Auto-save failed:', e.message); }
+  }
+
+  // Load past conversation from history
+  async function aichatLoadConversation(conversationId) {
+    try {
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/admin/ai-chat-history/' + conversationId, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      var d = await res.json();
+      if (d.conversation) {
+        _aichatHistory = d.conversation.messages || [];
+        document.getElementById('aichat-messages').innerHTML = '';
+        _aichatHistory.forEach(function(msg) {
+          aichatAppend(msg.role, msg.content.replace(/\n/g, '<br>'));
+        });
+        toast('Conversation loaded', 'success');
+      }
+    } catch(e) { toast('Failed to load conversation: ' + e.message, 'error'); }
+  }
+
+  // Show past conversations list
+  async function aichatShowHistory() {
+    try {
+      var token = getAuthToken();
+      var res = await fetch(API_BASE + '/api/admin/ai-chat-history', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      var d = await res.json();
+      var conversations = d.conversations || [];
+
+      var html = '<div style="padding:16px;"><h3>📚 Conversation History</h3><div style="display:grid;gap:8px;margin-top:12px;">';
+      conversations.forEach(function(conv) {
+        html += '<div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;cursor:pointer;" onclick="aichatLoadConversation(\'' + conv.id + '\')">' +
+          '<div style="font-weight:600;color:#fff;">' + (conv.title || 'Chat') + '</div>' +
+          '<div style="font-size:12px;color:#94a3b8;margin-top:4px;">' + new Date(conv.updated_at).toLocaleDateString() + '</div>' +
+          '</div>';
+      });
+      html += '</div></div>';
+
+      var modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML = '<div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:70vh;overflow-y:auto;">' + html + '</div>';
+      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    } catch(e) { toast('Failed to load history: ' + e.message, 'error'); }
   }
 
   function _aichatSpeak(text) {
