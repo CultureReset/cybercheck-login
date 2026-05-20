@@ -13018,13 +13018,26 @@
 
     function filterQRMenus() {
       var q = (document.getElementById('qr-menu-search') || {}).value || '';
+      var el = document.getElementById('qr-menus-list');
+
+      // If list is empty, try loading first
+      if (!_allQRMenus.length) {
+        console.log('QR Menus not loaded yet, loading now...');
+        loadQRMenus().then(function() {
+          // Recursively call filter again after load
+          filterQRMenus();
+        });
+        return;
+      }
+
       var filtered = _allQRMenus.filter(function(e) {
-        return !q || (e.name || '').toLowerCase().includes(q.toLowerCase());
+        return !q || (e.name || '').toLowerCase().includes(q.toLowerCase()) || (e.slug || '').toLowerCase().includes(q.toLowerCase());
       });
 
-      var el = document.getElementById('qr-menus-list');
+      console.log('Search term:', q, 'Total businesses:', _allQRMenus.length, 'Filtered:', filtered.length);
+
       if (!filtered.length) {
-        el.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No matches found.</p>';
+        el.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:12px;">0 restaurants</div><p style="color:var(--text-muted);font-size:14px;">No matches found for "' + escHtml(q) + '"</p>';
         return;
       }
 
@@ -14048,7 +14061,7 @@
         }
         return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #334155;background:#1e293b;transition:.1s;user-select:none;" ' +
           'onmouseover="this.style.background=\'#273548\'" onmouseout="this.style.background=\'#1e293b\'" ' +
-          'onmousedown="event.preventDefault(); mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
+          'onclick="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
           '<span>' + displayName + '</span>' +
           (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
           '</div>';
