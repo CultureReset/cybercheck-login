@@ -13038,12 +13038,13 @@
       var rows = items.map(function(biz, idx) {
         var isSite = biz._url_type === 'site_id';
         var siteId = biz.site_id || '';
+        var bizSlug = biz.slug || '';
         var nameSlug = String(biz.name || '').toLowerCase().trim()
           .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')
           .replace(/^-|-$/g, '') || 'business';
         var qrUrl = isSite
           ? 'https://cybercheck-links.vercel.app/' + nameSlug + '/menu?site_id=' + encodeURIComponent(siteId)
-          : 'https://cybercheck-links.vercel.app/' + encodeURIComponent(biz.slug || nameSlug) + '/menu';
+          : 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(bizSlug || nameSlug);
         var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(qrUrl);
         var safeName = (biz.name||'').replace(/\'/g,"\\'");
         var typeBadge = isSite
@@ -13060,11 +13061,11 @@
                 typeBadge +
               '</div>' +
               '<div style="font-size:11px;font-family:monospace;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;max-width:320px;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\').then(function(){toast(\'URL copied\',\'success\')})" title="Click to copy">' + qrUrl + '</div>' +
-              // SMS send row (site_id only)
-              (isSite ? '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;">' +
-                '<input type="tel" id="qrm-phone-' + idx + '" placeholder="+1 850 555 0000" style="padding:5px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;width:160px;">' +
-                '<button class="btn btn-outline" style="font-size:12px;padding:5px 12px;" onclick="qrMenusSendSMS(\'' + siteId + '\',\'' + safeName + '\',' + idx + ')">📱 Send SMS</button>' +
-              '</div>' : '') +
+              // PIN + Edit Link row
+              '<div style="margin-top:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+                '<input type="text" id="qrm-pin-' + idx + '" placeholder="PIN for edits" style="padding:5px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:12px;width:120px;">' +
+                '<button class="btn btn-outline" style="font-size:12px;padding:5px 12px;" onclick="generateQREditLink(\'' + (bizSlug || nameSlug) + '\',\'' + safeName + '\',' + idx + ')">🔗 Edit Link</button>' +
+              '</div>' +
             '</div>' +
           '</div>' +
           // Action buttons
@@ -13073,7 +13074,6 @@
             '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="navigator.clipboard.writeText(\'' + qrUrl + '\').then(function(){toast(\'Copied!\',\'success\')})">📋 Copy URL</button>' +
             (isSite ? '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="qrMenusEditMenu(\'' + siteId + '\')">✏️ Edit Menu</button>' : '') +
             '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" onclick="qrMenusOpenPrint(\'' + encodeURIComponent(qrUrl) + '\',\'' + safeName + '\')">🖨 Print QR</button>' +
-            '<button class="btn btn-outline" style="font-size:12px;padding:7px 12px;" id="gen-link-' + idx + '" onclick="generateEditLink(\'' + (isSite ? siteId : (biz.id||'')) + '\',\'' + safeName + '\',' + idx + ',' + (isSite ? 'true' : 'false') + ')">🔗 Edit Link</button>' +
           '</div>' +
           '<div id="edit-link-result-' + idx + '"></div>' +
         '</div>';
@@ -13117,6 +13117,28 @@
         else if (d.url) { navigator.clipboard.writeText(d.url); toast('SMS not configured — link copied to clipboard', 'success'); }
         else toast(d.error || 'Failed', 'error');
       } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    function generateQREditLink(slug, name, idx) {
+      var pinEl = document.getElementById('qrm-pin-' + idx);
+      var pin = (pinEl || {}).value || '';
+      var resultEl = document.getElementById('edit-link-result-' + idx);
+
+      if (!pin) {
+        toast('Please enter a PIN for this business', 'error');
+        return;
+      }
+
+      var editUrl = 'https://cybercheck-links.vercel.app/daily-menu.html?slug=' + encodeURIComponent(slug) + '&pin=' + encodeURIComponent(pin);
+
+      resultEl.innerHTML = '<div style="background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:12px;margin-top:10px;font-size:12px;">' +
+        '<div style="font-weight:600;color:#166534;margin-bottom:8px;">✅ Edit Link Ready!</div>' +
+        '<div style="background:#fff;border:1px solid #86efac;border-radius:4px;padding:8px 10px;font-family:monospace;font-size:11px;word-break:break-all;margin-bottom:8px;line-height:1.4;">' + editUrl + '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button style="flex:1;padding:6px 10px;background:#16a34a;color:#fff;border:none;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;" onclick="navigator.clipboard.writeText(\'' + editUrl + '\');toast(\'Link copied!\',\'success\');">📋 Copy Link</button>' +
+          '<button style="flex:1;padding:6px 10px;background:#0ea5e9;color:#fff;border:none;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;" onclick="window.open(\'' + editUrl + '\',\'_blank\');">🌐 Test Link</button>' +
+        '</div>' +
+      '</div>';
     }
 
     async function generateEditLink(id, name, idx, isSite) {
