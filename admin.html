@@ -595,6 +595,7 @@
             <button onclick="switchEntTab('sections')" id="enttab-sections" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">Sections</button>
             <button onclick="switchEntTab('pages')"    id="enttab-pages"    style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📍 Pages</button>
             <button onclick="switchEntTab('wavegent')" id="enttab-wavegent" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🎨 Wavegent</button>
+            <button onclick="switchEntTab('rawdata')" id="enttab-rawdata" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📥 Raw Data</button>
           </div>
 
           <div style="padding:28px;" id="ent-editor-body">
@@ -783,6 +784,35 @@
                   onkeydown="if(event.key==='Enter')wgSend()">
                 <button onclick="wgSend()" class="btn btn-primary" id="wg-send-btn" style="flex-shrink:0;">Apply ✨</button>
               </div>
+            </div>
+
+            <!-- RAW DATA TAB -->
+            <div id="enttab-rawdata-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Paste raw menu data, happy hour details, specials, or events. The AI will parse and add it to the database.</p>
+
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">Data Type</label>
+                <select id="raw-data-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                  <option value="menu">🍽️ Menu Items</option>
+                  <option value="drinks">🍷 Drinks</option>
+                  <option value="happy_hour">🍺 Happy Hour</option>
+                  <option value="specials">⭐ Specials</option>
+                  <option value="events">📅 Events</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">Raw Data (paste CSV, JSON, or text)</label>
+                <textarea id="raw-data-input" placeholder="Paste raw data here. Examples:&#10;- CSV: Name,Price,Description&#10;- JSON: [{name:..., price:...}]&#10;- Text: Burger $12, Fries $5..."
+                  style="width:100%;height:200px;padding:12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
+              </div>
+
+              <div style="display:flex;gap:10px;">
+                <button onclick="processRawData()" class="btn btn-primary" style="flex:1;">✨ Process with AI</button>
+                <button onclick="document.getElementById('raw-data-input').value=''" class="btn btn-outline" style="flex:1;">Clear</button>
+              </div>
+
+              <div id="raw-data-result" style="margin-top:16px;display:none;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px;"></div>
             </div>
 
           </div>
@@ -17438,6 +17468,117 @@
     };
   });
   // ── End App Manager ───────────────────────────────────────────
+
+  // ── Raw Data Processing ───────────────────────────────────────
+  async function processRawData() {
+    const dataType = document.getElementById('raw-data-type').value;
+    const rawData = document.getElementById('raw-data-input').value.trim();
+
+    if (!rawData) {
+      toast('Please paste some data first', 'error');
+      return;
+    }
+
+    if (!currentEntityId) {
+      toast('No entity selected', 'error');
+      return;
+    }
+
+    const resultDiv = document.getElementById('raw-data-result');
+    resultDiv.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">Processing with AI...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+      const token = getAuthToken();
+      const response = await fetch(API_BASE + '/admin/gcr/parse-raw-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          entity_id: currentEntityId,
+          data_type: dataType,
+          raw_data: rawData
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        resultDiv.innerHTML = '<div style="color:var(--danger);padding:12px;background:rgba(239,68,68,0.1);border-radius:8px;"><strong>Error:</strong> ' + escHtml(result.error) + '</div>';
+        return;
+      }
+
+      // Display results
+      if (result.parsed_items && result.parsed_items.length > 0) {
+        let html = '<div><strong style="color:var(--primary);">✅ ' + result.parsed_items.length + ' items processed</strong></div>';
+        html += '<div style="margin-top:8px;font-size:12px;color:var(--text-muted);max-height:300px;overflow-y:auto;">';
+        html += result.parsed_items.map(item =>
+          '<div style="padding:6px 0;border-bottom:1px solid var(--card-border);">' +
+          (item.item_name || item.name || 'Unnamed') + ' — $' + (item.price || '?') +
+          (item.description ? ' <em>(' + item.description.substring(0, 40) + '...)</em>' : '') +
+          '</div>'
+        ).join('');
+        html += '</div>';
+        html += '<div style="margin-top:12px;display:flex;gap:8px;">' +
+                '<button onclick="confirmRawDataSave()" class="btn btn-primary" style="flex:1;">Save All</button>' +
+                '<button onclick="document.getElementById(\'raw-data-result\').style.display=\'none\'" class="btn btn-outline" style="flex:1;">Cancel</button>' +
+                '</div>';
+        resultDiv.innerHTML = html;
+
+        // Store parsed items for saving
+        window.parsedRawItems = result.parsed_items;
+        window.parsedDataType = dataType;
+      } else {
+        resultDiv.innerHTML = '<div style="color:var(--text-muted);padding:12px;">No items parsed. Try a different format.</div>';
+      }
+    } catch (err) {
+      resultDiv.innerHTML = '<div style="color:var(--danger);">Error: ' + err.message + '</div>';
+    }
+  }
+
+  async function confirmRawDataSave() {
+    if (!window.parsedRawItems || !window.parsedRawItems.length) {
+      toast('No items to save', 'error');
+      return;
+    }
+
+    const token = getAuthToken();
+    const dataType = window.parsedDataType;
+
+    try {
+      const response = await fetch(API_BASE + '/admin/gcr/save-parsed-items', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          entity_id: currentEntityId,
+          data_type: dataType,
+          items: window.parsedRawItems
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        toast(result.error, 'error');
+        return;
+      }
+
+      toast(result.saved + ' items saved successfully', 'success');
+      document.getElementById('raw-data-input').value = '';
+      document.getElementById('raw-data-result').style.display = 'none';
+
+      // Reload entity data
+      loadEntity(currentEntityId);
+    } catch (err) {
+      toast('Save failed: ' + err.message, 'error');
+    }
+  }
+  // ── End Raw Data Processing ───────────────────────────────────
   </script>
 
 </body>
