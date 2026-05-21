@@ -2176,6 +2176,53 @@
           </div>
         </div>
 
+        <!-- Location ID Manager (for trackable home page QR codes) -->
+        <div class="card" style="padding:20px;margin-bottom:16px;border:1px solid #4ade80;background:rgba(74,222,128,0.05);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h3 style="margin:0;">🎯 GCR Home Page QR IDs</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin:4px 0 0;">Manage location mappings for trackable QR codes pointing to <strong>https://gulfcoastradar.com?id=X</strong></p>
+            </div>
+            <button class="btn btn-primary" style="font-size:13px;" onclick="openAddQRLocation()">+ Add Location</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;" id="qr-locations-grid">
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;grid-column:1/-1;">Loading locations...</div>
+          </div>
+        </div>
+
+        <!-- Add/Edit Location Modal -->
+        <div id="qr-location-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px;">
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:12px;max-width:450px;margin:40px auto;padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <h3 id="qr-loc-title" style="margin:0;">Add Location</h3>
+              <button onclick="closeQRLocationModal()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:0 4px;">&times;</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:16px;">
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;">QR ID</label>
+                <input type="number" id="qr-loc-id" min="1" max="9999" placeholder="1-9999" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Location Name</label>
+                <input type="text" id="qr-loc-name" placeholder="e.g. Downtown Cafe, Hotel Beachside" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+              </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Notes (optional)</label>
+              <textarea id="qr-loc-notes" rows="2" placeholder="e.g. Door sticker, moved to pier in July..." style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="saveQRLocation()" id="qr-loc-save-btn" style="flex:1;font-size:13px;padding:9px;">Save</button>
+              <button class="btn btn-outline" onclick="closeQRLocationModal()" style="flex:1;font-size:13px;padding:9px;">Cancel</button>
+              <button class="btn btn-outline" id="qr-loc-delete-btn" style="display:none;background:rgba(239,68,68,0.1);color:#ef4444;border-color:#ef4444;font-size:13px;padding:9px;" onclick="deleteQRLocation()">Delete</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Filter + Table -->
         <div class="card" style="padding:20px;">
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
@@ -12623,6 +12670,7 @@
     async function loadQRCodes() {
       var wrap = document.getElementById('qr-table-wrap');
       if (wrap) wrap.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">Loading...</p>';
+      loadQRLocations();
       try {
         var res = await fetch(API_BASE + '/api/qr', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         _allQRCodes = res.ok ? await res.json() : [];
@@ -12698,6 +12746,144 @@
           '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Status</th>' +
           '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Actions</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+
+    var _qrLocations = {};
+    var _editingQRLocationId = null;
+
+    async function loadQRLocations() {
+      try {
+        var res = await fetch(API_BASE + '/api/qr/locations', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        _qrLocations = res.ok ? await res.json() : {};
+      } catch(e) {
+        console.warn('Failed to load QR locations:', e);
+        _qrLocations = {};
+      }
+      renderQRLocationsGrid();
+    }
+
+    function renderQRLocationsGrid() {
+      var grid = document.getElementById('qr-locations-grid');
+      if (!grid) return;
+
+      var ids = Object.keys(_qrLocations).map(function(k){ return parseInt(k); }).sort(function(a,b){ return a-b; });
+
+      if (!ids.length) {
+        grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;grid-column:1/-1;">No locations yet. Add one to get started.</div>';
+        return;
+      }
+
+      grid.innerHTML = ids.map(function(id) {
+        var loc = _qrLocations[id];
+        return '<div style="border:1px solid var(--card-border);border-radius:8px;padding:12px;background:var(--bg);">' +
+          '<div style="font-weight:700;font-size:16px;color:#4ade80;margin-bottom:4px;">ID: ' + id + '</div>' +
+          '<div style="font-size:13px;color:var(--text);margin-bottom:2px;">' + escHtml(loc.name||'Unnamed') + '</div>' +
+          (loc.notes ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;max-height:40px;overflow:hidden;">' + escHtml(loc.notes) + '</div>' : '') +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button onclick="editQRLocation(' + id + ')" style="flex:1;font-size:11px;padding:6px;border:1px solid var(--card-border);border-radius:4px;background:none;color:var(--text);cursor:pointer;">Edit</button>' +
+            '<button onclick="copyQRLocationUrl(' + id + ')" style="flex:1;font-size:11px;padding:6px;border:1px solid var(--card-border);border-radius:4px;background:none;color:#38bdf8;cursor:pointer;">Copy URL</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openAddQRLocation() {
+      _editingQRLocationId = null;
+      document.getElementById('qr-loc-title').textContent = 'Add Location';
+      document.getElementById('qr-loc-id').value = '';
+      document.getElementById('qr-loc-name').value = '';
+      document.getElementById('qr-loc-notes').value = '';
+      document.getElementById('qr-loc-delete-btn').style.display = 'none';
+      document.getElementById('qr-location-modal').style.display = 'block';
+      setTimeout(function(){ document.getElementById('qr-loc-id').focus(); }, 100);
+    }
+
+    function editQRLocation(id) {
+      _editingQRLocationId = id;
+      var loc = _qrLocations[id] || {};
+      document.getElementById('qr-loc-title').textContent = 'Edit Location';
+      document.getElementById('qr-loc-id').value = id;
+      document.getElementById('qr-loc-id').disabled = true;
+      document.getElementById('qr-loc-name').value = loc.name || '';
+      document.getElementById('qr-loc-notes').value = loc.notes || '';
+      document.getElementById('qr-loc-delete-btn').style.display = 'block';
+      document.getElementById('qr-location-modal').style.display = 'block';
+      setTimeout(function(){ document.getElementById('qr-loc-name').focus(); }, 100);
+    }
+
+    function closeQRLocationModal() {
+      document.getElementById('qr-location-modal').style.display = 'none';
+      document.getElementById('qr-loc-id').disabled = false;
+      _editingQRLocationId = null;
+    }
+
+    async function saveQRLocation() {
+      var id = parseInt(document.getElementById('qr-loc-id').value);
+      var name = (document.getElementById('qr-loc-name').value || '').trim();
+      var notes = (document.getElementById('qr-loc-notes').value || '').trim();
+
+      if (!id || id < 1 || id > 9999) {
+        alert('Please enter a valid ID (1-9999)');
+        return;
+      }
+      if (!name) {
+        alert('Please enter a location name');
+        return;
+      }
+
+      try {
+        var res = await fetch(API_BASE + '/api/qr/locations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getAuthToken()
+          },
+          body: JSON.stringify({ id: id, name: name, notes: notes })
+        });
+        if (!res.ok) {
+          var err = await res.json();
+          alert('Error: ' + (err.error || 'Unknown error'));
+          return;
+        }
+        _qrLocations[id] = { name: name, notes: notes };
+        closeQRLocationModal();
+        renderQRLocationsGrid();
+        toast('Location saved', 'success');
+      } catch(e) {
+        alert('Failed to save: ' + e.message);
+      }
+    }
+
+    async function deleteQRLocation() {
+      if (!_editingQRLocationId) return;
+      if (!confirm('Delete location ID ' + _editingQRLocationId + '? You can reassign this ID to another location.')) return;
+
+      try {
+        var res = await fetch(API_BASE + '/api/qr/locations/' + _editingQRLocationId, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!res.ok) {
+          var err = await res.json();
+          alert('Error: ' + (err.error || 'Unknown error'));
+          return;
+        }
+        delete _qrLocations[_editingQRLocationId];
+        closeQRLocationModal();
+        renderQRLocationsGrid();
+        toast('Location deleted', 'success');
+      } catch(e) {
+        alert('Failed to delete: ' + e.message);
+      }
+    }
+
+    function copyQRLocationUrl(id) {
+      var url = 'https://gulfcoastradar.com/home?id=' + id;
+      navigator.clipboard.writeText(url).then(function() {
+        toast('URL copied to clipboard', 'success');
+      }).catch(function() {
+        prompt('Copy this URL:', url);
+      });
     }
 
     var _currentQRCodeId = null;
