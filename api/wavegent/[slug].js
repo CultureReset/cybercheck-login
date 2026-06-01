@@ -1,4 +1,4 @@
-const API_BASE = 'https://cybercheck-api-database.vercel.app';
+const API_BASE = 'https://gcr-api-gules.vercel.app';
 
 // Simple time converter HH:MM:SS → 12h format
 function to12h(timeStr) {

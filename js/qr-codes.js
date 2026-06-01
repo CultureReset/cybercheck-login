@@ -5,7 +5,7 @@ const QRC = (() => {
   let _codes = [];
   let _editId = null;
 
-  const API = () => window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+  const API = () => window.CC_API_BASE || 'https://gcr-api-gules.vercel.app';
   const token = () => localStorage.getItem('cc_token');
 
   function headers() {

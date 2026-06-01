@@ -74,7 +74,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/></svg>
           <span>Daily SMS Links</span>
         </div>
-        <div class="nav-item" onclick="window.open('https://cybercheck-links.vercel.app/admin-menu-editors.html', '_blank')">
+        <div class="nav-item" data-page="menu-editors-hub" onclick="showPage('menu-editors-hub')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           <span>Menu Editors Hub 🎯</span>
         </div>
@@ -2479,7 +2479,7 @@
         <script>
         (function(){
           var _ctTouristId = null, _ctConvId = null, _ctHistory = [];
-          var CTAPI = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+          var CTAPI = GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app';
 
           function ctToken() { return localStorage.getItem('cc_admin_token') || ''; }
 
@@ -4268,6 +4268,154 @@
       </div>
       <!-- ── END AI CHAT PAGE ── -->
 
+      <!-- ── MENU EDITORS HUB ── -->
+      <div id="page-menu-editors-hub" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🎯 Menu Editors Hub</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Search an existing business or create a new one. Then use AI chat to add/edit menu items, specials, events, photos, and more.</div>
+        </div>
+
+        <div class="card" style="padding:24px;margin-bottom:20px;">
+          <h2 style="margin:0 0 16px;">Step 1 — Select or Create Business</h2>
+          <div style="display:grid;grid-template-columns:1fr 200px;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">Search Existing Business</label>
+              <div style="position:relative;">
+                <input type="text" id="meh-biz-search" placeholder="🔍 Search by name..." autocomplete="off"
+                  style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
+                  oninput="mehShowBizDrop()" onfocus="mehShowBizDrop()" onblur="setTimeout(function(){document.getElementById('meh-biz-drop').style.display='none'},180)">
+                <div id="meh-biz-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--card-border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;"></div>
+                <input type="hidden" id="meh-site-id">
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-primary" style="flex:1;" onclick="mehCreateNewBusiness()">+ Create New</button>
+              <div style="font-size:11px;color:var(--text-muted);text-align:center;">or create fresh</div>
+            </div>
+          </div>
+          <div id="meh-selected-biz" style="padding:12px;background:var(--bg);border-radius:6px;border:1px solid var(--card-border);color:var(--text-muted);font-size:13px;display:none;">
+            Selected: <strong id="meh-biz-name" style="color:var(--text);"></strong>
+            <button class="btn btn-outline btn-sm" style="float:right;padding:4px 8px;font-size:11px;" onclick="mehClearBusiness()">Change</button>
+          </div>
+        </div>
+
+        <!-- AI Chat for this business -->
+        <div class="card" style="padding:20px;margin-bottom:20px;display:none;" id="meh-chat-card">
+          <h2 style="margin:0 0 16px;">Step 2 — Add Data via AI Chat</h2>
+
+          <div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:6px;border:1px solid var(--card-border);font-size:13px;">
+            <strong>Paste or type anything:</strong> menu text, special offers, event details, website copy, Google Maps info — and I'll organize it for this business. You can upload menu photos too.
+          </div>
+
+          <!-- Messages -->
+          <div id="meh-messages" style="min-height:200px;max-height:400px;overflow-y:auto;border:1px solid var(--card-border);border-radius:8px;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg);">
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0;">
+              Messages will appear here...
+            </div>
+          </div>
+
+          <!-- Image upload -->
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('meh-img-input').click()" style="white-space:nowrap;">📷 Upload Menu Photo</button>
+            <span id="meh-img-status" style="font-size:12px;color:var(--text-muted);"></span>
+            <input type="file" id="meh-img-input" accept="image/*" style="display:none" onchange="mehHandleImage(this)">
+          </div>
+
+          <!-- Input -->
+          <div style="display:flex;gap:8px;">
+            <textarea id="meh-input" placeholder="Paste menu text, specials, events, website copy... or upload photo above. Ctrl+Enter to send." rows="3"
+              style="flex:1;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"
+              onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){mehSendChat();}"></textarea>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button class="btn btn-primary" onclick="mehSendChat()" style="height:50px;padding:0 20px;">Send</button>
+              <div style="font-size:11px;color:var(--text-muted);text-align:center;">Ctrl+Enter</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gallery Manager -->
+        <div class="card" style="padding:20px;margin-bottom:20px;display:none;" id="meh-gallery-card">
+          <h2 style="margin:0 0 16px;">Gallery Manager — Upload Images (20-25 at a time)</h2>
+
+          <button class="btn btn-secondary" style="margin-bottom:12px;" onclick="document.getElementById('meh-bulk-upload').click()">
+            📷 Upload Images (bulk)
+          </button>
+          <input type="file" id="meh-bulk-upload" accept="image/*" multiple style="display:none;" onchange="mehHandleBulkUpload(event)">
+
+          <div id="meh-upload-status" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;display:none;"></div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));gap:12px;margin-top:16px;" id="meh-gallery-grid">
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:40px 20px;grid-column:1/-1;">
+              No images uploaded yet
+            </div>
+          </div>
+        </div>
+
+        <!-- Organized Data Preview (Inline on Dashboard) -->
+        <div class="card" style="padding:20px;margin-bottom:20px;display:none;" id="meh-preview-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+            <h2 style="margin:0;">📊 Organized Data Preview</h2>
+            <div id="meh-data-badges" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+          </div>
+
+          <!-- Tabs for preview -->
+          <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:16px;overflow-x:auto;">
+            <button class="btn" style="padding:12px 16px;background:none;border:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;" onclick="mehPreviewTab('business')" id="meh-ptab-business">🏢 Business Info</button>
+            <button class="btn" style="padding:12px 16px;background:none;border:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;" onclick="mehPreviewTab('menu')" id="meh-ptab-menu">🍽️ Menu</button>
+            <button class="btn" style="padding:12px 16px;background:none;border:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;" onclick="mehPreviewTab('specials')" id="meh-ptab-specials">⭐ Specials</button>
+            <button class="btn" style="padding:12px 16px;background:none;border:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;" onclick="mehPreviewTab('gallery')" id="meh-ptab-gallery">📷 Gallery</button>
+          </div>
+
+          <!-- Business Info Panel -->
+          <div id="meh-pv-business" style="display:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Name</label>
+                <input type="text" id="meh-pv-name" placeholder="Business name" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;" onchange="mehUpdatePreviewData()">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Phone</label>
+                <input type="text" id="meh-pv-phone" placeholder="Phone number" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;" onchange="mehUpdatePreviewData()">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Website</label>
+                <input type="text" id="meh-pv-website" placeholder="https://..." style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;" onchange="mehUpdatePreviewData()">
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Address</label>
+                <input type="text" id="meh-pv-address" placeholder="Street address" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;" onchange="mehUpdatePreviewData()">
+              </div>
+            </div>
+            <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">Description</label>
+            <textarea id="meh-pv-description" placeholder="Business description" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:14px;min-height:80px;resize:vertical;" onchange="mehUpdatePreviewData()"></textarea>
+          </div>
+
+          <!-- Menu Panel -->
+          <div id="meh-pv-menu" style="display:none;" class="meh-preview-panel"></div>
+
+          <!-- Specials Panel -->
+          <div id="meh-pv-specials" style="display:none;" class="meh-preview-panel"></div>
+
+          <!-- Gallery Panel -->
+          <div id="meh-pv-gallery" style="display:none;display:grid;grid-template-columns:repeat(auto-fill, minmax(100px, 1fr));gap:12px;"></div>
+
+          <!-- Save Buttons -->
+          <div style="display:flex;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1);flex-wrap:wrap;">
+            <button class="btn btn-primary" style="flex:1;min-width:200px;" onclick="mehSaveToDatabase()" id="meh-save-btn">
+              ✅ SAVE ALL TO DATABASE
+            </button>
+            <button class="btn btn-secondary" style="flex:1;min-width:200px;display:none;" onclick="mehOpenEditor()" id="meh-editor-btn">
+              📝 OPEN EDITOR
+            </button>
+            <button class="btn btn-secondary" style="flex:1;min-width:200px;" onclick="mehClearBusiness()">
+              🔄 Start Over
+            </button>
+          </div>
+        </div>
+
+        <div id="meh-status" style="padding:12px;border-radius:6px;display:none;margin-bottom:16px;"></div>
+      </div>
+
       <div id="page-ai-organize" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>AI Data Organizer</h1>
@@ -4441,6 +4589,59 @@
               <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">You can edit the JSON directly. Changes here will be saved when you click Save to Database.</div>
             </div>
 
+          </div>
+        </div>
+
+        <!-- VISUAL PREVIEW REPLICA (Like Restaurant Menu Editor) -->
+        <div id="ao-visual-preview" style="display:none;margin-bottom:20px;">
+          <div class="card" style="padding:24px;border:1px solid var(--primary);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+              <h3 style="margin:0;font-size:16px;">📱 Visual Preview (As it will appear)</h3>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="aoLoadFromDB()">Load Existing</button>
+                <button class="btn btn-outline btn-sm" onclick="aoToggleEditMode()">Toggle Edit</button>
+              </div>
+            </div>
+
+            <!-- Business header -->
+            <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--card-border);">
+              <input type="text" id="ao-preview-name" placeholder="Business Name" style="font-size:20px;font-weight:bold;background:transparent;border:none;color:var(--text);width:100%;margin-bottom:4px;" readonly>
+              <input type="text" id="ao-preview-tagline" placeholder="Tagline" style="font-size:12px;background:transparent;border:none;color:var(--text-muted);width:100%;" readonly>
+            </div>
+
+            <!-- Tabs for different sections -->
+            <div style="display:flex;gap:0;border-bottom:1px solid var(--card-border);overflow-x:auto;margin-bottom:20px;">
+              <button onclick="aoPreviewTab('menu')" id="ao-pvtab-menu" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">🍽️ Menu</button>
+              <button onclick="aoPreviewTab('drinks')" id="ao-pvtab-drinks" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">🥤 Drinks</button>
+              <button onclick="aoPreviewTab('specials')" id="ao-pvtab-specials" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">⭐ Specials</button>
+              <button onclick="aoPreviewTab('hours')" id="ao-pvtab-hours" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">🕐 Hours</button>
+              <button onclick="aoPreviewTab('contact')" id="ao-pvtab-contact" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;">📞 Contact</button>
+            </div>
+
+            <!-- Menu Tab -->
+            <div id="ao-pv-menu" style="display:block;">
+              <div id="ao-pv-menu-sections"></div>
+            </div>
+
+            <!-- Drinks Tab -->
+            <div id="ao-pv-drinks" style="display:none;">
+              <div id="ao-pv-drink-sections"></div>
+            </div>
+
+            <!-- Specials Tab -->
+            <div id="ao-pv-specials" style="display:none;">
+              <div id="ao-pv-specials-list"></div>
+            </div>
+
+            <!-- Hours Tab -->
+            <div id="ao-pv-hours" style="display:none;">
+              <div id="ao-pv-hours-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
+            </div>
+
+            <!-- Contact Tab -->
+            <div id="ao-pv-contact" style="display:none;">
+              <div id="ao-pv-contact-info"></div>
+            </div>
           </div>
         </div>
 
@@ -5244,7 +5445,575 @@
   <div id="toast-container" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
 
   <script>
-    var API_BASE = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+    // Detect if running locally or on Vercel
+    var isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    var API_BASE = isDev ? 'http://localhost:3000' : (window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app');
+    var GCR_API_BASE = API_BASE;
+    var GCR_ADMIN_API = API_BASE;
+
+    // Menu Editor URL helpers
+    function getEditorBaseUrl() {
+      return isDev ? 'http://localhost:3002' : 'https://restaurant-menu-editor.vercel.app';
+    }
+
+    function buildMenuEditorUrl(slug, pin) {
+      var base = getEditorBaseUrl();
+      return base + '/' + encodeURIComponent(slug) + '?pin=' + encodeURIComponent(pin);
+    }
+
+    // ─────────────────────────────────────────────────────
+    // MENU EDITORS HUB FUNCTIONS
+    // ─────────────────────────────────────────────────────
+
+    async function mehShowBizDrop() {
+      var input = document.getElementById('meh-biz-search').value.toLowerCase();
+      var drop = document.getElementById('meh-biz-drop');
+
+      if (!input) {
+        drop.style.display = 'none';
+        return;
+      }
+
+      try {
+        var r = await fetch(API_BASE + '/api/admin/gcr/entities?search=' + encodeURIComponent(input), {
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        var entities = await r.json();
+        drop.innerHTML = (entities || []).map(function(e) {
+          return '<div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer;transition:background .2s;" onclick="mehSelectBusiness(\'' + e.id + '\',\'' + e.name.replace(/'/g, "\\'") + '\')" onmouseover="this.style.background=\'rgba(11,122,117,.2)\'" onmouseout="this.style.background=\'\'"><strong>' + e.name + '</strong><div style="font-size:11px;color:#94a3b8;">' + (e.subtitle || '') + '</div></div>';
+        }).join('');
+        drop.style.display = drop.innerHTML ? 'block' : 'none';
+      } catch(e) {
+        console.error('Error searching businesses:', e);
+        drop.innerHTML = '<div style="padding:8px 12px;color:#f87171;">Error loading businesses</div>';
+      }
+    }
+
+    function mehSelectBusiness(bizId, bizName) {
+      document.getElementById('meh-site-id').value = bizId;
+      document.getElementById('meh-biz-search').value = bizName;
+      document.getElementById('meh-biz-name').textContent = bizName;
+      document.getElementById('meh-selected-biz').style.display = 'block';
+      document.getElementById('meh-chat-card').style.display = 'block';
+      document.getElementById('meh-gallery-card').style.display = 'block';
+      document.getElementById('meh-preview-btn-row').style.display = 'flex';
+      document.getElementById('meh-biz-drop').style.display = 'none';
+      document.getElementById('meh-input').focus();
+      mehLoadGallery();
+    }
+
+    function mehCreateNewBusiness() {
+      var name = prompt('Enter business name:');
+      if (!name) return;
+
+      document.getElementById('meh-site-id').value = 'new';
+      document.getElementById('meh-biz-search').value = name;
+      document.getElementById('meh-biz-name').textContent = name + ' (NEW)';
+      document.getElementById('meh-selected-biz').style.display = 'block';
+      document.getElementById('meh-chat-card').style.display = 'block';
+      document.getElementById('meh-gallery-card').style.display = 'block';
+      document.getElementById('meh-preview-btn-row').style.display = 'flex';
+      document.getElementById('meh-input').focus();
+      mehLoadGallery();
+    }
+
+    function mehLoadGallery() {
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      mehRenderGallery(gallery);
+    }
+
+    var _mehGalActiveTab = -1;
+
+    function mehRenderGallery(gallery) {
+      var grid = document.getElementById('meh-gallery-grid');
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      if (!data.gallery_sections) data.gallery_sections = [];
+      var sections = data.gallery_sections;
+
+      if (gallery.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:40px 20px;grid-column:1/-1;">No images uploaded yet</div>';
+        return;
+      }
+
+      // Tab bar
+      var tabBar = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;">';
+      tabBar += '<button onclick="mehGalSetTab(-1)" style="padding:8px 18px;border-radius:20px;border:2px solid ' + (_mehGalActiveTab === -1 ? '#0b7a75' : '#334155') + ';background:' + (_mehGalActiveTab === -1 ? '#0b7a75' : '#1e293b') + ';color:white;cursor:pointer;font-size:13px;font-weight:600;">All (' + gallery.length + ')</button>';
+      sections.forEach(function(s, i) {
+        tabBar += '<button onclick="mehGalSetTab(' + i + ')" style="padding:8px 14px;border-radius:20px;border:2px solid ' + (_mehGalActiveTab === i ? '#0b7a75' : '#334155') + ';background:' + (_mehGalActiveTab === i ? '#0b7a75' : '#1e293b') + ';color:white;cursor:pointer;font-size:13px;font-weight:600;">' + (s.name || 'Section') + ' (' + (s.images ? s.images.length : 0) + ')</button>';
+      });
+      if (sections.length < 10) {
+        tabBar += '<button onclick="mehAddGallerySection()" style="padding:8px 16px;border-radius:20px;border:2px dashed #334155;background:transparent;color:#94a3b8;cursor:pointer;font-size:13px;">+ Add Section</button>';
+      }
+      tabBar += '</div>';
+
+      // Get photos for current view
+      var displayPhotos = [];
+      if (_mehGalActiveTab === -1) {
+        displayPhotos = gallery.map(function(img, i) { return {url: img.url, idx: i}; });
+      } else {
+        var sec = sections[_mehGalActiveTab];
+        if (sec && sec.images) {
+          displayPhotos = sec.images.map(function(url) {
+            var idx = gallery.findIndex(function(g) { return g.url === url; });
+            return {url: url, idx: idx};
+          }).filter(function(p) { return p.idx !== -1; });
+        }
+      }
+
+      var gridHtml = tabBar + '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(80px, 1fr));gap:12px;">';
+      gridHtml += displayPhotos.map(function(img) {
+        var borderColor = _mehGalActiveTab >= 0 ? '#8b5cf6' : '#334155';
+        var html = '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:2px solid ' + borderColor + ';">';
+        html += '<img src="' + img.url + '" alt="gallery" style="width:100%;height:100%;object-fit:cover;">';
+        if (_mehGalActiveTab === -1 && sections.length > 0) {
+          var assignedIdx = sections.findIndex(function(s) { return s.images && s.images.includes(img.url); });
+          html += '<select onchange="mehGalAssignSection(' + img.idx + ',this.value)" onclick="event.stopPropagation()" style="position:absolute;bottom:4px;left:4px;right:28px;font-size:10px;padding:2px 4px;border-radius:4px;background:rgba(0,0,0,0.7);color:white;border:none;cursor:pointer;">';
+          html += '<option value="-1">' + (assignedIdx >= 0 ? '✓ ' + sections[assignedIdx].name : '+ Assign') + '</option>';
+          sections.forEach(function(s, si) {
+            if (si !== assignedIdx) html += '<option value="' + si + '">' + s.name + '</option>';
+          });
+          if (assignedIdx >= 0) html += '<option value="-1">✕ Remove</option>';
+          html += '</select>';
+        }
+        html += '<button style="position:absolute;top:4px;right:4px;background:#dc2626;color:white;border:none;border-radius:50%;width:20px;height:20px;padding:0;cursor:pointer;font-size:10px;" onclick="mehRemoveGalleryImage(' + img.idx + ')">✕</button>';
+        html += '</div>';
+        return html;
+      }).join('');
+      gridHtml += '</div>';
+
+      grid.innerHTML = gridHtml;
+    }
+
+    function mehGalSetTab(i) {
+      _mehGalActiveTab = i;
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      mehRenderGallery(gallery);
+    }
+
+    function mehAddGallerySection() {
+      var name = prompt('Section name (e.g. Appetizers):');
+      if (!name) return;
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      if (!data.gallery_sections) data.gallery_sections = [];
+      data.gallery_sections.push({id: 'gsec_' + Date.now(), name: name, images: []});
+      localStorage.setItem('meh-current-data', JSON.stringify(data));
+      _mehGalActiveTab = data.gallery_sections.length - 1;
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      mehRenderGallery(gallery);
+    }
+
+    function mehGalAssignSection(imgIdx, sectionIdx) {
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      if (!gallery || !gallery[imgIdx]) return;
+      var url = gallery[imgIdx].url;
+      if (!url) return;
+
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      if (!data.gallery_sections) data.gallery_sections = [];
+
+      // Remove from all sections
+      data.gallery_sections.forEach(function(s) {
+        if (s.images) s.images = s.images.filter(function(u) { return u !== url; });
+      });
+
+      // Add to new section
+      var si = parseInt(sectionIdx);
+      if (si >= 0 && data.gallery_sections[si]) {
+        if (!data.gallery_sections[si].images) data.gallery_sections[si].images = [];
+        data.gallery_sections[si].images.push(url);
+      }
+
+      localStorage.setItem('meh-current-data', JSON.stringify(data));
+      mehRenderGallery(gallery);
+    }
+
+    function mehHandleBulkUpload(event) {
+      var files = event.target.files;
+      if (files.length === 0) return;
+
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      var statusDiv = document.getElementById('meh-upload-status');
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = '⏳ Uploading ' + files.length + ' images...';
+
+      var uploaded = 0;
+      for (var i = 0; i < Math.min(files.length, 25); i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          gallery.push({
+            id: Date.now().toString() + Math.random(),
+            url: e.target.result,
+            name: file.name
+          });
+          localStorage.setItem('meh-gallery', JSON.stringify(gallery));
+          uploaded++;
+          if (uploaded === Math.min(files.length, 25)) {
+            statusDiv.textContent = '✅ Uploaded ' + uploaded + ' image(s)';
+            mehRenderGallery(gallery);
+            event.target.value = '';
+            setTimeout(function() { statusDiv.style.display = 'none'; }, 2000);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function mehRemoveGalleryImage(idx) {
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      if (!gallery[idx]) return;
+      var url = gallery[idx].url;
+      gallery.splice(idx, 1);
+      localStorage.setItem('meh-gallery', JSON.stringify(gallery));
+
+      // Remove from all sections in meh-current-data
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      if (data.gallery_sections) {
+        data.gallery_sections.forEach(function(s) {
+          if (s.images) s.images = s.images.filter(function(u) { return u !== url; });
+        });
+        localStorage.setItem('meh-current-data', JSON.stringify(data));
+      }
+
+      mehRenderGallery(gallery);
+    }
+
+    function mehSelectImageForItem(imgIdx) {
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      var img = gallery[imgIdx];
+      if (!img) return;
+
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      if (!data.gallery) data.gallery = [];
+      data.gallery.push({ id: img.id, url: img.url, type: 'Menu' });
+      localStorage.setItem('meh-current-data', JSON.stringify(data));
+
+      alert('✅ Image added to preview data');
+    }
+
+    function mehShowOrganizedData(organizedData) {
+      document.getElementById('meh-preview-card').style.display = 'block';
+
+      // Show data badges (item counts)
+      var badges = [];
+      if (organizedData.name) badges.push({ label: organizedData.name, color: '#0b7a75' });
+      if (organizedData.menu_items && organizedData.menu_items.length) badges.push({ label: organizedData.menu_items.length + ' menu items', color: '#22c55e' });
+      if (organizedData.specials && organizedData.specials.length) badges.push({ label: organizedData.specials.length + ' specials', color: '#f59e0b' });
+      if (organizedData.events && organizedData.events.length) badges.push({ label: organizedData.events.length + ' events', color: '#a78bfa' });
+
+      var badgeHtml = badges.map(function(b) {
+        return '<span style="padding:6px 12px;background:' + b.color + ';color:#fff;border-radius:8px;font-size:12px;font-weight:600;">' + b.label + '</span>';
+      }).join('');
+      document.getElementById('meh-data-badges').innerHTML = badgeHtml;
+
+      // Populate fields
+      document.getElementById('meh-pv-name').value = organizedData.name || '';
+      document.getElementById('meh-pv-phone').value = organizedData.phone || '';
+      document.getElementById('meh-pv-website').value = organizedData.website || '';
+      document.getElementById('meh-pv-address').value = organizedData.address || '';
+      document.getElementById('meh-pv-description').value = organizedData.description || organizedData.about || '';
+
+      // Render menu
+      mehRenderPreviewMenu(organizedData.menu_items || []);
+
+      // Render specials
+      mehRenderPreviewSpecials(organizedData.specials || [], organizedData.events || []);
+
+      // Render gallery
+      mehRenderPreviewGallery();
+
+      mehPreviewTab('business');
+      document.getElementById('meh-input').value = '';
+      document.getElementById('meh-messages').innerHTML = '<div style="padding:12px;background:#064e3b;border-radius:6px;color:#d1fae5;">✅ Data organized! Review below and make any edits, then save.</div>';
+    }
+
+    function mehRenderPreviewMenu(items) {
+      var html = '';
+      if (items.length === 0) {
+        html = '<p style="color:var(--text-muted);text-align:center;padding:20px;">No menu items</p>';
+      } else {
+        var grouped = {};
+        items.forEach(function(item) {
+          var cat = item.category || 'Other';
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(item);
+        });
+        Object.keys(grouped).forEach(function(cat) {
+          html += '<div style="margin-bottom:16px;padding:16px;background:var(--bg);border-radius:8px;">';
+          html += '<h4 style="margin:0 0 12px 0;color:var(--primary);">📁 ' + cat + '</h4>';
+          grouped[cat].forEach(function(item) {
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);">';
+            html += '<div><strong>' + (item.name || '') + '</strong>';
+            if (item.description) html += '<br><small style="color:var(--text-muted);">' + item.description + '</small>';
+            html += '</div>';
+            if (item.price) html += '<div style="font-weight:bold;color:var(--primary);white-space:nowrap;margin-left:12px;">$' + item.price + '</div>';
+            html += '</div>';
+          });
+          html += '</div>';
+        });
+      }
+      document.getElementById('meh-pv-menu').innerHTML = html;
+    }
+
+    function mehRenderPreviewSpecials(specials, events) {
+      var html = '';
+      if (specials.length > 0) {
+        html += '<div style="margin-bottom:16px;"><h4 style="margin:0 0 12px 0;color:#f59e0b;">⭐ Specials</h4>';
+        specials.forEach(function(s) {
+          html += '<div style="padding:12px;background:var(--bg);border-radius:8px;margin-bottom:8px;border-left:3px solid #f59e0b;">';
+          html += '<div style="font-weight:600;">' + s.name + '</div>';
+          if (s.description) html += '<div style="font-size:13px;color:var(--text-muted);">' + s.description + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      if (events.length > 0) {
+        html += '<div><h4 style="margin:0 0 12px 0;color:#a78bfa;">🎉 Events</h4>';
+        events.forEach(function(e) {
+          html += '<div style="padding:12px;background:var(--bg);border-radius:8px;margin-bottom:8px;border-left:3px solid #a78bfa;">';
+          html += '<div style="font-weight:600;">' + e.name + '</div>';
+          if (e.date) html += '<div style="font-size:12px;color:var(--text-muted);">📅 ' + e.date + '</div>';
+          if (e.description) html += '<div style="font-size:13px;color:var(--text-muted);">' + e.description + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      if (!html) html = '<p style="color:var(--text-muted);text-align:center;padding:20px;">No specials or events</p>';
+      document.getElementById('meh-pv-specials').innerHTML = html;
+    }
+
+    function mehRenderPreviewGallery() {
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      var html = gallery.map(function(img) {
+        return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;">' +
+          '<img src="' + img.url + '" alt="gallery" style="width:100%;height:100%;object-fit:cover;">' +
+          '<button style="position:absolute;top:4px;right:4px;background:#dc2626;color:white;border:none;border-radius:50%;width:20px;height:20px;padding:0;cursor:pointer;font-size:10px;" onclick="mehRemoveGalleryImage(' + gallery.indexOf(img) + ')">✕</button>' +
+          '</div>';
+      }).join('');
+      document.getElementById('meh-pv-gallery').innerHTML = html || '<p style="color:var(--text-muted);text-align:center;padding:20px;grid-column:1/-1;">No gallery images uploaded</p>';
+    }
+
+    function mehPreviewTab(tab) {
+      ['business', 'menu', 'specials', 'gallery'].forEach(function(t) {
+        var btn = document.getElementById('meh-ptab-' + t);
+        var panel = document.getElementById('meh-pv-' + t);
+        if (btn) {
+          btn.style.borderBottomColor = t === tab ? '#0b7a75' : 'transparent';
+          btn.style.color = t === tab ? '#f1f5f9' : 'var(--text-muted)';
+          btn.style.fontWeight = t === tab ? '600' : 'normal';
+        }
+        if (panel) panel.style.display = t === tab ? 'block' : 'none';
+      });
+    }
+
+    function mehUpdatePreviewData() {
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      data.name = document.getElementById('meh-pv-name').value;
+      data.phone = document.getElementById('meh-pv-phone').value;
+      data.website = document.getElementById('meh-pv-website').value;
+      data.address = document.getElementById('meh-pv-address').value;
+      data.description = document.getElementById('meh-pv-description').value;
+      localStorage.setItem('meh-current-data', JSON.stringify(data));
+    }
+
+    function mehClearBusiness() {
+      document.getElementById('meh-site-id').value = '';
+      document.getElementById('meh-biz-search').value = '';
+      document.getElementById('meh-selected-biz').style.display = 'none';
+      document.getElementById('meh-chat-card').style.display = 'none';
+      document.getElementById('meh-preview-btn-row').style.display = 'none';
+      document.getElementById('meh-messages').innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0;">Messages will appear here...</div>';
+    }
+
+    function mehHandleImage(input) {
+      var file = input.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+        gallery.push({ id: Date.now().toString(), url: e.target.result });
+        localStorage.setItem('meh-gallery', JSON.stringify(gallery));
+        document.getElementById('meh-img-status').textContent = gallery.length + ' image(s) ready to save';
+        input.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function mehSendChat() {
+      var input = document.getElementById('meh-input').value.trim();
+      if (!input) return;
+
+      var bizId = document.getElementById('meh-site-id').value;
+      var bizName = document.getElementById('meh-biz-name').textContent;
+      if (!bizId || !bizName) {
+        alert('Select or create a business first');
+        return;
+      }
+
+      var messagesDiv = document.getElementById('meh-messages');
+      var userMsg = '<div style="text-align:right;padding:8px 12px;background:#0b7a75;border-radius:6px;margin-left:20%;color:#e2e8f0;word-wrap:break-word;">' + input.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+      messagesDiv.innerHTML += userMsg;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      document.getElementById('meh-input').value = '';
+
+      var loadingDiv = '<div style="padding:8px 12px;color:#94a3b8;font-style:italic;">🤖 AI is organizing...</div>';
+      messagesDiv.innerHTML += loadingDiv;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      try {
+        var r = await fetch(API_BASE + '/api/admin/ai-organize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getAuthToken()
+          },
+          body: JSON.stringify({
+            raw_input: input,
+            business_id: bizId === 'new' ? null : bizId,
+            business_name: bizName
+          })
+        });
+
+        var result = await r.json();
+
+        messagesDiv.innerHTML = messagesDiv.innerHTML.replace(loadingDiv, '');
+
+        if (result.success) {
+          var aiResponse = '<div style="padding:8px 12px;background:#1e293b;border-radius:6px;border-left:3px solid #0b7a75;color:#e2e8f0;word-wrap:break-word;">' + (result.message || 'Data organized and ready!') + '</div>';
+          messagesDiv.innerHTML += aiResponse;
+
+          var organizedData = result.organized_data || {};
+          if (!organizedData.gallery_sections) organizedData.gallery_sections = [];
+          localStorage.setItem('meh-current-data', JSON.stringify(organizedData));
+          localStorage.setItem('meh-business-id', bizId);
+          localStorage.setItem('meh-business-name', bizName);
+
+          // Show organized data inline on dashboard
+          mehShowOrganizedData(organizedData);
+        } else {
+          messagesDiv.innerHTML += '<div style="padding:8px 12px;background:#7f1d1d;border-radius:6px;color:#fee2e2;">Error: ' + (result.error || 'Unknown error') + '</div>';
+        }
+
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      } catch(e) {
+        messagesDiv.innerHTML = messagesDiv.innerHTML.replace(loadingDiv, '<div style="padding:8px 12px;background:#7f1d1d;border-radius:6px;color:#fee2e2;">Error: ' + e.message + '</div>');
+      }
+    }
+
+    function mehOpenPreview() {
+      var data = localStorage.getItem('meh-current-data');
+      if (!data) {
+        alert('No data organized yet');
+        return;
+      }
+
+      localStorage.setItem('ai-preview-data', data);
+      window.open('preview.html', 'preview');
+    }
+
+    async function mehSaveToDatabase() {
+      var bizId = document.getElementById('meh-site-id').value;
+      var bizName = document.getElementById('meh-biz-name').textContent;
+      if (!bizId || !bizName) {
+        alert('Select or create a business first');
+        return;
+      }
+
+      var saveBtn = document.getElementById('meh-save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Saving...';
+
+      var data = JSON.parse(localStorage.getItem('meh-current-data') || '{}');
+      var gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+
+      if (!data.name || (Object.keys(data).length === 0 && gallery.length === 0)) {
+        alert('No data to save');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '✅ SAVE ALL TO DATABASE';
+        return;
+      }
+
+      try {
+        // Format data for save endpoint
+        var slug = (data.name || bizName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        var payload = {
+          business: {
+            name: data.name || bizName,
+            tagline: data.tagline || '',
+            phone: data.phone || '',
+            website: data.website || '',
+            address: data.address || '',
+            about: data.description || ''
+          },
+          gallery: gallery.map(function(img) {
+            return { id: img.id, url: img.url, label: img.name || 'Photo', type: 'Gallery' };
+          }),
+          gallery_sections: data.gallery_sections || [],
+          areas: [{
+            menu_sections: data.menu_items ? [{ name: 'Menu', items: data.menu_items }] : [],
+            drink_sections: [],
+            specials: data.specials || [],
+            events: data.events || []
+          }],
+          sides: [],
+          dailyFeatures: [],
+          happyHour: []
+        };
+
+        // Call save endpoint
+        var r = await fetch(API_BASE + '/api/menu-editor/' + slug + '/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': getAuthToken()
+          },
+          body: JSON.stringify(payload)
+        });
+
+        var result = await r.json();
+
+        if (result.success || r.ok) {
+          var statusDiv = document.getElementById('meh-status');
+          statusDiv.style.display = 'block';
+          statusDiv.style.background = '#064e3b';
+          statusDiv.style.color = '#d1fae5';
+          statusDiv.textContent = '✅ Saved to database!';
+
+          // Store slug for opening editor
+          localStorage.setItem('meh-editor-slug', slug);
+          localStorage.setItem('meh-editor-pin', data.pin || '0000');
+
+          // Show Open Editor button
+          document.getElementById('meh-save-btn').style.display = 'none';
+          document.getElementById('meh-editor-btn').style.display = 'block';
+
+          saveBtn.disabled = false;
+          saveBtn.textContent = '✅ SAVE ALL TO DATABASE';
+        } else {
+          throw new Error(result.error || 'Save failed');
+        }
+      } catch(e) {
+        var statusDiv = document.getElementById('meh-status');
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = '#7f1d1d';
+        statusDiv.style.color = '#fee2e2';
+        statusDiv.textContent = '❌ Error: ' + e.message;
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = '✅ SAVE ALL TO DATABASE';
+      }
+    }
+
+    function mehOpenEditor() {
+      var slug = localStorage.getItem('meh-editor-slug');
+      if (!slug) {
+        alert('No business saved yet');
+        return;
+      }
+      window.open('menu-editor-popup.html?slug=' + encodeURIComponent(slug), '_blank');
+    }
 
     function getAuthToken() {
       try {
@@ -5328,7 +6097,7 @@
     async function loadOverview() {
       try {
         var token = getAuthToken();
-        var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
         var gcr = res.ok ? await res.json() : [];
         if (!Array.isArray(gcr)) gcr = [];
 
@@ -5399,7 +6168,7 @@
       if (!confirm('Permanently delete "' + name + '" from the database?\n\nThis removes ALL linked data (tags, menus, events, specials) and cannot be undone.')) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
         });
@@ -5438,8 +6207,9 @@
       var token = getAuthToken();
       document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
-        _allGCRBusinesses = res.ok ? await res.json() : [];
+        var res = await fetch(GCR_API_BASE + '/api/gcr/entities?limit=1000', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = res.ok ? await res.json() : {};
+        _allGCRBusinesses = data.entities || data.businesses || [];
         renderGCRBusinesses(_allGCRBusinesses);
       } catch(e) {
         document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
@@ -5554,7 +6324,7 @@
       if (!confirm('Send dashboard invite email to ' + name + '?')) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/invite', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/invite', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
         });
@@ -5569,7 +6339,7 @@
     async function toggleGCRLive(entityId, isActive, checkboxEl) {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: { is_active: isActive } })
@@ -5598,7 +6368,7 @@
       var btn = document.querySelector('[onclick="autoActivateTop5()"]');
       if (btn) { btn.disabled = true; btn.textContent = '⏳ Running...'; }
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/auto-activate-top5', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/auto-activate-top5', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({})
@@ -5657,7 +6427,7 @@
       var token = getAuthToken();
       document.getElementById('gcr-claims-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/claims', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/claims', { headers: { 'Authorization': 'Bearer ' + token } });
         _allGCRClaims = res.ok ? await res.json() : [];
         renderGCRClaims(_allGCRClaims);
         // update badge
@@ -5817,7 +6587,7 @@
       });
 
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -5882,7 +6652,7 @@
         progressText.textContent = 'Importing ' + (i + 1) + ' of ' + _csvRows.length + '...';
         progressBar.style.width = Math.round(((i + 1) / _csvRows.length) * 100) + '%';
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/import-csv', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/import-csv', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify(_csvRows[i])
@@ -5912,7 +6682,7 @@
           fetch(API_BASE + '/api/reviews', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
           fetch(API_BASE + '/api/reviews/stats', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
           fetch(API_BASE + '/api/reviews/requests', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
-          fetch(API_BASE + '/api/admin/gcr/entities?limit=200', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?limit=200', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
         ]);
         const reviews  = rvRes.ok    ? await rvRes.json()   : [];
         const stats    = statsRes.ok ? await statsRes.json() : {};
@@ -5939,7 +6709,7 @@
       }
       el.innerHTML = entities.map(function(e) {
         var reviewUrl = 'https://cybercheck-links.vercel.app/reviews/' + e.id;
-        var webhookUrl = 'https://cybercheck-api-database.vercel.app/api/reviews/webhook/pos?site_id=' + e.id;
+        var webhookUrl = GCR_ADMIN_API + '/api/reviews/webhook/pos?site_id=' + e.id;
         return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 14px;">' +
           '<div style="font-size:13px;font-weight:700;margin-bottom:8px;">' + escHtml(e.name) + '</div>' +
           '<div style="display:flex;flex-direction:column;gap:6px;">' +
@@ -6096,7 +6866,7 @@
         }
 
         var qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=';
-        var portalBase = 'https://cybercheck-api-database.vercel.app/api/qr/partner-portal/';
+        var portalBase = GCR_ADMIN_API + '/api/qr/partner-portal/';
         var scanBase = 'https://cybercheck-links.vercel.app/q.html?c=';
 
         document.getElementById('rp-partners-body').innerHTML = partners.map(function(p) {
@@ -6287,7 +7057,7 @@
       _eventsLoaded = true;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/events', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/events', { headers: { 'Authorization': 'Bearer ' + token } });
         var events = res.ok ? await res.json() : [];
         if (!events.length) {
           document.getElementById('gcr-events-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No events.</td></tr>';
@@ -6398,7 +7168,7 @@
         cover_charge: document.getElementById('event-cover-charge').value || null,
         image_url: document.getElementById('event-image-url').value || null,
       };
-      var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
+      var url = id ? GCR_ADMIN_API + '/api/admin/gcr/events/' + id : GCR_ADMIN_API + '/api/admin/gcr/events';
       var method = id ? 'PUT' : 'POST';
       try {
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -6415,7 +7185,7 @@
       if (!confirm('Delete this event?')) return;
       var token = getAuthToken();
       try {
-        await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         toast('Event deleted.');
         _eventsLoaded = false;
         loadGCREvents();
@@ -6429,7 +7199,7 @@
       _specialsLoaded = true;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/specials', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials', { headers: { 'Authorization': 'Bearer ' + token } });
         var specials = res.ok ? await res.json() : [];
         if (!specials.length) {
           document.getElementById('gcr-specials-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No specials.</td></tr>';
@@ -6481,7 +7251,7 @@
         end_time: document.getElementById('special-end-time').value || null,
         is_active: document.getElementById('special-active').checked,
       };
-      var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
+      var url = id ? GCR_ADMIN_API + '/api/admin/gcr/specials/' + id : GCR_ADMIN_API + '/api/admin/gcr/specials';
       var method = id ? 'PUT' : 'POST';
       try {
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -6498,7 +7268,7 @@
       if (!confirm('Delete this special?')) return;
       var token = getAuthToken();
       try {
-        await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         toast('Special deleted.');
         _specialsLoaded = false;
         loadGCRSpecials();
@@ -6514,7 +7284,7 @@
       var body = document.getElementById('ads-list-body');
       if (!body) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + token } });
         var d = await res.json();
         var ads = d.ads || [];
         if (!ads.length) {
@@ -6557,7 +7327,7 @@
         document.getElementById('ad-active').checked = true;
       } else {
         // find from existing DOM data — reload from API instead
-        fetch(API_BASE + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
+        fetch(GCR_ADMIN_API + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
           .then(function(r){ return r.json(); })
           .then(function(d){
             var ad = (d.ads || []).find(function(a){ return a.id === id; });
@@ -6595,7 +7365,7 @@
       var token = getAuthToken();
       try {
         var method = id ? 'PUT' : 'POST';
-        var url = id ? API_BASE + '/api/admin/gcr/ads/' + id : API_BASE + '/api/admin/gcr/ads';
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/ads/' + id : GCR_ADMIN_API + '/api/admin/gcr/ads';
         var res = await fetch(url, { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast(id ? 'Ad updated!' : 'Ad created!', 'success');
@@ -6608,7 +7378,7 @@
     async function deleteAd(id) {
       if (!confirm('Delete this ad?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/ads/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/ads/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Ad deleted', 'success');
         _adsLoaded = false;
         loadGCRAds();
@@ -6639,7 +7409,7 @@
       if (!_bulkEventsData.length) { toast('No valid CSV loaded', 'error'); return; }
       var token = getAuthToken();
       // Match business names to site_ids
-      var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
       var bizList = res.ok ? await res.json() : [];
       var matched = [], unmatched = [];
       _bulkEventsData.forEach(function(row) {
@@ -6662,7 +7432,7 @@
       var success = 0, errors = 0;
       for (var i = 0; i < events.length; i++) {
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/events', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/events', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify(events[i])
@@ -7098,7 +7868,7 @@
       switchBizTab('basic');
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
         _bizEditorData = await res.json();
         var biz = _bizEditorData.business || {};
         var content = _bizEditorData.content || {};
@@ -7501,7 +8271,7 @@
       }
       status.textContent = success + ' of ' + compressed.length + ' uploaded.';
       // Reload photos
-      var res2 = await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bizEditorSiteId, { headers: { 'Authorization': 'Bearer ' + token } });
+      var res2 = await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bizEditorSiteId, { headers: { 'Authorization': 'Bearer ' + token } });
       var d = await res2.json();
       renderBizPhotos(d.media || []);
     }
@@ -7962,7 +8732,7 @@
         var specials = _aoResult.specials || [];
         for (var j = 0; j < specials.length; j++) {
           var sp = specials[j];
-          var r2 = await fetch(API_BASE + '/api/admin/gcr/specials', {
+          var r2 = await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify({ entity_id: siteId, special_name: sp.special_name||sp.name, discount_text: sp.discount_text||'', description: sp.description||'', days: sp.days||'', start_time: sp.start_time||null, end_time: sp.end_time||null })
           });
@@ -7982,8 +8752,39 @@
         var drinkCount = saved.filter(function(s){return s==='drink';}).length;
         var msg = '✅ Saved: ' + (foodCount ? foodCount + ' food ' : '') + (drinkCount ? drinkCount + ' drinks ' : '') + (specials.length ? specials.length + ' specials ' : '') + (events.length ? events.length + ' events' : '');
         if (errors.length) msg += ' — ' + errors.length + ' failed';
+
+        // Get business slug/entity_id
+        var bizName = document.getElementById('ao-biz-search').value || 'Business';
+        var bizSlug = bizName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+        // Create PIN automatically
+        statusEl.textContent = msg + ' — Creating PIN...';
+        var pin = Math.floor(1000 + Math.random() * 9000).toString();
+        try {
+          var pinRes = await fetch(API_BASE + '/api/gcr/entity/' + encodeURIComponent(bizSlug) + '/set-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: pin })
+          });
+          if (pinRes.ok) {
+            // Show PIN and edit link
+            var editUrl = buildMenuEditorUrl(bizSlug, pin);
+            statusEl.innerHTML = '<div style="background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:12px;margin-top:10px;font-size:12px;">' +
+              '<div style="font-weight:600;color:#166534;margin-bottom:8px;">✅ ' + msg + '</div>' +
+              '<div style="font-weight:600;color:#166534;margin-bottom:8px;margin-top:12px;">🔐 PIN Created: <strong>' + pin + '</strong></div>' +
+              '<div style="background:#fff;border:1px solid #86efac;border-radius:4px;padding:8px 10px;font-family:monospace;font-size:11px;word-break:break-all;margin-bottom:8px;line-height:1.4;">' + editUrl + '</div>' +
+              '<div style="display:flex;gap:6px;">' +
+                '<button style="flex:1;padding:6px 10px;background:#16a34a;color:#fff;border:none;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;" onclick="navigator.clipboard.writeText(\'' + editUrl + '\');toast(\'Link copied!\',\'success\');">📋 Copy Link</button>' +
+                '<button style="flex:1;padding:6px 10px;background:#0ea5e9;color:#fff;border:none;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;" onclick="window.open(\'' + editUrl + '\',\'_blank\');">🌐 Test Link</button>' +
+              '</div>' +
+            '</div>';
+            statusEl.style.color = '#22c55e';
+          }
+        } catch(pinErr) {
+          statusEl.textContent = msg + ' (PIN creation failed: ' + pinErr.message + ')';
+        }
+
         statusEl.style.color = errors.length ? '#f59e0b' : '#4ade80';
-        statusEl.textContent = msg;
         toast(msg, 'success');
       } catch(e) {
         statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message;
@@ -8037,6 +8838,7 @@
         if (topSave) topSave.style.display = '';
 
         renderAOPreview(_aoResult);
+        renderMenuPreview();
         document.getElementById('ao-step2').style.display = '';
       } catch(e) {
         document.getElementById('ao-loading').style.display = 'none';
@@ -8044,6 +8846,38 @@
         statusEl.style.color = '#ef4444';
         statusEl.textContent = '✗ Failed: ' + e.message + '. Try pasting the page content manually instead.';
       }
+    }
+
+    function aoMergeData(existing, aiNew) {
+      // Merge existing data with new AI data
+      var merged = { ...aiNew };
+
+      // Merge menu items (avoid duplicates by name)
+      if (existing.menu_items && existing.menu_items.length > 0) {
+        var aiNames = (aiNew.menu_items || []).map(function(i) { return i.name; });
+        var toAdd = existing.menu_items.filter(function(i) { return aiNames.indexOf(i.name) === -1; });
+        merged.menu_items = (aiNew.menu_items || []).concat(toAdd);
+      }
+
+      // Merge drink items
+      if (existing.drink_items && existing.drink_items.length > 0) {
+        var aiDrinkNames = (aiNew.drink_items || []).map(function(i) { return i.name; });
+        var drinkToAdd = existing.drink_items.filter(function(i) { return aiDrinkNames.indexOf(i.name) === -1; });
+        merged.drink_items = (aiNew.drink_items || []).concat(drinkToAdd);
+      }
+
+      // Merge specials (keep all)
+      if (existing.specials && existing.specials.length > 0) {
+        merged.specials = (aiNew.specials || []).concat(existing.specials);
+      }
+
+      // Keep existing contact info if AI didn't have it
+      if (existing.phone && !aiNew.phone) merged.phone = existing.phone;
+      if (existing.address && !aiNew.address) merged.address = existing.address;
+      if (existing.website && !aiNew.website) merged.website = existing.website;
+      if (existing.hours && !aiNew.hours) merged.hours = existing.hours;
+
+      return merged;
     }
 
     async function runAIOrganize() {
@@ -8059,11 +8893,60 @@
         var r = await fetch(API_BASE + '/api/admin/ai-organize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-          body: JSON.stringify({ raw_text: raw, business_type: type || undefined })
+          body: JSON.stringify({ raw_input: raw, business_type: type || undefined })
         });
         if (!r.ok) { var e = await r.json(); throw new Error(e.error || 'AI organize failed'); }
         var d = await r.json();
-        _aoResult = d.structured;
+        var apiData = d.organized_data || d.structured || {};
+
+        // Transform API's section-based format to flat arrays for preview
+        var menuItems = [];
+        (apiData.menu_sections || []).forEach(function(section) {
+          (section.items || []).forEach(function(item) {
+            menuItems.push({
+              name: item.item_name || item.name || '',
+              description: item.description || '',
+              price: item.price || '',
+              category: section.section_name || section.name || 'Appetizers',
+              images: item.images || []
+            });
+          });
+        });
+
+        var drinkItems = [];
+        (apiData.drink_sections || []).forEach(function(section) {
+          (section.items || []).forEach(function(item) {
+            drinkItems.push({
+              name: item.item_name || item.name || '',
+              description: item.description || '',
+              price: item.price || '',
+              category: section.section_name || section.name || 'Beverages',
+              images: item.images || []
+            });
+          });
+        });
+
+        var aiData = {
+          name: apiData.name || apiData.business_name || '',
+          tagline: apiData.tagline || apiData.subtitle || '',
+          description: apiData.description || '',
+          phone: apiData.phone || '',
+          address: apiData.address || '',
+          website: apiData.website || apiData.website_url || '',
+          menu_items: menuItems,
+          drink_items: drinkItems,
+          specials: apiData.specials || [],
+          events: apiData.events || [],
+          hours: apiData.hours || [],
+          happy_hour: apiData.happy_hour || ''
+        };
+
+        // MERGE with existing data instead of replacing
+        if (_aoResult && (_aoResult.menu_items || _aoResult.drink_items)) {
+          aiData = aoMergeData(_aoResult, aiData);
+          toast('📦 Merged new data with existing menu', 'success');
+        }
+        _aoResult = aiData;
         document.getElementById('ao-loading').style.display = 'none';
 
         // Enable save buttons
@@ -8083,6 +8966,7 @@
         // Also log to confirm data was received
         console.log('AI result stored:', _aoResult ? Object.keys(_aoResult) : 'NULL');
         renderAOPreview(_aoResult);
+        renderMenuPreview();
         toast('✨ AI Done! Click the SAVE button at the top.', 'success');
       } catch(e) {
         document.getElementById('ao-loading').style.display = 'none';
@@ -8193,6 +9077,270 @@
       });
     }
 
+    function aoPreviewTab(tab) {
+      ['menu','drinks','specials','hours','contact'].forEach(function(t) {
+        document.getElementById('ao-pvtab-' + t).style.borderBottomColor = t === tab ? 'var(--primary)' : 'transparent';
+        document.getElementById('ao-pvtab-' + t).style.color = t === tab ? 'var(--text)' : 'var(--text-muted)';
+        document.getElementById('ao-pvtab-' + t).style.fontWeight = t === tab ? '600' : 'normal';
+        var panel = document.getElementById('ao-pv-' + t);
+        if (panel) panel.style.display = t === tab ? '' : 'none';
+      });
+    }
+
+    function renderMenuPreview() {
+      var data = _aoResult || {};
+      document.getElementById('ao-preview-name').value = data.name || '';
+      document.getElementById('ao-preview-tagline').value = data.tagline || data.subtitle || '';
+
+      // MENU ITEMS - FULLY EDITABLE
+      var menuHTML = '';
+      var menuItems = data.menu_items || [];
+      if (menuItems.length > 0) {
+        var grouped = {};
+        menuItems.forEach(function(item, idx) {
+          var cat = item.category || 'Appetizers';
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push({...item, _idx: idx});
+        });
+        Object.keys(grouped).forEach(function(cat) {
+          menuHTML += '<div style="margin-bottom:20px;border:1px solid var(--card-border);border-radius:8px;padding:16px;">';
+          menuHTML += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h4 style="margin:0;color:var(--primary);">' + cat + '</h4><button class="btn btn-outline btn-sm" onclick="aoAddMenuItem(\'' + cat + '\')">+ Add Item</button></div>';
+          grouped[cat].forEach(function(item) {
+            menuHTML += '<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" onclick="aoEditMenuItem(' + item._idx + ')">';
+            menuHTML += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
+            menuHTML += '<div style="flex:1;"><strong style="font-size:14px;">' + (item.name || '(unnamed)') + '</strong>';
+            if (item.description) menuHTML += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + item.description + '</div>';
+            if (item.images && item.images.length) menuHTML += '<div style="font-size:11px;color:#22c55e;margin-top:4px;">📷 ' + item.images.length + ' image(s)</div>';
+            menuHTML += '</div>';
+            menuHTML += '<div style="text-align:right;display:flex;gap:8px;align-items:center;"><strong style="color:var(--primary);">$' + (item.price || '0.00') + '</strong><button class="btn btn-sm" style="background:#dc2626;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); aoDeleteMenuItem(' + item._idx + ')">Delete</button></div>';
+            menuHTML += '</div></div>';
+          });
+          menuHTML += '</div>';
+        });
+      }
+      if (!menuHTML) menuHTML = '<p style="color:var(--text-muted);text-align:center;">No menu items <button class="btn btn-outline btn-sm" onclick="aoAddMenuItem(\'Main\')">+ Add First Item</button></p>';
+      document.getElementById('ao-pv-menu-sections').innerHTML = menuHTML;
+
+      // DRINKS - FULLY EDITABLE
+      var drinksHTML = '';
+      var drinks = data.drink_items || data.drinks || [];
+      if (drinks.length > 0) {
+        var drinkGrouped = {};
+        drinks.forEach(function(item, idx) {
+          var cat = item.category || 'Beverages';
+          if (!drinkGrouped[cat]) drinkGrouped[cat] = [];
+          drinkGrouped[cat].push({...item, _idx: idx, _type: 'drink'});
+        });
+        Object.keys(drinkGrouped).forEach(function(cat) {
+          drinksHTML += '<div style="margin-bottom:20px;border:1px solid var(--card-border);border-radius:8px;padding:16px;">';
+          drinksHTML += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h4 style="margin:0;color:var(--primary);">' + cat + '</h4><button class="btn btn-outline btn-sm" onclick="aoAddDrinkItem(\'' + cat + '\')">+ Add Drink</button></div>';
+          drinkGrouped[cat].forEach(function(item) {
+            drinksHTML += '<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px;cursor:pointer;border:2px solid transparent;" onclick="aoEditDrinkItem(' + item._idx + ')">';
+            drinksHTML += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
+            drinksHTML += '<div style="flex:1;"><strong style="font-size:14px;">' + (item.name || '(unnamed)') + '</strong>';
+            if (item.description) drinksHTML += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + item.description + '</div>';
+            drinksHTML += '</div>';
+            drinksHTML += '<div style="text-align:right;display:flex;gap:8px;align-items:center;"><strong style="color:var(--primary);">$' + (item.price || '0.00') + '</strong><button class="btn btn-sm" style="background:#dc2626;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); aoDeleteDrinkItem(' + item._idx + ')">Delete</button></div>';
+            drinksHTML += '</div></div>';
+          });
+          drinksHTML += '</div>';
+        });
+      }
+      if (!drinksHTML) drinksHTML = '<p style="color:var(--text-muted);text-align:center;">No drinks <button class="btn btn-outline btn-sm" onclick="aoAddDrinkItem(\'Beverages\')">+ Add First Drink</button></p>';
+      document.getElementById('ao-pv-drink-sections').innerHTML = drinksHTML;
+
+      // SPECIALS/HOURS/CONTACT - keep as-is for now
+      var specialsHTML = '';
+      if (data.specials && data.specials.length > 0) {
+        data.specials.forEach(function(special) {
+          specialsHTML += '<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px;border-left:4px solid var(--primary);">';
+          specialsHTML += '<strong>' + (special.name || 'Special') + '</strong>';
+          if (special.description) specialsHTML += '<br><small>' + special.description + '</small>';
+          if (special.price) specialsHTML += '<br><strong style="color:var(--primary);">$' + special.price + '</strong>';
+          specialsHTML += '</div>';
+        });
+      }
+      if (data.happy_hour) {
+        specialsHTML += '<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px;border-left:4px solid #f59e0b;">';
+        specialsHTML += '<strong style="color:#f59e0b;">🍹 Happy Hour</strong>';
+        specialsHTML += '<br><small>' + (typeof data.happy_hour === 'string' ? data.happy_hour : JSON.stringify(data.happy_hour)) + '</small>';
+        specialsHTML += '</div>';
+      }
+      if (!specialsHTML) specialsHTML = '<p style="color:var(--text-muted);text-align:center;">No specials</p>';
+      document.getElementById('ao-pv-specials-list').innerHTML = specialsHTML;
+
+      var hoursHTML = '';
+      if (data.hours && data.hours.length > 0) {
+        hoursHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;">';
+        data.hours.forEach(function(h) {
+          var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          hoursHTML += '<div style="padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--card-border);">';
+          hoursHTML += '<strong style="font-size:13px;">' + dayNames[h.day_of_week] + '</strong><br>';
+          hoursHTML += '<span style="font-size:12px;color:var(--text-muted);">' + h.opens_at + ' – ' + h.closes_at + '</span>';
+          hoursHTML += '</div>';
+        });
+        hoursHTML += '</div>';
+      }
+      if (!hoursHTML) hoursHTML = '<p style="color:var(--text-muted);text-align:center;">No hours</p>';
+      document.getElementById('ao-pv-hours-list').innerHTML = hoursHTML;
+
+      var contactHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">';
+      if (data.phone) contactHTML += '<div><strong>📞 Phone</strong><br><span style="font-size:13px;">' + data.phone + '</span></div>';
+      if (data.address) contactHTML += '<div><strong>📍 Address</strong><br><span style="font-size:13px;">' + data.address + '</span></div>';
+      if (data.website) contactHTML += '<div><strong>🌐 Website</strong><br><span style="font-size:13px;"><a href="' + data.website + '" target="_blank" style="color:var(--primary);">' + data.website + '</a></span></div>';
+      contactHTML += '</div>';
+      document.getElementById('ao-pv-contact-info').innerHTML = contactHTML;
+
+      document.getElementById('ao-visual-preview').style.display = '';
+      aoPreviewTab('menu');
+    }
+
+    function aoEditMenuItem(idx) {
+      var item = _aoResult.menu_items[idx];
+      var newName = prompt('Item name:', item.name || '');
+      if (newName === null) return;
+      var newDesc = prompt('Description:', item.description || '');
+      if (newDesc === null) return;
+      var newPrice = prompt('Price:', item.price || '');
+      if (newPrice === null) return;
+      _aoResult.menu_items[idx].name = newName;
+      _aoResult.menu_items[idx].description = newDesc;
+      _aoResult.menu_items[idx].price = newPrice;
+      renderMenuPreview();
+    }
+
+    function aoEditDrinkItem(idx) {
+      var item = _aoResult.drink_items[idx];
+      var newName = prompt('Drink name:', item.name || '');
+      if (newName === null) return;
+      var newDesc = prompt('Description:', item.description || '');
+      if (newDesc === null) return;
+      var newPrice = prompt('Price:', item.price || '');
+      if (newPrice === null) return;
+      _aoResult.drink_items[idx].name = newName;
+      _aoResult.drink_items[idx].description = newDesc;
+      _aoResult.drink_items[idx].price = newPrice;
+      renderMenuPreview();
+    }
+
+    function aoDeleteMenuItem(idx) {
+      if (confirm('Delete this menu item?')) {
+        _aoResult.menu_items.splice(idx, 1);
+        renderMenuPreview();
+      }
+    }
+
+    function aoDeleteDrinkItem(idx) {
+      if (confirm('Delete this drink?')) {
+        _aoResult.drink_items.splice(idx, 1);
+        renderMenuPreview();
+      }
+    }
+
+    function aoAddMenuItem(category) {
+      var name = prompt('Item name:');
+      if (!name) return;
+      var desc = prompt('Description:');
+      var price = prompt('Price:');
+      if (!_aoResult.menu_items) _aoResult.menu_items = [];
+      _aoResult.menu_items.push({
+        name: name,
+        description: desc || '',
+        price: price || '0.00',
+        category: category,
+        images: []
+      });
+      renderMenuPreview();
+    }
+
+    function aoAddDrinkItem(category) {
+      var name = prompt('Drink name:');
+      if (!name) return;
+      var desc = prompt('Description:');
+      var price = prompt('Price:');
+      if (!_aoResult.drink_items) _aoResult.drink_items = [];
+      _aoResult.drink_items.push({
+        name: name,
+        description: desc || '',
+        price: price || '0.00',
+        category: category,
+        images: []
+      });
+      renderMenuPreview();
+    }
+
+    function aoToggleEditMode() {
+      var isReadOnly = document.getElementById('ao-preview-name').readOnly;
+      document.getElementById('ao-preview-name').readOnly = !isReadOnly;
+      document.getElementById('ao-preview-tagline').readOnly = !isReadOnly;
+    }
+
+    async function aoLoadFromDB() {
+      var slug = prompt('Enter business slug (e.g., ocean-breeze-restaurant):');
+      if (!slug) return;
+      try {
+        var token = getAuthToken();
+        var res = await fetch(API_BASE + '/api/menu-editor/' + encodeURIComponent(slug) + '/data', {
+          headers: { 'x-admin-token': token }
+        });
+        if (!res.ok) throw new Error('Business not found');
+        var data = await res.json();
+
+        // Flatten nested sections into flat arrays
+        var menuItems = [];
+        (data.menu_sections || []).forEach(function(section) {
+          (section.items || []).forEach(function(item) {
+            menuItems.push({
+              name: item.item_name || item.name || '',
+              description: item.description || '',
+              price: item.price || '',
+              category: section.section_name || section.name || 'Appetizers',
+              images: item.images || []
+            });
+          });
+        });
+
+        var drinkItems = [];
+        (data.drink_sections || []).forEach(function(section) {
+          (section.items || []).forEach(function(item) {
+            drinkItems.push({
+              name: item.item_name || item.name || '',
+              description: item.description || '',
+              price: item.price || '',
+              category: section.section_name || section.name || 'Beverages',
+              images: item.images || []
+            });
+          });
+        });
+
+        // Map API response to _aoResult format
+        _aoResult = {
+          name: data.entity?.name || '',
+          tagline: data.entity?.subtitle || data.entity?.description || '',
+          description: data.entity?.description || '',
+          phone: data.entity?.phone || '',
+          address: data.entity?.address_line_1 || data.entity?.address || '',
+          website: data.entity?.website_url || data.entity?.website || '',
+          menu_items: menuItems,
+          drink_items: drinkItems,
+          specials: data.specials || [],
+          events: data.events || [],
+          hours: data.hours || [],
+          happy_hour: data.happy_hour || ''
+        };
+
+        renderMenuPreview();
+        document.getElementById('ao-step2').style.display = '';
+        document.getElementById('ao-step1').style.display = 'none';
+        document.getElementById('ao-loading').style.display = 'none';
+        document.getElementById('ao-visual-preview').style.display = '';
+        aoPreviewTab('menu');
+        toast('✅ Loaded ' + (data.entity?.name || slug) + ' from database', 'success');
+      } catch(e) {
+        toast('Error loading business: ' + e.message, 'error');
+      }
+    }
+
     async function approveAIOrganize() {
       // Read back any edits from the raw JSON editor (if user was on that tab)
       var rawJson = document.getElementById('ao-json-editor').value.trim();
@@ -8266,7 +9414,7 @@
       document.getElementById('bd-biz-name').textContent = 'Loading…';
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
         _bdData = await res.json();
         var b = _bdData.business || {};
         _bdSlug = b.slug || siteId;
@@ -8353,7 +9501,7 @@
         featured:         (document.getElementById('bd-gcr-featured')||{}).checked,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast('Profile saved!', 'success');
         clearBdDirty();
@@ -8392,12 +9540,12 @@
       var payload = { item_name: document.getElementById('bd-menuitem-form-name').value, price: parseFloat(document.getElementById('bd-menuitem-form-price').value) || null, description: document.getElementById('bd-menuitem-form-desc').value || null, image_url: document.getElementById('bd-menuitem-form-photo').value || null };
       var method = id ? 'PUT' : 'POST';
       var table = isDrink ? 'drink-items' : 'menu-items';
-      var url = id ? API_BASE + '/api/admin/gcr/' + table + '/' + id : API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/' + table;
+      var url = id ? GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id : GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/' + table;
       try {
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-menuitem').style.display = 'none';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdMenuItems2 = d.menu || [];
         _bdDrinkItems2 = d.drinks || [];
         renderBizDashMenu(); renderBizDashDrinks(); toast('Saved!', 'success');
@@ -8407,7 +9555,7 @@
       if (!confirm('Delete this item?')) return;
       var token = getAuthToken();
       var table = type === 'drink' ? 'drink-items' : 'menu-items';
-      await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (type === 'drink') { _bdDrinkItems2 = _bdDrinkItems2.filter(function(i){ return i.id !== id; }); renderBizDashDrinks(); }
       else { _bdMenuItems2 = _bdMenuItems2.filter(function(i){ return i.id !== id; }); renderBizDashMenu(); }
       toast('Deleted', 'success');
@@ -8424,7 +9572,7 @@
     async function saveBizDashHappyHour() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/happy-hour', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hh_days: document.getElementById('bd-hh-days').value, hh_start: document.getElementById('bd-hh-start').value, hh_end: document.getElementById('bd-hh-end').value }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/happy-hour', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hh_days: document.getElementById('bd-hh-days').value, hh_start: document.getElementById('bd-hh-start').value, hh_end: document.getElementById('bd-hh-end').value }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Happy hour saved!', 'success');
         clearBdDirty();
@@ -8455,18 +9603,18 @@
       var id = document.getElementById('bd-special-form-id').value; if (id) payload.id = id;
       try {
         var method = id ? 'PUT' : 'POST';
-        var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/specials/' + id : GCR_ADMIN_API + '/api/admin/gcr/specials';
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-special').style.display = 'none';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdSpecials2 = d.specials || []; renderBizDashSpecials(); toast('Saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
     async function deleteBizSpecialItem(id) {
       if (!confirm('Delete?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _bdSpecials2 = _bdSpecials2.filter(function(s){ return s.id !== id; }); renderBizDashSpecials(); toast('Deleted', 'success');
     }
 
@@ -8493,18 +9641,18 @@
       var id = document.getElementById('bd-event-form-id').value; if (id) payload.id = id;
       try {
         var method = id ? 'PUT' : 'POST';
-        var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/events/' + id : GCR_ADMIN_API + '/api/admin/gcr/events';
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-event').style.display = 'none';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdEvents2 = d.events || []; renderBizDashEvents(); toast('Saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
     async function deleteBizEventItem(id) {
       if (!confirm('Delete?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _bdEvents2 = _bdEvents2.filter(function(e){ return e.id !== id; }); renderBizDashEvents(); toast('Deleted', 'success');
     }
 
@@ -8716,7 +9864,7 @@
         var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url, caption: caption }) });
         if (!res.ok) throw new Error('Failed');
         document.getElementById('bd-media-url').value = ''; document.getElementById('bd-media-caption').value = '';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdData.media = d.media || []; renderBizMedia(); toast('Photo added!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
@@ -8750,7 +9898,7 @@
       }
       var clearInput = document.getElementById('bd-media-upload-input') || document.getElementById('bd-media-file');
       if (clearInput) clearInput.value = '';
-      var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+      var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
       _bdData.media = d.media || []; renderBizMedia(); toast(uploaded + ' photo(s) uploaded!', 'success');
     }
 
@@ -8797,7 +9945,7 @@
       if (!wrap || !_bdSiteId) return;
       wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation', {
           headers: { 'Authorization': 'Bearer ' + getAuthToken() }
         });
         if (!res.ok) throw new Error('Load failed');
@@ -8841,7 +9989,7 @@
       var name = prompt('Section name (e.g. "Catch of the Day", "Veggie of the Day"):');
       if (!name || !name.trim()) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation/sections', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation/sections', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: name.trim(), sort_order: _rotationSections.length })
@@ -8954,7 +10102,7 @@
     async function loadEntities() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         _allEntities = data.entities || [];
         renderEntities(_allEntities);
@@ -9002,7 +10150,7 @@
     async function toggleEntityActive(entityId, isActive) {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: { is_active: isActive } })
@@ -9112,21 +10260,21 @@
           if ((!curA[f] || curA[f] === '') && entB[f]) updateFields[f] = entB[f];
         });
         if (Object.keys(updateFields).length) {
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: updateFields }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: updateFields }) });
         }
 
         // 4. Copy tags from B (skip dupes)
         var existTags = (dataA.tags||[]).map(function(t){ return t.tag.toLowerCase(); });
         var newTags = (dataB.tags||[]).filter(function(t){ return !existTags.includes(t.tag.toLowerCase()); });
         for (var i=0; i<newTags.length; i++) {
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: newTags[i].tag, tag_category: newTags[i].tag_category }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: newTags[i].tag, tag_category: newTags[i].tag_category }) });
         }
 
         // 5. Copy features from B (skip dupes)
         var existFeats = (dataA.features||[]).map(function(f){ return f.label.toLowerCase(); });
         var newFeats = (dataB.features||[]).filter(function(f){ return !existFeats.includes(f.label.toLowerCase()); });
         for (var i=0; i<newFeats.length; i++) {
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeats[i].label, sort_order: existFeats.length + i }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeats[i].label, sort_order: existFeats.length + i }) });
         }
 
         // 6. Copy sections from B that don't exist on A
@@ -9137,12 +10285,12 @@
         var sectionsAdded = 0;
         for (var i=0; i<newSections.length; i++) {
           var s = newSections[i];
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: s.section_key, section_label: s.section_label, section_type: s.section_type, sort_order: s.sort_order || 50 }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: s.section_key, section_label: s.section_label, section_type: s.section_type, sort_order: s.sort_order || 50 }) });
           sectionsAdded++;
         }
 
         // 7. Delete entity B
-        await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityB, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityB, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
 
         toast('Merged! ' + nameB + ' → ' + nameA + ' (' + newTags.length + ' tags, ' + newFeats.length + ' features, ' + sectionsAdded + ' sections added)', 'success');
         loadEntities();
@@ -9155,7 +10303,7 @@
     async function toggleEntitySponsored(entityId, isSponsored) {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: { is_sponsored: isSponsored, sort_order: isSponsored ? 0 : 999 } })
@@ -9173,7 +10321,7 @@
       if (!confirm('Permanently delete "' + entityName + '"? This cannot be undone.')) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + token }
         });
@@ -9311,7 +10459,7 @@
         description: document.getElementById('ent-description') ? document.getElementById('ent-description').value : undefined,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         document.getElementById('ent-editor-title').textContent = payload.name;
         toast('Entity saved!', 'success');
@@ -9352,7 +10500,7 @@
       };
       if (!entity.name || !entity.slug) { toast('Name and slug are required', 'error'); return; }
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityId = result.id;
@@ -9377,7 +10525,7 @@
         return { day: d.label, open: closed ? null : openVal, close: closed ? null : closeVal, closed: closed };
       });
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ hours: { schedule: schedule } })
@@ -9398,7 +10546,7 @@
         description: (document.getElementById('ent-hh-desc')  || {}).value || '',
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ happyHour: payload })
@@ -9424,7 +10572,7 @@
       var payload = { item_name: nm, price: price ? parseFloat(price) : null, description: dc || null };
       try {
         var token = getAuthToken();
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
           method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -9438,7 +10586,7 @@
       if (!id || !confirm('Delete this item?')) return;
       try {
         var token = getAuthToken();
-        await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         toast('Deleted', 'success');
         await reloadEntContent();
       } catch(err) { toast(err.message, 'error'); }
@@ -9448,7 +10596,7 @@
       if (!id) return;
       try {
         var token = getAuthToken();
-        var r = await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ image_url: url })
@@ -9470,7 +10618,7 @@
         var formData = new FormData();
         formData.append('file', fileInput.files[0]);
         // Upload to entity photos endpoint, then use URL for menu item
-        var r = await fetch(API_BASE + '/api/admin/gcr/upload-photo', {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-photo', {
           method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
         });
         var d = await r.json();
@@ -9505,7 +10653,7 @@
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
               var pr = (item.price_text || '').replace(/[^0-9.]/g,'');
-              await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_name: item.name || item.item_name || '', price: pr ? parseFloat(pr) : null, description: item.description || null })
               });
@@ -9569,7 +10717,7 @@
     async function deleteGCREvent(id) {
       if (!confirm('Delete this event?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Event deleted.', 'success');
         await reloadEntContent();
       } catch(e) { toast(e.message, 'error'); }
@@ -9578,7 +10726,7 @@
     async function deleteGCRSpecial(id) {
       if (!confirm('Delete this special?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Special deleted.', 'success');
         await reloadEntContent();
       } catch(e) { toast(e.message, 'error'); }
@@ -9621,7 +10769,7 @@
       try {
         var fd = new FormData(); fd.append('image', files[0]);
         var token = getAuthToken();
-        var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
         var res = await r.json();
         if (res.url) {
           document.getElementById('ent-item-edit-img-url').value = res.url;
@@ -9644,7 +10792,7 @@
         image_url:   document.getElementById('ent-item-edit-img-url').value.trim() || null,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, {
           method: 'PUT', headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -9660,7 +10808,7 @@
       var table = document.getElementById('ent-item-edit-table').value;
       if (!id || !confirm('Delete this item?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Deleted', 'success');
         closeEntItemEdit();
         await reloadEntContent();
@@ -9697,7 +10845,7 @@
       if (!url.startsWith('http')) { toast('Enter a valid photo URL', 'error'); return; }
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: { add: [{ image_url: url, caption: (capEl||{}).value || '' }] } })
@@ -9714,7 +10862,7 @@
       if (!_currentEntityId) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: { delete: [{ id: photoId, image_url: imageUrl }] } })
@@ -9814,7 +10962,7 @@
 
       if (existingTag) {
         // Remove tag
-        await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags/' + existingTag.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/tags/' + existingTag.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         ent._tags = (ent._tags || []).filter(function(t){ return t.id !== existingTag.id; });
         btn.style.background = 'transparent';
         btn.style.color = 'var(--text)';
@@ -9822,7 +10970,7 @@
       } else {
         // Add tag
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag, tag_category: cat||null }) });
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag, tag_category: cat||null }) });
           var result = await res.json();
           if (!ent._tags) ent._tags = [];
           ent._tags.push(result.tag || { tag: tag, tag_category: cat });
@@ -9847,7 +10995,7 @@
       var token = getAuthToken();
       var ent = _allEntities.find(function(e){ return e.id === entityId; });
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag }) });
         var result = await res.json();
         if (!ent._tags) ent._tags = [];
         ent._tags.push(result.tag || { tag: tag });
@@ -9867,7 +11015,7 @@
       if (!tag) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityTags.push(result.tag);
@@ -9879,7 +11027,7 @@
     async function removeEntTag(tagId) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityTags = _currentEntityTags.filter(function(t){ return t.id !== tagId; });
       renderEntTags();
     }
@@ -9900,7 +11048,7 @@
       if (!label) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityFeatures.push(result.feature);
@@ -9912,7 +11060,7 @@
     async function removeEntFeature(fid) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityFeatures = _currentEntityFeatures.filter(function(f){ return f.id !== fid; });
       renderEntFeatures();
     }
@@ -9933,7 +11081,7 @@
       if (!label) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityPF.push(result.item);
@@ -9945,7 +11093,7 @@
     async function removeEntPF(pid) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityPF = _currentEntityPF.filter(function(p){ return p.id !== pid; });
       renderEntPF();
     }
@@ -10000,7 +11148,7 @@
       var type = document.getElementById('sec-new-type').value;
       if (!key || !label) { toast('Key and label are required', 'error'); return; }
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntitySections.push(result.section);
@@ -10204,7 +11352,7 @@
     async function deleteEntSection(sectionId) {
       if (!confirm('Delete this section and all its content?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntitySections = _currentEntitySections.filter(function(s){ return s.id !== sectionId; });
       renderEntSections();
       toast('Section deleted', 'success');
@@ -10229,7 +11377,7 @@
         if (sectionType === 'rich_text') {
           var res = await fetch(API_BASE + '/api/gcr/entity/___', { headers: {} });
           // Fetch directly from section
-          var r = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/rich-text-get');
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/rich-text-get');
           // Build inline editor
           body.innerHTML = '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;">About / Description Text</label>' +
             '<textarea id="sec-rt-text" rows="8" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>' +
@@ -10239,13 +11387,13 @@
           if (section && section.content) document.getElementById('sec-rt-text').value = section.content.body_text || '';
 
         } else if (sectionType === 'bullets') {
-          var bulletsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/bullets', { headers: { 'Authorization': 'Bearer ' + token } });
+          var bulletsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/bullets', { headers: { 'Authorization': 'Bearer ' + token } });
           var bd = await bulletsRes.json();
           _secEditGroups = bd.bullets || [];
           renderSecBullets();
 
         } else if (sectionType === 'grouped_items') {
-          var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
+          var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
           var gd = await grpRes.json();
           _secEditGroups = gd.groups || [];
           renderSecGroups();
@@ -10277,7 +11425,7 @@
           body.innerHTML = hoursHtml;
 
         } else if (sectionType === 'gallery') {
-          var photosRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { headers: { 'Authorization': 'Bearer ' + token } });
+          var photosRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/photos', { headers: { 'Authorization': 'Bearer ' + token } });
           var pd = await photosRes.json();
           renderSecPhotos(pd.photos || []);
 
@@ -10292,7 +11440,7 @@
       var token = getAuthToken();
       var text = document.getElementById('sec-rt-text').value;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: text }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: text }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Saved!', 'success');
         // Update local cache
@@ -10325,7 +11473,7 @@
       var text = document.getElementById('sec-bullet-new').value.trim();
       if (!text) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: text, sort_order: _secEditGroups.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: text, sort_order: _secEditGroups.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _secEditGroups.push(result.bullet);
@@ -10337,13 +11485,13 @@
     async function saveSecBullet(idx) {
       var token = getAuthToken();
       var b = _secEditGroups[idx];
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + b.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: b.bullet_text }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + b.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: b.bullet_text }) });
       toast('Saved', 'success');
     }
 
     async function deleteSecBullet(id, idx) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _secEditGroups.splice(idx, 1);
       renderSecBullets();
     }
@@ -10379,7 +11527,7 @@
 
     async function addSecGroup() {
       var token = getAuthToken();
-      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'New Group', sort_order: _secEditGroups.length }) });
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'New Group', sort_order: _secEditGroups.length }) });
       var result = await res.json();
       if (result.error) { toast(result.error, 'error'); return; }
       _secEditGroups.push({ ...result.group, items: [] });
@@ -10389,14 +11537,14 @@
     async function saveSecGroup(gi) {
       var token = getAuthToken();
       var g = _secEditGroups[gi];
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + g.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: g.title, subtitle: g.subtitle }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + g.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: g.title, subtitle: g.subtitle }) });
       toast('Group saved', 'success');
     }
 
     async function deleteSecGroup(id, gi) {
       if (!confirm('Delete this group and all its items?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _secEditGroups.splice(gi, 1);
       renderSecGroups();
     }
@@ -10404,7 +11552,7 @@
     async function addSecItem(groupId, gi) {
       var token = getAuthToken();
       var payload = { group_id: groupId, item_name: 'New Item', item_type: 'menu_item', sort_order: (_secEditGroups[gi].items||[]).length };
-      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       var result = await res.json();
       if (result.error) { toast(result.error, 'error'); return; }
       if (!_secEditGroups[gi].items) _secEditGroups[gi].items = [];
@@ -10415,13 +11563,13 @@
     async function saveSecItem(gi, ii) {
       var token = getAuthToken();
       var item = _secEditGroups[gi].items[ii];
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items/' + item.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: item.item_name, item_description: item.item_description, price_text: item.price_text, price_numeric: item.price_numeric }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/items/' + item.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: item.item_name, item_description: item.item_description, price_text: item.price_text, price_numeric: item.price_numeric }) });
       toast('Item saved', 'success');
     }
 
     async function deleteSecItem(id, gi, ii) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/items/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _secEditGroups[gi].items.splice(ii, 1);
       renderSecGroups();
     }
@@ -10431,7 +11579,7 @@
       var token = getAuthToken();
       var payload = { address_line_1: document.getElementById('loc-addr').value, city: document.getElementById('loc-city').value, state: document.getElementById('loc-state').value, zip: document.getElementById('loc-zip').value, phone: document.getElementById('loc-phone').value, directions_url: document.getElementById('loc-dir').value, note_text: document.getElementById('loc-note').value };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error('Save failed');
         toast('Location saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -10448,7 +11596,7 @@
         return { day_of_week: d, open_time: closed ? null : (parts[0]||'').trim()||null, close_time: closed ? null : (parts[1]||'').trim()||null, is_closed: closed };
       });
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/hours', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hours }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/hours', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hours }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Hours saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -10480,7 +11628,7 @@
       var cap = document.getElementById('sec-photo-caption').value.trim();
       if (!url) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url, caption: cap }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url, caption: cap }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         document.getElementById('sec-photo-url').value = '';
@@ -10496,7 +11644,7 @@
 
     async function deleteSecPhoto(id, el) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (el) el.remove();
       toast('Deleted', 'success');
     }
@@ -10547,7 +11695,7 @@
       var token = getAuthToken();
 
       if (type === 'section_based') {
-        var res = await fetch(API_BASE + '/api/admin/gcr/import-section-based', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/import-section-based', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(rows)
@@ -10572,7 +11720,7 @@
         for (var i = 0; i < rows.length; i++) {
           var r = rows[i];
           try {
-            var res = await fetch(API_BASE + '/api/admin/gcr/entities', {
+            var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', {
               method: 'POST',
               headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
               body: JSON.stringify({ entity: { name: r.name, slug: r.slug, entity_subtype: r.entity_subtype, subtitle: r.subtitle, phone: r.phone, address_line_1: r.address_line_1, city: r.city, state: r.state, zip: r.zip, website_url: r.website_url, directions_url: r.directions_url, hero_image_url: r.hero_image_url } })
@@ -10608,7 +11756,7 @@
             if (!entity) { errors++; console.warn('Entity not found:', entry.entity_slug); continue; }
 
             // Get or create section
-            var secCreateRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entity.id + '/sections', {
+            var secCreateRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entity.id + '/sections', {
               method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
               body: JSON.stringify({ section_key: entry.section_key, section_label: entry.section_key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}), section_type: 'grouped_items', sort_order: 99 })
             });
@@ -10616,7 +11764,7 @@
             var sectionId = secCreateData.section?.id;
             if (!sectionId) {
               // Already exists — fetch it
-              var secListRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entity.id + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
+              var secListRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entity.id + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
               var secListData = await secListRes.json();
               var existSec = (secListData.sections||[]).find(function(s){ return s.section_key === entry.section_key; });
               if (!existSec) { errors++; continue; }
@@ -10624,7 +11772,7 @@
             }
 
             // Fetch existing items in this section to prevent duplicates
-            var existItemsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
+            var existItemsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
             var existItemsData = await existItemsRes.json();
             var existingNames = new Set();
             (existItemsData.groups||[]).forEach(function(g) {
@@ -10635,7 +11783,7 @@
             for (var gTitle in entry.groups) {
               var items = entry.groups[gTitle];
               // Get or create group
-              var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', {
+              var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: gTitle === 'default' ? '' : gTitle, sort_order: 0 })
               });
@@ -10650,7 +11798,7 @@
                 var item = items[ii];
                 var nameKey = (item.item_name||'').toLowerCase().trim();
                 if (existingNames.has(nameKey)) { skipped++; continue; } // duplicate — skip
-                await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/items', {
+                await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/items', {
                   method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                   body: JSON.stringify({ group_id: grpId||null, item_name: item.item_name, item_description: item.item_description||null, price_text: item.price_text||null, price_numeric: parseFloat(item.price_numeric)||null, item_type: item.item_type||'menu_item', sort_order: ii })
                 });
@@ -10794,14 +11942,14 @@
     async function getOrCreateEventsSection(entityId, token) {
       if (_gcrEntitySectionCache[entityId]) return _gcrEntitySectionCache[entityId];
       // Try creating — if exists, fetch it
-      var secRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', {
+      var secRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/sections', {
         method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ section_key: 'events', section_label: 'Events', section_type: 'cards', sort_order: 50 })
       });
       var secData = await secRes.json();
       if (secData.section?.id) { _gcrEntitySectionCache[entityId] = secData.section.id; return secData.section.id; }
       // Already exists — fetch
-      var listRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
+      var listRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
       var listData = await listRes.json();
       var sec = (listData.sections||[]).find(function(s){ return s.section_key === 'events'; });
       if (sec) { _gcrEntitySectionCache[entityId] = sec.id; return sec.id; }
@@ -10821,11 +11969,11 @@
           var sectionId = await getOrCreateEventsSection(e._entityId, token);
           if (!sectionId) { errors++; continue; }
           // Check for duplicate event title in this section
-          var existCardsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', { headers: { 'Authorization': 'Bearer ' + token } });
+          var existCardsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/cards', { headers: { 'Authorization': 'Bearer ' + token } });
           var existCardsData = await existCardsRes.json();
           var existTitles = new Set((existCardsData.cards||[]).map(function(c){ return (c.title||'').toLowerCase().trim(); }));
           if (existTitles.has((e.event_name||'').toLowerCase().trim())) { skipped++; continue; }
-          await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', {
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/cards', {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: e.event_name, subtitle: e.subtitle, description: e.description, badge_text: e.badge_text, price_text: e.price_text||null, image_url: e.image_url||null, link_url: e.link_url||null, sort_order: i })
           });
@@ -10852,7 +12000,7 @@
       var token = getAuthToken();
       var filter = (document.getElementById('gcr-review-filter') || {}).value || 'all';
       try {
-        var url = API_BASE + '/api/admin/gcr/reviews';
+        var url = GCR_ADMIN_API + '/api/admin/gcr/reviews';
         if (filter !== 'all') url += '?status=' + filter;
         var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
@@ -10895,7 +12043,7 @@
 
     async function updateGCRReviewStatus(reviewId, status) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/reviews/' + reviewId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/reviews/' + reviewId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
       var r = _gcrReviews.find(function(x){ return x.id === reviewId; });
       if (r) r.status = status;
       renderGCRReviews();
@@ -10907,7 +12055,7 @@
     async function loadGCRCustomers() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/customers', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/customers', { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         _gcrCustomers = data.customers || [];
       } catch(e) { _gcrCustomers = []; }
@@ -10957,7 +12105,7 @@
 
       // ── 1. Entity-level views (existing gcrDb data) ──
       try {
-        var r1   = await fetch(API_BASE + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
+        var r1   = await fetch(GCR_ADMIN_API + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
         var d1   = await r1.json();
         if (el('ga-today-visitors')) el('ga-today-visitors').textContent = (d1.today_visitors || 0).toLocaleString();
         if (el('ga-today-views'))    el('ga-today-views').textContent    = (d1.today_views    || 0).toLocaleString();
@@ -11113,7 +12261,7 @@
       _gcrMessagingEntityId = entityId;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/messaging/' + entityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/messaging/' + entityId, { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         var s = data.settings || {};
         var el = function(id){ return document.getElementById(id); };
@@ -11139,7 +12287,7 @@
         notify_on_review: (el('gm-notify-review') || {}).checked !== false,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/messaging/' + _gcrMessagingEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/messaging/' + _gcrMessagingEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error();
         toast('Messaging settings saved!', 'success');
       } catch(e) { toast('Save failed — check if gcr_messaging_settings table exists', 'error'); }
@@ -11150,7 +12298,7 @@
     async function loadGCRCoupons() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/coupons', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/coupons', { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         _gcrCoupons = data.coupons || [];
       } catch(e) { _gcrCoupons = []; }
@@ -11188,7 +12336,7 @@
     async function deleteGCRCoupon(id) {
       if (!confirm('Delete this coupon?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/coupons/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/coupons/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _gcrCoupons = _gcrCoupons.filter(function(c){ return c.id !== id; });
       renderGCRCoupons();
       toast('Coupon deleted', 'success');
@@ -11227,7 +12375,7 @@
       if (maxUses) payload.max_uses = parseInt(maxUses);
       if (expires) payload.expires_at = expires + 'T23:59:59Z';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/coupons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/coupons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error();
         document.getElementById('couponModal')?.remove();
         toast('Coupon created!', 'success');
@@ -11353,13 +12501,13 @@
             if (!cur[k] || cur[k] === '') mergeFields[k] = updateFields[k];
           }
           if (Object.keys(mergeFields).length) {
-            await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: mergeFields }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: mergeFields }) });
           }
           // Add new features (skip existing)
           var existingFeatures = (curData.features||[]).map(function(f){ return f.label.toLowerCase(); });
           var newFeatures = (d.features||[]).filter(function(f){ return !existingFeatures.includes(f.toLowerCase()); });
           for (var fi=0; fi<newFeatures.length; fi++) {
-            await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeatures[fi], sort_order: existingFeatures.length + fi }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeatures[fi], sort_order: existingFeatures.length + fi }) });
           }
         }
 
@@ -11369,7 +12517,7 @@
           // Check if section already exists
           var existing = _existingSections.find(function(s){ return s.section_key === key; });
           if (existing) return existing.id;
-          var r = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: order }) });
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: order }) });
           var rd = await r.json(); return rd.section?.id;
         }
 
@@ -11378,14 +12526,14 @@
         // 2. About section
         if (d.description) {
           var sid = await createSection('about', 'About', 'rich_text', order++);
-          if (sid) await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: d.description }) });
+          if (sid) await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: d.description }) });
         }
 
         // 3. Highlights
         if (d.highlights?.length) {
           var sid = await createSection('highlights', 'Highlights', 'bullets', order++);
           if (sid) for (var i=0; i<d.highlights.length; i++) {
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.highlights[i], sort_order: i }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.highlights[i], sort_order: i }) });
           }
         }
 
@@ -11394,11 +12542,11 @@
           var sid = await createSection('schedules', 'Times & Tickets', 'grouped_items', order++);
           if (sid) for (var i=0; i<d.schedules.length; i++) {
             var sched = d.schedules[i];
-            var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: sched.time||sched.name, subtitle: sched.name, sort_order: i }) });
+            var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: sched.time||sched.name, subtitle: sched.name, sort_order: i }) });
             var grpId = (await grpRes.json()).group?.id;
             if (grpId && sched.tickets) for (var j=0; j<sched.tickets.length; j++) {
               var t = sched.tickets[j];
-              await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: t.name, price_text: '$'+t.price, price_numeric: parseFloat(t.price)||null, item_type: 'ticket', sort_order: j }) });
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: t.name, price_text: '$'+t.price, price_numeric: parseFloat(t.price)||null, item_type: 'ticket', sort_order: j }) });
             }
           }
         }
@@ -11410,12 +12558,12 @@
           for (var meal in byMeal) {
             var sid = await createSection(meal.toLowerCase().replace(/\s+/g,'-'), meal, 'grouped_items', order++);
             if (sid) {
-              var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: meal, sort_order: 0 }) });
+              var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: meal, sort_order: 0 }) });
               var grpId = (await grpRes.json()).group?.id;
               var items = byMeal[meal];
               for (var i=0; i<items.length; i++) {
                 var item = items[i];
-                await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: item.name, item_description: item.description, price_text: item.price ? '$'+item.price : null, price_numeric: parseFloat(item.price)||null, item_type: 'menu_item', sort_order: i }) });
+                await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: item.name, item_description: item.description, price_text: item.price ? '$'+item.price : null, price_numeric: parseFloat(item.price)||null, item_type: 'menu_item', sort_order: i }) });
               }
             }
           }
@@ -11426,11 +12574,11 @@
           var hhData = typeof d.happy_hour === 'string' ? { schedule: d.happy_hour, deals: [] } : d.happy_hour;
           var sid = await createSection('happy_hour', 'Happy Hour', 'grouped_items', order++);
           if (sid) {
-            var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: hhData.schedule||'Happy Hour', sort_order: 0 }) });
+            var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: hhData.schedule||'Happy Hour', sort_order: 0 }) });
             var grpId = (await grpRes.json()).group?.id;
             if (grpId) for (var i=0; i<(hhData.deals||[]).length; i++) {
               var deal = hhData.deals[i];
-              await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: deal.name, item_description: deal.desc, price_text: deal.price, item_type: 'hh_item', sort_order: i }) });
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: deal.name, item_description: deal.desc, price_text: deal.price, item_type: 'hh_item', sort_order: i }) });
             }
           }
         }
@@ -11439,7 +12587,7 @@
         if (d.restrictions?.length) {
           var sid = await createSection('restrictions', 'Guest Info', 'bullets', order++);
           if (sid) for (var i=0; i<d.restrictions.length; i++) {
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.restrictions[i], sort_order: i }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.restrictions[i], sort_order: i }) });
           }
         }
 
@@ -11448,13 +12596,13 @@
           var sid = await createSection('events', 'Events', 'cards', order++);
           if (sid) for (var i=0; i<d.events.length; i++) {
             var ev = d.events[i];
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/cards', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: ev.title||ev.name, description: ev.description, badge_text: ev.event_date, sort_order: i }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/cards', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: ev.title||ev.name, description: ev.description, badge_text: ev.event_date, sort_order: i }) });
           }
         }
 
         // 9. Location section always last
         var locSid = await createSection('location', 'Location', 'location', 99);
-        if (locSid) await fetch(API_BASE + '/api/admin/gcr/sections/' + locSid + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, phone: d.phone, website_url: d.website, directions_url: d.social?.google_maps }) });
+        if (locSid) await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + locSid + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, phone: d.phone, website_url: d.website, directions_url: d.social?.google_maps }) });
 
         document.getElementById('ao-loading').style.display = 'none';
         document.getElementById('ao-saved').style.display = '';
@@ -11527,8 +12675,8 @@
       var token = getAuthToken();
       try {
         var [cfgRes, cardsRes] = await Promise.all([
-          fetch(API_BASE + '/api/admin/gcr/site-config', { headers: { 'Authorization': 'Bearer ' + token } }),
-          fetch(API_BASE + '/api/admin/gcr/category-cards', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/site-config', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/category-cards', { headers: { 'Authorization': 'Bearer ' + token } }),
         ]);
         if (cfgRes.ok) {
           var d = await cfgRes.json();
@@ -11603,7 +12751,7 @@
         bg_image: document.getElementById('hero-bg-url').value,
         quick_tags: _siteHeroTags,
       };
-      var res = await fetch(API_BASE + '/api/admin/gcr/site-config/hero', {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/site-config/hero', {
         method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ value })
       });
@@ -11667,7 +12815,7 @@
           image_url: (document.getElementById('cc-img-' + p.id) || {}).value || '',
           color_gradient: (document.getElementById('cc-grad-' + p.id) || {}).value || '',
         };
-        return fetch(API_BASE + '/api/admin/gcr/category-cards/' + p.id, {
+        return fetch(GCR_ADMIN_API + '/api/admin/gcr/category-cards/' + p.id, {
           method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -11682,7 +12830,7 @@
       var catId = document.getElementById('ph-page-select').value;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/category-page-config/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/category-page-config/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
         if (!res.ok) return;
         var d = await res.json();
         var cfg = d.config || {};
@@ -11713,7 +12861,7 @@
         page_description: document.getElementById('ph-description').value,
         hero_image_url: document.getElementById('ph-image-url').value,
       };
-      var res = await fetch(API_BASE + '/api/admin/gcr/category-page-config/' + catId, {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/category-page-config/' + catId, {
         method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -11730,7 +12878,7 @@
       var body = document.getElementById('top5-editor-body');
       body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-assignments/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : { assignments: [] };
         _top5Assignments = d.assignments || [];
         renderTop5Editor(catId);
@@ -11787,7 +12935,7 @@
       results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);">Searching…</div>';
       try {
         var token = getAuthToken();
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : {};
         var entities = d.entities || [];
         if (!entities.length) { results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);">No results found.</div>'; return; }
@@ -11808,7 +12956,7 @@
       var token = getAuthToken();
       var nextPos = Math.min((_top5Assignments.length || 0) + 1, 5);
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId + '/order', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-assignments/' + catId + '/order', {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ assignments: [{ entity_id: entityId, sort_order: nextPos, is_featured: true }] })
@@ -11830,7 +12978,7 @@
           is_featured: document.getElementById('top5-feat-' + i).checked,
         };
       });
-      var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId + '/order', {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-assignments/' + catId + '/order', {
         method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ orders })
       });
@@ -11847,7 +12995,7 @@
         var token = getAuthToken();
         var formData = new FormData(); formData.append('file', file);
         try {
-          var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
           var d = await r.json();
           if (!r.ok) { toast(d.error || 'Upload failed', 'error'); return; }
           var el = document.getElementById(targetInputId);
@@ -11869,7 +13017,7 @@
       var container = document.getElementById('ent-pages-list');
       container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId, { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : { assignments: [] };
         _entPageAssignments = d.assignments || [];
         renderEntPages();
@@ -11914,12 +13062,12 @@
         var pos = parseInt((document.getElementById('ep-pos-' + p.id) || {}).value) || 1;
 
         if (checked) {
-          promises.push(fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId, {
+          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId, {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_id: p.id, sort_order: pos, is_featured: featured })
           }));
         } else if (currentIds.has(p.id)) {
-          promises.push(fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId + '/' + p.id, {
+          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId + '/' + p.id, {
             method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
           }));
         }
@@ -11944,17 +13092,17 @@
           var file = input.files[0]; if (!file) return;
           var formData = new FormData(); formData.append('file', file);
           try {
-            var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+            var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
             var d = await r.json();
             if (!r.ok) { toast(d.error || 'Upload failed', 'error'); return; }
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: d.url, caption: caption || '' }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: d.url, caption: caption || '' }) });
             toast('Photo uploaded!', 'success');
           } catch(e) { toast(e.message, 'error'); }
         };
         input.click();
       } else {
         var cap = caption || prompt('Caption (optional):') || '';
-        await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url.trim(), caption: cap }) });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url.trim(), caption: cap }) });
         toast('Photo added!', 'success');
       }
     }
@@ -12433,7 +13581,7 @@
         var qrUrl  = l.site_id
           ? 'https://cybercheck-links.vercel.app/qr-menu.html?site_id=' + encodeURIComponent(l.site_id)
           : 'https://cybercheck-links.vercel.app/qr-menu.html?slug=' + encodeURIComponent(l.entity_slug || '');
-        var editUrl = 'https://cybercheck-links.vercel.app/menu-editor.html?token=' + l.token;
+        var editUrl = getEditorBaseUrl() + '/' + encodeURIComponent(l.entity_slug || '');
         var sentTo = l.send_phone ? '<span style="font-size:12px;color:var(--text-muted);">📱 '+l.send_phone+'</span>' : '';
         var statusDot, statusText;
         if (l.submitted_at) {
@@ -13388,7 +14536,7 @@
       .then(d => {
         if (d.success) {
           // PIN saved, now show the link
-          var editUrl = 'https://cybercheck-links.vercel.app/daily-menu.html?slug=' + encodeURIComponent(slug) + '&pin=' + encodeURIComponent(pin);
+          var editUrl = buildMenuEditorUrl(slug, pin);
 
           resultEl.innerHTML = '<div style="background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:12px;margin-top:10px;font-size:12px;">' +
             '<div style="font-weight:600;color:#166534;margin-bottom:8px;">✅ Edit Link Ready!</div>' +
@@ -13584,7 +14732,7 @@
         var _chosenProvider = _provSel ? _provSel.value : 'anthropic';
         var _chosenModel = _modSel ? _modSel.value : 'claude-sonnet-4-6';
 
-        var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/grok-chat', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -14531,7 +15679,7 @@
       var section = _mbCats.find(function(c) { return c.name === oldName; });
       if (!section || !section.id) { toast('Section not found', 'error'); return; }
 
-      fetch(API_BASE + '/api/admin/gcr/entities/' + encodeURIComponent(_mbSiteId) + '/sections/' + encodeURIComponent(section.id), {
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + encodeURIComponent(_mbSiteId) + '/sections/' + encodeURIComponent(section.id), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
         body: JSON.stringify({ name: name })
@@ -14567,7 +15715,7 @@
 
     var toDelete = _mbItems.filter(function(i) { return i.category === name; });
     Promise.all(toDelete.map(function(item) {
-      return fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(item.id), {
+      return fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(item.id), {
         method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
     })).then(function() {
@@ -14646,14 +15794,14 @@
       var res;
       if (existingId) {
         // Update existing item
-        res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items/' + encodeURIComponent(existingId), {
+        res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items/' + encodeURIComponent(existingId), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(payload)
         });
       } else {
         // Create new item in section
-        res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
+        res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(payload)
@@ -14679,7 +15827,7 @@
       var item = _mbItems.find(function(i) { return String(i.id) === String(id); });
       if (!item || !item.section_id) { toast('Item or section not found', 'error'); return; }
 
-      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(id), {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(id), {
         method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
       if (res.ok) {
@@ -14924,7 +16072,7 @@
         }
 
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify(payload)
@@ -16786,7 +17934,7 @@
 
   <script>
   // ── Standalone AI Chat page ───────────────────────────────────
-  var _aichatApiBase = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app';
+  var _aichatApiBase = API_BASE;
 
   // ── Business search bar ──
   var _aichatBizSearchTimer = null;

@@ -1,8 +1,9 @@
 // ============================================
 // Supabase Client — Direct browser connection
+// Uses same DB as gcr-api-clean for unified menu editing
 // ============================================
-const SUPABASE_URL = 'https://xbptmkpbiqzvxptjkfoi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhicHRta3BiaXF6dnhwdGprZm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNzU5NTYsImV4cCI6MjA5Mzc1MTk1Nn0.VPbIAGRiH2b2v1KOLuaCxBOvEHw-hINHfy5_Rppd-N8';
+const SUPABASE_URL = 'https://mkepugvdlktfsossumox.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZXB1Z3ZkbGt0ZnNvc3N1bW94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MjI0MDEsImV4cCI6MjA5NDk5ODQwMX0.27ZrHwtt0RtQvFA24w4LCH0fTKxkpvT_R1aaqvSIo3w';
 
 // Save CDN reference BEFORE var declaration overwrites window.supabase
 var _supabaseLib = window.supabase;

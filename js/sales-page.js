@@ -5,7 +5,7 @@
 // Saves to: PUT /api/gcr/sales-page/:pageId
 // ============================================
 
-const SP_BASE = 'https://cybercheck-api-database.vercel.app';
+const SP_BASE = 'https://gcr-api-gules.vercel.app';
 
 let _sp_data    = null;
 let _sp_pageId  = 'index';

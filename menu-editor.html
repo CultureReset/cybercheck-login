@@ -224,16 +224,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="spinner-wrap" id="spinner"><div class="spinner"></div></div>
 
 <script>
-const token = new URLSearchParams(window.location.search).get('token');
-const BASE = 'https://cybercheck-api-database.vercel.app/update/' + token;
+const API_BASE = 'https://gcr-api-clean-fresh.vercel.app';
+const params = new URLSearchParams(window.location.search);
+const slug = params.get('slug') || params.get('site_id');
+const token = params.get('token');
+const pin = params.get('pin');
 let _data = {};
 let _currentTab = 'specials';
+
+// ── PIN Validation ───────────────────────────────────────────
+async function validatePIN() {
+  if (!pin) return true; // No PIN required if token is set
+  try {
+    const r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}`);
+    const entity = await r.json();
+    const data = entity.entity || entity;
+    return data.pin === pin || data.edit_pin === pin;
+  } catch(e) {
+    console.warn('PIN validation failed:', e);
+    return false;
+  }
+}
 
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
   showSpinner(true);
   try {
-    const r = await fetch(BASE + '/data');
+    if (pin && !await validatePIN()) {
+      toast('Invalid PIN', true);
+      showSpinner(false);
+      return;
+    }
+    const r = await fetch(`${API_BASE}/api/gcr/menu-editor-data?slug=${encodeURIComponent(slug)}`);
     _data = await r.json();
     renderAll();
     loadRotation();
@@ -247,10 +269,11 @@ const _rotationPicks = {}; // option_id -> { priceOverride }
 
 async function loadRotation() {
   try {
-    const r = await fetch(BASE + '/daily-rotation');
+    const r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}`);
     if (!r.ok) return;
-    const data = await r.json();
-    _rotationSections = data.sections || [];
+    const entity = await r.json();
+    const data = entity.entity || entity;
+    _rotationSections = (data.menu_sections && data.menu_sections.length > 0) ? data.menu_sections : [];
     if (!_rotationSections.length) return;
     document.getElementById('rotation-panel').style.display = '';
     renderRotation();
@@ -309,19 +332,19 @@ async function submitRotation() {
   });
   btn.disabled = true; btn.textContent = 'Saving…'; status.textContent = '';
   try {
-    const r = await fetch(BASE + '/daily-rotation/submit', {
+    const r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ picks: picks })
+      body: JSON.stringify({ slug: slug, picks: picks })
     });
     let d;
     try { d = await r.json(); } catch(_) { d = { error: 'Server returned non-JSON (status ' + r.status + ')' }; }
     if (!r.ok) throw new Error(d.error || ('Save failed (' + r.status + ')'));
-    status.textContent = '✓ Saved ' + (d.picks || 0) + ' pick(s) for today';
+    status.textContent = '✓ Saved ' + (d.picks || Object.keys(picks).length) + ' pick(s) for today';
     status.style.color = '#22c55e';
     // Refresh the menu tab so the owner sees their picks appear as items
     try {
-      const rd = await fetch(BASE + '/data');
+      const rd = await fetch(`${API_BASE}/api/gcr/menu-editor-data?slug=${encodeURIComponent(slug)}`);
       _data = await rd.json();
       renderMenu();
     } catch(_) {}
@@ -475,7 +498,7 @@ function renderPhotos() {
 async function deletePhoto(id) {
   if (!confirm('Remove this photo?')) return;
   showSpinner(true);
-  var r = await fetch(BASE + '/photos/' + id, { method: 'DELETE' });
+  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({delete: [id]}) });
   var res = await r.json();
   if (res.success) { _data.photos = (_data.photos||[]).filter(function(p){ return p.id !== id; }); renderPhotos(); toast('Photo removed'); }
   else toast(res.error || 'Delete failed', true);
@@ -616,7 +639,7 @@ async function handleImageUpload(input, field) {
   var fd = new FormData();
   fd.append('image', input.files[0]);
   try {
-    var r = await fetch(BASE + '/upload', { method: 'POST', body: fd });
+    var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', body: fd });
     var res = await r.json();
     if (res.url) {
       // Update preview in drawer
@@ -636,7 +659,7 @@ async function uploadStandalonePhoto(input) {
   showSpinner(true);
   var fd = new FormData();
   fd.append('image', input.files[0]);
-  var r = await fetch(BASE + '/upload?save_photo=1', { method: 'POST', body: fd });
+  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', body: fd });
   var res = await r.json();
   if (res.url) {
     if (res.photo) {
@@ -666,7 +689,7 @@ async function saveDrawer(type) {
     showSpinner(true);
     try {
       var secMethod = id ? 'PUT' : 'POST';
-      var secUrl = id ? BASE + '/menu-sections/' + id : BASE + '/menu-sections';
+      var secUrl = `${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/menu`;
       var sr = await fetch(secUrl, { method: secMethod, headers: {'Content-Type':'application/json'}, body: JSON.stringify(secPayload) });
       var sres = await sr.json();
       if (sres.item) {
@@ -710,7 +733,7 @@ async function saveDrawer(type) {
 
   showSpinner(true);
   try {
-    var r = await fetch(BASE + endpoints[type], { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug: slug, [type]: payload}) });
     var res = await r.json();
     if (res.item) {
       // Update local data
@@ -731,7 +754,7 @@ async function deleteItem(type, id) {
   if (!confirm('Delete this item?')) return;
   var endpoints = { special: '/specials/', menu: '/menu-items/', drink: '/drink-items/', hh: '/hh-items/', event: '/events/' };
   showSpinner(true);
-  var r = await fetch(BASE + endpoints[type] + id, { method: 'DELETE' });
+  var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug: slug, [type]: id}) });
   var res = await r.json();
   if (res.success) {
     var lists = { special: 'specials', menu: 'menu_items', drink: 'drink_items', hh: 'hh_items', event: 'events' };
@@ -744,7 +767,7 @@ async function deleteItem(type, id) {
 async function saveHH() {
   var payload = { hh_days: v('hh-days'), hh_start: v('hh-start'), hh_end: v('hh-end'), hh_description: v('hh-desc') };
   showSpinner(true);
-  var r = await fetch(BASE + '/happy-hour', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/hours`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
   var res = await r.json();
   if (res.success) { if (_data.entity) Object.assign(_data.entity, payload); toast('Happy hour saved!'); }
   else toast(res.error || 'Save failed', true);
@@ -758,7 +781,7 @@ function addMenuSection() {
 async function deleteSection(id) {
   if (!confirm('Delete this section? Items in it will become unsectioned.')) return;
   showSpinner(true);
-  var r = await fetch(BASE + '/menu-sections/' + id, { method: 'DELETE' });
+  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/menu`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({delete_section: id}) });
   var res = await r.json();
   if (res.success) {
     _data.menu_sections = (_data.menu_sections||[]).filter(function(s){ return s.id !== id; });
@@ -791,7 +814,7 @@ async function uploadGalleryPhoto(input) {
   var fd = new FormData();
   fd.append('image', input.files[0]);
   try {
-    var r = await fetch(BASE + '/upload', { method: 'POST', body: fd });
+    var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', body: fd });
     var res = await r.json();
     if (res.url) {
       var grid = document.getElementById('d-gallery-grid');
@@ -893,7 +916,7 @@ async function runMenuScan() {
   try {
     var fd = new FormData();
     fd.append('image', _scanFile);
-    var r = await fetch(BASE + '/setup/parse-image', { method: 'POST', body: fd });
+    var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, { method: 'POST', body: fd });
     var res = await r.json();
     if (!res.ok || !res.result) { toast(res.error || 'AI could not read the menu. Try a clearer photo.', true); showSpinner(false); return; }
     _scanAIResult = res.result;
@@ -931,7 +954,7 @@ async function confirmScanCreate() {
   if (!_scanAIResult) return;
   showSpinner(true);
   try {
-    var r = await fetch(BASE + '/setup/create', {
+    var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ sections: _scanAIResult.sections || [] })
@@ -940,7 +963,7 @@ async function confirmScanCreate() {
     if (res.ok) {
       showScanStep('c');
       // Reload data in background so menu tab shows new items
-      fetch(BASE + '/data').then(function(r){ return r.json(); }).then(function(d){ _data = d; });
+      fetch(`${API_BASE}/api/gcr/menu-editor-data?slug=${encodeURIComponent(slug)}`).then(function(r){ return r.json(); }).then(function(d){ _data = d; });
     } else toast(res.error || 'Create failed', true);
   } catch(e) { toast('Error creating menu', true); }
   showSpinner(false);

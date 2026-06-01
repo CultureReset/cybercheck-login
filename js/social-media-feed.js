@@ -8,7 +8,7 @@
 // =============================================
 
 const API_BASE = window.location.hostname === 'localhost'
-  ? 'https://cybercheck-api-database.vercel.app/api'
+  ? 'https://gcr-api-gules.vercel.app/api'
   : '/api';
 
 // =============================================

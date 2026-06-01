@@ -75,7 +75,7 @@ async function initEnhancedPageBuilder() {
   renderPreview();
 }
 
-const PB_BASE = 'https://cybercheck-api-database.vercel.app';
+const PB_BASE = 'https://gcr-api-gules.vercel.app';
 
 function pbToUrl(url) {
   if (!url) return '';

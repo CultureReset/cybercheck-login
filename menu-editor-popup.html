@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Editor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      overflow-y: auto;
+    }
+    .header {
+      position: sticky;
+      top: 0;
+      background: #1e293b;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .header p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin: 0;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: #38bdf8;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      background: #0f172a;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 8px 12px;
+      background: #1e293b;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 6px;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .tab-btn.active {
+      background: #0b7a75;
+      color: #f1f5f9;
+    }
+    .content {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 12px;
+    }
+    label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    input, textarea, select {
+      padding: 10px 12px;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 6px;
+      color: #f1f5f9;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #0b7a75;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .btn-primary {
+      background: #0b7a75;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0a6b68;
+    }
+    .btn-primary:disabled {
+      background: #64748b;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+    .btn-outline {
+      background: none;
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+    }
+    .section {
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .item {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    .item-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .item-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .item-price {
+      font-weight: 600;
+      color: #0b7a75;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+    .footer {
+      padding: 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      gap: 12px;
+      background: #1e293b;
+      position: sticky;
+      bottom: 0;
+    }
+    .footer .btn {
+      flex: 1;
+      min-width: 200px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>🍽️ Menu Editor</h1>
+      <p id="biz-name" style="margin-top: 4px;"></p>
+    </div>
+    <button class="close-btn" onclick="window.close()">×</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('menu')">🍽️ Menu</button>
+    <button class="tab-btn" onclick="switchTab('drinks')">🥤 Drinks</button>
+    <button class="tab-btn" onclick="switchTab('specials')">⭐ Specials</button>
+    <button class="tab-btn" onclick="switchTab('events')">🎉 Events</button>
+    <button class="tab-btn" onclick="switchTab('gallery')">📷 Gallery</button>
+    <button class="tab-btn" onclick="switchTab('hours')">🕐 Hours</button>
+    <button class="tab-btn" onclick="switchTab('happy-hour')">🍺 Happy Hour</button>
+    <button class="tab-btn" onclick="switchTab('business')">🌐 Business Info</button>
+  </div>
+
+  <div class="content">
+    <!-- MENU TAB -->
+    <div id="menu" class="tab-panel active">
+      <h2>Menu Sections</h2>
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="menu-section-name" placeholder="Section name (e.g. Appetizers, Entrees)">
+        <button class="btn btn-primary" onclick="addMenuSection()" style="margin-top: 8px;">+ Add Section</button>
+      </div>
+      <div id="menu-sections"></div>
+    </div>
+
+    <!-- DRINKS TAB -->
+    <div id="drinks" class="tab-panel">
+      <h2>Drink Sections</h2>
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="drinks-section-name" placeholder="Section name (e.g. Cocktails, Beer, Wine)">
+        <button class="btn btn-primary" onclick="addDrinkSection()" style="margin-top: 8px;">+ Add Section</button>
+      </div>
+      <div id="drink-sections"></div>
+    </div>
+
+    <!-- SPECIALS TAB -->
+    <div id="specials" class="tab-panel">
+      <h2>Specials & Events</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <h3 style="margin-bottom: 12px;">Specials</h3>
+          <input type="text" id="special-name" placeholder="Special name" style="margin-bottom: 8px;">
+          <textarea id="special-desc" placeholder="Description" style="margin-bottom: 8px;"></textarea>
+          <button class="btn btn-primary" onclick="addSpecial()">+ Add Special</button>
+        </div>
+        <div>
+          <h3 style="margin-bottom: 12px;">Events</h3>
+          <input type="text" id="event-name" placeholder="Event name" style="margin-bottom: 8px;">
+          <textarea id="event-desc" placeholder="Description" style="margin-bottom: 8px;"></textarea>
+          <input type="date" id="event-date" style="margin-bottom: 8px;">
+          <button class="btn btn-primary" onclick="addEvent()">+ Add Event</button>
+        </div>
+      </div>
+      <div id="specials-list"></div>
+    </div>
+
+    <!-- EVENTS TAB (details in specials, just display here) -->
+
+    <!-- GALLERY TAB -->
+    <div id="gallery" class="tab-panel">
+      <h2>Gallery</h2>
+      <button class="btn btn-secondary" onclick="document.getElementById('img-upload').click()" style="margin-bottom: 16px;">📷 Upload Image</button>
+      <input type="file" id="img-upload" accept="image/*" style="display: none;" onchange="uploadImage(this)">
+      <div id="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px;"></div>
+    </div>
+
+    <!-- HOURS TAB -->
+    <div id="hours" class="tab-panel">
+      <h2>Hours of Operation</h2>
+      <div id="hours-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;"></div>
+    </div>
+
+    <!-- HAPPY HOUR TAB -->
+    <div id="happy-hour" class="tab-panel">
+      <h2>Happy Hour</h2>
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="hh-section-name" placeholder="Section name (e.g. Appetizers Happy Hour)">
+        <button class="btn btn-primary" onclick="addHappyHourSection()" style="margin-top: 8px;">+ Add Section</button>
+      </div>
+      <div id="happy-hour-sections"></div>
+    </div>
+
+    <!-- BUSINESS INFO TAB -->
+    <div id="business" class="tab-panel">
+      <h2>Business Information</h2>
+      <div class="card">
+        <div class="field">
+          <label>Business Name</label>
+          <input type="text" id="biz-name-input" placeholder="Business Name">
+        </div>
+        <div class="field">
+          <label>Tagline</label>
+          <input type="text" id="biz-tagline" placeholder="Tagline">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="text" id="biz-phone" placeholder="Phone">
+        </div>
+        <div class="field">
+          <label>Website</label>
+          <input type="text" id="biz-website" placeholder="Website URL">
+        </div>
+        <div class="field">
+          <label>Address</label>
+          <input type="text" id="biz-address" placeholder="Address">
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea id="biz-about" placeholder="About / Description"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn btn-primary" onclick="saveAll()" id="save-btn">💾 SAVE ALL CHANGES</button>
+    <button class="btn btn-secondary" onclick="window.close()">Close</button>
+  </div>
+
+  <script>
+    var API_BASE = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:3000' : 'https://gcr-api-clean.vercel.app';
+    var slug = new URLSearchParams(location.search).get('slug');
+    var token = null;
+    var data = { business: {}, areas: [], gallery: [], gallery_sections: [], specials: [], events: [], menu_sections: {}, drink_sections: {} };
+    var currentTab = 'menu';
+
+    function getAuthToken() {
+      try {
+        var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+        if (sbKey) {
+          var sb = JSON.parse(localStorage.getItem(sbKey));
+          if (sb && sb.access_token) return sb.access_token;
+        }
+      } catch(e) {}
+      return localStorage.getItem('cc_admin_token') || localStorage.getItem('admin-session');
+    }
+
+    function init() {
+      if (!slug) { alert('No slug provided'); window.close(); return; }
+      token = getAuthToken();
+      if (!token) { alert('Not authenticated'); window.close(); return; }
+      loadData();
+    }
+
+    function loadData() {
+      fetch(API_BASE + '/api/menu-editor/' + encodeURIComponent(slug) + '/data', {
+        headers: { 'x-admin-token': token }
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d.entity) {
+          data.business = {
+            name: d.entity.name || '',
+            tagline: d.entity.subtitle || '',
+            phone: d.entity.phone || '',
+            website: d.entity.website_url || '',
+            address: d.entity.address_line_1 || '',
+            about: d.entity.description || ''
+          };
+          document.getElementById('biz-name').textContent = d.entity.name || 'Business';
+          document.getElementById('biz-name-input').value = data.business.name;
+          document.getElementById('biz-tagline').value = data.business.tagline;
+          document.getElementById('biz-phone').value = data.business.phone;
+          document.getElementById('biz-website').value = data.business.website;
+          document.getElementById('biz-address').value = data.business.address;
+          document.getElementById('biz-about').value = data.business.about;
+        }
+        if (d.menu_sections) {
+          data.menu_sections = d.menu_sections;
+          renderMenuSections();
+        }
+        if (d.drink_sections) {
+          data.drink_sections = d.drink_sections;
+          renderDrinkSections();
+        }
+        if (d.specials) {
+          data.specials = d.specials;
+          renderSpecials();
+        }
+        if (d.events) {
+          data.events = d.events;
+          renderSpecials();
+        }
+        if (d.hours) {
+          data.hours = d.hours;
+          renderHours();
+        }
+        if (d.happy_hour_sections) {
+          data.happy_hour_sections = d.happy_hour_sections;
+          renderHappyHourSections();
+        }
+        if (d.photos) {
+          data.gallery = d.photos;
+          renderGallery();
+        }
+        if (d.gallery_sections) {
+          data.gallery_sections = d.gallery_sections;
+          renderGallery();
+        }
+      })
+      .catch(e => { console.error(e); alert('Error loading data: ' + e.message); });
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function addMenuSection() {
+      var name = document.getElementById('menu-section-name').value.trim();
+      if (!name) return;
+      if (!data.menu_sections) data.menu_sections = [];
+      data.menu_sections.push({ id: Math.random().toString(36).substr(2, 9), section_name: name, items: [] });
+      document.getElementById('menu-section-name').value = '';
+      renderMenuSections();
+    }
+
+    function addDrinkSection() {
+      var name = document.getElementById('drinks-section-name').value.trim();
+      if (!name) return;
+      if (!data.drink_sections) data.drink_sections = [];
+      data.drink_sections.push({ id: Math.random().toString(36).substr(2, 9), section_name: name, items: [] });
+      document.getElementById('drinks-section-name').value = '';
+      renderDrinkSections();
+    }
+
+    function addSpecial() {
+      var name = document.getElementById('special-name').value.trim();
+      var desc = document.getElementById('special-desc').value.trim();
+      if (!name) return;
+      if (!data.specials) data.specials = [];
+      data.specials.push({ id: Math.random().toString(36).substr(2, 9), special_name: name, description: desc, is_active: true });
+      document.getElementById('special-name').value = '';
+      document.getElementById('special-desc').value = '';
+      renderSpecials();
+    }
+
+    function addEvent() {
+      var name = document.getElementById('event-name').value.trim();
+      var desc = document.getElementById('event-desc').value.trim();
+      var date = document.getElementById('event-date').value;
+      if (!name || !date) return;
+      if (!data.events) data.events = [];
+      data.events.push({ id: Math.random().toString(36).substr(2, 9), event_name: name, description: desc, event_date: date, is_active: true });
+      document.getElementById('event-name').value = '';
+      document.getElementById('event-desc').value = '';
+      document.getElementById('event-date').value = '';
+      renderSpecials();
+    }
+
+    function uploadImage(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (!data.gallery) data.gallery = [];
+        data.gallery.push({ id: Math.random().toString(36).substr(2, 9), url: e.target.result, type: 'Business' });
+        renderGallery();
+        input.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderMenuSections() {
+      var html = '';
+      if (data.menu_sections && data.menu_sections.length) {
+        data.menu_sections.forEach(s => {
+          html += '<div class="section"><div class="section-header"><div class="section-title">' + (s.section_name || 'Untitled') + '</div><button class="btn btn-outline btn-sm" onclick="deleteMenuSection(\'' + s.id + '\')">×</button></div>';
+          if (s.items && s.items.length) {
+            s.items.forEach(i => {
+              var imgs = i.images || (i.image_url ? [{url: i.image_url}] : []);
+              html += '<div class="item"><div style="display:flex;gap:12px;margin-bottom:8px;">';
+              if (imgs.length) {
+                html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+                imgs.forEach((img, idx) => {
+                  html += '<div style="position:relative;border-radius:6px;overflow:hidden;width:60px;height:60px;"><img src="' + img.url + '" alt="" style="width:100%;height:100%;object-fit:cover;"><button onclick="deleteItemImage(\'' + s.id + '\',\'' + i.id + '\',' + idx + ')" style="position:absolute;top:2px;right:2px;background:#dc2626;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;padding:0;">×</button></div>';
+                });
+                html += '</div>';
+              }
+              html += '<div style="flex:1;"><div class="item-name">' + i.item_name + '</div><div class="item-desc">' + (i.description || '') + '</div><div class="item-price">$' + i.price + '</div><button class="btn btn-outline btn-sm" onclick="showGalleryPicker(\'' + s.id + '\',\'' + i.id + '\',\'menu\')" style="margin-top:6px;">📷 Add Image</button></div></div>';
+            });
+          } else {
+            html += '<div style="color: #64748b; font-size: 13px; padding: 8px;">No items in this section</div>';
+          }
+          html += '</div>';
+        });
+      }
+      document.getElementById('menu-sections').innerHTML = html || '<p style="color: #64748b;">No sections yet</p>';
+    }
+
+    function renderDrinkSections() {
+      var html = '';
+      if (data.drink_sections && data.drink_sections.length) {
+        data.drink_sections.forEach(s => {
+          html += '<div class="section"><div class="section-header"><div class="section-title">' + (s.section_name || 'Untitled') + '</div><button class="btn btn-outline btn-sm" onclick="deleteDrinkSection(\'' + s.id + '\')">×</button></div>';
+          if (s.items && s.items.length) {
+            s.items.forEach(i => {
+              var imgs = i.images || (i.image_url ? [{url: i.image_url}] : []);
+              html += '<div class="item"><div style="display:flex;gap:12px;margin-bottom:8px;">';
+              if (imgs.length) {
+                html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+                imgs.forEach((img, idx) => {
+                  html += '<div style="position:relative;border-radius:6px;overflow:hidden;width:60px;height:60px;"><img src="' + img.url + '" alt="" style="width:100%;height:100%;object-fit:cover;"><button onclick="deleteItemImage(\'' + s.id + '\',\'' + i.id + '\',' + idx + ')" style="position:absolute;top:2px;right:2px;background:#dc2626;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;padding:0;">×</button></div>';
+                });
+                html += '</div>';
+              }
+              html += '<div style="flex:1;"><div class="item-name">' + i.item_name + '</div><div class="item-desc">' + (i.description || '') + '</div><button class="btn btn-outline btn-sm" onclick="showGalleryPicker(\'' + s.id + '\',\'' + i.id + '\',\'drinks\')" style="margin-top:6px;">📷 Add Image</button></div></div>';
+            });
+          } else {
+            html += '<div style="color: #64748b; font-size: 13px; padding: 8px;">No items in this section</div>';
+          }
+          html += '</div>';
+        });
+      }
+      document.getElementById('drink-sections').innerHTML = html || '<p style="color: #64748b;">No sections yet</p>';
+    }
+
+    function renderSpecials() {
+      var html = '<div class="grid">';
+      if (data.specials && data.specials.length) {
+        html += '<div><h3>Specials</h3>';
+        data.specials.forEach(s => {
+          html += '<div class="item"><div class="item-name">' + s.special_name + '</div><div class="item-desc">' + (s.description || '') + '</div><button class="btn btn-outline btn-sm" onclick="deleteSpecial(\'' + s.id + '\')">Delete</button></div>';
+        });
+        html += '</div>';
+      }
+      if (data.events && data.events.length) {
+        html += '<div><h3>Events</h3>';
+        data.events.forEach(e => {
+          html += '<div class="item"><div class="item-name">' + e.event_name + '</div><div class="item-desc">' + e.event_date + ' - ' + (e.description || '') + '</div><button class="btn btn-outline btn-sm" onclick="deleteEvent(\'' + e.id + '\')">Delete</button></div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+      document.getElementById('specials-list').innerHTML = html;
+    }
+
+    var _galActiveTab = -1;
+
+    function renderGallery() {
+      if (!data.gallery_sections) data.gallery_sections = [];
+      var sections = data.gallery_sections;
+
+      // Tab bar
+      var tabBar = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;">';
+      tabBar += '<button onclick="galSetTab(-1)" style="padding:8px 18px;border-radius:20px;border:2px solid ' + (_galActiveTab === -1 ? '#0b7a75' : '#334155') + ';background:' + (_galActiveTab === -1 ? '#0b7a75' : '#1e293b') + ';color:white;cursor:pointer;font-size:13px;font-weight:600;">All (' + (data.gallery ? data.gallery.length : 0) + ')</button>';
+
+      sections.forEach((s, i) => {
+        tabBar += '<button onclick="galSetTab(' + i + ')" style="padding:8px 14px;border-radius:20px;border:2px solid ' + (_galActiveTab === i ? '#0b7a75' : '#334155') + ';background:' + (_galActiveTab === i ? '#0b7a75' : '#1e293b') + ';color:white;cursor:pointer;font-size:13px;font-weight:600;">' + (s.name || 'Section') + ' (' + (s.images ? s.images.length : 0) + ')</button>';
+      });
+
+      if (sections.length < 10) {
+        tabBar += '<button onclick="addGallerySection()" style="padding:8px 16px;border-radius:20px;border:2px dashed #334155;background:transparent;color:#94a3b8;cursor:pointer;font-size:13px;">+ Add Section</button>';
+      }
+      tabBar += '</div>';
+
+      // Get photos for current view
+      var displayPhotos = [];
+      if (_galActiveTab === -1) {
+        displayPhotos = (data.gallery || []).map((img, i) => ({url: typeof img === 'string' ? img : img.url, idx: i}));
+      } else {
+        var sec = sections[_galActiveTab];
+        if (sec && sec.images) {
+          displayPhotos = sec.images.map(url => ({url: url, idx: data.gallery.findIndex(g => (typeof g === 'string' ? g : g.url) === url)})).filter(p => p.idx !== -1);
+        }
+      }
+
+      var gridHtml = '';
+      if (displayPhotos.length) {
+        gridHtml += '<div id="gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;">';
+        displayPhotos.forEach((img) => {
+          var borderColor = _galActiveTab >= 0 ? '#8b5cf6' : '#334155';
+          gridHtml += '<div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid ' + borderColor + ';">';
+          gridHtml += '<img src="' + img.url + '" alt="" style="width:100%;height:100px;object-fit:cover;">';
+          if (_galActiveTab === -1 && data.gallery_sections.length > 0) {
+            var assignedIdx = data.gallery_sections.findIndex(s => s.images && s.images.includes(img.url));
+            gridHtml += '<select onchange="galAssignSection(' + img.idx + ',this.value)" onclick="event.stopPropagation()" style="position:absolute;bottom:4px;left:4px;right:28px;font-size:10px;padding:2px 4px;border-radius:4px;background:rgba(0,0,0,0.7);color:white;border:none;cursor:pointer;">';
+            gridHtml += '<option value="-1">' + (assignedIdx >= 0 ? '✓ ' + data.gallery_sections[assignedIdx].name : '+ Assign') + '</option>';
+            data.gallery_sections.forEach((s, si) => {
+              if (si !== assignedIdx) {
+                gridHtml += '<option value="' + si + '">' + s.name + '</option>';
+              }
+            });
+            if (assignedIdx >= 0) {
+              gridHtml += '<option value="-1">✕ Remove</option>';
+            }
+            gridHtml += '</select>';
+          }
+          gridHtml += '<button onclick="removeImage(' + img.idx + ')" style="position:absolute;top:4px;right:4px;padding:4px 8px;font-size:12px;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;">×</button>';
+          gridHtml += '</div>';
+        });
+        gridHtml += '</div>';
+      } else {
+        gridHtml = '<p style="color:#64748b;">No images in this view</p>';
+      }
+
+      document.getElementById('gallery-grid').innerHTML = tabBar + gridHtml;
+    }
+
+    function galSetTab(i) {
+      _galActiveTab = i;
+      renderGallery();
+    }
+
+    function addGallerySection() {
+      if (!data.gallery_sections) data.gallery_sections = [];
+      var name = prompt('Section name (e.g. Appetizers):');
+      if (!name) return;
+      data.gallery_sections.push({id: 'gsec_' + Date.now(), name: name, images: []});
+      _galActiveTab = data.gallery_sections.length - 1;
+      renderGallery();
+    }
+
+    function galAssignSection(imgIdx, sectionIdx) {
+      if (!data.gallery || !data.gallery[imgIdx]) return;
+      var img = data.gallery[imgIdx];
+      var url = typeof img === 'string' ? img : img.url;
+      if (!url) return;
+
+      // Remove from all sections
+      (data.gallery_sections || []).forEach(s => {
+        if (s.images) s.images = s.images.filter(u => u !== url);
+      });
+
+      // Add to new section
+      var si = parseInt(sectionIdx);
+      if (si >= 0 && data.gallery_sections[si]) {
+        if (!data.gallery_sections[si].images) data.gallery_sections[si].images = [];
+        data.gallery_sections[si].images.push(url);
+      }
+
+      renderGallery();
+    }
+
+    function renderHours() {
+      var html = '';
+      var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      days.forEach((day, i) => {
+        var hour = data.hours && data.hours.find(h => h.day_of_week === (i + 1) % 7);
+        var opens = hour ? hour.opens_at : '09:00';
+        var closes = hour ? hour.closes_at : '22:00';
+        html += '<div class="card"><label>' + day + '</label><div style="display: flex; gap: 8px;"><input type="time" value="' + opens + '" onchange="updateHour(' + i + ', \'open\', this.value)" style="flex: 1;"><input type="time" value="' + closes + '" onchange="updateHour(' + i + ', \'close\', this.value)" style="flex: 1;"></div></div>';
+      });
+      document.getElementById('hours-grid').innerHTML = html;
+    }
+
+    function removeImage(i) {
+      if (!data.gallery) return;
+      var url = typeof data.gallery[i] === 'string' ? data.gallery[i] : (data.gallery[i] || {}).url;
+      data.gallery.splice(i, 1);
+      // Remove from all sections
+      (data.gallery_sections || []).forEach(s => {
+        if (s.images) s.images = s.images.filter(u => u !== url);
+      });
+      renderGallery();
+    }
+
+    function deleteMenuSection(id) {
+      data.menu_sections = data.menu_sections.filter(s => s.id !== id);
+      renderMenuSections();
+    }
+
+    function deleteDrinkSection(id) {
+      data.drink_sections = data.drink_sections.filter(s => s.id !== id);
+      renderDrinkSections();
+    }
+
+    function deleteSpecial(id) {
+      data.specials = data.specials.filter(s => s.id !== id);
+      renderSpecials();
+    }
+
+    function deleteEvent(id) {
+      data.events = data.events.filter(e => e.id !== id);
+      renderSpecials();
+    }
+
+    function renderHappyHourSections() {
+      if (!data.happy_hour_sections) data.happy_hour_sections = [];
+      var html = '';
+      data.happy_hour_sections.forEach(section => {
+        if (!section.items) section.items = [];
+        html += '<div class="card" style="margin-bottom: 16px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><h3 style="margin: 0;">' + section.section_name + '</h3><button class="btn btn-outline btn-sm" onclick="deleteHappyHourSection(\'' + section.id + '\')">Delete</button></div>';
+        section.items.forEach(item => {
+          var imgs = item.images || (item.image_url ? [{url: item.image_url}] : []);
+          html += '<div style="padding: 12px; background: #f1f5f9; border-radius: 6px; margin-bottom: 8px;">';
+          if (imgs.length) {
+            html += '<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">';
+            imgs.forEach((img, idx) => {
+              html += '<div style="position:relative;border-radius:6px;overflow:hidden;width:60px;height:60px;"><img src="' + img.url + '" alt="" style="width:100%;height:100%;object-fit:cover;"><button onclick="deleteItemImage(\'' + section.id + '\',\'' + item.id + '\',' + idx + ')" style="position:absolute;top:2px;right:2px;background:#dc2626;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;padding:0;">×</button></div>';
+            });
+            html += '</div>';
+          }
+          html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><strong>' + item.item_name + '</strong><br><small>$' + item.original_price + ' → $' + item.price + '</small><br><small>' + (item.description || '') + '</small></div><div style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm" onclick="showGalleryPicker(\'' + section.id + '\',\'' + item.id + '\',\'hh\')" title="Add image">📷</button><button class="btn btn-outline btn-sm" onclick="deleteHappyHourItem(\'' + item.id + '\')">×</button></div></div></div>';
+        });
+        html += '<button class="btn btn-outline btn-sm" onclick="addHappyHourItem(\'' + section.id + '\')" style="width: 100%;">+ Add Item</button></div>';
+      });
+      document.getElementById('happy-hour-sections').innerHTML = html || '<p style="color: #64748b;">No happy hour sections yet</p>';
+    }
+
+    function addHappyHourSection() {
+      var name = document.getElementById('hh-section-name').value.trim();
+      if (!name) return;
+      if (!data.happy_hour_sections) data.happy_hour_sections = [];
+      data.happy_hour_sections.push({ id: 'hh-' + Date.now(), section_name: name, items: [] });
+      document.getElementById('hh-section-name').value = '';
+      renderHappyHourSections();
+    }
+
+    function addHappyHourItem(sectionId) {
+      var itemName = prompt('Item name (e.g. Calamari):');
+      if (!itemName) return;
+      var originalPrice = prompt('Original price:');
+      if (!originalPrice) return;
+      var price = prompt('Happy hour price:');
+      if (!price) return;
+      var description = prompt('Description (optional):');
+      var section = data.happy_hour_sections.find(s => s.id === sectionId);
+      if (section) {
+        section.items.push({ id: 'hhitem-' + Date.now(), item_name: itemName, original_price: parseFloat(originalPrice), price: parseFloat(price), description: description || '' });
+        renderHappyHourSections();
+      }
+    }
+
+    function deleteHappyHourSection(id) {
+      if (!data.happy_hour_sections) return;
+      data.happy_hour_sections = data.happy_hour_sections.filter(s => s.id !== id);
+      renderHappyHourSections();
+    }
+
+    function deleteHappyHourItem(id) {
+      if (!data.happy_hour_sections) return;
+      data.happy_hour_sections.forEach(section => {
+        section.items = section.items.filter(i => i.id !== id);
+      });
+      renderHappyHourSections();
+    }
+
+    function updateHour(dayIdx, type, time) {
+      // Update hours display (simple version - full impl would store in data structure)
+    }
+
+    function saveAll() {
+      var btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ SAVING...';
+
+      // Update business info from form
+      data.business.name = document.getElementById('biz-name-input').value;
+      data.business.tagline = document.getElementById('biz-tagline').value;
+      data.business.phone = document.getElementById('biz-phone').value;
+      data.business.website = document.getElementById('biz-website').value;
+      data.business.address = document.getElementById('biz-address').value;
+      data.business.about = document.getElementById('biz-about').value;
+
+      var payload = {
+        business: data.business,
+        gallery: data.gallery,
+        gallery_sections: data.gallery_sections,
+        areas: [{ id: 'main', name: 'Main Restaurant', menu_sections: data.menu_sections, drink_sections: data.drink_sections, happy_hour_sections: data.happy_hour_sections, specials: data.specials, events: data.events, hours: {} }],
+        sides: [],
+        dailyFeatures: []
+      };
+
+      fetch(API_BASE + '/api/menu-editor/' + encodeURIComponent(slug) + '/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(d => {
+        btn.disabled = false;
+        btn.textContent = '✅ SAVED!';
+        setTimeout(() => { btn.textContent = '💾 SAVE ALL CHANGES'; }, 2000);
+      })
+      .catch(e => {
+        btn.disabled = false;
+        btn.textContent = '❌ ERROR: ' + e.message;
+      });
+    }
+
+    var currentItemSection = null;
+    var currentItemId = null;
+    var currentItemType = null;
+
+    function showGalleryPicker(sectionId, itemId, type) {
+      currentItemSection = sectionId;
+      currentItemId = itemId;
+      currentItemType = type;
+
+      var modal = document.createElement('div');
+      modal.id = 'gallery-picker-modal';
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+
+      var content = '<div style="background:#0f172a;border-radius:12px;padding:24px;max-width:500px;max-height:80vh;overflow-y:auto;color:#e2e8f0;">';
+      content += '<h2 style="margin-top:0;margin-bottom:20px;">Add Image to Item</h2>';
+      content += '<div style="margin-bottom:20px;"><h3 style="margin-top:0;margin-bottom:12px;font-size:14px;">From Gallery:</h3>';
+
+      if (data.gallery && data.gallery.length) {
+        content += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;margin-bottom:16px;">';
+        data.gallery.forEach((img, idx) => {
+          content += '<button onclick="addImageToItem(' + idx + ')" style="padding:0;border:none;border-radius:8px;overflow:hidden;cursor:pointer;width:100%;aspect-ratio:1/1;"><img src="' + img.url + '" alt="" style="width:100%;height:100%;object-fit:cover;"></button>';
+        });
+        content += '</div>';
+      } else {
+        content += '<p style="color:#64748b;font-size:13px;">No gallery images yet</p>';
+      }
+
+      content += '<div style="border-top:1px solid #334155;padding-top:16px;margin-top:16px;">';
+      content += '<h3 style="margin:0 0 12px 0;font-size:14px;">Or Upload New:</h3>';
+      content += '<input type="file" id="gallery-picker-upload" accept="image/*" style="display:none;" onchange="uploadAndAddImage(this)">';
+      content += '<button onclick="document.getElementById(\'gallery-picker-upload\').click()" class="btn btn-primary" style="width:100%;margin-bottom:12px;">📤 Upload Image</button>';
+      content += '</div>';
+
+      content += '<button onclick="closeGalleryPicker()" class="btn btn-secondary" style="width:100%;">Cancel</button>';
+      content += '</div>';
+
+      modal.innerHTML = content;
+      document.body.appendChild(modal);
+    }
+
+    function addImageToItem(galleryIndex) {
+      if (!data.gallery || !data.gallery[galleryIndex]) return;
+      var img = data.gallery[galleryIndex];
+
+      if (currentItemType === 'menu') {
+        var section = data.menu_sections.find(s => s.id === currentItemSection);
+        var item = section.items.find(i => i.id === currentItemId);
+        if (!item.images) item.images = [];
+        item.images.push({url: img.url});
+      } else if (currentItemType === 'drinks') {
+        var section = data.drink_sections.find(s => s.id === currentItemSection);
+        var item = section.items.find(i => i.id === currentItemId);
+        if (!item.images) item.images = [];
+        item.images.push({url: img.url});
+      } else if (currentItemType === 'hh') {
+        var section = data.happy_hour_sections.find(s => s.id === currentItemSection);
+        var item = section.items.find(i => i.id === currentItemId);
+        if (!item.images) item.images = [];
+        item.images.push({url: img.url});
+      }
+
+      closeGalleryPicker();
+      if (currentItemType === 'menu') renderMenuSections();
+      else if (currentItemType === 'drinks') renderDrinkSections();
+      else if (currentItemType === 'hh') renderHappyHourSections();
+    }
+
+    function uploadAndAddImage(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+
+        if (currentItemType === 'menu') {
+          var section = data.menu_sections.find(s => s.id === currentItemSection);
+          var item = section.items.find(i => i.id === currentItemId);
+          if (!item.images) item.images = [];
+          item.images.push({url: dataUrl});
+        } else if (currentItemType === 'drinks') {
+          var section = data.drink_sections.find(s => s.id === currentItemSection);
+          var item = section.items.find(i => i.id === currentItemId);
+          if (!item.images) item.images = [];
+          item.images.push({url: dataUrl});
+        } else if (currentItemType === 'hh') {
+          var section = data.happy_hour_sections.find(s => s.id === currentItemSection);
+          var item = section.items.find(i => i.id === currentItemId);
+          if (!item.images) item.images = [];
+          item.images.push({url: dataUrl});
+        }
+
+        closeGalleryPicker();
+        if (currentItemType === 'menu') renderMenuSections();
+        else if (currentItemType === 'drinks') renderDrinkSections();
+        else if (currentItemType === 'hh') renderHappyHourSections();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteItemImage(sectionId, itemId, imgIndex) {
+      var section = null;
+      var item = null;
+
+      // Try menu sections first
+      section = data.menu_sections.find(s => s.id === sectionId);
+      if (section) {
+        item = section.items.find(i => i.id === itemId);
+      }
+
+      // Try drink sections
+      if (!item) {
+        section = data.drink_sections.find(s => s.id === sectionId);
+        if (section) {
+          item = section.items.find(i => i.id === itemId);
+        }
+      }
+
+      // Try happy hour sections
+      if (!item) {
+        section = data.happy_hour_sections.find(s => s.id === sectionId);
+        if (section) {
+          item = section.items.find(i => i.id === itemId);
+        }
+      }
+
+      if (item && item.images) {
+        item.images.splice(imgIndex, 1);
+      }
+
+      var currentTab = document.querySelector('.tab-btn.active').textContent;
+      if (currentTab.includes('Menu')) renderMenuSections();
+      else if (currentTab.includes('Drinks')) renderDrinkSections();
+      else if (currentTab.includes('Happy Hour')) renderHappyHourSections();
+    }
+
+    function closeGalleryPicker() {
+      var modal = document.getElementById('gallery-picker-modal');
+      if (modal) modal.remove();
+    }
+
+    init();
+  </script>
+</body>
+</html>

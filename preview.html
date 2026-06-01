@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Preview — Before Saving to DB</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    header {
+      background: #1e293b;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 { font-size: 24px; margin-bottom: 8px; }
+    header .subtitle { font-size: 13px; color: #94a3b8; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      background: #1e293b;
+      padding: 0 20px;
+      position: sticky;
+      top: 60px;
+      z-index: 99;
+    }
+    .tab-btn {
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+    }
+    .tab-btn.active {
+      color: #f1f5f9;
+      border-bottom-color: #0b7a75;
+    }
+    .tab-btn:hover { color: #f1f5f9; }
+
+    .content { padding: 20px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 { font-size: 18px; margin-bottom: 16px; }
+    .card h3 { font-size: 14px; color: #cbd5e1; margin-top: 16px; margin-bottom: 8px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 6px;
+      color: #f1f5f9;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #0b7a75;
+      box-shadow: 0 0 0 3px rgba(11, 122, 117, .2);
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary {
+      background: #0b7a75;
+      color: white;
+    }
+    .btn-primary:hover { background: #0a6960; }
+    .btn-primary:disabled {
+      background: #475569;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #475569;
+      color: white;
+    }
+    .btn-secondary:hover { background: #64748b; }
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .gallery-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-item .remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .section {
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+    .section-header h4 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .item {
+      background: #1e293b;
+      border-left: 3px solid #0b7a75;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+    .item-name { font-weight: 600; font-size: 14px; }
+    .item-desc { font-size: 12px; color: #cbd5e1; margin-top: 4px; }
+    .item-price { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal.open { display: flex; }
+    .modal-content {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #f1f5f9;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .save-bar {
+      position: sticky;
+      bottom: 0;
+      background: #0b7a75;
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      z-index: 99;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .save-bar p {
+      font-size: 13px;
+      color: #e2e8f0;
+      flex: 1;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .tabs { overflow-x: auto; }
+    }
+
+    .loading { text-align: center; padding: 40px; color: #94a3b8; }
+    .error { background: #7f1d1d; color: #fee2e2; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+    .success { background: #064e3b; color: #d1fae5; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎯 Data Preview</h1>
+    <div class="subtitle">Review your data before saving to database. Edit anything here. Changes saved locally.</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('info')">Business Info</button>
+    <button class="tab-btn" onclick="switchTab('menu')">Menu</button>
+    <button class="tab-btn" onclick="switchTab('gallery')">Gallery</button>
+    <button class="tab-btn" onclick="switchTab('specials')">Specials & Events</button>
+    <button class="tab-btn" onclick="switchTab('happy-hour')">Happy Hour</button>
+  </div>
+
+  <div class="content">
+    <!-- Business Info Tab -->
+    <div id="tab-info" class="tab-content active">
+      <div class="card">
+        <h2>Business Information</h2>
+        <label>Business Name</label>
+        <input type="text" id="biz-name" placeholder="Restaurant name" oninput="saveLocal()">
+
+        <label>Tagline</label>
+        <input type="text" id="biz-tagline" placeholder="Short description" oninput="saveLocal()">
+
+        <label>Phone</label>
+        <input type="tel" id="biz-phone" placeholder="(251) 123-4567" oninput="saveLocal()">
+
+        <label>Website</label>
+        <input type="url" id="biz-website" placeholder="https://..." oninput="saveLocal()">
+
+        <label>Address</label>
+        <input type="text" id="biz-address" placeholder="Street address" oninput="saveLocal()">
+
+        <label>About / Description</label>
+        <textarea id="biz-about" placeholder="Tell about your business..." oninput="saveLocal()"></textarea>
+      </div>
+    </div>
+
+    <!-- Menu Tab -->
+    <div id="tab-menu" class="tab-content">
+      <div class="card">
+        <h2>Menu Sections</h2>
+        <button class="btn btn-secondary" onclick="addSection()" style="margin-bottom: 16px;">+ Add Section</button>
+        <div id="sections-container"></div>
+      </div>
+    </div>
+
+    <!-- Gallery Tab -->
+    <div id="tab-gallery" class="tab-content">
+      <div class="card">
+        <h2>Photo Gallery</h2>
+        <button class="btn btn-secondary" onclick="document.getElementById('gallery-input').click()" style="margin-bottom: 16px;">📷 Add Photos</button>
+        <input type="file" id="gallery-input" accept="image/*" multiple style="display: none;" onchange="handleGalleryUpload(event)">
+        <div id="gallery-container" class="gallery"></div>
+      </div>
+    </div>
+
+    <!-- Specials & Events Tab -->
+    <div id="tab-specials" class="tab-content">
+      <div class="card">
+        <h2>Specials</h2>
+        <button class="btn btn-secondary" onclick="addSpecial()" style="margin-bottom: 16px;">+ Add Special</button>
+        <div id="specials-container"></div>
+      </div>
+      <div class="card">
+        <h2>Events</h2>
+        <button class="btn btn-secondary" onclick="addEvent()" style="margin-bottom: 16px;">+ Add Event</button>
+        <div id="events-container"></div>
+      </div>
+    </div>
+
+    <!-- Happy Hour Tab -->
+    <div id="tab-happy-hour" class="tab-content">
+      <div class="card">
+        <h2>Happy Hour Times & Specials</h2>
+        <button class="btn btn-secondary" onclick="addHappyHour()" style="margin-bottom: 16px;">+ Add Happy Hour</button>
+        <div id="happy-hour-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <p id="save-status">💾 Auto-saving to local storage...</p>
+    <button class="btn btn-primary" onclick="saveToDB()">✅ SAVE ALL TO DATABASE</button>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000';
+
+    // Load data from localStorage
+    function loadLocal() {
+      const data = JSON.parse(localStorage.getItem('ai-preview-data') || '{}');
+      if (data.business) {
+        document.getElementById('biz-name').value = data.business.name || '';
+        document.getElementById('biz-tagline').value = data.business.tagline || '';
+        document.getElementById('biz-phone').value = data.business.phone || '';
+        document.getElementById('biz-website').value = data.business.website || '';
+        document.getElementById('biz-address').value = data.business.address || '';
+        document.getElementById('biz-about').value = data.business.about || '';
+      }
+      if (data.gallery) renderGallery(data.gallery);
+      if (data.sections) renderSections(data.sections);
+      if (data.specials) renderSpecials(data.specials);
+      if (data.events) renderEvents(data.events);
+      if (data.happyHour) renderHappyHour(data.happyHour);
+    }
+
+    function saveLocal() {
+      const data = {
+        business: {
+          name: document.getElementById('biz-name').value,
+          tagline: document.getElementById('biz-tagline').value,
+          phone: document.getElementById('biz-phone').value,
+          website: document.getElementById('biz-website').value,
+          address: document.getElementById('biz-address').value,
+          about: document.getElementById('biz-about').value,
+        },
+        gallery: JSON.parse(localStorage.getItem('ai-preview-gallery') || '[]'),
+        sections: JSON.parse(localStorage.getItem('ai-preview-sections') || '[]'),
+        specials: JSON.parse(localStorage.getItem('ai-preview-specials') || '[]'),
+        events: JSON.parse(localStorage.getItem('ai-preview-events') || '[]'),
+        happyHour: JSON.parse(localStorage.getItem('ai-preview-happy-hour') || '[]'),
+      };
+      localStorage.setItem('ai-preview-data', JSON.stringify(data));
+      document.getElementById('save-status').textContent = '✅ Saved locally';
+      setTimeout(() => {
+        document.getElementById('save-status').textContent = '💾 Auto-saving to local storage...';
+      }, 2000);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function addSection() {
+      const sections = JSON.parse(localStorage.getItem('ai-preview-sections') || '[]');
+      const newSection = {
+        id: Date.now().toString(),
+        name: 'New Section',
+        items: []
+      };
+      sections.push(newSection);
+      localStorage.setItem('ai-preview-sections', JSON.stringify(sections));
+      renderSections(sections);
+      saveLocal();
+    }
+
+    function renderSections(sections) {
+      const container = document.getElementById('sections-container');
+      container.innerHTML = sections.map((section, idx) => `
+        <div class="section">
+          <div class="section-header">
+            <input type="text" value="${section.name}" style="font-weight: 600; flex: 1;"
+              onchange="updateSection(${idx}, 'name', this.value)">
+            <button class="btn btn-danger" onclick="removeSection(${idx})">Delete</button>
+          </div>
+          <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;"
+            onclick="addItem(${idx})">+ Add Item</button>
+          <div id="items-${section.id}">
+            ${(section.items || []).map((item, itemIdx) => `
+              <div class="item">
+                ${item.image ? `<img src="${item.image}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px;">` : ''}
+                <div class="item-name">${item.name}</div>
+                ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                ${item.price ? `<div class="item-price">$${item.price}</div>` : ''}
+                <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                  <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; flex:1;"
+                    onclick="openImagePicker(${idx}, ${itemIdx})">🖼️ Pick Image</button>
+                  <button class="btn btn-danger" style="font-size: 11px; padding: 4px 8px;"
+                    onclick="removeItem(${idx}, ${itemIdx})">Remove</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateSection(idx, field, value) {
+      const sections = JSON.parse(localStorage.getItem('ai-preview-sections') || '[]');
+      sections[idx][field] = value;
+      localStorage.setItem('ai-preview-sections', JSON.stringify(sections));
+      saveLocal();
+    }
+
+    function removeSection(idx) {
+      let sections = JSON.parse(localStorage.getItem('ai-preview-sections') || '[]');
+      sections.splice(idx, 1);
+      localStorage.setItem('ai-preview-sections', JSON.stringify(sections));
+      renderSections(sections);
+      saveLocal();
+    }
+
+    function addItem(sectionIdx) {
+      const sections = JSON.parse(localStorage.getItem('ai-preview-sections') || '[]');
+      if (!sections[sectionIdx].items) sections[sectionIdx].items = [];
+      sections[sectionIdx].items.push({
+        id: Date.now().toString(),
+        name: 'New Item',
+        description: '',
+        price: ''
+      });
+      localStorage.setItem('ai-preview-sections', JSON.stringify(sections));
+      renderSections(sections);
+      saveLocal();
+    }
+
+    function removeItem(sectionIdx, itemIdx) {
+      const sections = JSON.parse(localStorage.getItem('ai-preview-sections') || '[]');
+      sections[sectionIdx].items.splice(itemIdx, 1);
+      localStorage.setItem('ai-preview-sections', JSON.stringify(sections));
+      renderSections(sections);
+      saveLocal();
+    }
+
+    function handleGalleryUpload(event) {
+      const files = event.target.files;
+      const gallery = JSON.parse(localStorage.getItem('ai-preview-gallery') || '[]');
+
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          gallery.push({
+            id: Date.now().toString() + Math.random(),
+            url: e.target.result,
+            type: 'Hero'
+          });
+          localStorage.setItem('ai-preview-gallery', JSON.stringify(gallery));
+          renderGallery(gallery);
+          saveLocal();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderGallery(gallery) {
+      const container = document.getElementById('gallery-container');
+      container.innerHTML = gallery.map((img, idx) => `
+        <div class="gallery-item">
+          <img src="${img.url}" alt="Gallery item">
+          <button class="remove" onclick="removeGalleryItem(${idx})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function removeGalleryItem(idx) {
+      let gallery = JSON.parse(localStorage.getItem('ai-preview-gallery') || '[]');
+      gallery.splice(idx, 1);
+      localStorage.setItem('ai-preview-gallery', JSON.stringify(gallery));
+      renderGallery(gallery);
+      saveLocal();
+    }
+
+    function addSpecial() {
+      const specials = JSON.parse(localStorage.getItem('ai-preview-specials') || '[]');
+      specials.push({
+        id: Date.now().toString(),
+        name: 'New Special',
+        description: '',
+        price: ''
+      });
+      localStorage.setItem('ai-preview-specials', JSON.stringify(specials));
+      renderSpecials(specials);
+      saveLocal();
+    }
+
+    function renderSpecials(specials) {
+      const container = document.getElementById('specials-container');
+      container.innerHTML = specials.map((special, idx) => `
+        <div class="item">
+          <input type="text" value="${special.name}" placeholder="Special name"
+            onchange="updateSpecial(${idx}, 'name', this.value)" style="margin-bottom: 8px;">
+          <input type="text" value="${special.description}" placeholder="Description"
+            onchange="updateSpecial(${idx}, 'description', this.value)" style="margin-bottom: 8px;">
+          <input type="text" value="${special.price}" placeholder="Price"
+            onchange="updateSpecial(${idx}, 'price', this.value)" style="margin-bottom: 8px;">
+          <button class="btn btn-danger" onclick="removeSpecial(${idx})">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function updateSpecial(idx, field, value) {
+      const specials = JSON.parse(localStorage.getItem('ai-preview-specials') || '[]');
+      specials[idx][field] = value;
+      localStorage.setItem('ai-preview-specials', JSON.stringify(specials));
+      saveLocal();
+    }
+
+    function removeSpecial(idx) {
+      let specials = JSON.parse(localStorage.getItem('ai-preview-specials') || '[]');
+      specials.splice(idx, 1);
+      localStorage.setItem('ai-preview-specials', JSON.stringify(specials));
+      renderSpecials(specials);
+      saveLocal();
+    }
+
+    function addEvent() {
+      const events = JSON.parse(localStorage.getItem('ai-preview-events') || '[]');
+      events.push({
+        id: Date.now().toString(),
+        name: 'New Event',
+        description: '',
+        date: '',
+        time: ''
+      });
+      localStorage.setItem('ai-preview-events', JSON.stringify(events));
+      renderEvents(events);
+      saveLocal();
+    }
+
+    function renderEvents(events) {
+      const container = document.getElementById('events-container');
+      container.innerHTML = events.map((event, idx) => `
+        <div class="item">
+          <input type="text" value="${event.name}" placeholder="Event name"
+            onchange="updateEvent(${idx}, 'name', this.value)" style="margin-bottom: 8px;">
+          <input type="text" value="${event.description}" placeholder="Description"
+            onchange="updateEvent(${idx}, 'description', this.value)" style="margin-bottom: 8px;">
+          <input type="date" value="${event.date}"
+            onchange="updateEvent(${idx}, 'date', this.value)" style="margin-bottom: 8px;">
+          <input type="time" value="${event.time}"
+            onchange="updateEvent(${idx}, 'time', this.value)" style="margin-bottom: 8px;">
+          <button class="btn btn-danger" onclick="removeEvent(${idx})">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function updateEvent(idx, field, value) {
+      const events = JSON.parse(localStorage.getItem('ai-preview-events') || '[]');
+      events[idx][field] = value;
+      localStorage.setItem('ai-preview-events', JSON.stringify(events));
+      saveLocal();
+    }
+
+    function removeEvent(idx) {
+      let events = JSON.parse(localStorage.getItem('ai-preview-events') || '[]');
+      events.splice(idx, 1);
+      localStorage.setItem('ai-preview-events', JSON.stringify(events));
+      renderEvents(events);
+      saveLocal();
+    }
+
+    function addHappyHour() {
+      const happyHour = JSON.parse(localStorage.getItem('ai-preview-happy-hour') || '[]');
+      happyHour.push({
+        id: Date.now().toString(),
+        day: 'Monday',
+        timeStart: '17:00',
+        timeEnd: '19:00',
+        specials: ''
+      });
+      localStorage.setItem('ai-preview-happy-hour', JSON.stringify(happyHour));
+      renderHappyHour(happyHour);
+      saveLocal();
+    }
+
+    function renderHappyHour(happyHour) {
+      const container = document.getElementById('happy-hour-container');
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      container.innerHTML = happyHour.map((hh, idx) => `
+        <div class="item">
+          <select onchange="updateHappyHour(${idx}, 'day', this.value)" style="margin-bottom: 8px;">
+            ${days.map(day => `<option ${hh.day === day ? 'selected' : ''}>${day}</option>`).join('')}
+          </select>
+          <label>Start Time</label>
+          <input type="time" value="${hh.timeStart}"
+            onchange="updateHappyHour(${idx}, 'timeStart', this.value)">
+          <label>End Time</label>
+          <input type="time" value="${hh.timeEnd}"
+            onchange="updateHappyHour(${idx}, 'timeEnd', this.value)">
+          <label>Specials & Details</label>
+          <textarea placeholder="$2 off drinks, $5 appetizers..."
+            onchange="updateHappyHour(${idx}, 'specials', this.value)">${hh.specials}</textarea>
+          <button class="btn btn-danger" onclick="removeHappyHour(${idx})">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function updateHappyHour(idx, field, value) {
+      const happyHour = JSON.parse(localStorage.getItem('ai-preview-happy-hour') || '[]');
+      happyHour[idx][field] = value;
+      localStorage.setItem('ai-preview-happy-hour', JSON.stringify(happyHour));
+      saveLocal();
+    }
+
+    function removeHappyHour(idx) {
+      let happyHour = JSON.parse(localStorage.getItem('ai-preview-happy-hour') || '[]');
+      happyHour.splice(idx, 1);
+      localStorage.setItem('ai-preview-happy-hour', JSON.stringify(happyHour));
+      renderHappyHour(happyHour);
+      saveLocal();
+    }
+
+    function openImagePicker(sectionIdx, itemIdx) {
+      const gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
+
+      modal.innerHTML = `
+        <div style="background:#1e293b;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;">Pick an Image for Menu Item</h3>
+            <button style="background:none;border:none;color:#f1f5f9;font-size:20px;cursor:pointer;" onclick="this.closest('[style*=fixed]').remove()">✕</button>
+          </div>
+
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:12px;" onclick="document.getElementById('picker-file').click()">📤 Upload New Image</button>
+          <input type="file" id="picker-file" accept="image/*" style="display:none;" onchange="handlePickerFileUpload(event, ${sectionIdx}, ${itemIdx})">
+
+          ${gallery.length > 0 ? `
+            <p style="font-size:13px;color:#94a3b8;margin:0 0 12px;">Or pick from gallery:</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(100px, 1fr));gap:12px;">
+              ${gallery.map((img, idx) => `
+                <img src="${img.url}" alt="gallery" style="width:100%;height:100px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:border .2s;"
+                  onclick="selectImageForItem(${sectionIdx}, ${itemIdx}, ${idx}); this.closest('[style*=fixed]').remove();"
+                  onmouseover="this.style.borderColor='#0b7a75'"
+                  onmouseout="this.style.borderColor='transparent'">
+              `).join('')}
+            </div>
+          ` : `
+            <p style="text-align:center;color:#64748b;padding:40px 20px;">No gallery images yet. Upload one above.</p>
+          `}
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+    }
+
+    function handlePickerFileUpload(event, sectionIdx, itemIdx) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectImageForItem(sectionIdx, itemIdx, -1, e.target.result);
+        document.querySelector('[style*="fixed"]').remove();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function selectImageForItem(sectionIdx, itemIdx, galleryIdx, customUrl) {
+      const sections = JSON.parse(localStorage.getItem('ai-preview-sections') || '[]');
+
+      if (galleryIdx >= 0) {
+        const gallery = JSON.parse(localStorage.getItem('meh-gallery') || '[]');
+        sections[sectionIdx].items[itemIdx].image = gallery[galleryIdx].url;
+      } else {
+        sections[sectionIdx].items[itemIdx].image = customUrl;
+      }
+
+      localStorage.setItem('ai-preview-sections', JSON.stringify(sections));
+      renderSections(sections);
+      saveLocal();
+    }
+
+    async function saveToDB() {
+      const saveBtn = event.target;
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Saving...';
+
+      try {
+        const data = JSON.parse(localStorage.getItem('ai-preview-data') || '{}');
+
+        // Format data for API
+        const payload = {
+          business_name: data.business.name,
+          business_tagline: data.business.tagline,
+          business_phone: data.business.phone,
+          business_website: data.business.website,
+          business_address: data.business.address,
+          business_about: data.business.about,
+          gallery: data.gallery,
+          sections: data.sections,
+          specials: data.specials,
+          events: data.events,
+          happy_hour: data.happyHour
+        };
+
+        const response = await fetch(API_BASE + '/api/admin/save-preview-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (localStorage.getItem('cc_admin_token') || 'admin-session')
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          document.getElementById('save-status').textContent = '✅ Successfully saved to database!';
+          localStorage.removeItem('ai-preview-data');
+          localStorage.removeItem('ai-preview-gallery');
+          localStorage.removeItem('ai-preview-sections');
+          localStorage.removeItem('ai-preview-specials');
+          localStorage.removeItem('ai-preview-events');
+          localStorage.removeItem('ai-preview-happy-hour');
+          setTimeout(() => window.history.back(), 2000);
+        } else {
+          throw new Error('Save failed: ' + response.statusText);
+        }
+      } catch (err) {
+        document.getElementById('save-status').textContent = '❌ Error: ' + err.message;
+        saveBtn.disabled = false;
+        saveBtn.textContent = '✅ SAVE ALL TO DATABASE';
+      }
+    }
+
+    // Initialize on load
+    window.addEventListener('load', loadLocal);
+  </script>
+</body>
+</html>

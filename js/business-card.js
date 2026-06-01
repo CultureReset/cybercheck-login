@@ -3,7 +3,7 @@
 // ============================================
 
 const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'https://cybercheck-api-database.vercel.app/api'
+  ? 'https://gcr-api-gules.vercel.app/api'
   : '/api';
 
 let businessData = null;

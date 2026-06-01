@@ -342,7 +342,7 @@ class CSVImportManager {
       console.log(`📤 Syncing ${businesses.length} businesses to Supabase...`);
 
       const adminToken = localStorage.getItem('cc_admin_token') || '';
-      const response = await fetch((window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app') + '/api/admin/gcr/import-csv', {
+      const response = await fetch((window.CC_API_BASE || 'https://gcr-api-gules.vercel.app') + '/api/admin/gcr/import-csv', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
