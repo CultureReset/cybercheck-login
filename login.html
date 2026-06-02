@@ -415,6 +415,23 @@
           showTab('login');
           document.getElementById('email').value = email;
         } else {
+          // Try admin login first (gcr-api-clean admin_users table)
+          try {
+            var adminRes = await fetch('https://gcr-api-clean.vercel.app/api/admin/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email, password: password })
+            });
+            if (adminRes.ok) {
+              var adminData = await adminRes.json();
+              if (adminData.token && adminData.admin && adminData.admin.role === 'admin') {
+                try { localStorage.setItem('cc_admin_token', adminData.token); localStorage.setItem('cc_user_role', 'admin'); localStorage.removeItem('cc_token'); } catch(e) {}
+                window.location.href = 'admin.html';
+                return;
+              }
+            }
+          } catch(e) {}
+
           var result = await login(email, password);
           if (result && result.error) { showErr(result.error); btn.disabled = false; btn.textContent = 'Sign In'; return; }
           var role = result.user && result.user.role;
