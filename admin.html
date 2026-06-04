@@ -323,11 +323,11 @@
           </div>
           <div class="card" style="padding:24px;text-align:center;">
             <div style="font-size:32px;font-weight:700;color:#f59e0b;" id="stat-users">—</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Users</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Hidden</div>
           </div>
           <div class="card" style="padding:24px;text-align:center;">
             <div style="font-size:32px;font-weight:700;color:#a78bfa;" id="stat-bookings">—</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Total Bookings</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Sponsored</div>
           </div>
         </div>
         <div class="card" style="padding:24px;">
@@ -6053,6 +6053,7 @@
       // Close sidebar on mobile after navigation
       if (window.innerWidth <= 768) closeSidebar();
       // Lazy load data
+      if (page === 'overview') loadOverview();
       if (page === 'gcr-businesses' && !_gcrLoaded) loadGCRBusinesses();
       if (page === 'gcr-claims' && !_claimsLoaded) loadGCRClaims();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
@@ -6097,21 +6098,17 @@
     async function loadOverview() {
       try {
         var token = getAuthToken();
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
-        var gcr = res.ok ? await res.json() : [];
-        if (!Array.isArray(gcr)) gcr = [];
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = res.ok ? await res.json() : {};
+        var gcr = data.entities || [];
 
-        var featured = gcr.filter(function(b){ return b.featured; }).length;
-
-        // Live GCR count = entities actually showing on public GCR pages
-        var liveRes = await fetch(API_BASE.replace('/api/admin','') + '/api/gcr/entities?_t=' + Date.now());
-        var liveData = liveRes.ok ? await liveRes.json() : {};
-        var liveEntities = liveData.businesses || liveData.entities || (Array.isArray(liveData) ? liveData : []);
+        var liveCount = gcr.filter(function(b){ return b.is_active; }).length;
+        var hiddenCount = gcr.length - liveCount;
 
         document.getElementById('stat-businesses').textContent = gcr.length;
-        document.getElementById('stat-gcr').textContent = liveEntities.length;
-        document.getElementById('stat-users').textContent = featured;
-        document.getElementById('stat-bookings').textContent = '—';
+        document.getElementById('stat-gcr').textContent = liveCount;
+        document.getElementById('stat-users').textContent = hiddenCount;
+        document.getElementById('stat-bookings').textContent = gcr.filter(function(b){ return b.is_sponsored; }).length;
 
         var tableHTML = function(list) {
           var h = '<table style="width:100%;border-collapse:collapse;">';
@@ -6122,18 +6119,20 @@
           h += '</tr></thead><tbody>';
           list.forEach(function(b) {
             h += '<tr style="border-bottom:1px solid var(--card-border);">';
-            h += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml(b.name || '—') + '</td>';
-            h += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.entity_type || '—') + '</td>';
+            h += '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml((b.icon||'') + ' ' + (b.name || '—')) + '</td>';
+            h += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.entity_subtype || '—') + '</td>';
             h += '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.city || '—') + '</td>';
-            h += '<td style="padding:10px 8px;font-size:13px;">' + (b.is_active ? '<span style="color:#22c55e;">Active</span>' : '<span style="color:var(--text-muted);">Hidden</span>') + '</td>';
-            h += '<td style="padding:10px 8px;"><button onclick="openGCRBizDashboard(\'' + escHtml(b.id) + '\')" class="btn btn-outline btn-sm">Edit</button></td>';
+            h += '<td style="padding:10px 8px;font-size:13px;">' + (b.is_active ? '<span style="color:#22c55e;font-weight:700;">LIVE</span>' : '<span style="color:var(--text-muted);">Hidden</span>') + '</td>';
+            h += '<td style="padding:10px 8px;"><button onclick="showPage(\'gcr-entity-editor\');loadEntityForEdit(\'' + escHtml(b.id) + '\')" class="btn btn-outline btn-sm">Edit</button></td>';
             h += '</tr>';
           });
           h += '</tbody></table>';
           return h;
         };
 
-        document.getElementById('recent-businesses').innerHTML = tableHTML(gcr.slice(0, 10));
+        // Sort by most recently updated
+        var sorted = gcr.slice().sort(function(a,b){ return (b.updated_at||'') > (a.updated_at||'') ? 1 : -1; });
+        document.getElementById('recent-businesses').innerHTML = tableHTML(sorted.slice(0, 20));
         document.getElementById('businesses-list').innerHTML = tableHTML(gcr);
       } catch(e) {
         document.getElementById('recent-businesses').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Could not load data.</div>';
