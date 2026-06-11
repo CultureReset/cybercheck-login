@@ -104,6 +104,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Events 🤖</span>
         </div>
+        <div class="nav-item" data-page="gcr-artists" onclick="showPage('gcr-artists')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span>Artists</span>
+        </div>
         <div class="nav-item" data-page="gcr-specials" onclick="showPage('gcr-specials')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Specials 🤖</span>
@@ -1342,11 +1346,97 @@
       </div>
 
       <!-- ── GCR EVENTS ──────────────────────────────── -->
+      <!-- ── ARTISTS ─────────────────────────────────────────────────── -->
+      <div id="page-gcr-artists" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Artists</h1>
+          <button class="btn btn-primary" onclick="openArtistEditor(null)">+ Add Artist</button>
+        </div>
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <input type="text" id="artist-search" placeholder="Search artists..." oninput="searchArtists()" style="width:100%;max-width:400px;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+        </div>
+        <div id="artists-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>
+
+        <!-- Artist Editor Modal -->
+        <div id="artist-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+          <div style="max-width:600px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;position:relative;">
+            <button onclick="closeArtistEditor()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+            <h2 id="artist-editor-title" style="margin:0 0 24px;">Edit Artist</h2>
+
+            <!-- Photo -->
+            <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;">
+              <div id="artist-photo-preview" style="width:100px;height:100px;border-radius:50%;background:var(--bg);border:2px solid var(--card-border);overflow:hidden;flex-shrink:0;">
+                <img id="artist-photo-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;">
+                <div id="artist-photo-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;">🎤</div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Artist Photo</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <input type="file" id="artist-photo-file" accept="image/*" onchange="previewArtistPhoto(this)" style="font-size:13px;color:var(--text);">
+                  <div style="font-size:12px;color:var(--text-muted);">— or paste URL —</div>
+                  <input type="text" id="artist-photo-url" placeholder="https://..." oninput="previewArtistPhotoUrl(this.value)" style="padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;gap:14px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Name *</label>
+                <input type="text" id="artist-name" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Bio</label>
+                <textarea id="artist-bio" rows="3" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Genre</label>
+                  <input type="text" id="artist-genre" placeholder="e.g. Blues, Rock, Country" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Hometown</label>
+                  <input type="text" id="artist-hometown" placeholder="e.g. Nashville, TN" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Website</label>
+                <input type="text" id="artist-website" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Spotify URL</label>
+                <input type="text" id="artist-spotify" placeholder="https://open.spotify.com/artist/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Instagram</label>
+                  <input type="text" id="artist-instagram" placeholder="@handle or URL" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Facebook</label>
+                  <input type="text" id="artist-facebook" placeholder="@handle or URL" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">TikTok</label>
+                  <input type="text" id="artist-tiktok" placeholder="@handle or URL" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:24px;">
+              <button onclick="saveArtist()" class="btn btn-primary" style="flex:1;">Save Artist</button>
+              <button onclick="closeArtistEditor()" class="btn btn-outline">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="page-gcr-events" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>GCR Events</h1>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-outline" onclick="openAIEventExtract()">🤖 AI Extract from Photo/Text</button>
+            <button class="btn btn-outline" onclick="openBulkAddEventsModal()">+ Bulk Add Events</button>
+            <button class="btn btn-outline" onclick="backfillEventTypes(this)">🔄 Backfill Event Types</button>
             <button class="btn btn-primary" onclick="openAddEventModal()">+ Add Event</button>
           </div>
         </div>
@@ -1365,6 +1455,20 @@
             <textarea id="ai-event-raw-text" placeholder="Or paste event text here — dates, times, descriptions, venue..." rows="4" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
             <button class="btn btn-primary" onclick="aiExtractEventsFromText()" style="width:100%;">Extract Events with AI</button>
             <div id="ai-event-status" style="margin-top:8px;font-size:13px;color:var(--text-muted);"></div>
+
+            <!-- AI extracted events preview + bulk save -->
+            <div id="ai-event-preview" style="display:none;margin-top:16px;border-top:1px solid var(--card-border);padding-top:16px;">
+              <div style="font-weight:700;margin-bottom:10px;">Extracted Events — review &amp; save</div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:5px;">Save to Business *</label>
+                <input type="text" id="ai-event-biz-search" placeholder="Search business..." oninput="aiEvtSearchBiz()" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;box-sizing:border-box;">
+                <div id="ai-event-biz-results" style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;margin-top:4px;max-height:140px;overflow-y:auto;display:none;"></div>
+                <div id="ai-event-biz-selected" style="font-size:13px;color:var(--primary);font-weight:600;margin-top:4px;"></div>
+              </div>
+              <div id="ai-event-preview-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+              <div id="ai-event-save-result" style="margin-bottom:10px;"></div>
+              <button onclick="saveAIExtractedEvents()" class="btn btn-primary" style="width:100%;">Save All Events</button>
+            </div>
           </div>
         </div>
         <div class="card" style="padding:24px;">
@@ -1379,6 +1483,33 @@
               </tr></thead>
               <tbody id="gcr-events-body"><tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Bulk Add Events Modal -->
+        <div id="bulk-add-events-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+          <div style="max-width:700px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;position:relative;">
+            <button onclick="document.getElementById('bulk-add-events-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+            <h2 style="margin:0 0 6px;">Bulk Add Events</h2>
+            <p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Select a business then add multiple events at once.</p>
+
+            <!-- Business picker -->
+            <div style="margin-bottom:20px;">
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Business *</label>
+              <input type="text" id="bulk-evt-biz-search" placeholder="Search business name..." oninput="bulkEvtSearchBiz()" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              <div id="bulk-evt-biz-results" style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;margin-top:4px;max-height:160px;overflow-y:auto;display:none;"></div>
+              <div id="bulk-evt-biz-selected" style="margin-top:8px;font-size:13px;color:var(--primary);font-weight:600;"></div>
+            </div>
+
+            <!-- Event rows -->
+            <div id="bulk-evt-rows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+            <button class="btn btn-outline btn-sm" onclick="addBulkEvtRow()" style="margin-bottom:20px;">+ Add Another Event</button>
+
+            <div id="bulk-evt-result" style="margin-bottom:16px;"></div>
+            <div style="display:flex;gap:12px;">
+              <button onclick="submitBulkEvents()" class="btn btn-primary" style="flex:1;">Save All Events</button>
+              <button onclick="document.getElementById('bulk-add-events-modal').style.display='none'" class="btn btn-outline">Cancel</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1408,13 +1539,27 @@
                   <select id="event-type" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
                     <option value="">— Select —</option>
                     <option value="live_music">Live Music</option>
+                    <option value="open_mic">Open Mic / Open Jam</option>
+                    <option value="dj">DJ Night</option>
+                    <option value="karaoke">Karaoke</option>
                     <option value="trivia">Trivia Night</option>
                     <option value="bingo">Bingo</option>
-                    <option value="karaoke">Karaoke</option>
                     <option value="comedy">Comedy</option>
-                    <option value="dj">DJ</option>
-                    <option value="special_event">Special Event</option>
+                    <option value="drag_show">Drag Show</option>
+                    <option value="open_bar">Open Bar</option>
+                    <option value="happy_hour">Happy Hour</option>
+                    <option value="food_special">Food Special</option>
+                    <option value="wine_tasting">Wine Tasting</option>
+                    <option value="beer_tasting">Beer Tasting</option>
+                    <option value="brunch_event">Brunch Event</option>
+                    <option value="kids_event">Kids Event</option>
                     <option value="holiday">Holiday Event</option>
+                    <option value="festival">Festival</option>
+                    <option value="fundraiser">Fundraiser / Charity</option>
+                    <option value="tournament">Tournament / Competition</option>
+                    <option value="art_show">Art Show</option>
+                    <option value="market">Market / Pop-Up</option>
+                    <option value="special_event">Special Event</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -1738,10 +1883,136 @@
           </div>
         </div>
         <div class="card" style="padding:28px;">
-          <h3 style="margin:0 0 8px;">JSON Upload (Advanced)</h3>
-          <p style="color:var(--text-muted);font-size:14px;margin:0 0 16px;">Paste complete business data as JSON. Empty sections preserve existing data.</p>
-          <textarea id="bulk-json-input" rows="12" placeholder='{"menu": [...], "drinks": [...], "specials": [...], "events": [...]}' style="width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;"></textarea>
-          <button onclick="applyJSONUpload()" class="btn btn-primary" style="margin-top:12px;">Apply JSON Upload</button>
+          <h3 style="margin:0 0 4px;">Menu JSON Upload</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin:0 0 20px;">Upload a fully structured menu JSON for any entity. Creates meal period sections, sub-sections, and items. Existing data is replaced per section.</p>
+
+          <!-- Entity picker -->
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Target Entity</label>
+            <div style="display:flex;gap:8px;">
+              <input id="mju-slug-input" type="text" placeholder="Paste slug or search..." style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" oninput="mjuSearchEntity(this.value)">
+              <button class="btn btn-outline btn-sm" onclick="mjuSearchEntity(document.getElementById('mju-slug-input').value)" style="white-space:nowrap;">Look up</button>
+            </div>
+            <div id="mju-entity-confirm" style="margin-top:8px;font-size:13px;color:#22c55e;display:none;"></div>
+          </div>
+
+          <!-- Schema reference -->
+          <details style="margin-bottom:16px;">
+            <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);user-select:none;">📋 JSON Structure Reference (click to expand)</summary>
+            <pre style="margin-top:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;font-size:11px;color:var(--text-muted);overflow-x:auto;white-space:pre;">{
+  "meal_periods": [
+    {
+      "meal_period_key": "lunch",        // breakfast|brunch|lunch|dinner|kids|drinks|happy_hour|specials|all_day
+      "section_name": "Lunch",           // display name (can differ from key)
+      "section_type": "regular",         // regular|ayce|dietary|happy_hour|special|rotating
+      "available_days": "Mon,Tue,Wed,Thu,Fri",
+      "available_start": "11:00",
+      "available_end": "15:00",
+      "price": null,                     // AYCE price if section_type=ayce
+      "sort_order": 1,
+      "sections": [
+        {
+          "section_name": "Soups",
+          "sort_order": 1,
+          "items": [
+            {
+              "name": "Crab Bisque",
+              "description": "Creamy crab soup with crackers",
+              "price": "8",
+              "regular_price": null,     // for happy hour items
+              "photo_url": null,
+              "is_available": true,
+              "is_sold_out": false,
+              "modifiers": [             // prep options, sizes, etc.
+                {
+                  "name": "Size",
+                  "options": [
+                    {"label": "Cup", "price_delta": 0},
+                    {"label": "Bowl", "price_delta": 4}
+                  ]
+                }
+              ],
+              "available_days": null,    // null = inherits from section
+              "available_start": null,
+              "available_end": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "meal_period_key": "drinks",
+      "section_name": "Drinks",
+      "section_type": "rotating",
+      "sections": [
+        {
+          "section_name": "On Tap",
+          "sort_order": 1,
+          "items": [
+            { "name": "Sweetwater 420", "price": "6", "is_available": true }
+          ]
+        }
+      ]
+    }
+  ]
+}</pre>
+          </details>
+
+          <!-- JSON input -->
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('mju-file-input').click()">📁 Load from file</button>
+              <input type="file" id="mju-file-input" accept=".json" style="display:none;" onchange="mjuLoadFile(this)">
+              <button class="btn btn-outline btn-sm" onclick="mjuPasteExample()">Paste example</button>
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('mju-json-input').value=''">Clear</button>
+            </div>
+            <textarea id="mju-json-input" rows="14" placeholder='Paste your meal period JSON here...' style="width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>
+          </div>
+
+          <button onclick="mjuPreview()" class="btn btn-primary">Preview Upload</button>
+
+          <!-- Preview panel -->
+          <div id="mju-preview" style="display:none;margin-top:20px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:20px;">
+            <h4 style="margin:0 0 12px;">Review before uploading</h4>
+            <div id="mju-preview-stats" style="font-size:13px;color:var(--text-muted);margin-bottom:12px;"></div>
+            <div id="mju-preview-tree" style="font-size:13px;max-height:320px;overflow-y:auto;"></div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button onclick="mjuSubmit()" class="btn btn-primary" id="mju-submit-btn">✅ Upload to DB</button>
+              <button onclick="document.getElementById('mju-preview').style.display='none'" class="btn btn-outline">Cancel</button>
+            </div>
+            <div id="mju-result" style="margin-top:12px;font-size:13px;"></div>
+          </div>
+        </div>
+
+        <!-- Events JSON Upload -->
+        <div class="card" style="padding:28px;margin-top:20px;">
+          <h3 style="margin:0 0 4px;">Events JSON Upload</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin:0 0 16px;">Upload multiple events for one or many businesses via JSON. Each event needs a business slug or name to match.</p>
+          <details style="margin-bottom:16px;">
+            <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);user-select:none;">📋 JSON Structure (click to expand)</summary>
+            <pre style="margin-top:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;font-size:11px;color:var(--text-muted);overflow-x:auto;white-space:pre;">[
+  {
+    "entity_slug": "cobalt-the-restaurant",
+    "event_name": "T-Bone Montgomery",
+    "artist_name": "T-Bone Montgomery",
+    "event_type": "live_music",
+    "event_date": "2026-06-14",
+    "start_time": "7:00 PM",
+    "end_time": "10:00 PM",
+    "description": "Live blues from the Gulf Coast legend",
+    "cover_charge": 0,
+    "image_url": "https://..."
+  }
+]</pre>
+          </details>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('eju-file-input').click()">📁 Load from file</button>
+            <input type="file" id="eju-file-input" accept=".json" style="display:none;" onchange="ejuLoadFile(this)">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('eju-json-input').value=''">Clear</button>
+          </div>
+          <textarea id="eju-json-input" rows="10" placeholder='Paste events JSON array here...' style="width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;margin-bottom:12px;"></textarea>
+          <button onclick="ejuSubmit()" class="btn btn-primary">Upload Events</button>
+          <div id="eju-result" style="margin-top:12px;font-size:13px;"></div>
         </div>
       </div>
 
@@ -6059,6 +6330,7 @@
       if (page === 'gcr-businesses' && !_gcrLoaded) loadGCRBusinesses();
       if (page === 'gcr-claims' && !_claimsLoaded) loadGCRClaims();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
+      if (page === 'gcr-artists') loadArtists(document.getElementById('artist-search') ? document.getElementById('artist-search').value : '');
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
       if (page === 'gcr-ads' && !_adsLoaded) loadGCRAds();
       if (page === 'leads' && !_leadsLoaded) loadLeads();
@@ -6976,11 +7248,16 @@
       input.value = '';
     }
 
+    var _aiExtractedEvents = [];
+    var _aiEvtBizSlug = null;
+    var _aiEvtBizTimer;
+
     async function aiExtractEventsFromText() {
       var raw = document.getElementById('ai-event-raw-text').value.trim();
       if (!raw) { toast('Enter some event text first', 'error'); return; }
       var statusEl = document.getElementById('ai-event-status');
       statusEl.textContent = '🤖 Structuring events...';
+      document.getElementById('ai-event-preview').style.display = 'none';
       try {
         var r = await fetch(API_BASE + '/api/admin/ai-organize', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
@@ -6990,19 +7267,66 @@
         if (!r.ok) throw new Error(d.error);
         var events = d.structured && d.structured.events || [];
         if (!events.length) { statusEl.textContent = '⚠️ No events found — try more detail'; return; }
+        _aiExtractedEvents = events;
+        _aiEvtBizSlug = null;
         statusEl.style.color = '#4ade80';
-        statusEl.textContent = '✅ Found ' + events.length + ' events — opening form for each...';
-        // Pre-fill the add modal with first event and offer sequential entry
-        events.forEach(function(ev, i) {
-          setTimeout(function() {
-            openAddEventModal();
-            var nm = document.getElementById('event-name'); if (nm) nm.value = ev.event_name || ev.name || '';
-            var ds = document.getElementById('event-description'); if (ds) ds.value = ev.description || '';
-            var dt = document.getElementById('event-date'); if (dt) dt.value = ev.event_date || '';
-            var st = document.getElementById('event-start-time'); if (st) st.value = ev.start_time || '';
-          }, i * 100);
-        });
+        statusEl.textContent = '✅ Found ' + events.length + ' event(s) — review below';
+        // Render preview list
+        var listEl = document.getElementById('ai-event-preview-list');
+        listEl.innerHTML = events.map(function(ev, i) {
+          return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:10px;font-size:13px;">' +
+            '<div style="font-weight:700;">' + escHtml(ev.event_name || ev.name || 'Event ' + (i+1)) + '</div>' +
+            (ev.event_date ? '<div style="color:var(--text-muted);">📅 ' + escHtml(ev.event_date) + (ev.start_time ? ' · ' + escHtml(ev.start_time) : '') + '</div>' : '') +
+            (ev.description ? '<div style="color:var(--text-muted);margin-top:4px;">' + escHtml(ev.description) + '</div>' : '') +
+            '</div>';
+        }).join('');
+        document.getElementById('ai-event-biz-search').value = '';
+        document.getElementById('ai-event-biz-selected').textContent = '';
+        document.getElementById('ai-event-save-result').innerHTML = '';
+        document.getElementById('ai-event-preview').style.display = 'block';
       } catch(e) { statusEl.style.color = '#ef4444'; statusEl.textContent = '❌ ' + e.message; }
+    }
+
+    function aiEvtSearchBiz() {
+      clearTimeout(_aiEvtBizTimer);
+      var q = document.getElementById('ai-event-biz-search').value.trim();
+      if (q.length < 2) { document.getElementById('ai-event-biz-results').style.display = 'none'; return; }
+      _aiEvtBizTimer = setTimeout(async function() {
+        var token = localStorage.getItem('cc_admin_token');
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=8', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await r.json();
+        var items = d.entities || d.data || [];
+        var el = document.getElementById('ai-event-biz-results');
+        if (!items.length) { el.style.display = 'none'; return; }
+        el.innerHTML = items.map(function(b) {
+          return '<div onclick="selectAiEvtBiz(\'' + escHtml(b.slug) + '\',\'' + escHtml(b.name) + '\')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--card-border);" onmouseover="this.style.background=\'var(--bg-hover, #333)\'" onmouseout="this.style.background=\'\'">' + escHtml(b.name) + '</div>';
+        }).join('');
+        el.style.display = 'block';
+      }, 300);
+    }
+
+    function selectAiEvtBiz(slug, name) {
+      _aiEvtBizSlug = slug;
+      document.getElementById('ai-event-biz-search').value = name;
+      document.getElementById('ai-event-biz-results').style.display = 'none';
+      document.getElementById('ai-event-biz-selected').textContent = '✓ ' + name;
+    }
+
+    async function saveAIExtractedEvents() {
+      if (!_aiEvtBizSlug) { toast('Select a business first', 'error'); return; }
+      if (!_aiExtractedEvents.length) { toast('No events to save', 'error'); return; }
+      var token = localStorage.getItem('cc_admin_token');
+      var resultEl = document.getElementById('ai-event-save-result');
+      resultEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Saving ' + _aiExtractedEvents.length + ' event(s)...</div>';
+      var ok = 0, fail = 0;
+      for (var ev of _aiExtractedEvents) {
+        var payload = { event_name: ev.event_name || ev.name, artist_name: ev.artist_name || ev.event_name || ev.name, event_type: ev.event_type || null, event_date: ev.event_date || null, start_time: ev.start_time || null, end_time: ev.end_time || null, description: ev.description || null, image_url: ev.image_url || null, cover_charge: ev.cover_charge != null ? parseFloat(ev.cover_charge) : null };
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _aiEvtBizSlug + '/events', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var d = await r.json();
+        if (d.error) fail++; else ok++;
+      }
+      resultEl.innerHTML = '<div style="padding:10px;border-radius:8px;background:' + (fail ? '#7f1d1d' : '#14532d') + ';color:' + (fail ? '#fca5a5' : '#86efac') + ';font-size:13px;">' + ok + ' saved' + (fail ? ', ' + fail + ' failed' : '') + '</div>';
+      if (ok) { _eventsLoaded = false; loadGCREvents(); }
     }
 
     async function aiExtractSpecials(input) {
@@ -7468,6 +7792,463 @@
 
     function processBulkCSV() { toast('Select a business to attach this data to — CSV bulk upload coming soon.', 'error'); }
     function applyJSONUpload() { toast('Select a business to apply this JSON to — coming soon.', 'error'); }
+
+    // ── ARTISTS ──────────────────────────────────────────────────────────────
+    var _artistEditorId = null;
+    var _artistPhotoFile = null;
+
+    async function loadArtists(search) {
+      var url = GCR_ADMIN_API + '/api/admin/artists' + (search ? '?search=' + encodeURIComponent(search) : '');
+      var token = localStorage.getItem('cc_admin_token');
+      var r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+      var d = await r.json();
+      renderArtistsList(d.artists || []);
+    }
+
+    function renderArtistsList(artists) {
+      var el = document.getElementById('artists-list');
+      if (!artists.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:14px;padding:20px;">No artists found.</div>'; return; }
+      el.innerHTML = artists.map(function(a) {
+        var img = a.image_url ? '<img src="' + escHtml(a.image_url) + '" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-size:32px;">🎤</span>';
+        var socials = [
+          a.social_instagram ? '<a href="' + escHtml(a.social_instagram) + '" target="_blank" style="color:var(--primary);font-size:12px;">IG</a>' : '',
+          a.social_facebook  ? '<a href="' + escHtml(a.social_facebook)  + '" target="_blank" style="color:var(--primary);font-size:12px;">FB</a>' : '',
+          a.social_tiktok    ? '<a href="' + escHtml(a.social_tiktok)    + '" target="_blank" style="color:var(--primary);font-size:12px;">TT</a>' : '',
+          a.spotify_url      ? '<a href="' + escHtml(a.spotify_url)      + '" target="_blank" style="color:var(--primary);font-size:12px;">Spotify</a>' : '',
+        ].filter(Boolean).join(' · ');
+        return '<div class="card" style="padding:16px;cursor:pointer;" onclick="openArtistEditor(\'' + a.id + '\')">' +
+          '<div style="display:flex;align-items:center;gap:14px;">' +
+          '<div style="width:64px;height:64px;border-radius:50%;background:var(--bg);border:1px solid var(--card-border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' + img + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+          '<div style="font-weight:700;font-size:15px;margin-bottom:2px;">' + escHtml(a.name || '') + '</div>' +
+          (a.genre ? '<div style="font-size:12px;color:var(--text-muted);">🎵 ' + escHtml(a.genre) + '</div>' : '') +
+          (a.hometown ? '<div style="font-size:12px;color:var(--text-muted);">📍 ' + escHtml(a.hometown) + '</div>' : '') +
+          (socials ? '<div style="margin-top:6px;display:flex;gap:8px;">' + socials + '</div>' : '') +
+          '</div></div>' +
+          (a.bio ? '<div style="font-size:13px;color:var(--text-muted);margin-top:10px;border-top:1px solid var(--card-border);padding-top:10px;">' + escHtml(a.bio.slice(0,120)) + (a.bio.length > 120 ? '…' : '') + '</div>' : '') +
+          '</div>';
+      }).join('');
+    }
+
+    var _artistSearchTimer;
+    function searchArtists() {
+      clearTimeout(_artistSearchTimer);
+      _artistSearchTimer = setTimeout(function() { loadArtists(document.getElementById('artist-search').value); }, 300);
+    }
+
+    async function openArtistEditor(id) {
+      _artistEditorId = id;
+      _artistPhotoFile = null;
+      document.getElementById('artist-editor-title').textContent = id ? 'Edit Artist' : 'Add Artist';
+      document.getElementById('artist-name').value = '';
+      document.getElementById('artist-bio').value = '';
+      document.getElementById('artist-genre').value = '';
+      document.getElementById('artist-hometown').value = '';
+      document.getElementById('artist-website').value = '';
+      document.getElementById('artist-spotify').value = '';
+      document.getElementById('artist-instagram').value = '';
+      document.getElementById('artist-facebook').value = '';
+      document.getElementById('artist-tiktok').value = '';
+      document.getElementById('artist-photo-url').value = '';
+      document.getElementById('artist-photo-img').style.display = 'none';
+      document.getElementById('artist-photo-placeholder').style.display = 'flex';
+      if (id) {
+        var token = localStorage.getItem('cc_admin_token');
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/artists/' + id, { headers: { 'Authorization': 'Bearer ' + token } });
+        var a = await r.json();
+        document.getElementById('artist-name').value = a.name || '';
+        document.getElementById('artist-bio').value = a.bio || '';
+        document.getElementById('artist-genre').value = a.genre || '';
+        document.getElementById('artist-hometown').value = a.hometown || '';
+        document.getElementById('artist-website').value = a.website_url || '';
+        document.getElementById('artist-spotify').value = a.spotify_url || '';
+        document.getElementById('artist-instagram').value = a.social_instagram || '';
+        document.getElementById('artist-facebook').value = a.social_facebook || '';
+        document.getElementById('artist-tiktok').value = a.social_tiktok || '';
+        if (a.image_url) {
+          document.getElementById('artist-photo-url').value = a.image_url;
+          document.getElementById('artist-photo-img').src = a.image_url;
+          document.getElementById('artist-photo-img').style.display = 'block';
+          document.getElementById('artist-photo-placeholder').style.display = 'none';
+        }
+      }
+      document.getElementById('artist-editor-modal').style.display = 'block';
+    }
+
+    function closeArtistEditor() {
+      document.getElementById('artist-editor-modal').style.display = 'none';
+      _artistEditorId = null;
+      _artistPhotoFile = null;
+    }
+
+    function previewArtistPhoto(input) {
+      if (!input.files || !input.files[0]) return;
+      _artistPhotoFile = input.files[0];
+      var url = URL.createObjectURL(_artistPhotoFile);
+      document.getElementById('artist-photo-img').src = url;
+      document.getElementById('artist-photo-img').style.display = 'block';
+      document.getElementById('artist-photo-placeholder').style.display = 'none';
+      document.getElementById('artist-photo-url').value = '';
+    }
+
+    function previewArtistPhotoUrl(url) {
+      if (!url) { document.getElementById('artist-photo-img').style.display = 'none'; document.getElementById('artist-photo-placeholder').style.display = 'flex'; return; }
+      document.getElementById('artist-photo-img').src = url;
+      document.getElementById('artist-photo-img').style.display = 'block';
+      document.getElementById('artist-photo-placeholder').style.display = 'none';
+      _artistPhotoFile = null;
+    }
+
+    async function saveArtist() {
+      var token = localStorage.getItem('cc_admin_token');
+      if (!_artistEditorId) { toast('New artist creation coming soon — edit existing artists for now.', 'error'); return; }
+      var photoUrl = document.getElementById('artist-photo-url').value.trim();
+
+      // Upload photo file if one was selected
+      if (_artistPhotoFile) {
+        var fd = new FormData();
+        fd.append('image', _artistPhotoFile);
+        var ur = await fetch(GCR_ADMIN_API + '/api/admin/artists/' + _artistEditorId + '/photo', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+        var ud = await ur.json();
+        if (ud.url) photoUrl = ud.url;
+        else { toast('Photo upload failed: ' + (ud.error || 'unknown'), 'error'); return; }
+      }
+
+      var payload = {
+        name: document.getElementById('artist-name').value.trim(),
+        bio: document.getElementById('artist-bio').value.trim() || null,
+        genre: document.getElementById('artist-genre').value.trim() || null,
+        hometown: document.getElementById('artist-hometown').value.trim() || null,
+        website_url: document.getElementById('artist-website').value.trim() || null,
+        spotify_url: document.getElementById('artist-spotify').value.trim() || null,
+        social_instagram: document.getElementById('artist-instagram').value.trim() || null,
+        social_facebook: document.getElementById('artist-facebook').value.trim() || null,
+        social_tiktok: document.getElementById('artist-tiktok').value.trim() || null,
+      };
+      if (photoUrl) payload.image_url = photoUrl;
+
+      var r = await fetch(GCR_ADMIN_API + '/api/admin/artists/' + _artistEditorId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      var d = await r.json();
+      if (d.error) { toast('Error: ' + d.error, 'error'); return; }
+      toast('Artist saved!', 'success');
+      closeArtistEditor();
+      loadArtists(document.getElementById('artist-search').value);
+    }
+
+    // ── BULK ADD EVENTS ──────────────────────────────────────────────────────
+    var _bulkEvtBizSlug = null;
+    var _bulkEvtBizSearchTimer;
+
+    function openBulkAddEventsModal() {
+      _bulkEvtBizSlug = null;
+      document.getElementById('bulk-evt-biz-search').value = '';
+      document.getElementById('bulk-evt-biz-results').style.display = 'none';
+      document.getElementById('bulk-evt-biz-selected').textContent = '';
+      document.getElementById('bulk-evt-result').innerHTML = '';
+      document.getElementById('bulk-evt-rows').innerHTML = '';
+      addBulkEvtRow();
+      addBulkEvtRow();
+      document.getElementById('bulk-add-events-modal').style.display = 'block';
+    }
+
+    function bulkEvtSearchBiz() {
+      clearTimeout(_bulkEvtBizSearchTimer);
+      var q = document.getElementById('bulk-evt-biz-search').value.trim();
+      if (q.length < 2) { document.getElementById('bulk-evt-biz-results').style.display = 'none'; return; }
+      _bulkEvtBizSearchTimer = setTimeout(async function() {
+        var token = localStorage.getItem('cc_admin_token');
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=8', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await r.json();
+        var items = d.entities || d.data || [];
+        var el = document.getElementById('bulk-evt-biz-results');
+        if (!items.length) { el.style.display = 'none'; return; }
+        el.innerHTML = items.map(function(b) {
+          return '<div onclick="selectBulkEvtBiz(\'' + escHtml(b.slug) + '\',\'' + escHtml(b.name) + '\')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--card-border);" onmouseover="this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.background=\'\'">' + escHtml(b.name) + '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">' + escHtml(b.slug) + '</span></div>';
+        }).join('');
+        el.style.display = 'block';
+      }, 300);
+    }
+
+    function selectBulkEvtBiz(slug, name) {
+      _bulkEvtBizSlug = slug;
+      document.getElementById('bulk-evt-biz-search').value = name;
+      document.getElementById('bulk-evt-biz-results').style.display = 'none';
+      document.getElementById('bulk-evt-biz-selected').textContent = '✓ ' + name + ' (' + slug + ')';
+    }
+
+    var _bulkEvtRowCount = 0;
+    function addBulkEvtRow() {
+      var i = _bulkEvtRowCount++;
+      var row = document.createElement('div');
+      row.id = 'bulk-evt-row-' + i;
+      row.style.cssText = 'background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;position:relative;';
+      row.innerHTML =
+        '<button onclick="document.getElementById(\'bulk-evt-row-' + i + '\').remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">✕</button>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Artist / Event Name *</label><input type="text" class="bev-artist" placeholder="e.g. T-Bone Montgomery" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Date *</label><input type="date" class="bev-date" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Start Time</label><input type="text" class="bev-start" placeholder="7:00 PM" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">End Time</label><input type="text" class="bev-end" placeholder="10:00 PM" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Cover Charge</label><input type="text" class="bev-cover" placeholder="Free or $10" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Event Type</label><select class="bev-type" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"><option value="">— Type —</option><option value="live_music">Live Music</option><option value="open_mic">Open Mic</option><option value="dj">DJ Night</option><option value="karaoke">Karaoke</option><option value="trivia">Trivia</option><option value="bingo">Bingo</option><option value="comedy">Comedy</option><option value="drag_show">Drag Show</option><option value="happy_hour">Happy Hour</option><option value="food_special">Food Special</option><option value="brunch_event">Brunch Event</option><option value="kids_event">Kids Event</option><option value="holiday">Holiday</option><option value="festival">Festival</option><option value="fundraiser">Fundraiser</option><option value="tournament">Tournament</option><option value="art_show">Art Show</option><option value="market">Market/Pop-Up</option><option value="special_event">Special Event</option><option value="other">Other</option></select></div>' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Description</label><input type="text" class="bev-desc" placeholder="Optional description" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+          '<div><label style="font-size:12px;color:var(--text-muted);">Image URL</label><input type="text" class="bev-img" placeholder="https://..." style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;margin-top:3px;"></div>' +
+        '</div>';
+      document.getElementById('bulk-evt-rows').appendChild(row);
+    }
+
+    async function backfillEventTypes(btn) {
+      var orig = btn.textContent;
+      btn.textContent = '⏳ Running...';
+      btn.disabled = true;
+      var token = localStorage.getItem('cc_admin_token');
+      var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/backfill-types', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+      var d = await r.json();
+      btn.textContent = orig;
+      btn.disabled = false;
+      if (d.error) { toast('Error: ' + d.error, 'error'); return; }
+      toast('✅ Updated ' + d.updated + ' of ' + d.total + ' events', 'success');
+      _eventsLoaded = false;
+      loadGCREvents();
+    }
+
+    async function submitBulkEvents() {
+      if (!_bulkEvtBizSlug) { toast('Select a business first', 'error'); return; }
+      var token = localStorage.getItem('cc_admin_token');
+      var rows = document.getElementById('bulk-evt-rows').querySelectorAll('[id^="bulk-evt-row-"]');
+      var events = [];
+      rows.forEach(function(row) {
+        var artist = row.querySelector('.bev-artist').value.trim();
+        var date = row.querySelector('.bev-date').value.trim();
+        if (!artist || !date) return;
+        var cover = row.querySelector('.bev-cover').value.trim();
+        var coverNum = cover ? parseFloat(cover.replace(/[^0-9.]/g,'')) : null;
+        events.push({
+          event_name: artist,
+          artist_name: artist,
+          event_type: row.querySelector('.bev-type').value || null,
+          event_date: date,
+          start_time: row.querySelector('.bev-start').value.trim() || null,
+          end_time: row.querySelector('.bev-end').value.trim() || null,
+          description: row.querySelector('.bev-desc').value.trim() || null,
+          image_url: row.querySelector('.bev-img').value.trim() || null,
+          cover_charge: isNaN(coverNum) ? null : coverNum,
+        });
+      });
+      if (!events.length) { toast('Add at least one event with a name and date', 'error'); return; }
+      var resultEl = document.getElementById('bulk-evt-result');
+      resultEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Saving ' + events.length + ' event(s)...</div>';
+      var ok = 0, fail = 0;
+      for (var ev of events) {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bulkEvtBizSlug + '/events', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+        var d = await r.json();
+        if (d.error) fail++; else ok++;
+      }
+      resultEl.innerHTML = '<div style="padding:12px;border-radius:8px;background:' + (fail ? '#7f1d1d' : '#14532d') + ';color:' + (fail ? '#fca5a5' : '#86efac') + ';font-size:14px;">' + ok + ' saved' + (fail ? ', ' + fail + ' failed' : '') + '</div>';
+      if (ok) { _eventsLoaded = false; loadGCREvents(); }
+    }
+
+    // ── Menu JSON Upload ──────────────────────────────────────────────────────
+    var _mjuSlug = null;
+    var _mjuParsed = null;
+
+    async function mjuSearchEntity(val) {
+      val = (val || '').trim();
+      if (!val) return;
+      var confirm = document.getElementById('mju-entity-confirm');
+      confirm.style.display = 'none';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/gcr/entities?search=' + encodeURIComponent(val) + '&limit=1', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var data = await r.json();
+        var ent = (data.entities || data)[0];
+        if (ent) {
+          _mjuSlug = ent.slug;
+          confirm.textContent = '✓ ' + ent.name + ' (' + ent.slug + ')';
+          confirm.style.display = 'block';
+        } else {
+          confirm.textContent = '✗ No entity found';
+          confirm.style.color = '#ef4444';
+          confirm.style.display = 'block';
+          _mjuSlug = null;
+        }
+      } catch(e) {
+        confirm.textContent = '✗ Lookup failed: ' + e.message;
+        confirm.style.color = '#ef4444';
+        confirm.style.display = 'block';
+      }
+    }
+
+    // ── EVENTS JSON UPLOAD ────────────────────────────────────────────────────
+    function ejuLoadFile(input) {
+      var file = input.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) { document.getElementById('eju-json-input').value = e.target.result; };
+      reader.readAsText(file);
+      input.value = '';
+    }
+
+    async function ejuSubmit() {
+      var raw = document.getElementById('eju-json-input').value.trim();
+      var resultEl = document.getElementById('eju-result');
+      var events;
+      try { events = JSON.parse(raw); } catch(e) { resultEl.innerHTML = '<div style="color:#ef4444;">Invalid JSON: ' + e.message + '</div>'; return; }
+      if (!Array.isArray(events)) { resultEl.innerHTML = '<div style="color:#ef4444;">JSON must be an array of events.</div>'; return; }
+      var token = localStorage.getItem('cc_admin_token');
+      resultEl.innerHTML = '<div style="color:var(--text-muted);">Uploading ' + events.length + ' events...</div>';
+      var ok = 0, fail = 0, errs = [];
+      for (var ev of events) {
+        var slug = ev.entity_slug;
+        if (!slug) { fail++; errs.push('Missing entity_slug on: ' + (ev.event_name || 'unknown')); continue; }
+        var payload = { event_name: ev.event_name, artist_name: ev.artist_name || ev.event_name || null, event_type: ev.event_type || null, event_date: ev.event_date || null, start_time: ev.start_time || null, end_time: ev.end_time || null, description: ev.description || null, image_url: ev.image_url || null, cover_charge: ev.cover_charge != null ? parseFloat(ev.cover_charge) : null };
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/events', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var d = await r.json();
+        if (d.error) { fail++; errs.push(ev.event_name + ': ' + d.error); } else ok++;
+      }
+      var html = '<div style="padding:12px;border-radius:8px;background:' + (fail ? '#7f1d1d' : '#14532d') + ';color:' + (fail ? '#fca5a5' : '#86efac') + ';">' + ok + ' events saved' + (fail ? ', ' + fail + ' failed' : '') + '</div>';
+      if (errs.length) html += '<div style="margin-top:8px;font-size:12px;color:#ef4444;">' + errs.slice(0,5).map(function(e){return escHtml(e);}).join('<br>') + '</div>';
+      resultEl.innerHTML = html;
+      if (ok) { _eventsLoaded = false; }
+    }
+
+    function mjuLoadFile(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('mju-json-input').value = e.target.result;
+      };
+      reader.readAsText(file);
+      input.value = '';
+    }
+
+    function mjuPasteExample() {
+      var ex = {
+        meal_periods: [
+          {
+            meal_period_key: 'lunch',
+            section_name: 'Lunch',
+            section_type: 'regular',
+            available_days: 'Mon,Tue,Wed,Thu,Fri',
+            available_start: '11:00',
+            available_end: '15:00',
+            sort_order: 1,
+            sections: [
+              {
+                section_name: 'Soups',
+                sort_order: 1,
+                items: [
+                  { name: 'Crab Bisque', description: 'Creamy crab soup', price: '8', is_available: true },
+                  { name: 'Seafood Gumbo', description: 'Shrimp & sausage gumbo', price: '10', is_available: true }
+                ]
+              },
+              {
+                section_name: 'Entrees',
+                sort_order: 2,
+                items: [
+                  {
+                    name: 'Grilled Grouper',
+                    description: 'Fresh local grouper, 2 sides',
+                    price: '22',
+                    is_available: true,
+                    modifiers: [
+                      { name: 'Preparation', options: [{ label: 'Grilled', price_delta: 0 }, { label: 'Blackened', price_delta: 0 }, { label: 'Fried', price_delta: 0 }] }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            meal_period_key: 'drinks',
+            section_name: 'Drinks',
+            section_type: 'rotating',
+            sort_order: 5,
+            sections: [
+              {
+                section_name: 'On Tap',
+                sort_order: 1,
+                items: [
+                  { name: 'Sweetwater 420', price: '6', is_available: true },
+                  { name: 'Goose Island IPA', price: '7', is_available: true }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      document.getElementById('mju-json-input').value = JSON.stringify(ex, null, 2);
+    }
+
+    function mjuPreview() {
+      if (!_mjuSlug) { toast('Select an entity first', 'error'); return; }
+      var raw = document.getElementById('mju-json-input').value.trim();
+      if (!raw) { toast('Paste JSON first', 'error'); return; }
+      try {
+        _mjuParsed = JSON.parse(raw);
+      } catch(e) {
+        toast('Invalid JSON: ' + e.message, 'error'); return;
+      }
+      var periods = _mjuParsed.meal_periods || [];
+      if (!periods.length) { toast('JSON must have a meal_periods array', 'error'); return; }
+
+      var totalSections = 0, totalItems = 0;
+      var treeHtml = '';
+      periods.forEach(function(p) {
+        var secs = p.sections || [];
+        totalSections += secs.length;
+        var secCount = secs.reduce(function(n, s) { return n + (s.items || []).length; }, 0);
+        totalItems += secCount;
+        treeHtml += '<div style="margin-bottom:10px;padding:10px 14px;background:rgba(11,122,117,.08);border-left:3px solid var(--primary);border-radius:0 6px 6px 0;">';
+        treeHtml += '<div style="font-weight:700;margin-bottom:4px;">🍽️ ' + (p.section_name || p.meal_period_key) + ' <span style="font-weight:400;color:var(--text-muted);font-size:12px;">(' + p.meal_period_key + ' · ' + (p.section_type || 'regular') + ')</span></div>';
+        if (p.available_days || p.available_start) {
+          treeHtml += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">' + (p.available_days || 'all days') + (p.available_start ? ' · ' + p.available_start + '–' + (p.available_end || '') : '') + '</div>';
+        }
+        secs.forEach(function(s) {
+          var items = s.items || [];
+          treeHtml += '<div style="margin-left:16px;margin-bottom:4px;"><span style="color:var(--text);font-weight:600;">↳ ' + s.section_name + '</span> <span style="color:var(--text-muted);font-size:12px;">(' + items.length + ' items)</span></div>';
+          items.forEach(function(i) {
+            treeHtml += '<div style="margin-left:32px;font-size:12px;color:var(--text-muted);">• ' + i.name + (i.price ? ' — $' + i.price : '') + (i.modifiers && i.modifiers.length ? ' <span style="color:#a78bfa;">[' + i.modifiers.map(function(m){return m.name;}).join(', ') + ']</span>' : '') + '</div>';
+          });
+        });
+        treeHtml += '</div>';
+      });
+
+      document.getElementById('mju-preview-stats').innerHTML =
+        '<strong>' + periods.length + '</strong> meal periods &nbsp;·&nbsp; <strong>' + totalSections + '</strong> sections &nbsp;·&nbsp; <strong>' + totalItems + '</strong> items &nbsp;·&nbsp; Entity: <strong>' + _mjuSlug + '</strong>';
+      document.getElementById('mju-preview-tree').innerHTML = treeHtml;
+      document.getElementById('mju-result').innerHTML = '';
+      document.getElementById('mju-preview').style.display = 'block';
+    }
+
+    async function mjuSubmit() {
+      if (!_mjuSlug || !_mjuParsed) return;
+      var btn = document.getElementById('mju-submit-btn');
+      var result = document.getElementById('mju-result');
+      btn.disabled = true; btn.textContent = 'Uploading…';
+      result.innerHTML = '';
+      try {
+        var r = await fetch(API_BASE + '/api/admin/gcr/entities/' + encodeURIComponent(_mjuSlug) + '/menu-json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify(_mjuParsed)
+        });
+        var data = await r.json();
+        if (data.success || data.created) {
+          result.innerHTML = '<span style="color:#22c55e;">✅ Uploaded! ' + (data.message || (data.created + ' sections created')) + '</span>';
+          toast('Menu JSON uploaded successfully');
+        } else {
+          result.innerHTML = '<span style="color:#ef4444;">✗ ' + (data.error || 'Upload failed') + '</span>';
+        }
+      } catch(e) {
+        result.innerHTML = '<span style="color:#ef4444;">✗ Error: ' + e.message + '</span>';
+      } finally {
+        btn.disabled = false; btn.textContent = '✅ Upload to DB';
+      }
+    }
 
     // ── LEADS ─────────────────────────────────────────
     var _leadsLoaded = false;
