@@ -7140,7 +7140,7 @@
 
         var qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=';
         var portalBase = GCR_ADMIN_API + '/api/qr/partner-portal/';
-        var scanBase = 'https://cybercheck-links.vercel.app/q.html?c=';
+        var scanBase = 'https://gulfcoastradar.com/q.html?c=';
 
         document.getElementById('rp-partners-body').innerHTML = partners.map(function(p) {
           var typeLabel = { rental:'🏠 Rental', hotel:'🏨 Hotel', restaurant:'🍽️ Restaurant', activity:'⚓ Activity', other:'📍 Other' }[p.type] || p.type;
@@ -14673,7 +14673,7 @@
       };
 
       var rows = codes.map(function(c) {
-        var scanUrl = c.scan_url || ('https://cybercheck-links.vercel.app/q.html?c=' + c.code);
+        var scanUrl = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
         var placementIcon = c.placement === 'portable' ? '✋' : '📍';
         return '<tr style="border-top:1px solid var(--card-border);">' +
           '<td style="padding:10px 8px;font-weight:600;color:#38bdf8;">#' + (c.seq_number||'—') + '</td>' +
@@ -14981,7 +14981,7 @@
       if (!codes.length) { alert('No codes to export'); return; }
       var header = ['#','Label','Type','Location','Placement','Scan URL','Scans','Active','Created'];
       var rows = codes.map(function(c) {
-        var scanUrl = c.scan_url || ('https://cybercheck-links.vercel.app/q.html?c=' + c.code);
+        var scanUrl = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
         return [c.seq_number, c.label, c.type, c.location||'', c.placement||'fixed', scanUrl, c.scan_count||0, c.active?'Yes':'No', c.created_at ? c.created_at.split('T')[0] : ''].map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
       });
       var csv = [header.join(',')].concat(rows).join('\n');
