@@ -5774,6 +5774,21 @@
     var GCR_API_BASE = API_BASE;
     var GCR_ADMIN_API = API_BASE;
 
+    // Normalize API responses to handle both wrapped and unwrapped formats
+    function normalizeApiResponse(data, expectedKeys) {
+      if (!data) return data;
+      // If response has expected keys at top level, it's unwrapped (public endpoint)
+      if (expectedKeys && expectedKeys.length > 0 && expectedKeys.some(k => k in data)) {
+        return data;
+      }
+      // If wrapped format (admin endpoints), unwrap it
+      if (data.entity && (expectedKeys === undefined || expectedKeys.includes('entity'))) {
+        return data.entity;
+      }
+      if (Array.isArray(data)) return data;
+      return data;
+    }
+
     // Menu Editor URL helpers
     function getEditorBaseUrl() {
       return isDev ? 'http://localhost:3002' : 'https://restaurant-menu-editor-main.vercel.app';
