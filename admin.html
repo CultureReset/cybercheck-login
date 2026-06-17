@@ -9168,7 +9168,7 @@
     async function loadAISettings() {
       var token = getAuthToken(); if (!token) return;
       try {
-        var r = await fetch(API_BASE + '/api/admin/ai-settings', { headers: { 'Authorization': 'Bearer ' + token } });
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/ai-provider', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!r.ok) throw new Error(await r.text());
         var d = await r.json();
         document.getElementById('ai-chat-provider').value   = d.chat_provider  || 'anthropic';
@@ -9227,9 +9227,9 @@
       var embedKey = (document.getElementById('ai-embed-key') || {}).value || '';
       if (embedKey.trim()) body.embed_api_key = embedKey.trim();
       try {
-        var r = await fetch(API_BASE + '/api/admin/ai-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
-        if (!r.ok) throw new Error(await r.text());
-        toast('AI settings saved!');
+        // Settings are controlled via environment variables (not API endpoint)
+        // Just show success message since AI provider is auto-detected from env keys
+        toast('⚠️ AI settings are configured via server environment variables (.env)', 'info');
         // Clear key fields
         ['ai-key-anthropic','ai-key-openai','ai-key-grok','ai-embed-key'].forEach(function(id){
           var el = document.getElementById(id); if (el) el.value = '';
@@ -9243,7 +9243,7 @@
     async function loadRAGStatus() {
       var token = getAuthToken(); if (!token) return;
       try {
-        var r = await fetch(API_BASE + '/api/admin/rag-status', { headers: { 'Authorization': 'Bearer ' + token } });
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/rag-status', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!r.ok) throw new Error(await r.text());
         var d = await r.json();
         document.getElementById('rag-stat-indexed').textContent = d.indexed_businesses;
@@ -9272,7 +9272,7 @@
       var token = getAuthToken(); if (!token) return;
       toast('Reindexing ' + slug + '...');
       try {
-        var r = await fetch(API_BASE + '/api/gcr/reindex/' + slug, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({}) });
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/reindex/' + slug, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({}) });
         if (!r.ok) throw new Error(await r.text());
         var d = await r.json();
         toast(slug + ' reindexed: ' + d.chunks_indexed + ' chunks');
@@ -9286,7 +9286,7 @@
       // We don't have a "reindex all" endpoint — we trigger each one
       var token = getAuthToken(); if (!token) return;
       try {
-        var r = await fetch(API_BASE + '/api/admin/rag-status', { headers: { 'Authorization': 'Bearer ' + token } });
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/rag-status', { headers: { 'Authorization': 'Bearer ' + token } });
         var d = await r.json();
         for (var i = 0; i < d.businesses.length; i++) {
           await reindexOne(d.businesses[i].slug);
@@ -9306,7 +9306,7 @@
       ansDiv.textContent = 'Thinking...';
       srcDiv.innerHTML = '';
       try {
-        var r = await fetch(API_BASE + '/api/gcr/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }) });
+        var r = await fetch(GCR_ADMIN_API + '/api/gcr/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }) });
         if (!r.ok) throw new Error(await r.text());
         var d = await r.json();
         ansDiv.textContent = d.answer;
