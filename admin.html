@@ -12063,6 +12063,291 @@
       renderEntContent();
     }
 
+    // ── 5-TAB MENU EDITOR ─────────────────────────────────────────────────────────
+
+    var _menuEditorTab = 'today';
+
+    function renderMenuEditor() {
+      var menuEl = document.getElementById('ent-content-menu');
+      if (!menuEl) return;
+
+      var sections = (_currentEntityContent.menu && _currentEntityContent.menu.length > 0 && _currentEntityContent.menu[0].items !== undefined) ? _currentEntityContent.menu : [];
+
+      menuEl.innerHTML =
+        '<div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:2px solid var(--card-border);padding-bottom:8px;flex-wrap:wrap;">' +
+          '<button class="btn ' + (_menuEditorTab==='today' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="switchMenuTab(\'today\')">📋 Today</button>' +
+          '<button class="btn ' + (_menuEditorTab==='sections' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="switchMenuTab(\'sections\')">📑 Sections</button>' +
+          '<button class="btn ' + (_menuEditorTab==='items' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="switchMenuTab(\'items\')">🍽️ Items</button>' +
+          '<button class="btn ' + (_menuEditorTab==='photos' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="switchMenuTab(\'photos\')">📷 Photos</button>' +
+          '<button class="btn ' + (_menuEditorTab==='preview' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="switchMenuTab(\'preview\')">👁️ Preview</button>' +
+        '</div>' +
+        '<div id="menu-tab-today" style="display:' + (_menuEditorTab==='today' ? 'block' : 'none') + ';"></div>' +
+        '<div id="menu-tab-sections" style="display:' + (_menuEditorTab==='sections' ? 'block' : 'none') + ';"></div>' +
+        '<div id="menu-tab-items" style="display:' + (_menuEditorTab==='items' ? 'block' : 'none') + ';"></div>' +
+        '<div id="menu-tab-photos" style="display:' + (_menuEditorTab==='photos' ? 'block' : 'none') + ';"></div>' +
+        '<div id="menu-tab-preview" style="display:' + (_menuEditorTab==='preview' ? 'block' : 'none') + ';"></div>';
+
+      renderMenuTabToday(sections);
+      renderMenuTabSections(sections);
+      renderMenuTabItems(sections);
+      renderMenuTabPhotos();
+      renderMenuTabPreview(sections);
+    }
+
+    function switchMenuTab(tab) {
+      _menuEditorTab = tab;
+      renderMenuEditor();
+    }
+
+    function renderMenuTabToday(sections) {
+      var el = document.getElementById('menu-tab-today');
+      if (!el) return;
+
+      var allItems = [];
+      sections.forEach(function(s) { (s.items || []).forEach(function(i) { allItems.push(i); }); });
+
+      el.innerHTML =
+        '<div style="padding:12px 0;border-bottom:1px solid var(--card-border);margin-bottom:12px;">' +
+          '<p style="font-size:13px;color:var(--text-muted);margin:0 0 10px;">Quick toggles for what\'s available right now. Check "What is available today, what time is it available, what is sold out, what is featured?"</p>' +
+        '</div>' +
+        (allItems.length ? allItems.map(function(item) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;background:var(--bg);">' +
+            '<input type="checkbox" ' + (item.is_available ? 'checked' : '') + ' onchange="toggleMenuItemAvailable(' + JSON.stringify(item.id).replace(/"/g, '&quot;') + ',this.checked)" style="width:18px;height:18px;cursor:pointer;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:600;font-size:14px;">' + escHtml(item.item_name || item.name || '') + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);">' + (item.description ? escHtml(item.description) : '—') + '</div>' +
+            '</div>' +
+            '<span style="font-weight:600;color:var(--primary);">$' + (item.price || 0).toFixed(2) + '</span>' +
+          '</div>';
+        }).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No menu items yet. Add items in the Items tab.</div>');
+    }
+
+    function renderMenuTabSections(sections) {
+      var el = document.getElementById('menu-tab-sections');
+      if (!el) return;
+
+      var days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      el.innerHTML =
+        '<div style="margin-bottom:16px;">' +
+          '<button class="btn btn-primary btn-sm" onclick="openMenuSectionForm()">+ Add Section</button>' +
+        '</div>' +
+        (sections.length ? sections.map(function(sec, idx) {
+          var daysStr = (sec.days_of_week && sec.days_of_week.length > 0) ? sec.days_of_week.join(', ') : days.join(', ');
+          return '<div style="padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:10px;background:var(--bg);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+              '<div>' +
+                '<div style="font-weight:600;font-size:14px;">' + escHtml(sec.section_name || '') + '</div>' +
+                '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(daysStr) + ' • ' + escHtml(sec.start_time || '—') + ' – ' + escHtml(sec.end_time || '—') + '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:6px;">' +
+                '<button class="btn btn-outline btn-xs" onclick="editMenuSection(' + idx + ')">Edit</button>' +
+                '<button class="btn btn-outline btn-xs" style="color:#ef4444;border-color:#ef4444;" onclick="deleteMenuSection(' + JSON.stringify(sec.id).replace(/"/g, '&quot;') + ')">Delete</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No sections yet. Add one with the button above.</div>') +
+        '<div id="menu-section-form" style="display:none;padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-top:12px;background:var(--bg);">' +
+          '<input id="msf-name" type="text" placeholder="Section name (e.g., Breakfast, Lunch, Dinner)" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;margin-bottom:8px;box-sizing:border-box;">' +
+          '<div style="font-size:12px;color:var(--text-muted);margin:8px 0;">Days of week: <label style="margin-right:10px;"><input type="checkbox" name="msf-day" value="Monday" checked> Mon</label><label style="margin-right:10px;"><input type="checkbox" name="msf-day" value="Tuesday" checked> Tue</label><label style="margin-right:10px;"><input type="checkbox" name="msf-day" value="Wednesday" checked> Wed</label><label style="margin-right:10px;"><input type="checkbox" name="msf-day" value="Thursday" checked> Thu</label><label style="margin-right:10px;"><input type="checkbox" name="msf-day" value="Friday" checked> Fri</label><label style="margin-right:10px;"><input type="checkbox" name="msf-day" value="Saturday" checked> Sat</label><label><input type="checkbox" name="msf-day" value="Sunday" checked> Sun</label></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+            '<div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Start Time</label><input id="msf-start" type="time" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;"></div>' +
+            '<div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">End Time</label><input id="msf-end" type="time" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;"></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="btn btn-primary btn-sm" onclick="saveMenuSection()">Save</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="closeMenuSectionForm()">Cancel</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function renderMenuTabItems(sections) {
+      var el = document.getElementById('menu-tab-items');
+      if (!el) return;
+
+      var allItems = [];
+      sections.forEach(function(s) { (s.items || []).forEach(function(i) { i._sectionName = s.section_name; allItems.push(i); }); });
+
+      el.innerHTML =
+        '<div style="margin-bottom:16px;">' +
+          '<button class="btn btn-primary btn-sm" onclick="openMenuItemForm()">+ Add Item</button>' +
+        '</div>' +
+        (allItems.length ? allItems.map(function(item) {
+          return '<div style="padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:10px;background:var(--bg);">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
+              '<div style="flex:1;">' +
+                '<div style="font-weight:600;font-size:14px;">' + escHtml(item.item_name || item.name || '') + '</div>' +
+                '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(item._sectionName || '') + ' • $' + (item.price || 0).toFixed(2) + '</div>' +
+              '</div>' +
+              '<button class="btn btn-outline btn-xs" onclick="editMenuItem(' + JSON.stringify(item.id).replace(/"/g, '&quot;') + ')">Edit</button>' +
+            '</div>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;">' +
+              '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ' + (item.is_featured ? 'checked' : '') + ' onchange="toggleMenuItemFlag(' + JSON.stringify(item.id).replace(/"/g, '&quot;') + ',\'is_featured\',this.checked)"> Featured</label>' +
+              '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ' + (item.is_catch_of_day ? 'checked' : '') + ' onchange="toggleMenuItemFlag(' + JSON.stringify(item.id).replace(/"/g, '&quot;') + ',\'is_catch_of_day\',this.checked)"> Catch of Day</label>' +
+              '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ' + (item.is_on_tap ? 'checked' : '') + ' onchange="toggleMenuItemFlag(' + JSON.stringify(item.id).replace(/"/g, '&quot;') + ',\'is_on_tap\',this.checked)"> On Tap</label>' +
+              '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" ' + (item.has_market_price ? 'checked' : '') + ' onchange="toggleMenuItemFlag(' + JSON.stringify(item.id).replace(/"/g, '&quot;') + ',\'has_market_price\',this.checked)"> Market Price</label>' +
+            '</div>' +
+          '</div>';
+        }).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No items yet. Add one with the button above.</div>') +
+        '<div id="menu-item-form" style="display:none;padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-top:12px;background:var(--bg);">' +
+          '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+            '<input id="mif-name" type="text" placeholder="Item name" style="flex:1;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">' +
+            '<input id="mif-price" type="number" placeholder="Price" step="0.01" style="width:100px;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">' +
+          '</div>' +
+          '<input id="mif-desc" type="text" placeholder="Description (optional)" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;margin-bottom:8px;box-sizing:border-box;">' +
+          '<select id="mif-section" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;margin-bottom:8px;box-sizing:border-box;">' +
+            '<option value="">— Select section —</option>' +
+            (sections.map(function(s) { return '<option value="' + escHtml(s.id) + '">' + escHtml(s.section_name) + '</option>'; }).join('')) +
+          '</select>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="btn btn-primary btn-sm" onclick="saveMenuItem()">Save</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="closeMenuItemForm()">Cancel</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function renderMenuTabPhotos() {
+      var el = document.getElementById('menu-tab-photos');
+      if (!el) return;
+
+      var photos = (_currentEntityContent.menu && _currentEntityContent.menu.length && _currentEntityContent.menu[0].items !== undefined) ? [] : [];
+
+      el.innerHTML =
+        '<div style="margin-bottom:16px;">' +
+          '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'menu-photo-upload\').click()">📤 Upload Photo</button>' +
+          '<input type="file" id="menu-photo-upload" accept="image/*" style="display:none" onchange="uploadMenuPhoto(this)">' +
+        '</div>' +
+        (photos.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;">' +
+          photos.map(function(p) { return '<div style="border:1px solid var(--card-border);border-radius:8px;overflow:hidden;"><img src="' + escHtml(p.image_url||p.url||'') + '" style="width:100%;height:100px;object-fit:cover;"></div>'; }).join('') +
+        '</div>' : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No photos yet. Upload one to manage menu images.</div>');
+    }
+
+    function renderMenuTabPreview(sections) {
+      var el = document.getElementById('menu-tab-preview');
+      if (!el) return;
+
+      var now = new Date();
+      var currentDay = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
+      var currentTime = ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2);
+
+      el.innerHTML =
+        '<div style="padding:12px 0;border-bottom:1px solid var(--card-border);margin-bottom:12px;">' +
+          '<p style="font-size:13px;color:var(--text-muted);margin:0;">Preview what customers see on the QR menu right now (today, ' + currentDay + ' at ' + currentTime + ')</p>' +
+        '</div>' +
+        (sections.length ? sections.map(function(sec) {
+          var inSchedule = !sec.days_of_week || sec.days_of_week.indexOf(currentDay) >= 0;
+          var isOpen = !sec.start_time || !sec.end_time || (currentTime >= sec.start_time && currentTime <= sec.end_time);
+          var shouldShow = sec.is_active !== false && inSchedule && isOpen;
+
+          var items = (sec.items || []).filter(function(i) { return i.is_available !== false; });
+
+          return '<div style="margin-bottom:16px;padding:12px;border:1px solid ' + (shouldShow ? 'var(--primary)' : '#999') + ';border-radius:8px;background:' + (shouldShow ? 'var(--bg)' : 'rgba(128,128,128,0.1)') + ';opacity:' + (shouldShow ? '1' : '0.5') + ';">' +
+            '<div style="font-weight:700;font-size:15px;margin-bottom:8px;color:' + (shouldShow ? 'var(--primary)' : '#666') + ';">' + escHtml(sec.section_name || '') + (shouldShow ? ' ✓' : ' (not showing)') + '</div>' +
+            (items.length ? '<div style="font-size:13px;">' + items.map(function(i) {
+              var badges = [];
+              if (i.is_featured) badges.push('⭐ Featured');
+              if (i.is_catch_of_day) badges.push('🎣 Catch of Day');
+              if (i.is_on_tap) badges.push('🍺 On Tap');
+              return '<div style="padding:8px 0;border-bottom:1px solid var(--card-border);display:flex;justify-content:space-between;"><div><strong>' + escHtml(i.item_name||i.name||'') + '</strong>' + (badges.length ? ' ' + badges.join(' ') : '') + '</div><span style="color:var(--primary);font-weight:600;">$' + (i.price||0).toFixed(2) + '</span></div>';
+            }).join('') + '</div>' : '<div style="color:var(--text-muted);font-size:13px;">No available items</div>') +
+          '</div>';
+        }).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No sections yet. Create some in the Sections tab.</div>');
+    }
+
+    // Menu editor helper functions
+    function openMenuSectionForm() { document.getElementById('menu-section-form').style.display = 'block'; }
+    function closeMenuSectionForm() { document.getElementById('menu-section-form').style.display = 'none'; }
+    function openMenuItemForm() { document.getElementById('menu-item-form').style.display = 'block'; }
+    function closeMenuItemForm() { document.getElementById('menu-item-form').style.display = 'none'; }
+
+    function saveMenuSection() {
+      var name = document.getElementById('msf-name').value.trim();
+      if (!name) { alert('Section name required'); return; }
+      var days = Array.from(document.querySelectorAll('input[name="msf-day"]:checked')).map(function(el) { return el.value; });
+      var startTime = document.getElementById('msf-start').value;
+      var endTime = document.getElementById('msf-end').value;
+      var token = getAuthToken();
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/menu-sections', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section_name: name, days_of_week: days, start_time: startTime || null, end_time: endTime || null, is_active: true })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { alert('Error: ' + d.error); return; }
+        toast('Section saved', 'success');
+        reloadEntContent();
+      }).catch(function(e) { alert('Error saving section: ' + e.message); });
+    }
+
+    function deleteMenuSection(sectionId) {
+      if (!confirm('Delete this section?')) return;
+      var token = getAuthToken();
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/menu-sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } })
+        .then(function(r) { return r.json(); }).then(function(d) { toast('Section deleted', 'success'); reloadEntContent(); }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function saveMenuItem() {
+      var name = document.getElementById('mif-name').value.trim();
+      var price = parseFloat(document.getElementById('mif-price').value) || 0;
+      var desc = document.getElementById('mif-desc').value.trim();
+      var sectionId = document.getElementById('mif-section').value;
+      if (!name) { alert('Item name required'); return; }
+      var token = getAuthToken();
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/menu-items', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_name: name, price: price, description: desc, section_id: sectionId || null, is_available: true })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { alert('Error: ' + d.error); return; }
+        toast('Item saved', 'success');
+        closeMenuItemForm();
+        reloadEntContent();
+      }).catch(function(e) { alert('Error saving item: ' + e.message); });
+    }
+
+    function editMenuItem(itemId) {
+      alert('Edit item feature coming soon');
+    }
+
+    function toggleMenuItemAvailable(itemId, isAvailable) {
+      var token = getAuthToken();
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/menu-items/' + itemId, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_available: isAvailable })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        toast(isAvailable ? 'Item marked available' : 'Item marked sold out', 'success');
+      }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function toggleMenuItemFlag(itemId, flag, value) {
+      var token = getAuthToken();
+      var payload = {};
+      payload[flag] = value;
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/menu-items/' + itemId, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        toast('Updated', 'success');
+      }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
+    function uploadMenuPhoto(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var formData = new FormData();
+      formData.append('image', file);
+      var token = getAuthToken();
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { alert('Upload failed: ' + d.error); return; }
+        toast('Photo uploaded', 'success');
+        reloadEntContent();
+      }).catch(function(e) { alert('Error: ' + e.message); });
+    }
+
     function renderEntContent() {
       var c = _currentEntityContent;
 
@@ -12098,42 +12383,9 @@
         }).join('');
       }
 
-      // Menu
+      // Menu (5-tab editor)
       var menuEl = document.getElementById('ent-content-menu'); if (!menuEl) return;
-      var menuItems = (c.menu && c.menu.items) || [];
-      var menuItemRows = menuItems.map(function(item) {
-        var itemJson = escHtml(JSON.stringify(item));
-        return '<div onclick="openEntItemEdit(' + itemJson + ',\'menu-items\')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--card-border);cursor:pointer;border-radius:8px;transition:background .15s;" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'transparent\'">' +
-          '<div style="flex-shrink:0;width:52px;height:44px;border-radius:8px;overflow:hidden;background:var(--bg);border:1px solid var(--card-border);">' +
-            (item.image_url ? '<img src="' + escHtml(item.image_url) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'🍽️\';">' : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;">🍽️</div>') +
-          '</div>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:14px;font-weight:600;">' + escHtml(item.item_name||item.name||'') + '</div>' +
-            (item.description ? '<div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(item.description) + '</div>' : '') +
-          '</div>' +
-          '<span style="font-size:14px;font-weight:600;color:var(--primary);min-width:55px;text-align:right;flex-shrink:0;">' + (item.price != null ? '$'+item.price : escHtml(item.price_text||'')) + '</span>' +
-          '<span style="font-size:18px;color:var(--text-muted);flex-shrink:0;">›</span>' +
-          '</div>';
-      }).join('');
-      menuEl.innerHTML =
-        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">' +
-          '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'ent-menu-img\').click()">📷 AI Extract from Photo</button>' +
-          '<input type="file" id="ent-menu-img" accept="image/*" multiple style="display:none" onchange="entAIExtract(this,\'menu\')">' +
-          '<button class="btn btn-primary btn-sm" onclick="toggleEntItemForm(\'menu\')">+ Add Item</button>' +
-        '</div>' +
-        '<div id="ent-menu-ai-status" style="font-size:13px;margin-bottom:8px;"></div>' +
-        '<div id="ent-menu-add-form" style="display:none;padding:14px;border:1px solid var(--card-border);border-radius:10px;margin-bottom:14px;background:var(--bg);">' +
-          '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
-            '<input id="ent-menu-nm" type="text" placeholder="Item name" style="flex:1;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
-            '<input id="ent-menu-pr" type="text" placeholder="$0.00" style="width:90px;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">' +
-          '</div>' +
-          '<input id="ent-menu-dc" type="text" placeholder="Description (optional)" style="width:100%;padding:8px 12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;margin-bottom:8px;">' +
-          '<div style="display:flex;gap:8px;">' +
-            '<button class="btn btn-primary btn-sm" onclick="saveEntContentItem(\'menu-items\',\'ent-menu\')">Save</button>' +
-            '<button class="btn btn-outline btn-sm" onclick="toggleEntItemForm(\'menu\')">Cancel</button>' +
-          '</div>' +
-        '</div>' +
-        (menuItemRows || '<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">No items yet. Upload a photo or add manually.</div>');
+      renderMenuEditor();
 
       // Drinks
       var drinksEl = document.getElementById('ent-content-drinks'); if (!drinksEl) return;
