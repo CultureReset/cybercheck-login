@@ -11178,7 +11178,7 @@
         var lookup = (ent && ent.slug) ? ent.slug : entityId;
         var res = await fetch(API_BASE + '/api/gcr/entity/' + encodeURIComponent(lookup));
         var data = await res.json();
-        var e = data.entity;
+        var e = data.entity || data;  // API returns entity directly, not wrapped
         document.getElementById('ent-editor-title').textContent = e.name;
         document.getElementById('ent-editor-slug').textContent = e.slug;
         // Fill info
@@ -11216,16 +11216,16 @@
         sv('ent-hh-end', hh.end || e.hh_end);
         var hhDesc = document.getElementById('ent-hh-desc'); if (hhDesc) hhDesc.value = hh.description || e.hh_description || '';
         // Tags / Features / Sections / Content
-        _currentEntityTags     = data.tags        || [];
-        _currentEntityFeatures = data.features    || [];
-        _currentEntityPF       = data.perfect_for || [];
-        _currentEntitySections = data.sections    || [];
-        var hhData = data.happy_hour || {};
+        _currentEntityTags     = e.tags        || [];
+        _currentEntityFeatures = e.features    || [];
+        _currentEntityPF       = e.perfect_for || [];
+        _currentEntitySections = e.sections    || [];
+        var hhData = e.happy_hour || {};
         hhData.days        = e.hh_days        || hhData.days;
         hhData.start       = e.hh_start       || hhData.start;
         hhData.end         = e.hh_end         || hhData.end;
         hhData.description = e.hh_description || hhData.description;
-        _currentEntityContent  = { menu: data.menu || [], drinks: data.drinks || [], hh: hhData, events: data.events || [], specials: data.specials || [] };
+        _currentEntityContent  = { menu: e.menu_sections || e.menu || [], drinks: e.drink_sections || e.drinks || [], hh: hhData, events: e.events || [], specials: e.specials || [] };
         renderEntTags(); renderEntFeatures(); renderEntPF(); renderEntSections(); renderEntContent();
       } catch(err) { toast('Failed to load entity: ' + err.message, 'error'); }
     }
@@ -11657,7 +11657,8 @@
         if (!ent) return;
         var res = await fetch(API_BASE + '/api/gcr/entity/' + ent.slug);
         var data = await res.json();
-        var photos = data.photos || [];
+        var entity = data.entity || data;  // API returns entity directly
+        var photos = entity.photos || [];
         if (!photos.length) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No photos yet.</span>'; return; }
         grid.innerHTML = photos.map(function(p, i) {
           return '<div style="position:relative;border-radius:10px;overflow:hidden;background:#1a2332;">' +
