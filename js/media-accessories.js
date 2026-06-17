@@ -9,7 +9,7 @@ var _docksImages = {};
 var _featuresImages = {};
 var _stepsImages = {};
 
-const MA_API = 'https://gcr-api-gules.vercel.app';
+const MA_API = 'https://gcr-api-clean.vercel.app';
 
 async function loadMediaAccessories() {
   console.log('🔄 Loading media accessories...');
