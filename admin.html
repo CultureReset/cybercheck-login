@@ -9108,7 +9108,7 @@
         fd.append('site_id', _bizEditorSiteId);
         fd.append('folder', 'gallery');
         try {
-          var res = await fetch(API_BASE + '/api/admin/upload-photo', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-photo', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token },
             body: fd
@@ -11182,6 +11182,8 @@
 
     // ── Open entity editor ─────────────────────────────
 
+    var _currentEntitySlug = null;  // Track slug for saves
+
     async function openEntEditor(entityId) {
       _currentEntityId = entityId;
       document.getElementById('entEditorModal').style.display = 'block';
@@ -11195,6 +11197,7 @@
         var res = await fetch(API_BASE + '/api/gcr/entity/' + encodeURIComponent(lookup));
         var data = await res.json();
         var e = data.entity || data;  // API returns entity directly, not wrapped
+        _currentEntitySlug = e.slug;  // Store slug for save operations
         document.getElementById('ent-editor-title').textContent = e.name;
         document.getElementById('ent-editor-slug').textContent = e.slug;
         // Fill info
@@ -11249,6 +11252,7 @@
     function closeEntEditor() {
       document.getElementById('entEditorModal').style.display = 'none';
       _currentEntityId = null;
+      _currentEntitySlug = null;
     }
 
     function switchEntTab(tab) {
@@ -11308,7 +11312,7 @@
         description: document.getElementById('ent-description') ? document.getElementById('ent-description').value : undefined,
       };
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         document.getElementById('ent-editor-title').textContent = payload.name;
         toast('Entity saved!', 'success');
@@ -11374,7 +11378,7 @@
         return { day: d.label, open: closed ? null : openVal, close: closed ? null : closeVal, closed: closed };
       });
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ hours: { schedule: schedule } })
@@ -11395,7 +11399,7 @@
         description: (document.getElementById('ent-hh-desc')  || {}).value || '',
       };
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ happyHour: payload })
@@ -11421,7 +11425,7 @@
       var payload = { item_name: nm, price: price ? parseFloat(price) : null, description: dc || null };
       try {
         var token = getAuthToken();
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/' + table, {
           method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -11502,7 +11506,7 @@
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
               var pr = (item.price_text || '').replace(/[^0-9.]/g,'');
-              await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/' + table, {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_name: item.name || item.item_name || '', price: pr ? parseFloat(pr) : null, description: item.description || null })
               });
@@ -11695,7 +11699,7 @@
       if (!url.startsWith('http')) { toast('Enter a valid photo URL', 'error'); return; }
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: { add: [{ image_url: url, caption: (capEl||{}).value || '' }] } })
@@ -11712,7 +11716,7 @@
       if (!_currentEntityId) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: { delete: [{ id: photoId, image_url: imageUrl }] } })
@@ -11865,7 +11869,7 @@
       if (!tag) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityTags.push(result.tag);
@@ -11877,7 +11881,7 @@
     async function removeEntTag(tagId) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityTags = _currentEntityTags.filter(function(t){ return t.id !== tagId; });
       renderEntTags();
     }
@@ -11898,7 +11902,7 @@
       if (!label) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityFeatures.push(result.feature);
@@ -11910,7 +11914,7 @@
     async function removeEntFeature(fid) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityFeatures = _currentEntityFeatures.filter(function(f){ return f.id !== fid; });
       renderEntFeatures();
     }
@@ -11931,7 +11935,7 @@
       if (!label) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityPF.push(result.item);
@@ -11943,7 +11947,7 @@
     async function removeEntPF(pid) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityPF = _currentEntityPF.filter(function(p){ return p.id !== pid; });
       renderEntPF();
     }
@@ -11998,7 +12002,7 @@
       var type = document.getElementById('sec-new-type').value;
       if (!key || !label) { toast('Key and label are required', 'error'); return; }
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntitySections.push(result.section);
@@ -12202,7 +12206,7 @@
     async function deleteEntSection(sectionId) {
       if (!confirm('Delete this section and all its content?')) return;
       var token = getAuthToken();
-      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntitySections = _currentEntitySections.filter(function(s){ return s.id !== sectionId; });
       renderEntSections();
       toast('Section deleted', 'success');
@@ -13867,7 +13871,7 @@
       var container = document.getElementById('ent-pages-list');
       container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntitySlug, { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : { assignments: [] };
         _entPageAssignments = d.assignments || [];
         renderEntPages();
@@ -13912,12 +13916,12 @@
         var pos = parseInt((document.getElementById('ep-pos-' + p.id) || {}).value) || 1;
 
         if (checked) {
-          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId, {
+          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntitySlug, {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_id: p.id, sort_order: pos, is_featured: featured })
           }));
         } else if (currentIds.has(p.id)) {
-          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId + '/' + p.id, {
+          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntitySlug + '/' + p.id, {
             method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
           }));
         }

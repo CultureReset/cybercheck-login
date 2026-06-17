@@ -16,6 +16,8 @@
 // SMS TO OWNER:
 //   "NEW BOOKING! {{name}} booked {{boats}} for {{date}}. Details: ..."
 
+var GCR_API = window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
+
 var BOOKINGS_STORAGE = 'beachside_bookings';
 
 var _bookings = [];
@@ -190,7 +192,7 @@ async function loadBookings() {
 async function loadDeclinedBookings() {
   try {
     const token = CC.auth?.getToken ? CC.auth.getToken() : (localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token'));
-    const res = await fetch('https://gcr-api-gules.vercel.app/api/dashboard/declined-bookings', {
+    const res = await fetch(GCR_API + '/api/dashboard/declined-bookings', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     const data = await res.json();
@@ -715,7 +717,7 @@ async function resendConfirmation(id) {
   var apiId = id.startsWith('b-') ? id.slice(2) : id;
   if (!confirm('Resend SMS + Email confirmation to customer?')) return;
   try {
-    var resp = await fetch('https://gcr-api-gules.vercel.app/api/public/resend-confirmation', {
+    var resp = await fetch(GCR_API + '/api/public/resend-confirmation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ booking_id: apiId })
@@ -736,7 +738,7 @@ async function sendWaiverLink(id) {
   var apiId = id.startsWith('b-') ? id.slice(2) : id;
   if (!confirm('Send waiver link to customer?')) return;
   try {
-    var resp = await fetch('https://gcr-api-gules.vercel.app/api/public/waivers/send-link', {
+    var resp = await fetch(GCR_API + '/api/public/waivers/send-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ booking_id: apiId })

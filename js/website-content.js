@@ -7,7 +7,7 @@
 let _wc_data = null;
 let _wc_activeSection = 'business';
 
-const WC_BASE = 'https://gcr-api-gules.vercel.app';
+const WC_BASE = 'https://gcr-api-clean.vercel.app';
 const WC_SITE_BASE = 'https://beachsidecircleboats.com'; // customer website domain
 
 // Sections that have dedicated DB columns (saved to site_content via dashboard API)

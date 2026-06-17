@@ -8,7 +8,7 @@
 // =============================================
 
 const API_BASE = window.location.hostname === 'localhost'
-  ? 'https://gcr-api-gules.vercel.app/api'
+  ? 'https://gcr-api-clean.vercel.app/api'
   : '/api';
 
 // =============================================
