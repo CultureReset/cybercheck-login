@@ -558,7 +558,7 @@
         <div class="card" style="padding:24px;">
           <div style="display:flex;gap:12px;margin-bottom:20px;">
             <input type="text" id="ent-search" placeholder="Search entities..." oninput="filterEntities()" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-            <button class="btn btn-outline" onclick="loadEntities()">Refresh</button>
+            <button class="btn btn-outline" onclick="loadEntities(true)">🔄 Refresh (bypass cache)</button>
           </div>
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" id="ent-count">Loading...</div>
           <div style="overflow-x:auto;">
@@ -10953,26 +10953,36 @@
 
     // ── Load entity list ───────────────────────────────
 
-    async function loadEntities() {
+    async function loadEntities(forceRefresh) {
       var token = getAuthToken();
       try {
-        _allEntities = [];
-        var offset = 0;
-        var limit = 1000;
-        var hasMore = true;
-        while (hasMore) {
-          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?limit=' + limit + '&offset=' + offset, { headers: { 'Authorization': 'Bearer ' + token } });
-          var data = await res.json();
-          var batch = data.entities || [];
-          if (batch.length === 0) {
-            hasMore = false;
-          } else {
-            _allEntities = _allEntities.concat(batch);
-            offset += limit;
-            if (batch.length < limit) hasMore = false;
+        // Check cache first (unless force refresh)
+        if (!forceRefresh) {
+          var cached = localStorage.getItem('_cachedEntities');
+          var cacheTime = localStorage.getItem('_cachedEntitiesTime');
+          var now = Date.now();
+          // Use cache if less than 1 hour old
+          if (cached && cacheTime && (now - parseInt(cacheTime)) < 3600000) {
+            _allEntities = JSON.parse(cached);
+            renderEntities(_allEntities);
+            toast('Loaded from cache (' + _allEntities.length + ' businesses)', 'info');
+            return;
           }
         }
+
+        // Load from API
+        toast('Loading ' + (forceRefresh ? '(forced refresh)' : '') + '...', 'info');
+        _allEntities = [];
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?limit=5000', { headers: { 'Authorization': 'Bearer ' + token } });
+        var data = await res.json();
+        _allEntities = data.entities || [];
+
+        // Cache the result
+        localStorage.setItem('_cachedEntities', JSON.stringify(_allEntities));
+        localStorage.setItem('_cachedEntitiesTime', Date.now().toString());
+
         renderEntities(_allEntities);
+        toast('✅ Loaded ' + _allEntities.length + ' businesses (cached)', 'success');
       } catch(err) { toast('Failed to load entities: ' + err.message, 'error'); }
     }
 
