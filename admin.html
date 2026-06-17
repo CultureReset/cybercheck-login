@@ -10956,9 +10956,22 @@
     async function loadEntities() {
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
-        var data = await res.json();
-        _allEntities = data.entities || [];
+        _allEntities = [];
+        var offset = 0;
+        var limit = 1000;
+        var hasMore = true;
+        while (hasMore) {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?limit=' + limit + '&offset=' + offset, { headers: { 'Authorization': 'Bearer ' + token } });
+          var data = await res.json();
+          var batch = data.entities || [];
+          if (batch.length === 0) {
+            hasMore = false;
+          } else {
+            _allEntities = _allEntities.concat(batch);
+            offset += limit;
+            if (batch.length < limit) hasMore = false;
+          }
+        }
         renderEntities(_allEntities);
       } catch(err) { toast('Failed to load entities: ' + err.message, 'error'); }
     }
