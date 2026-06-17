@@ -609,7 +609,7 @@
             <div id="enttab-info-content">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Name</label><input id="ent-name" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
-                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Business Type <span style="font-weight:400;color:var(--primary);">🎯 PRIMARY</span></label><select id="ent-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><option value="">— select —</option><option value="restaurant">🍽️ Restaurant</option><option value="coffee">☕ Coffee</option><option value="dessert">🍰 Dessert</option><option value="bakery">🥐 Bakery</option><option value="activity">🎯 Activity / Tour</option><option value="fishing_charter">🎣 Fishing Charter</option><option value="service">🛠️ Service</option><option value="shopping">🛍️ Shopping</option><option value="hotel">🏨 Hotel</option><option value="condo">🏠 Condo</option><option value="vacation_rental">🏡 Vacation Rental</option><option value="park">🌳 Park</option></select></div>
+                <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Business Type <span style="font-weight:400;color:var(--primary);">🎯 PRIMARY</span></label><select id="ent-type" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" onchange="updatePropertyFieldsVisibility()"><option value="">— select —</option><option value="restaurant">🍽️ Restaurant</option><option value="coffee">☕ Coffee</option><option value="dessert">🍰 Dessert</option><option value="bakery">🥐 Bakery</option><option value="activity">🎯 Activity / Tour</option><option value="fishing_charter">🎣 Fishing Charter</option><option value="service">🛠️ Service</option><option value="shopping">🛍️ Shopping</option><option value="hotel">🏨 Hotel</option><option value="condo">🏠 Condo</option><option value="vacation_rental">🏡 Vacation Rental</option><option value="park">🌳 Park</option></select></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Slug</label><input id="ent-slug" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Subtitle / Tagline</label><input id="ent-subtitle" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Description <span style="font-weight:400;">(shows on listing card)</span></label><textarea id="ent-description" rows="4" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea></div>
@@ -631,6 +631,12 @@
                   <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">TikTok URL</label><input id="ent-tiktok" type="text" placeholder="https://tiktok.com/..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                   <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price Range</label><select id="ent-price-range" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><option value="">— select —</option><option value="$">$ Under $15</option><option value="$$">$$ $15–30</option><option value="$$$">$$$ $30–60</option><option value="$$$$">$$$$ $60+</option></select></div>
                 </div></div>
+                <div id="ent-property-fields" style="display:none;border-top:1px solid var(--card-border);padding-top:14px;margin-top:14px;"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">Property Details <span style="font-weight:400;font-size:11px;">(for rentals/properties)</span></label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Bedrooms</label><input id="ent-bedrooms" type="number" min="0" placeholder="e.g. 3" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Bathrooms</label><input id="ent-bathrooms" type="number" min="0" placeholder="e.g. 2" step="0.5" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                  <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Square Footage</label><input id="ent-sqft" type="number" min="0" placeholder="e.g. 1500" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                </div></div>
+                <div style="border-top:1px solid var(--card-border);padding-top:14px;margin-top:14px;"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">Highlights &amp; Attributes</label><div style="margin-bottom:12px;"><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Highlights <span style="font-size:10px;color:var(--text-muted);">(What guests will see/experience)</span></label><textarea id="ent-highlights" placeholder="One highlight per line, e.g.&#10;Waterfront views&#10;Live music on weekends&#10;Fresh local seafood" style="width:100%;height:80px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div><div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Attributes <span style="font-size:10px;color:var(--text-muted);">(e.g. Pet-friendly, Wheelchair accessible)</span></label><textarea id="ent-attributes" placeholder="One attribute per line, e.g.&#10;Pet-friendly&#10;Wheelchair accessible&#10;Reservation required" style="width:100%;height:80px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Google Places ID</label><input id="ent-google-places-id" type="text" placeholder="ChIJ..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Address</label><input id="ent-address" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">City</label><input id="ent-city" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -11214,6 +11220,12 @@
         document.getElementById('ent-active').checked = e.is_active !== false;
         document.getElementById('ent-sponsored').checked = e.is_sponsored === true;
         sv('ent-description', e.description);
+        // Load property details if present
+        sv('ent-bedrooms', e.bedrooms); sv('ent-bathrooms', e.bathrooms); sv('ent-sqft', e.sqft);
+        updatePropertyFieldsVisibility();
+        // Load highlights and attributes
+        var highlightsEl = document.getElementById('ent-highlights'); if (highlightsEl) highlightsEl.value = (e.highlights || []).join('\n');
+        var attributesEl = document.getElementById('ent-attributes'); if (attributesEl) attributesEl.value = (e.attributes || []).join('\n');
         // Fill hours
         var DAY_MAP = {Monday:'mon',Tuesday:'tue',Wednesday:'wed',Thursday:'thu',Friday:'fri',Saturday:'sat',Sunday:'sun'};
         ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d) {
@@ -11277,6 +11289,15 @@
 
     // ── Save entity info ──────────────────────────────
 
+    function updatePropertyFieldsVisibility() {
+      var entityType = document.getElementById('ent-type').value;
+      var rentalTypes = ['hotel', 'condo', 'vacation_rental'];
+      var propertyFields = document.getElementById('ent-property-fields');
+      if (propertyFields) {
+        propertyFields.style.display = rentalTypes.includes(entityType) ? 'block' : 'none';
+      }
+    }
+
     async function saveEntInfo() {
       if (!_currentEntityId) return;
       var token = getAuthToken();
@@ -11301,6 +11322,11 @@
         social_facebook: document.getElementById('ent-facebook').value || null,
         social_tiktok: document.getElementById('ent-tiktok').value || null,
         price_range: document.getElementById('ent-price-range').value || null,
+        bedrooms: parseInt(document.getElementById('ent-bedrooms').value) || null,
+        bathrooms: parseFloat(document.getElementById('ent-bathrooms').value) || null,
+        sqft: parseInt(document.getElementById('ent-sqft').value) || null,
+        highlights: (document.getElementById('ent-highlights').value || '').split('\n').map(s => s.trim()).filter(Boolean),
+        attributes: (document.getElementById('ent-attributes').value || '').split('\n').map(s => s.trim()).filter(Boolean),
         google_places_id: document.getElementById('ent-google-places-id').value || null,
         address_line_1: document.getElementById('ent-address').value,
         city: document.getElementById('ent-city').value,
@@ -11326,7 +11352,7 @@
       _currentEntityId = null;
       document.getElementById('ent-editor-title').textContent = 'New Entity';
       document.getElementById('ent-editor-slug').textContent = '';
-      ['ent-name','ent-slug','ent-subtitle','ent-type','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions','ent-booking','ent-reservation','ent-order','ent-menu-url','ent-instagram','ent-facebook','ent-tiktok','ent-google-places-id','ent-address','ent-city','ent-state','ent-zip','ent-description'].forEach(function(id) {
+      ['ent-name','ent-slug','ent-subtitle','ent-type','ent-subtype','ent-icon','ent-phone','ent-rating','ent-review-count','ent-hero','ent-website','ent-directions','ent-booking','ent-reservation','ent-order','ent-menu-url','ent-instagram','ent-facebook','ent-tiktok','ent-bedrooms','ent-bathrooms','ent-sqft','ent-highlights','ent-attributes','ent-google-places-id','ent-address','ent-city','ent-state','ent-zip','ent-description'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
       });
       var prEl = document.getElementById('ent-price-range'); if (prEl) prEl.value = '';
