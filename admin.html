@@ -5777,7 +5777,7 @@
   <script>
     // Detect if running locally or on Vercel
     var isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    var API_BASE = isDev ? 'http://localhost:3000' : (window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app');
+    var API_BASE = window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app';
     var GCR_API_BASE = API_BASE;
     var GCR_ADMIN_API = API_BASE;
 
