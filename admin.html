@@ -6552,9 +6552,19 @@
       var token = getAuthToken();
       document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
       try {
-        var res = await fetch(GCR_API_BASE + '/api/gcr/entities?limit=1000', { headers: { 'Authorization': 'Bearer ' + token } });
-        var data = res.ok ? await res.json() : {};
-        _allGCRBusinesses = data.entities || data.businesses || [];
+        // Supabase caps each request at 1000 rows — page through to load all ~2,800.
+        var all = [];
+        var offset = 0;
+        while (true) {
+          var res = await fetch(GCR_API_BASE + '/api/gcr/entities?limit=1000&offset=' + offset, { headers: { 'Authorization': 'Bearer ' + token } });
+          if (!res.ok) break;
+          var data = await res.json();
+          var batch = data.entities || data.businesses || [];
+          all = all.concat(batch);
+          if (batch.length < 1000) break;
+          offset += 1000;
+        }
+        _allGCRBusinesses = all;
         renderGCRBusinesses(_allGCRBusinesses);
       } catch(e) {
         document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
@@ -9110,11 +9120,11 @@
       var success = 0;
       for (var i = 0; i < compressed.length; i++) {
         var fd = new FormData();
-        fd.append('file', compressed[i]);
-        fd.append('site_id', _bizEditorSiteId);
-        fd.append('folder', 'gallery');
+        fd.append('image', compressed[i]);
+        fd.append('entity_slug', _bizEditorSiteId);
+        fd.append('caption', 'gallery');
         try {
-          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-photo', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token },
             body: fd
@@ -9562,26 +9572,67 @@
       statusEl.style.display = ''; statusEl.textContent = 'Saving...';
       var saved = [], errors = [];
       try {
-        // Build full item list — food from menu_items, drinks from bar_menu
-        var allItems = [];
+        // Group items by category so we create one section per category, then post items linked to that section_id.
+        // Without this, items end up with section_id:null and don't group on the profile.
+        var foodByCat = {};
         (_aoResult.menu_items || []).forEach(function(item) {
-          allItems.push({ name: item.item_name || item.name, price: parseFloat(item.price)||0, description: item.description||'', category: item.category||'Menu Items', item_type: item.item_type || 'food', tags: [], modifiers: [] });
+          var cat = item.category || 'Menu Items';
+          if (!foodByCat[cat]) foodByCat[cat] = [];
+          foodByCat[cat].push({
+            item_name: item.item_name || item.name,
+            description: item.description || '',
+            price: parseFloat(item.price) || null,
+            tags: item.tags || null,
+            image_url: item.image_url || null,
+            is_available: item.is_available !== false,
+            sort_order: foodByCat[cat].length
+          });
         });
-        // bar_menu → flatten into drink items
+
+        var drinkByCat = {};
         (_aoResult.bar_menu || []).forEach(function(sec) {
+          var cat = sec.category || 'Drinks';
+          if (!drinkByCat[cat]) drinkByCat[cat] = [];
           (sec.items || []).forEach(function(item) {
-            allItems.push({ name: item.item_name || item.name, price: parseFloat(item.price)||0, description: item.desc || item.description || '', category: sec.category || 'Drinks', item_type: 'drink', tags: [], modifiers: [] });
+            drinkByCat[cat].push({
+              item_name: item.item_name || item.name,
+              description: item.desc || item.description || '',
+              price: parseFloat(item.price) || null,
+              image_url: item.image_url || null,
+              sort_order: drinkByCat[cat].length
+            });
           });
         });
-        for (var i = 0; i < allItems.length; i++) {
-          var item = allItems[i];
-          var endpoint = item.item_type === 'drink' ? '/api/admin/gcr/entities/' + siteId + '/drink-items' : '/api/admin/gcr/entities/' + siteId + '/menu-items';
-          var r = await fetch(API_BASE + endpoint, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-            body: JSON.stringify(item)
-          });
-          if (r.ok) saved.push(item.item_type === 'drink' ? 'drink' : 'menu item'); else errors.push('menu item');
+
+        async function createSectionsAndItems(grouped, sectionEndpointSuffix, itemEndpointSuffix, savedLabel) {
+          var sectionNames = Object.keys(grouped);
+          for (var si = 0; si < sectionNames.length; si++) {
+            var name = sectionNames[si];
+            // Create section
+            var secRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + siteId + '/' + sectionEndpointSuffix, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+              body: JSON.stringify({ section_name: name, sort_order: si })
+            });
+            if (!secRes.ok) { errors.push(savedLabel + ' section: ' + name); continue; }
+            var secData = await secRes.json();
+            var sectionId = secData.id;
+            // Post items under it
+            var items = grouped[name];
+            for (var ii = 0; ii < items.length; ii++) {
+              items[ii].section_id = sectionId;
+              var iRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + siteId + '/' + itemEndpointSuffix, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+                body: JSON.stringify(items[ii])
+              });
+              if (iRes.ok) saved.push(savedLabel); else errors.push(savedLabel);
+            }
+          }
         }
+
+        await createSectionsAndItems(foodByCat, 'menu-sections', 'menu-items', 'menu item');
+        await createSectionsAndItems(drinkByCat, 'drink-sections', 'drink-items', 'drink');
         // Save specials
         var specials = _aoResult.specials || [];
         for (var j = 0; j < specials.length; j++) {
@@ -11420,17 +11471,23 @@
       var token = getAuthToken();
       var days = [{key:'mon',label:'Monday'},{key:'tue',label:'Tuesday'},{key:'wed',label:'Wednesday'},
                   {key:'thu',label:'Thursday'},{key:'fri',label:'Friday'},{key:'sat',label:'Saturday'},{key:'sun',label:'Sunday'}];
+      var dayNum = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
       var schedule = days.map(function(d) {
         var openVal  = (document.getElementById('ent-hours-'+d.key+'-open')  || {}).value || '';
         var closeVal = (document.getElementById('ent-hours-'+d.key+'-close') || {}).value || '';
         var closed   = openVal.toLowerCase() === 'closed';
-        return { day: d.label, open: closed ? null : openVal, close: closed ? null : closeVal, closed: closed };
+        return {
+          day_of_week: dayNum[d.label],
+          opens_at: closed ? null : openVal,
+          closes_at: closed ? null : closeVal,
+          is_closed: closed
+        };
       });
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
-          method: 'PATCH',
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/hours', {
+          method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hours: { schedule: schedule } })
+          body: JSON.stringify({ hours: schedule })
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast('Hours saved!', 'success');
@@ -11499,7 +11556,7 @@
       try {
         var token = getAuthToken();
         var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, {
-          method: 'PATCH',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ image_url: url })
         });
@@ -11518,9 +11575,10 @@
       try {
         var token = getAuthToken();
         var formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+        formData.append('image', fileInput.files[0]);
+        formData.append('entity_slug', _currentEntitySlug || _bdSlug || _bdSiteId || '');
         // Upload to entity photos endpoint, then use URL for menu item
-        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-photo', {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', {
           method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
         });
         var d = await r.json();

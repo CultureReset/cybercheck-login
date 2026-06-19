@@ -309,7 +309,8 @@
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:3000/api'; // Change to your API URL
+    const API_ROOT = (window.CC_API_BASE || 'https://gcr-api-clean.vercel.app').replace(/\/$/, '');
+    const API_BASE = API_ROOT + '/api';
     let generatedWorkflow = null;
     let isListening = false;
     let recognition = null;
@@ -351,16 +352,20 @@
       updateProcessingStatus('Building workflow...');
 
       try {
+        const token = getAuthToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = 'Bearer ' + token;
+
         // Call AI API to generate workflow
         const response = await fetch(`${API_BASE}/ai/generate-workflow`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ description: input })
         });
 
-        const data = await response.json();
+        const data = await readJsonResponse(response);
 
-        if (data.success) {
+        if (response.ok && data.success) {
           generatedWorkflow = data.workflow;
           showWorkflowPreview(data.workflow);
         } else {
@@ -368,8 +373,8 @@
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Failed to create workflow. Please try again.');
-        reset();
+        generatedWorkflow = buildLocalWorkflow(input);
+        showWorkflowPreview(generatedWorkflow);
       }
     }
 
@@ -403,19 +408,23 @@
 
     async function saveWorkflow() {
       try {
+        const token = getAuthToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = 'Bearer ' + token;
+
         const response = await fetch(`${API_BASE}/workflows`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(generatedWorkflow)
         });
 
-        const data = await response.json();
+        const data = await readJsonResponse(response);
 
-        if (data.success) {
+        if (response.ok && data.success) {
           alert('✅ Workflow created and enabled!');
           window.location.href = 'automation-builder.html';
         } else {
-          throw new Error(data.error);
+          throw new Error(data.error || 'Save failed');
         }
       } catch (error) {
         console.error('Error saving workflow:', error);
@@ -437,6 +446,63 @@
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function readJsonResponse(response) {
+      const text = await response.text();
+      if (!text) return {};
+      try { return JSON.parse(text); }
+      catch (e) { return { error: text.slice(0, 200) }; }
+    }
+
+    function getAuthToken() {
+      try {
+        var sbKey = Object.keys(localStorage).find(function(k) {
+          return k.startsWith('sb-') && k.endsWith('-auth-token');
+        });
+        if (sbKey) {
+          var session = JSON.parse(localStorage.getItem(sbKey));
+          if (session && session.access_token) return session.access_token;
+        }
+      } catch(e) {}
+      return localStorage.getItem('cc_admin_token') ||
+             localStorage.getItem('cc_token') ||
+             sessionStorage.getItem('cc_token') ||
+             '';
+    }
+
+    function buildLocalWorkflow(input) {
+      var lower = input.toLowerCase();
+      var trigger = 'When the requested event happens';
+      if (lower.includes('book') || lower.includes('appointment')) trigger = 'When a booking or appointment is created';
+      if (lower.includes('review')) trigger = 'When a customer review is received';
+      if (lower.includes('purchase') || lower.includes('order')) trigger = 'When a purchase or order is completed';
+      if (lower.includes('every day') || lower.includes('daily')) trigger = 'Every day on a schedule';
+
+      var steps = [];
+      if (lower.includes('sms') || lower.includes('text')) {
+        steps.push({ action_name: 'Send SMS', description: 'Send a text message using the customer and business details from the trigger.' });
+      }
+      if (lower.includes('email')) {
+        steps.push({ action_name: 'Send Email', description: 'Send a personalized email with the right confirmation, summary, or follow-up details.' });
+      }
+      if (lower.includes('crm') || lower.includes('lead')) {
+        steps.push({ action_name: 'Update CRM', description: 'Create or update the contact record and apply the requested tags.' });
+      }
+      if (lower.includes('loyalty') || lower.includes('points')) {
+        steps.push({ action_name: 'Award Loyalty Points', description: 'Add the requested loyalty points to the customer profile.' });
+      }
+      if (!steps.length) {
+        steps.push({ action_name: 'Prepare Automation Action', description: 'Turn the request into an automation step for review before enabling.' });
+      }
+
+      return {
+        icon: '⚡',
+        name: 'Draft Automation',
+        description: 'Local draft generated because the live AI workflow API was unavailable.',
+        trigger_description: trigger,
+        steps: steps
+      };
     }
 
     // Voice input

@@ -296,13 +296,13 @@
         <p style="color: #666; font-size: 14px;">Ask questions about your connected tools and business data</p>
       </div>
       <div class="model-selector">
-        <button class="model-btn active" onclick="selectModel('chatgpt')">
+        <button class="model-btn active" onclick="selectModel('chatgpt', this)">
           🤖 ChatGPT
         </button>
-        <button class="model-btn" onclick="selectModel('gemini')">
+        <button class="model-btn" onclick="selectModel('gemini', this)">
           ✨ Gemini
         </button>
-        <button class="model-btn" onclick="selectModel('grok')">
+        <button class="model-btn" onclick="selectModel('grok', this)">
           ⚡ Grok
         </button>
       </div>
@@ -470,14 +470,16 @@
       }
     })();
 
+    window.CC_API_BASE = window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
     let currentModel = 'chatgpt';
+    const chatHistory = [];
 
-    function selectModel(model) {
+    function selectModel(model, target) {
       currentModel = model;
       document.querySelectorAll('.model-btn').forEach(btn => {
         btn.classList.remove('active');
       });
-      event.target.classList.add('active');
+      if (target) target.classList.add('active');
 
       console.log('Switched to model:', model);
     }
@@ -486,45 +488,78 @@
       document.getElementById('chatInput').value = question;
     }
 
-    function sendMessage() {
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function getChatToken() {
+      if (window.CC && CC.getToken) return CC.getToken();
+      return localStorage.getItem('cc_admin_token') ||
+             localStorage.getItem('cc_token') ||
+             sessionStorage.getItem('cc_token') ||
+             '';
+    }
+
+    async function readJsonResponse(response) {
+      const text = await response.text();
+      if (!text) return {};
+      try { return JSON.parse(text); }
+      catch (e) { return { error: text.slice(0, 200) }; }
+    }
+
+    function addMessage(role, text) {
+      const container = document.getElementById('chatContainer');
+      const msg = document.createElement('div');
+      msg.className = 'message ' + role;
+      msg.innerHTML = `
+        <div class="message-avatar">${role === 'user' ? '👤' : '🤖'}</div>
+        <div class="message-content">
+          <div class="message-text">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+        </div>
+      `;
+      container.appendChild(msg);
+      container.scrollTop = container.scrollHeight;
+      return msg;
+    }
+
+    async function sendMessage() {
       const input = document.getElementById('chatInput');
       const message = input.value.trim();
 
       if (!message) return;
 
-      // Add user message to chat
-      const container = document.getElementById('chatContainer');
-      const userMsg = document.createElement('div');
-      userMsg.className = 'message user';
-      userMsg.innerHTML = `
-        <div class="message-avatar">👤</div>
-        <div class="message-content">
-          <div class="message-text">${message}</div>
-        </div>
-      `;
-      container.appendChild(userMsg);
-
-      // Clear input
+      addMessage('user', message);
+      chatHistory.push({ role: 'user', content: message });
       input.value = '';
+      const status = addMessage('assistant', 'Thinking...');
 
-      // Simulate AI response
-      setTimeout(() => {
-        const aiMsg = document.createElement('div');
-        aiMsg.className = 'message assistant';
-        aiMsg.innerHTML = `
-          <div class="message-avatar">🤖</div>
-          <div class="message-content">
-            <div class="message-text">
-              I'm analyzing your ${message.toLowerCase()}... This is a demo response. In production, I would connect to your actual data from connected tools.
-            </div>
-          </div>
-        `;
-        container.appendChild(aiMsg);
-        container.scrollTop = container.scrollHeight;
-      }, 1000);
-
-      // Scroll to bottom
-      container.scrollTop = container.scrollHeight;
+      try {
+        const token = getChatToken();
+        const res = await fetch(window.CC_API_BASE + '/api/dashboard/ai-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify({
+            message,
+            history: chatHistory.slice(-10),
+            model: currentModel
+          })
+        });
+        const data = await readJsonResponse(res);
+        if (!res.ok) throw new Error(data.error || 'AI request failed');
+        const reply = data.reply || 'Done.';
+        status.querySelector('.message-text').innerHTML = escapeHtml(reply).replace(/\n/g, '<br>');
+        chatHistory.push({ role: 'assistant', content: reply });
+      } catch (err) {
+        const fallback = 'I could not reach the live AI endpoint from this page. The admin dashboard AI chat is the fully wired version; check your login token/API availability and try again.';
+        status.querySelector('.message-text').innerHTML = escapeHtml(fallback);
+      }
     }
 
     // Allow Enter to send

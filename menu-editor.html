@@ -231,15 +231,81 @@ const token = params.get('token');
 const pin = params.get('pin');
 let _data = {};
 let _currentTab = 'specials';
+let _menuToken = token || '';
+
+function editorHeaders(json) {
+  var h = {};
+  if (json) h['Content-Type'] = 'application/json';
+  if (_menuToken) h['x-menu-token'] = _menuToken;
+  var adminToken = localStorage.getItem('adminToken') || localStorage.getItem('gcr_admin_token') || '';
+  if (adminToken) h['x-admin-token'] = adminToken;
+  return h;
+}
+
+function editorUrl(path) {
+  return `${API_BASE}/api/menu-editor/${encodeURIComponent(slug)}${path}`;
+}
+
+async function safeJson(r) {
+  try { return await r.json(); } catch (_) { return {}; }
+}
+
+function normalizeEditorData(data) {
+  data = data || {};
+  data.menu_sections = data.menu_sections || [];
+  data.drink_sections = data.drink_sections || [];
+  data.happy_hour_sections = data.happy_hour_sections || [];
+  data.menu_items = data.menu_items || data.menu_sections.flatMap(function(sec) {
+    return (sec.items || []).map(function(item) {
+      return Object.assign({}, item, { menu_section_id: item.section_id || sec.id });
+    });
+  });
+  data.drink_items = data.drink_items || data.drink_sections.flatMap(function(sec) {
+    return (sec.items || []).map(function(item) {
+      return Object.assign({}, item, { drink_section_id: item.section_id || sec.id });
+    });
+  });
+  data.hh_items = data.hh_items || data.happy_hour_sections.flatMap(function(sec) {
+    return (sec.items || []).map(function(item) {
+      return Object.assign({}, item, {
+        hh_section_id: item.section_id || sec.id,
+        hh_price: item.hh_price != null ? item.hh_price : item.price,
+        regular_price: item.regular_price != null ? item.regular_price : item.original_price
+      });
+    });
+  });
+  data.photos = data.photos || (data.entity_photos || []).map(function(p) {
+    return Object.assign({}, p, { image_url: p.image_url || p.url });
+  });
+  return data;
+}
+
+async function ensureMenuToken() {
+  if (_menuToken || !pin) return;
+  const r = await fetch(editorUrl('/auth'), {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ pin: pin })
+  });
+  const d = await safeJson(r);
+  if (!r.ok || !d.token) throw new Error(d.error || 'Invalid PIN');
+  _menuToken = d.token;
+}
+
+async function loadEditorData() {
+  const r = await fetch(editorUrl('/data'), { headers: editorHeaders(false) });
+  const d = await safeJson(r);
+  if (!r.ok) throw new Error(d.error || 'Failed to load data');
+  _data = normalizeEditorData(d);
+  return _data;
+}
 
 // ── PIN Validation ───────────────────────────────────────────
 async function validatePIN() {
-  if (!pin) return true; // No PIN required if token is set
+  if (!pin) return true; // No PIN required if token/admin session is set
   try {
-    const r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}`);
-    const entity = await r.json();
-    const data = entity.entity || entity;
-    return data.pin === pin || data.edit_pin === pin;
+    await ensureMenuToken();
+    return true;
   } catch(e) {
     console.warn('PIN validation failed:', e);
     return false;
@@ -255,8 +321,8 @@ async function init() {
       showSpinner(false);
       return;
     }
-    const r = await fetch(`${API_BASE}/api/gcr/menu-editor-data?slug=${encodeURIComponent(slug)}`);
-    _data = await r.json();
+    await ensureMenuToken();
+    await loadEditorData();
     renderAll();
     loadRotation();
   } catch(e) { toast('Failed to load data', true); }
@@ -327,33 +393,9 @@ function updateRotationPrice(optionId, val) {
 async function submitRotation() {
   const btn = document.getElementById('rotation-submit');
   const status = document.getElementById('rotation-status');
-  const picks = Object.keys(_rotationPicks).map(function(id) {
-    return { option_id: id, price_override: _rotationPicks[id].priceOverride };
-  });
-  btn.disabled = true; btn.textContent = 'Saving…'; status.textContent = '';
-  try {
-    const r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ slug: slug, picks: picks })
-    });
-    let d;
-    try { d = await r.json(); } catch(_) { d = { error: 'Server returned non-JSON (status ' + r.status + ')' }; }
-    if (!r.ok) throw new Error(d.error || ('Save failed (' + r.status + ')'));
-    status.textContent = '✓ Saved ' + (d.picks || Object.keys(picks).length) + ' pick(s) for today';
-    status.style.color = '#22c55e';
-    // Refresh the menu tab so the owner sees their picks appear as items
-    try {
-      const rd = await fetch(`${API_BASE}/api/gcr/menu-editor-data?slug=${encodeURIComponent(slug)}`);
-      _data = await rd.json();
-      renderMenu();
-    } catch(_) {}
-  } catch(e) {
-    status.textContent = '✕ ' + e.message;
-    status.style.color = '#ef4444';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Submit Today\'s Picks';
-  }
+  btn.disabled = false;
+  status.textContent = 'Daily rotation save is not available from this editor yet.';
+  status.style.color = '#ef4444';
 }
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -402,9 +444,9 @@ function renderMenu() {
   if (!sections.length && !items.length) { el.innerHTML = '<div class="empty">No menu items yet.</div>'; return; }
   // Group items by section
   var html = '';
-  var noSection = items.filter(function(i){ return !i.menu_section_id; });
+  var noSection = items.filter(function(i){ return !(i.menu_section_id || i.section_id); });
   sections.forEach(function(sec) {
-    var secItems = items.filter(function(i){ return i.menu_section_id === sec.id; });
+    var secItems = items.filter(function(i){ return (i.menu_section_id || i.section_id) === sec.id; });
     var meta = [sec.available_days, sec.available_start ? (sec.available_start + (sec.available_end ? ' – ' + sec.available_end : '')) : ''].filter(Boolean).join(' · ');
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;">' +
       '<div>' +
@@ -497,8 +539,13 @@ function renderPhotos() {
 
 async function deletePhoto(id) {
   if (!confirm('Remove this photo?')) return;
+  var adminToken = localStorage.getItem('adminToken') || localStorage.getItem('gcr_admin_token') || '';
+  if (!adminToken) {
+    toast('Photo delete requires admin login', true);
+    return;
+  }
   showSpinner(true);
-  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({delete: [id]}) });
+  var r = await fetch(`${API_BASE}/api/admin/gcr/photos/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + adminToken } });
   var res = await r.json();
   if (res.success) { _data.photos = (_data.photos||[]).filter(function(p){ return p.id !== id; }); renderPhotos(); toast('Photo removed'); }
   else toast(res.error || 'Delete failed', true);
@@ -562,7 +609,7 @@ function buildDrawer(type, item, sectionId) {
   if (type === 'menu') {
     var marketChecked = item && !item.price && item.price_text === 'Market Price' ? 'checked' : '';
     var sections = (_data.menu_sections || []).map(function(s){
-      return '<option value="'+s.id+'"'+(item && item.menu_section_id===s.id?' selected':'')+(sectionId===s.id?' selected':'')+'>'+(s.section_name)+'</option>';
+      return '<option value="'+s.id+'"'+(item && (item.menu_section_id || item.section_id)===s.id?' selected':'')+(sectionId===s.id?' selected':'')+'>'+(s.section_name)+'</option>';
     }).join('');
     return '<h2>'+title+' Menu Item</h2>'+idField+sectionField+
       '<div class="field"><label>Section</label><select id="d-section"><option value="">— No section —</option>'+sections+'</select></div>'+
@@ -639,7 +686,8 @@ async function handleImageUpload(input, field) {
   var fd = new FormData();
   fd.append('image', input.files[0]);
   try {
-    var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', body: fd });
+    fd.append('type', 'gallery');
+    var r = await fetch(editorUrl('/upload'), { method: 'POST', headers: editorHeaders(false), body: fd });
     var res = await r.json();
     if (res.url) {
       // Update preview in drawer
@@ -659,13 +707,12 @@ async function uploadStandalonePhoto(input) {
   showSpinner(true);
   var fd = new FormData();
   fd.append('image', input.files[0]);
-  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', body: fd });
+  fd.append('type', 'gallery');
+  var r = await fetch(editorUrl('/upload'), { method: 'POST', headers: editorHeaders(false), body: fd });
   var res = await r.json();
   if (res.url) {
-    if (res.photo) {
-      if (!_data.photos) _data.photos = [];
-      _data.photos.unshift(res.photo);
-    }
+    if (!_data.photos) _data.photos = [];
+    _data.photos.unshift({ id: res.path || res.url, image_url: res.url, url: res.url });
     renderPhotos();
     toast('Photo saved!');
   } else toast(res.error || 'Upload failed', true);
@@ -689,12 +736,12 @@ async function saveDrawer(type) {
     showSpinner(true);
     try {
       var secMethod = id ? 'PUT' : 'POST';
-      var secUrl = `${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/menu`;
-      var sr = await fetch(secUrl, { method: secMethod, headers: {'Content-Type':'application/json'}, body: JSON.stringify(secPayload) });
+      var secUrl = id ? editorUrl('/menu-sections/' + encodeURIComponent(id)) : editorUrl('/menu-sections');
+      var sr = await fetch(secUrl, { method: secMethod, headers: editorHeaders(true), body: JSON.stringify(secPayload) });
       var sres = await sr.json();
-      if (sres.item) {
-        if (id) { var si = (_data.menu_sections||[]).findIndex(function(s){ return s.id === sres.item.id; }); if (si >= 0) _data.menu_sections[si] = sres.item; }
-        else { if (!_data.menu_sections) _data.menu_sections = []; _data.menu_sections.push(sres.item); }
+      if (sr.ok && sres.id) {
+        if (id) { var si = (_data.menu_sections||[]).findIndex(function(s){ return s.id === sres.id; }); if (si >= 0) _data.menu_sections[si] = sres; }
+        else { if (!_data.menu_sections) _data.menu_sections = []; _data.menu_sections.push(sres); }
         renderMenu(); closeDrawer(); toast('Section saved!');
       } else toast(sres.error || 'Save failed', true);
     } catch(e) { toast('Error saving', true); }
@@ -714,7 +761,8 @@ async function saveDrawer(type) {
     payload.item_name = v('d-name'); payload.description = v('d-desc');
     payload.price = isMarket ? null : v('d-price');
     payload.price_text = isMarket ? 'Market Price' : null;
-    payload.menu_section_id = v('d-section') || (document.getElementById('d-section-id') ? document.getElementById('d-section-id').value : null);
+    payload.section_id = v('d-section') || (document.getElementById('d-section-id') ? document.getElementById('d-section-id').value : null);
+    payload.menu_section_id = payload.section_id;
     payload.is_available = document.getElementById('d-active').checked;
   } else if (type === 'drink') {
     payload.item_name = v('d-name'); payload.description = v('d-desc');
@@ -722,7 +770,7 @@ async function saveDrawer(type) {
     payload.is_available = document.getElementById('d-active').checked;
   } else if (type === 'hh') {
     payload.item_name = v('d-name'); payload.description = v('d-desc');
-    payload.regular_price = v('d-reg-price'); payload.hh_price = v('d-price');
+    payload.original_price = v('d-reg-price'); payload.price = v('d-price'); payload.hh_price = payload.price;
     payload.price_text = v('d-price-text');
   } else if (type === 'event') {
     payload.event_name = v('d-name'); payload.description = v('d-desc');
@@ -733,15 +781,19 @@ async function saveDrawer(type) {
 
   showSpinner(true);
   try {
-    var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug: slug, [type]: payload}) });
+    var route = { special: 'specials', menu: 'menu-items', drink: 'drink-items', hh: 'hh-items', event: 'events' }[type];
+    var method = id ? 'PUT' : 'POST';
+    var url = id ? editorUrl('/' + route + '/' + encodeURIComponent(id)) : editorUrl('/' + route);
+    var r = await fetch(url, { method: method, headers: editorHeaders(true), body: JSON.stringify(payload) });
     var res = await r.json();
-    if (res.item) {
+    if (r.ok && res.id) {
       // Update local data
       var lists = { special: 'specials', menu: 'menu_items', drink: 'drink_items', hh: 'hh_items', event: 'events' };
       var key = lists[type];
-      var idx = (_data[key] || []).findIndex(function(i){ return i.id === res.item.id; });
-      if (idx >= 0) _data[key][idx] = res.item;
-      else { if (!_data[key]) _data[key] = []; _data[key].push(res.item); }
+      var normalized = normalizeEditorData({ menu_sections: [], drink_sections: [], happy_hour_sections: [], [key]: [res] })[key][0] || res;
+      var idx = (_data[key] || []).findIndex(function(i){ return i.id === normalized.id; });
+      if (idx >= 0) _data[key][idx] = normalized;
+      else { if (!_data[key]) _data[key] = []; _data[key].push(normalized); }
       renderAll();
       closeDrawer();
       toast('Saved!');
@@ -752,9 +804,9 @@ async function saveDrawer(type) {
 
 async function deleteItem(type, id) {
   if (!confirm('Delete this item?')) return;
-  var endpoints = { special: '/specials/', menu: '/menu-items/', drink: '/drink-items/', hh: '/hh-items/', event: '/events/' };
   showSpinner(true);
-  var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug: slug, [type]: id}) });
+  var route = { special: 'specials', menu: 'menu-items', drink: 'drink-items', hh: 'hh-items', event: 'events' }[type];
+  var r = await fetch(editorUrl('/' + route + '/' + encodeURIComponent(id)), { method: 'DELETE', headers: editorHeaders(false) });
   var res = await r.json();
   if (res.success) {
     var lists = { special: 'specials', menu: 'menu_items', drink: 'drink_items', hh: 'hh_items', event: 'events' };
@@ -767,7 +819,7 @@ async function deleteItem(type, id) {
 async function saveHH() {
   var payload = { hh_days: v('hh-days'), hh_start: v('hh-start'), hh_end: v('hh-end'), hh_description: v('hh-desc') };
   showSpinner(true);
-  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/hours`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  var r = await fetch(editorUrl('/happy-hour'), { method: 'PUT', headers: editorHeaders(true), body: JSON.stringify(payload) });
   var res = await r.json();
   if (res.success) { if (_data.entity) Object.assign(_data.entity, payload); toast('Happy hour saved!'); }
   else toast(res.error || 'Save failed', true);
@@ -781,12 +833,12 @@ function addMenuSection() {
 async function deleteSection(id) {
   if (!confirm('Delete this section? Items in it will become unsectioned.')) return;
   showSpinner(true);
-  var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/menu`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({delete_section: id}) });
+  var r = await fetch(editorUrl('/menu-sections/' + encodeURIComponent(id)), { method: 'DELETE', headers: editorHeaders(false) });
   var res = await r.json();
   if (res.success) {
     _data.menu_sections = (_data.menu_sections||[]).filter(function(s){ return s.id !== id; });
     // Clear section reference on items
-    (_data.menu_items||[]).forEach(function(i){ if (i.menu_section_id === id) i.menu_section_id = null; });
+    (_data.menu_items||[]).forEach(function(i){ if ((i.menu_section_id || i.section_id) === id) { i.menu_section_id = null; i.section_id = null; } });
     renderMenu(); closeDrawer(); toast('Section deleted');
   } else toast(res.error || 'Delete failed', true);
   showSpinner(false);
@@ -814,7 +866,8 @@ async function uploadGalleryPhoto(input) {
   var fd = new FormData();
   fd.append('image', input.files[0]);
   try {
-    var r = await fetch(`${API_BASE}/api/gcr/entity/${encodeURIComponent(slug)}/photos`, { method: 'PATCH', body: fd });
+    fd.append('type', 'gallery');
+    var r = await fetch(editorUrl('/upload'), { method: 'POST', headers: editorHeaders(false), body: fd });
     var res = await r.json();
     if (res.url) {
       var grid = document.getElementById('d-gallery-grid');
@@ -840,16 +893,25 @@ async function toggleSoldOut(id, type) {
   var item  = items.find(function(i){ return i.id === id; });
   if (!item || !endpoint) return;
   var newAvail = item.is_available !== false ? false : true;
+  if (type === 'hh') {
+    toast('Happy hour availability is edited by deleting or updating the item.', true);
+    return;
+  }
   var payload  = { id: id };
   payload[nameKey] = item.item_name;
-  if (type !== 'hh') payload.is_available = newAvail; // hh_items has no is_available column
+  payload.description = item.description || null;
+  payload.price = item.price != null ? item.price : null;
+  payload.section_id = item.section_id || item.menu_section_id || item.drink_section_id || null;
+  payload.image_url = item.image_url || null;
+  payload.is_available = newAvail;
   showSpinner(true);
   try {
-    var r = await fetch(BASE + endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    var route = { menu: 'menu-items', drink: 'drink-items', hh: 'hh-items' }[type];
+    var r = await fetch(editorUrl('/' + route + '/' + encodeURIComponent(id)), { method: 'PUT', headers: editorHeaders(true), body: JSON.stringify(payload) });
     var res = await r.json();
-    if (res.item) {
+    if (r.ok && res.id) {
       var idx = items.findIndex(function(i){ return i.id === id; });
-      if (idx >= 0) items[idx] = res.item;
+      if (idx >= 0) items[idx] = Object.assign({}, items[idx], res);
       renderAll();
       toast(newAvail ? 'Marked available' : 'Marked sold out');
     } else toast(res.error || 'Update failed', true);
@@ -911,19 +973,7 @@ function previewScanPhoto(input) {
 
 async function runMenuScan() {
   if (!_scanFile) { toast('Pick a photo first', true); return; }
-  showSpinner(true);
-  document.getElementById('spinner').querySelector('.spinner').style.borderTopColor = '#7c3aed';
-  try {
-    var fd = new FormData();
-    fd.append('image', _scanFile);
-    var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, { method: 'POST', body: fd });
-    var res = await r.json();
-    if (!res.ok || !res.result) { toast(res.error || 'AI could not read the menu. Try a clearer photo.', true); showSpinner(false); return; }
-    _scanAIResult = res.result;
-    renderScanPreview(res.result);
-    showScanStep('b');
-  } catch(e) { toast('Error scanning menu', true); }
-  showSpinner(false);
+  toast('AI menu scan is not connected to the current API route yet.', true);
 }
 
 function renderScanPreview(result) {
@@ -952,21 +1002,7 @@ function renderScanPreview(result) {
 
 async function confirmScanCreate() {
   if (!_scanAIResult) return;
-  showSpinner(true);
-  try {
-    var r = await fetch(`${API_BASE}/api/gcr/menu-editor-save`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ sections: _scanAIResult.sections || [] })
-    });
-    var res = await r.json();
-    if (res.ok) {
-      showScanStep('c');
-      // Reload data in background so menu tab shows new items
-      fetch(`${API_BASE}/api/gcr/menu-editor-data?slug=${encodeURIComponent(slug)}`).then(function(r){ return r.json(); }).then(function(d){ _data = d; });
-    } else toast(res.error || 'Create failed', true);
-  } catch(e) { toast('Error creating menu', true); }
-  showSpinner(false);
+  toast('AI menu import is not connected to the current API route yet.', true);
 }
 
 init();
