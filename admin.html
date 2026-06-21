@@ -2196,6 +2196,18 @@
         }
       ]
     }
+  ],
+
+  "schedules": [
+    {
+      "schedule_name": "Sunset Tour",
+      "label": "6:00 PM Departure",
+      "schedule_type": "tour",
+      "time_start": "18:00",
+      "duration": "2 hours",
+      "days_of_week": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+      "notes": "Weather dependent. Minimum 2 guests."
+    }
   ]
 }</pre>
           </details>
@@ -8591,6 +8603,7 @@
       if (d.whats_included?.length) lines.push('Whats included: ' + d.whats_included.length);
       if (d.requirements?.length)   lines.push('Requirements: ' + d.requirements.length);
       if (d.faqs?.length)     lines.push('FAQs: ' + d.faqs.length);
+      if (d.schedules?.length)lines.push('Schedules: ' + d.schedules.length);
       if (d.sections?.length) lines.push('Sections: ' + d.sections.length + ' (' + d.sections.map(function(s){ return s.section_name + ' (' + (s.items||[]).length + ' items)'; }).join(', ') + ')');
       document.getElementById('bji-preview-title').textContent = title;
       document.getElementById('bji-preview-body').innerHTML = lines.map(function(l){ return '<div>• ' + escHtml(l) + '</div>'; }).join('');
@@ -8637,6 +8650,7 @@
           whatsIncluded: wiPayload.length ? wiPayload : undefined,
           requirements: d.requirements?.length ? d.requirements : undefined,
           faqs: d.faqs?.length ? d.faqs : undefined,
+          schedules: d.schedules?.length ? d.schedules : undefined,
           sections: d.sections?.length ? d.sections : undefined,
           menu: d.menu?.length ? d.menu : undefined,
           events: d.events?.length ? d.events : undefined,
