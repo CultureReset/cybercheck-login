@@ -11626,7 +11626,7 @@
     function openAddIncluded() {
       var text = prompt('What\'s included item:'); if (!text) return;
       fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/whats-included', {
-        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify({item:text})
+        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify({included_item:text})
       }).then(function(r){ if(r.ok) loadPricingTab(); else alert('Failed to add.'); });
     }
     function deleteIncluded(id) {
@@ -11637,7 +11637,7 @@
     function openAddRequirement() {
       var text = prompt('Requirement (e.g. "Must be 18+", "Bring sunscreen"):'); if (!text) return;
       fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/requirements', {
-        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify({item:text})
+        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify({requirement_text:text})
       }).then(function(r){ if(r.ok) loadPricingTab(); else alert('Failed to add.'); });
     }
     function deleteRequirement(id) {
