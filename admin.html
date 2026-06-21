@@ -2130,6 +2130,95 @@
           </div>
         </div>
 
+        <!-- Business / Entity JSON Import -->
+        <div class="card" style="padding:28px;margin-top:20px;">
+          <h3 style="margin:0 0 4px;">🏢 Business JSON Import</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin:0 0 16px;">Import any business data from JSON. Include a <code>slug</code> field to add/update an <strong>existing</strong> business, or omit it to create a <strong>new</strong> one. Only fields present in the JSON are written — existing data is not touched.</p>
+          <details style="margin-bottom:16px;">
+            <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);user-select:none;">📋 JSON Structure Reference (click to expand)</summary>
+            <pre style="margin-top:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:14px;font-size:11px;color:var(--text-muted);overflow-x:auto;white-space:pre-wrap;">{
+  "slug": "coyote-beach-sports",        // REQUIRED to update existing; omit to create new
+  "name": "Coyote Beach Sports",
+  "entity_type": "activity",            // food | activity | stay | service | shop | park
+  "entity_subtype": "watersports",
+  "subtitle": "Rentals & Gear on the Beach",
+  "description": "Full description here.",
+  "phone": "251-555-1234",
+  "website_url": "https://example.com",
+  "address": "123 Beach Blvd",
+  "city": "Gulf Shores",
+  "hero_image_url": "https://...",
+
+  "hours": {
+    "Monday": { "open": "08:00", "close": "18:00" },
+    "Tuesday": { "open": "08:00", "close": "18:00" },
+    "Saturday": { "open": "07:00", "close": "20:00" },
+    "Sunday": "closed"
+  },
+
+  "tags": ["Veteran-Owned", "Family-Friendly", "Outdoor"],
+
+  "photos": [
+    { "url": "https://...", "caption": "Kayaks on the beach", "is_cover": true }
+  ],
+
+  "pricing": [
+    { "item_name": "Single Kayak", "price": 25, "price_type": "Per Hour" },
+    { "item_name": "Double Kayak", "price": 35, "price_type": "Per Hour" }
+  ],
+
+  "whats_included": ["Life jacket", "Paddle", "Safety briefing"],
+
+  "requirements": ["Must be 18+ or with adult", "Swim test required"],
+
+  "faqs": [
+    { "question": "Do you offer lessons?", "answer": "Yes, beginner lessons available." }
+  ],
+
+  "sections": [
+    {
+      "section_name": "Watercraft Rentals",
+      "section_type": "offerings",
+      "items": [
+        {
+          "item_name": "Single Kayak",
+          "price_from": 25,
+          "price_to": 45,
+          "price_label": "Per Hour",
+          "duration": "1–2 hrs",
+          "icon": "🛶",
+          "description": "Stable sit-on-top kayak.",
+          "metadata": {
+            "includes": ["Paddle", "Life jacket"],
+            "requires": "Age 8+",
+            "deposit": "$20"
+          }
+        }
+      ]
+    }
+  ]
+}</pre>
+          </details>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('bji-file').click()">📁 Load JSON file</button>
+            <input type="file" id="bji-file" accept=".json" style="display:none;" onchange="bjiLoadFile(this)">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('bji-input').value=''">Clear</button>
+          </div>
+          <textarea id="bji-input" rows="12" placeholder='Paste business JSON here or load from file...' style="width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;resize:vertical;"></textarea>
+          <div style="margin-top:12px;display:flex;gap:10px;">
+            <button onclick="bjiPreview()" class="btn btn-primary">Preview</button>
+          </div>
+          <div id="bji-preview" style="display:none;margin-top:20px;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:18px;">
+            <h4 style="margin:0 0 10px;" id="bji-preview-title"></h4>
+            <div id="bji-preview-body" style="font-size:13px;color:var(--text-muted);line-height:1.7;"></div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button onclick="bjiSubmit()" class="btn btn-primary" id="bji-submit-btn">✅ Import to DB</button>
+              <button onclick="document.getElementById('bji-preview').style.display='none'" class="btn btn-outline">Cancel</button>
+            </div>
+            <div id="bji-result" style="margin-top:10px;font-size:13px;"></div>
+          </div>
+        </div>
+
         <!-- Events JSON Upload -->
         <div class="card" style="padding:28px;margin-top:20px;">
           <h3 style="margin:0 0 4px;">Events JSON Upload</h3>
@@ -8467,6 +8556,225 @@
         result.innerHTML = '<span style="color:#ef4444;">✗ Error: ' + e.message + '</span>';
       } finally {
         btn.disabled = false; btn.textContent = '✅ Upload to DB';
+      }
+    }
+
+    // ── Business JSON Import ──────────────────────────
+    var _bjiParsed = null;
+
+    function bjiLoadFile(input) {
+      var file = input.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('bji-input').value = e.target.result;
+        input.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function bjiPreview() {
+      var raw = document.getElementById('bji-input').value.trim();
+      if (!raw) { toast('Paste or load a JSON first', 'error'); return; }
+      try { _bjiParsed = JSON.parse(raw); } catch(e) { toast('Invalid JSON: ' + e.message, 'error'); return; }
+      var d = _bjiParsed;
+      var isNew = !d.slug;
+      var title = isNew ? '➕ New business: ' + (d.name || '(unnamed)') : '✏️ Update existing: ' + d.slug;
+      var lines = [];
+      if (d.name)             lines.push('Name: ' + d.name);
+      if (d.entity_type)      lines.push('Type: ' + d.entity_type + (d.entity_subtype ? ' / ' + d.entity_subtype : ''));
+      if (d.phone)            lines.push('Phone: ' + d.phone);
+      if (d.city)             lines.push('City: ' + d.city);
+      if (d.hours)            lines.push('Hours: ' + Object.keys(d.hours).length + ' days');
+      if (d.tags?.length)     lines.push('Tags: ' + d.tags.length);
+      if (d.photos?.length)   lines.push('Photos: ' + d.photos.length);
+      if (d.pricing?.length)  lines.push('Pricing items: ' + d.pricing.length);
+      if (d.whats_included?.length) lines.push('Whats included: ' + d.whats_included.length);
+      if (d.requirements?.length)   lines.push('Requirements: ' + d.requirements.length);
+      if (d.faqs?.length)     lines.push('FAQs: ' + d.faqs.length);
+      if (d.sections?.length) lines.push('Sections: ' + d.sections.length + ' (' + d.sections.map(function(s){ return s.section_name + ' (' + (s.items||[]).length + ' items)'; }).join(', ') + ')');
+      document.getElementById('bji-preview-title').textContent = title;
+      document.getElementById('bji-preview-body').innerHTML = lines.map(function(l){ return '<div>• ' + escHtml(l) + '</div>'; }).join('');
+      document.getElementById('bji-preview').style.display = 'block';
+      document.getElementById('bji-result').innerHTML = '';
+    }
+
+    async function bjiSubmit() {
+      if (!_bjiParsed) return;
+      var btn = document.getElementById('bji-submit-btn');
+      var result = document.getElementById('bji-result');
+      btn.disabled = true; btn.textContent = 'Importing…';
+      result.innerHTML = '';
+      var token = getAuthToken();
+      try {
+        var d = _bjiParsed;
+        var slug = d.slug || null;
+        var errors = [];
+
+        // 1. Create or update entity core fields
+        var entityPayload = {};
+        ['name','entity_type','entity_subtype','subtitle','description','phone','website_url',
+         'address','city','state','zip','hero_image_url','booking_url','reservation_url',
+         'order_url','menu_url','directions_url','instagram_url','facebook_url','tiktok_url',
+         'price_range','icon'].forEach(function(f){ if (d[f] != null) entityPayload[f] = d[f]; });
+
+        if (!slug) {
+          // Create new entity
+          if (!d.name) { toast('name is required for new business', 'error'); return; }
+          if (!entityPayload.entity_type) entityPayload.entity_type = 'activity';
+          var cr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(entityPayload)
+          });
+          var cd = await cr.json();
+          if (!cr.ok) { toast('Failed to create entity: ' + (cd.error||''), 'error'); return; }
+          slug = cd.slug || cd.entity?.slug;
+          if (!slug) { toast('Entity created but no slug returned', 'error'); return; }
+          result.innerHTML += '<div style="color:#22c55e;">✅ Created entity: ' + escHtml(slug) + '</div>';
+        } else if (Object.keys(entityPayload).length > 0) {
+          // Update existing
+          var ur = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ entity: entityPayload })
+          });
+          if (!ur.ok) errors.push('entity update: ' + ((await ur.json()).error||''));
+          else result.innerHTML += '<div style="color:#22c55e;">✅ Updated entity fields</div>';
+        }
+
+        // 2. Hours
+        if (d.hours) {
+          var hr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug, {
+            method: 'PATCH',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hours: d.hours })
+          });
+          if (!hr.ok) errors.push('hours: ' + ((await hr.json()).error||''));
+          else result.innerHTML += '<div style="color:#22c55e;">✅ Hours saved</div>';
+        }
+
+        // 3. Tags
+        if (d.tags?.length) {
+          for (var i = 0; i < d.tags.length; i++) {
+            var tag = typeof d.tags[i] === 'string' ? { tag: d.tags[i] } : d.tags[i];
+            var tr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/tags', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify(tag)
+            });
+            if (!tr.ok) errors.push('tag ' + tag.tag + ': ' + ((await tr.json()).error||''));
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ Tags added (' + d.tags.length + ')</div>';
+        }
+
+        // 4. Photos
+        if (d.photos?.length) {
+          for (var i = 0; i < d.photos.length; i++) {
+            var p = typeof d.photos[i] === 'string' ? { url: d.photos[i] } : d.photos[i];
+            var pr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/photos', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: p.url, caption: p.caption||null, is_cover: !!p.is_cover })
+            });
+            if (!pr.ok) errors.push('photo: ' + ((await pr.json()).error||''));
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ Photos added (' + d.photos.length + ')</div>';
+        }
+
+        // 5. Pricing
+        if (d.pricing?.length) {
+          for (var i = 0; i < d.pricing.length; i++) {
+            var prc = d.pricing[i];
+            var prcr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/pricing-items', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ item_name: prc.item_name||prc.name, price: prc.price, price_type: prc.price_type||null, description: prc.description||null, sort_order: i })
+            });
+            if (!prcr.ok) errors.push('pricing: ' + ((await prcr.json()).error||''));
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ Pricing added (' + d.pricing.length + ')</div>';
+        }
+
+        // 6. Whats included
+        if (d.whats_included?.length) {
+          for (var i = 0; i < d.whats_included.length; i++) {
+            var wi = typeof d.whats_included[i] === 'string' ? d.whats_included[i] : d.whats_included[i].included_item;
+            var wir = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/whats-included', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ included_item: wi, sort_order: i })
+            });
+            if (!wir.ok) errors.push('whats_included: ' + ((await wir.json()).error||''));
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ What\'s included added (' + d.whats_included.length + ')</div>';
+        }
+
+        // 7. Requirements
+        if (d.requirements?.length) {
+          for (var i = 0; i < d.requirements.length; i++) {
+            var req = typeof d.requirements[i] === 'string' ? d.requirements[i] : d.requirements[i].requirement_text;
+            var reqr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/requirements', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ requirement_text: req, sort_order: i })
+            });
+            if (!reqr.ok) errors.push('requirement: ' + ((await reqr.json()).error||''));
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ Requirements added (' + d.requirements.length + ')</div>';
+        }
+
+        // 8. FAQs
+        if (d.faqs?.length) {
+          for (var i = 0; i < d.faqs.length; i++) {
+            var fq = d.faqs[i];
+            var fqr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/faqs', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ question: fq.question, answer: fq.answer, sort_order: i })
+            });
+            if (!fqr.ok) errors.push('faq: ' + ((await fqr.json()).error||''));
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ FAQs added (' + d.faqs.length + ')</div>';
+        }
+
+        // 9. Sections + items
+        if (d.sections?.length) {
+          for (var i = 0; i < d.sections.length; i++) {
+            var sec = d.sections[i];
+            var sr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/sections', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ section_name: sec.section_name, section_type: sec.section_type||'offerings', sort_order: sec.sort_order||i })
+            });
+            var sd = await sr.json();
+            if (!sr.ok) { errors.push('section: ' + (sd.error||'')); continue; }
+            var secId = sd.id || sd.section?.id;
+            if (sec.items?.length && secId) {
+              for (var j = 0; j < sec.items.length; j++) {
+                var it = sec.items[j];
+                var ir = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/section-items', {
+                  method: 'POST',
+                  headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ section_id: secId, item_name: it.item_name||it.name, description: it.description||null, price_from: it.price_from!=null?it.price_from:null, price_to: it.price_to||null, price_label: it.price_label||null, duration: it.duration||null, icon: it.icon||null, metadata: it.metadata||{}, sort_order: j })
+                });
+                if (!ir.ok) errors.push('section item: ' + ((await ir.json()).error||''));
+              }
+            }
+          }
+          result.innerHTML += '<div style="color:#22c55e;">✅ Sections added (' + d.sections.length + ')</div>';
+        }
+
+        if (errors.length) {
+          result.innerHTML += '<div style="color:#f59e0b;margin-top:8px;">⚠️ Some errors:<br>' + errors.map(function(e){ return escHtml(e); }).join('<br>') + '</div>';
+        } else {
+          result.innerHTML += '<div style="color:#22c55e;font-weight:600;margin-top:8px;">🎉 Import complete!</div>';
+        }
+        // refresh entity list
+        if (typeof loadGCREntities === 'function') loadGCREntities();
+      } catch(e) {
+        result.innerHTML = '<span style="color:#ef4444;">✗ Error: ' + escHtml(e.message) + '</span>';
+      } finally {
+        btn.disabled = false; btn.textContent = '✅ Import to DB';
       }
     }
 
