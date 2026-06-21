@@ -837,10 +837,65 @@
 
             <!-- PRICING TAB -->
             <div id="enttab-pricing-content" style="display:none;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                 <h3 style="margin:0;font-size:16px;">💰 Pricing</h3>
-                <button onclick="openAddPricingItem()" class="btn btn-primary btn-sm">+ Add Price</button>
+                <button onclick="togglePricingForm()" class="btn btn-primary btn-sm" id="pricing-add-btn">+ Add Price</button>
               </div>
+
+              <!-- Inline add price form -->
+              <div id="pricing-add-form" style="display:none;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:16px;margin-bottom:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">TIER / LABEL *</label>
+                    <input id="pi-tier" placeholder="Adult, Child, Under 2, Full Day, Half Day…" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">PRICE TYPE</label>
+                    <select id="pi-label" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                      <option value="per person">Per Person</option>
+                      <option value="per boat">Per Boat</option>
+                      <option value="per vehicle">Per Vehicle</option>
+                      <option value="per group">Per Group</option>
+                      <option value="per hour">Per Hour</option>
+                      <option value="per night">Per Night</option>
+                      <option value="per day">Per Day</option>
+                      <option value="half day">Half Day</option>
+                      <option value="full day">Full Day</option>
+                      <option value="flat rate">Flat Rate</option>
+                      <option value="free">Free</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">PRICE FROM ($)</label>
+                    <input id="pi-price-from" type="number" placeholder="0" min="0" step="0.01" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">PRICE TO ($) <span style="font-weight:400;opacity:0.6;">optional range</span></label>
+                    <input id="pi-price-to" type="number" placeholder="leave blank if fixed" min="0" step="0.01" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">MIN AGE <span style="font-weight:400;opacity:0.6;">free if under</span></label>
+                    <input id="pi-age" type="number" placeholder="e.g. 3 (under 3 free)" min="0" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">DURATION / TIME SLOT</label>
+                    <input id="pi-duration" placeholder="2 hours, Half Day, 9 AM – 11 AM…" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                  </div>
+                  <div>
+                    <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">DESCRIPTION <span style="font-weight:400;opacity:0.6;">optional</span></label>
+                    <input id="pi-desc" placeholder="Includes equipment, guide…" style="width:100%;padding:8px 10px;background:var(--card-bg,#1a1a2e);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;">
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                  <button onclick="togglePricingForm()" class="btn btn-outline btn-sm">Cancel</button>
+                  <button onclick="savePricingItem()" class="btn btn-primary btn-sm">Save Price</button>
+                </div>
+              </div>
+
               <div id="pricing-items-list" style="display:grid;gap:10px;margin-bottom:24px;"></div>
 
               <div style="border-top:1px solid var(--card-border);padding-top:20px;margin-bottom:8px;">
@@ -11503,10 +11558,21 @@
         var wData = wRes.ok ? await wRes.json() : {whats_included:[]};
         var rData = rRes.ok ? await rRes.json() : {requirements:[]};
         renderList('pricing-items-list', pData.pricing_items || pData, function(item) {
-          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
-            '<div><div style="font-weight:600;">' + (item.label||'') + '</div><div style="font-size:12px;color:var(--text-muted);">' + (item.description||'') + '</div></div>' +
-            '<div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;color:var(--primary);">$' + (item.price||0) + '</span>' +
-            '<button onclick="deletePricingItem(' + item.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">🗑</button></div></div>';
+          var priceStr = '';
+          if (item.price_label === 'free' || (item.price_from === 0 && !item.price_to)) { priceStr = 'FREE'; }
+          else if (item.price_from != null && item.price_to != null) { priceStr = '$' + item.price_from + ' – $' + item.price_to; }
+          else if (item.price_from != null) { priceStr = '$' + item.price_from; }
+          else { priceStr = 'Call'; }
+          var meta = [];
+          if (item.price_label) meta.push(item.price_label);
+          if (item.duration) meta.push('⏱ ' + item.duration);
+          if (item.minimum_age) meta.push('Ages ' + item.minimum_age + '+');
+          return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<div><div style="font-weight:600;">' + (item.tier_name||item.label||'') + '</div>' +
+            (meta.length ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + meta.join(' · ') + '</div>' : '') +
+            (item.description ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + item.description + '</div>' : '') + '</div>' +
+            '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:12px;"><span style="font-weight:700;color:var(--primary);">' + priceStr + '</span>' +
+            '<button onclick="deletePricingItem(\'' + item.id + '\')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">🗑</button></div></div>';
         }, 'No pricing items yet.');
         renderList('whats-included-list', wData.whats_included || wData, function(item) {
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
@@ -11520,14 +11586,37 @@
         }, 'No requirements added.');
       } catch(e) { console.error('loadPricingTab', e); }
     }
-    function openAddPricingItem() {
-      var label = prompt('Price label (e.g. "Adult", "Child", "Per Person"):'); if (!label) return;
-      var price = prompt('Price (number only):'); if (!price) return;
-      var desc  = prompt('Description (optional):') || '';
+    function togglePricingForm() {
+      var form = document.getElementById('pricing-add-form');
+      var showing = form.style.display !== 'none';
+      form.style.display = showing ? 'none' : 'block';
+      if (!showing) document.getElementById('pi-tier').focus();
+    }
+    function savePricingItem() {
+      var tier = document.getElementById('pi-tier').value.trim();
+      if (!tier) { alert('Tier/label is required.'); return; }
+      var priceFrom = document.getElementById('pi-price-from').value;
+      var priceTo   = document.getElementById('pi-price-to').value;
+      var label     = document.getElementById('pi-label').value;
+      var duration  = document.getElementById('pi-duration').value.trim();
+      var age       = document.getElementById('pi-age').value;
+      var desc      = document.getElementById('pi-desc').value.trim();
+      var body = { tier_name: tier, price_label: label };
+      if (priceFrom !== '') body.price_from = parseFloat(priceFrom);
+      if (priceTo   !== '') body.price_to   = parseFloat(priceTo);
+      if (duration  !== '') body.duration   = duration;
+      if (age       !== '') body.minimum_age = parseInt(age);
+      if (desc      !== '') body.description = desc;
       fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/pricing-items', {
-        method:'POST', headers:gcrAuthHeaders(),
-        body: JSON.stringify({label:label, price:parseFloat(price), description:desc})
-      }).then(function(r){ if(r.ok) loadPricingTab(); else alert('Failed to add.'); });
+        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify(body)
+      }).then(function(r){
+        if (r.ok) {
+          togglePricingForm();
+          ['pi-tier','pi-price-from','pi-price-to','pi-duration','pi-age','pi-desc'].forEach(function(id){ document.getElementById(id).value=''; });
+          document.getElementById('pi-label').selectedIndex = 0;
+          loadPricingTab();
+        } else { alert('Failed to save pricing.'); }
+      });
     }
     function deletePricingItem(id) {
       if (!confirm('Delete this price?')) return;
