@@ -8607,169 +8607,56 @@
       var token = getAuthToken();
       try {
         var d = _bjiParsed;
-        var slug = d.slug || null;
-        var errors = [];
 
-        // 1. Create or update entity core fields
-        var entityPayload = {};
-        ['name','entity_type','entity_subtype','subtitle','description','phone','website_url',
+        // Build import-master payload — maps flat JSON keys to the endpoint's expected shape
+        var entityFields = {};
+        ['name','slug','entity_type','entity_subtype','subtitle','description','phone','website_url',
          'address','city','state','zip','hero_image_url','booking_url','reservation_url',
          'order_url','menu_url','directions_url','instagram_url','facebook_url','tiktok_url',
-         'price_range','icon'].forEach(function(f){ if (d[f] != null) entityPayload[f] = d[f]; });
+         'price_range','icon'].forEach(function(f){ if (d[f] != null) entityFields[f] = d[f]; });
 
-        if (!slug) {
-          // Create new entity
-          if (!d.name) { toast('name is required for new business', 'error'); return; }
-          if (!entityPayload.entity_type) entityPayload.entity_type = 'activity';
-          var cr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify(entityPayload)
-          });
-          var cd = await cr.json();
-          if (!cr.ok) { toast('Failed to create entity: ' + (cd.error||''), 'error'); return; }
-          slug = cd.slug || cd.entity?.slug;
-          if (!slug) { toast('Entity created but no slug returned', 'error'); return; }
-          result.innerHTML += '<div style="color:#22c55e;">✅ Created entity: ' + escHtml(slug) + '</div>';
-        } else if (Object.keys(entityPayload).length > 0) {
-          // Update existing
-          var ur = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug, {
-            method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ entity: entityPayload })
-          });
-          if (!ur.ok) errors.push('entity update: ' + ((await ur.json()).error||''));
-          else result.innerHTML += '<div style="color:#22c55e;">✅ Updated entity fields</div>';
-        }
+        if (!entityFields.name) { toast('name is required', 'error'); btn.disabled=false; btn.textContent='✅ Import to DB'; return; }
+        // auto-generate slug from name if not provided
+        if (!entityFields.slug) entityFields.slug = entityFields.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 
-        // 2. Hours
-        if (d.hours) {
-          var hr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug, {
-            method: 'PATCH',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ hours: d.hours })
-          });
-          if (!hr.ok) errors.push('hours: ' + ((await hr.json()).error||''));
-          else result.innerHTML += '<div style="color:#22c55e;">✅ Hours saved</div>';
-        }
+        // Normalize tags to [{tag_name, tag_category}]
+        var tagsPayload = (d.tags||[]).map(function(t){ return typeof t==='string' ? {tag_name:t} : {tag_name:t.tag||t.tag_name, tag_category:t.tag_category||null}; });
 
-        // 3. Tags
-        if (d.tags?.length) {
-          for (var i = 0; i < d.tags.length; i++) {
-            var tag = typeof d.tags[i] === 'string' ? { tag: d.tags[i] } : d.tags[i];
-            var tr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/tags', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify(tag)
-            });
-            if (!tr.ok) errors.push('tag ' + tag.tag + ': ' + ((await tr.json()).error||''));
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ Tags added (' + d.tags.length + ')</div>';
-        }
+        // Normalize photos
+        var photosPayload = (d.photos||[]).map(function(p){ return typeof p==='string' ? {url:p} : p; });
 
-        // 4. Photos
-        if (d.photos?.length) {
-          for (var i = 0; i < d.photos.length; i++) {
-            var p = typeof d.photos[i] === 'string' ? { url: d.photos[i] } : d.photos[i];
-            var pr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/photos', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: p.url, caption: p.caption||null, is_cover: !!p.is_cover })
-            });
-            if (!pr.ok) errors.push('photo: ' + ((await pr.json()).error||''));
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ Photos added (' + d.photos.length + ')</div>';
-        }
+        // Normalize whats_included → whatsIncluded
+        var wiPayload = (d.whats_included||d.whatsIncluded||[]).map(function(w){ return typeof w==='string' ? w : (w.included_item||w.item||w); });
 
-        // 5. Pricing
-        if (d.pricing?.length) {
-          for (var i = 0; i < d.pricing.length; i++) {
-            var prc = d.pricing[i];
-            var prcr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/pricing-items', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ item_name: prc.item_name||prc.name, price: prc.price, price_type: prc.price_type||null, description: prc.description||null, sort_order: i })
-            });
-            if (!prcr.ok) errors.push('pricing: ' + ((await prcr.json()).error||''));
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ Pricing added (' + d.pricing.length + ')</div>';
-        }
+        var payload = {
+          entity: entityFields,
+          hours: d.hours || undefined,
+          tags: tagsPayload.length ? tagsPayload : undefined,
+          photos: photosPayload.length ? photosPayload : undefined,
+          pricing: d.pricing?.length ? d.pricing : undefined,
+          whatsIncluded: wiPayload.length ? wiPayload : undefined,
+          requirements: d.requirements?.length ? d.requirements : undefined,
+          faqs: d.faqs?.length ? d.faqs : undefined,
+          sections: d.sections?.length ? d.sections : undefined,
+          menu: d.menu?.length ? d.menu : undefined,
+          events: d.events?.length ? d.events : undefined,
+          specials: d.specials?.length ? d.specials : undefined,
+        };
+        // strip undefined keys
+        Object.keys(payload).forEach(function(k){ if (payload[k]===undefined) delete payload[k]; });
 
-        // 6. Whats included
-        if (d.whats_included?.length) {
-          for (var i = 0; i < d.whats_included.length; i++) {
-            var wi = typeof d.whats_included[i] === 'string' ? d.whats_included[i] : d.whats_included[i].included_item;
-            var wir = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/whats-included', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ included_item: wi, sort_order: i })
-            });
-            if (!wir.ok) errors.push('whats_included: ' + ((await wir.json()).error||''));
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ What\'s included added (' + d.whats_included.length + ')</div>';
-        }
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/import-master', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Import failed');
 
-        // 7. Requirements
-        if (d.requirements?.length) {
-          for (var i = 0; i < d.requirements.length; i++) {
-            var req = typeof d.requirements[i] === 'string' ? d.requirements[i] : d.requirements[i].requirement_text;
-            var reqr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/requirements', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ requirement_text: req, sort_order: i })
-            });
-            if (!reqr.ok) errors.push('requirement: ' + ((await reqr.json()).error||''));
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ Requirements added (' + d.requirements.length + ')</div>';
-        }
-
-        // 8. FAQs
-        if (d.faqs?.length) {
-          for (var i = 0; i < d.faqs.length; i++) {
-            var fq = d.faqs[i];
-            var fqr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/faqs', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ question: fq.question, answer: fq.answer, sort_order: i })
-            });
-            if (!fqr.ok) errors.push('faq: ' + ((await fqr.json()).error||''));
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ FAQs added (' + d.faqs.length + ')</div>';
-        }
-
-        // 9. Sections + items
-        if (d.sections?.length) {
-          for (var i = 0; i < d.sections.length; i++) {
-            var sec = d.sections[i];
-            var sr = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/sections', {
-              method: 'POST',
-              headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ section_name: sec.section_name, section_type: sec.section_type||'offerings', sort_order: sec.sort_order||i })
-            });
-            var sd = await sr.json();
-            if (!sr.ok) { errors.push('section: ' + (sd.error||'')); continue; }
-            var secId = sd.id || sd.section?.id;
-            if (sec.items?.length && secId) {
-              for (var j = 0; j < sec.items.length; j++) {
-                var it = sec.items[j];
-                var ir = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + slug + '/section-items', {
-                  method: 'POST',
-                  headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ section_id: secId, item_name: it.item_name||it.name, description: it.description||null, price_from: it.price_from!=null?it.price_from:null, price_to: it.price_to||null, price_label: it.price_label||null, duration: it.duration||null, icon: it.icon||null, metadata: it.metadata||{}, sort_order: j })
-                });
-                if (!ir.ok) errors.push('section item: ' + ((await ir.json()).error||''));
-              }
-            }
-          }
-          result.innerHTML += '<div style="color:#22c55e;">✅ Sections added (' + d.sections.length + ')</div>';
-        }
-
-        if (errors.length) {
-          result.innerHTML += '<div style="color:#f59e0b;margin-top:8px;">⚠️ Some errors:<br>' + errors.map(function(e){ return escHtml(e); }).join('<br>') + '</div>';
-        } else {
-          result.innerHTML += '<div style="color:#22c55e;font-weight:600;margin-top:8px;">🎉 Import complete!</div>';
-        }
-        // refresh entity list
+        var res = data.results || {};
+        var lines = Object.keys(res).map(function(k){ return '✅ ' + k + ': ' + res[k]; });
+        result.innerHTML = lines.map(function(l){ return '<div style="color:#22c55e;">' + escHtml(l) + '</div>'; }).join('') +
+          '<div style="color:#22c55e;font-weight:600;margin-top:8px;">🎉 Import complete! Slug: ' + escHtml(data.slug||'') + '</div>';
         if (typeof loadGCREntities === 'function') loadGCREntities();
       } catch(e) {
         result.innerHTML = '<span style="color:#ef4444;">✗ Error: ' + escHtml(e.message) + '</span>';
