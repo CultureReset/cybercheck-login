@@ -11559,16 +11559,17 @@
         var rData = rRes.ok ? await rRes.json() : {requirements:[]};
         renderList('pricing-items-list', pData.pricing_items || pData, function(item) {
           var priceStr = '';
-          if (item.price_label === 'free' || (item.price_from === 0 && !item.price_to)) { priceStr = 'FREE'; }
+          var priceVal = item.price_from != null ? item.price_from : item.price;
+          if (item.price_label === 'free' || priceVal === 0) { priceStr = 'FREE'; }
           else if (item.price_from != null && item.price_to != null) { priceStr = '$' + item.price_from + ' – $' + item.price_to; }
-          else if (item.price_from != null) { priceStr = '$' + item.price_from; }
+          else if (priceVal != null) { priceStr = '$' + priceVal; }
           else { priceStr = 'Call'; }
           var meta = [];
-          if (item.price_label) meta.push(item.price_label);
+          if (item.price_label || item.price_type) meta.push(item.price_label || item.price_type);
           if (item.duration) meta.push('⏱ ' + item.duration);
           if (item.minimum_age) meta.push('Ages ' + item.minimum_age + '+');
           return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
-            '<div><div style="font-weight:600;">' + (item.tier_name||item.label||'') + '</div>' +
+            '<div><div style="font-weight:600;">' + (item.tier_name||item.item_name||item.label||'') + '</div>' +
             (meta.length ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + meta.join(' · ') + '</div>' : '') +
             (item.description ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + item.description + '</div>' : '') + '</div>' +
             '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:12px;"><span style="font-weight:700;color:var(--primary);">' + priceStr + '</span>' +
@@ -11576,12 +11577,12 @@
         }, 'No pricing items yet.');
         renderList('whats-included-list', wData.whats_included || wData, function(item) {
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
-            '<span>✅ ' + (item.item||item.text||'') + '</span>' +
+            '<span>✅ ' + (item.included_item||item.item||item.text||'') + '</span>' +
             '<button onclick="deleteIncluded(' + item.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;">🗑</button></div>';
         }, 'Nothing added yet.');
         renderList('requirements-list', rData.requirements || rData, function(item) {
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
-            '<span>⚠️ ' + (item.item||item.text||item.requirement||'') + '</span>' +
+            '<span>⚠️ ' + (item.requirement_text||item.item||item.text||item.requirement||'') + '</span>' +
             '<button onclick="deleteRequirement(' + item.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;">🗑</button></div>';
         }, 'No requirements added.');
       } catch(e) { console.error('loadPricingTab', e); }
