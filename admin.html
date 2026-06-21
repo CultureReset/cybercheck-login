@@ -748,11 +748,17 @@
 
             <!-- PHOTOS TAB -->
             <div id="enttab-photos-content" style="display:none;">
-              <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Photos shown on the listing card and profile page. The first photo is the hero image on the card.</p>
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;">Photos shown on the listing card and profile page. The first photo is used as the hero image.</p>
+              <!-- Upload from device -->
+              <div style="margin-bottom:14px;padding:14px;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">📤 Upload from device</div>
+                <input type="file" accept="image/*" multiple onchange="uploadEntPhotos(this)" style="font-size:13px;color:var(--text);">
+              </div>
+              <!-- Add by URL -->
               <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                <input id="ent-photo-url-input" type="url" placeholder="Paste photo URL (https://...)" style="flex:1;min-width:240px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-                <input id="ent-photo-caption-input" type="text" placeholder="Caption (optional)" style="width:180px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
-                <button onclick="addEntPhoto()" class="btn btn-primary">Add Photo</button>
+                <input id="ent-photo-url-input" type="url" placeholder="Or paste photo URL (https://...)" style="flex:1;min-width:240px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <input id="ent-photo-caption-input" type="text" placeholder="Caption (optional)" style="width:160px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <button onclick="addEntPhoto()" class="btn btn-primary">Add URL</button>
               </div>
               <div id="ent-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;"></div>
             </div>
@@ -12238,27 +12244,28 @@
         var photos = entity.photos || [];
         if (!photos.length) { grid.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No photos yet.</span>'; return; }
         grid.innerHTML = photos.map(function(p, i) {
+          var imgSrc = p.url || p.image_url || '';
           return '<div style="position:relative;border-radius:10px;overflow:hidden;background:#1a2332;">' +
-            '<img src="' + escHtml(p.image_url) + '" style="width:100%;height:120px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">' +
+            '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:120px;object-fit:cover;display:block;" onerror="this.style.background=\'#374151\'">' +
             '<div style="padding:6px 8px;font-size:11px;color:var(--text-muted);">' + escHtml(p.caption||'') + '</div>' +
-            '<button onclick="deleteEntPhoto(' + (p.id||'null') + ', \'' + escHtml(p.image_url) + '\')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;">×</button>' +
+            '<button onclick="deleteEntPhoto(\'' + escHtml(p.id||'') + '\')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;">×</button>' +
             '</div>';
         }).join('');
       } catch(err) { grid.innerHTML = '<span style="color:#e74c3c;font-size:13px;">' + escHtml(err.message) + '</span>'; }
     }
 
     async function addEntPhoto() {
-      if (!_currentEntityId) return;
+      if (!_currentEntitySlug) return;
       var urlEl = document.getElementById('ent-photo-url-input');
       var capEl = document.getElementById('ent-photo-caption-input');
-      var url = (urlEl || {}).value || '';
+      var url = (urlEl||{}).value.trim();
       if (!url.startsWith('http')) { toast('Enter a valid photo URL', 'error'); return; }
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
-          method: 'PATCH',
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/photos', {
+          method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photos: { add: [{ image_url: url, caption: (capEl||{}).value || '' }] } })
+          body: JSON.stringify({ url: url, caption: (capEl||{}).value.trim() || null })
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Failed');
         toast('Photo added!', 'success');
@@ -12268,14 +12275,44 @@
       } catch(err) { toast(err.message, 'error'); }
     }
 
-    async function deleteEntPhoto(photoId, imageUrl) {
-      if (!_currentEntityId) return;
+    async function uploadEntPhotos(input) {
+      if (!_currentEntitySlug || !input.files.length) return;
+      var token = getAuthToken();
+      var total = input.files.length; var done = 0;
+      toast('Uploading ' + total + ' photo(s)…', 'info');
+      for (var i = 0; i < input.files.length; i++) {
+        var fd = new FormData();
+        fd.append('image', input.files[i]);
+        fd.append('entity_slug', _currentEntitySlug);
+        try {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: fd
+          });
+          var d = await res.json();
+          if (!res.ok) throw new Error(d.error || 'Upload failed');
+          // save the returned URL as a photo record
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/photos', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: d.url, caption: null })
+          });
+          done++;
+        } catch(e) { toast('Upload error: ' + e.message, 'error'); }
+      }
+      input.value = '';
+      toast(done + ' photo(s) uploaded!', 'success');
+      loadEntPhotos();
+    }
+
+    async function deleteEntPhoto(photoId) {
+      if (!photoId) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
-          method: 'PATCH',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photos: { delete: [{ id: photoId, image_url: imageUrl }] } })
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/photos/' + photoId, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Failed');
         toast('Photo removed', 'success');
