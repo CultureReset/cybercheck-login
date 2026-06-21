@@ -8222,7 +8222,6 @@
 
     async function saveArtist() {
       var token = localStorage.getItem('cc_admin_token');
-      if (!_artistEditorId) { toast('New artist creation coming soon — edit existing artists for now.', 'error'); return; }
       var photoUrl = document.getElementById('artist-photo-url').value.trim();
 
       // Upload photo file if one was selected
@@ -8248,10 +8247,23 @@
       };
       if (photoUrl) payload.image_url = photoUrl;
 
-      var r = await fetch(GCR_ADMIN_API + '/api/admin/artists/' + _artistEditorId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      // Create or update
+      var method = _artistEditorId ? 'PUT' : 'POST';
+      var url = GCR_ADMIN_API + '/api/admin/artists' + (_artistEditorId ? '/' + _artistEditorId : '');
+      var r = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       var d = await r.json();
-      if (d.error) { toast('Error: ' + d.error, 'error'); return; }
-      toast('Artist saved!', 'success');
+      if (d.error || !r.ok) { toast('Error: ' + (d.error || 'Failed'), 'error'); return; }
+
+      // If new artist and photo file selected, upload it now
+      if (!_artistEditorId && _artistPhotoFile && d.id) {
+        var fd = new FormData();
+        fd.append('image', _artistPhotoFile);
+        var ur = await fetch(GCR_ADMIN_API + '/api/admin/artists/' + d.id + '/photo', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+        var ud = await ur.json();
+        if (!ur.ok) toast('Photo upload had issues, but artist was created', 'warning');
+      }
+
+      toast('Artist ' + (method === 'POST' ? 'created' : 'updated') + '!', 'success');
       closeArtistEditor();
       loadArtists(document.getElementById('artist-search').value);
     }
