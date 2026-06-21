@@ -601,6 +601,12 @@
             <button onclick="switchEntTab('pages')"    id="enttab-pages"    style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📍 Pages</button>
             <button onclick="switchEntTab('wavegent')" id="enttab-wavegent" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🎨 Wavegent</button>
             <button onclick="switchEntTab('rawdata')" id="enttab-rawdata" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📥 Raw Data</button>
+            <button onclick="switchEntTab('pricing')" id="enttab-pricing" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">💰 Pricing</button>
+            <button onclick="switchEntTab('schedule')" id="enttab-schedule" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🗓️ Schedule</button>
+            <button onclick="switchEntTab('faqs')" id="enttab-faqs" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">❓ FAQs</button>
+            <button onclick="switchEntTab('team')" id="enttab-team" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">👥 Team</button>
+            <button onclick="switchEntTab('blog')" id="enttab-blog" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📰 Blog</button>
+            <button onclick="switchEntTab('sechours')" id="enttab-sechours" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🕐 Sec. Hours</button>
           </div>
 
           <div style="padding:28px;" id="ent-editor-body">
@@ -827,6 +833,77 @@
               </div>
 
               <div id="raw-data-result" style="margin-top:16px;display:none;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px;"></div>
+            </div>
+
+            <!-- PRICING TAB -->
+            <div id="enttab-pricing-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;">💰 Pricing</h3>
+                <button onclick="openAddPricingItem()" class="btn btn-primary btn-sm">+ Add Price</button>
+              </div>
+              <div id="pricing-items-list" style="display:grid;gap:10px;margin-bottom:24px;"></div>
+
+              <div style="border-top:1px solid var(--card-border);padding-top:20px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                  <h4 style="margin:0;font-size:14px;">What's Included</h4>
+                  <button onclick="openAddIncluded()" class="btn btn-outline btn-sm">+ Add Item</button>
+                </div>
+                <div id="whats-included-list" style="display:grid;gap:8px;"></div>
+              </div>
+
+              <div style="border-top:1px solid var(--card-border);padding-top:20px;margin-top:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                  <h4 style="margin:0;font-size:14px;">Requirements</h4>
+                  <button onclick="openAddRequirement()" class="btn btn-outline btn-sm">+ Add Item</button>
+                </div>
+                <div id="requirements-list" style="display:grid;gap:8px;"></div>
+              </div>
+            </div>
+
+            <!-- SCHEDULE TAB -->
+            <div id="enttab-schedule-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;">🗓️ Activity Schedules</h3>
+                <button onclick="openAddSchedule()" class="btn btn-primary btn-sm">+ Add Schedule</button>
+              </div>
+              <div id="schedules-list" style="display:grid;gap:10px;"></div>
+            </div>
+
+            <!-- FAQS TAB -->
+            <div id="enttab-faqs-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;">❓ FAQs</h3>
+                <button onclick="openAddFaq()" class="btn btn-primary btn-sm">+ Add FAQ</button>
+              </div>
+              <div id="faqs-list" style="display:grid;gap:10px;"></div>
+            </div>
+
+            <!-- TEAM TAB -->
+            <div id="enttab-team-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;">👥 Team Members</h3>
+                <button onclick="openAddTeamMember()" class="btn btn-primary btn-sm">+ Add Member</button>
+              </div>
+              <div id="team-members-list" style="display:grid;gap:10px;"></div>
+            </div>
+
+            <!-- BLOG TAB -->
+            <div id="enttab-blog-content" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;">📰 Blog Posts</h3>
+                <button onclick="openAddBlogPost()" class="btn btn-primary btn-sm">+ Add Post</button>
+              </div>
+              <div id="blog-posts-list" style="display:grid;gap:10px;"></div>
+            </div>
+
+            <!-- SECONDARY HOURS TAB -->
+            <div id="enttab-sechours-content" style="display:none;">
+              <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Additional hour blocks — e.g. Happy Hour, Kitchen Hours, Bar Hours, Seasonal Hours.</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:16px;">🕐 Secondary Hours</h3>
+                <button onclick="openAddSecHours()" class="btn btn-primary btn-sm">+ Add Hours Block</button>
+              </div>
+              <div id="sec-hours-list" style="display:grid;gap:10px;"></div>
             </div>
 
           </div>
@@ -10588,8 +10665,17 @@
     async function saveBizFleet() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/fleet', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ items: _bdFleetItems }) });
-        if (!res.ok) throw new Error('Save failed');
+        // Save fleet as entity_sections with section_type 'fleet'
+        var existing = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/sections', { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var fleetSec = (existing || []).find(function(s){ return s.section_type === 'fleet'; });
+        var secId;
+        if (!fleetSec) {
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_type: 'fleet', section_name: 'Fleet', sort_order: 10 }) });
+          fleetSec = await r.json(); secId = fleetSec.id;
+        } else { secId = fleetSec.id; }
+        for (var item of _bdFleetItems) {
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/section-items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_id: secId, item_name: item.name, description: item.description, price_from: item.price, entity_slug: _bdSlug }) });
+        }
         toast('Fleet saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
@@ -10619,8 +10705,9 @@
     async function saveBizAddons() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/addons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ items: _bdAddonItems }) });
-        if (!res.ok) throw new Error('Save failed');
+        for (var item of _bdAddonItems) {
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/sides', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: item.name, description: item.description, price: item.price, is_active: true }) });
+        }
         toast('Add-ons saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
@@ -10636,14 +10723,14 @@
     }
     async function approveBizReview(id) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/reviews/' + id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ active: true }) });
-      if (_bdData && _bdData.reviews) { var r = _bdData.reviews.find(function(x){ return x.id === id; }); if (r) r.active = true; }
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/reviews/' + id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ approved: true }) });
+      if (_bdData && _bdData.reviews) { var r = _bdData.reviews.find(function(x){ return x.id === id; }); if (r) r.approved = true; }
       renderBizDashReviews(); toast('Approved!', 'success');
     }
     async function deleteBizReview(id) {
       if (!confirm('Delete review?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/reviews/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/reviews/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (_bdData && _bdData.reviews) _bdData.reviews = _bdData.reviews.filter(function(r){ return r.id !== id; });
       renderBizDashReviews(); toast('Deleted', 'success');
     }
@@ -10687,8 +10774,17 @@
     async function saveBizSchedule() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/schedule', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ schedules: _bdScheduleSlots }) });
-        if (!res.ok) throw new Error('Save failed');
+        // Delete all existing schedules for this entity then reinsert
+        var existing = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/schedules', { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        for (var ex of (existing || [])) {
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/schedules/' + ex.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        }
+        for (var i = 0; i < _bdScheduleSlots.length; i++) {
+          var s = _bdScheduleSlots[i];
+          var tiers = s.tiers || [];
+          var priceFrom = tiers.length ? parseFloat(tiers[0].price) || null : null;
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/schedules', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: s.name || s.label, time_start: s.time || null, duration: s.duration || null, days_of_week: s.days || null, notes: tiers.length > 1 ? tiers.map(function(t){ return t.name + (t.price ? ': $' + t.price : ''); }).join(', ') : null, sort_order: i }) });
+        }
         toast('Schedule saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
@@ -10698,7 +10794,7 @@
       var token = getAuthToken();
       var arr = document.getElementById('bd-highlights-text').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/highlights', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ highlights: arr }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: { highlights: arr } }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Highlights saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -10707,18 +10803,22 @@
       var token = getAuthToken();
       var arr = document.getElementById('bd-restrictions-text').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/highlights', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ restrictions: arr }) });
-        if (!res.ok) throw new Error('Save failed');
-        toast('Guest info saved!', 'success');
+        // Delete existing requirements then reinsert
+        var existing = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/requirements', { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        for (var ex of (existing || [])) { await fetch(GCR_ADMIN_API + '/api/admin/gcr/requirements/' + ex.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); }
+        for (var i = 0; i < arr.length; i++) { await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/requirements', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ requirement_text: arr[i], sort_order: i, is_active: true }) }); }
+        toast('Requirements saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
     async function saveBizWhatToBring() {
       var token = getAuthToken();
       var arr = document.getElementById('bd-whatbring-text').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/highlights', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ what_to_bring: arr }) });
-        if (!res.ok) throw new Error('Save failed');
-        toast('What to bring saved!', 'success');
+        // Delete existing whats_included then reinsert
+        var existing = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/whats-included', { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        for (var ex of (existing || [])) { await fetch(GCR_ADMIN_API + '/api/admin/gcr/whats-included/' + ex.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); }
+        for (var i = 0; i < arr.length; i++) { await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/whats-included', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: arr[i], sort_order: i, is_active: true }) }); }
+        toast('What\'s included saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
 
@@ -10746,8 +10846,13 @@
     async function saveBizFAQ() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: { faq: _bdFaqItems } }) });
-        if (!res.ok) throw new Error('Save failed');
+        // Delete existing FAQs then reinsert
+        var existing = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/faqs', { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        for (var ex of (existing || [])) { await fetch(GCR_ADMIN_API + '/api/admin/gcr/faqs/' + ex.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); }
+        for (var i = 0; i < _bdFaqItems.length; i++) {
+          var f = _bdFaqItems[i];
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/faqs', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ question: f.q, answer: f.a, sort_order: i, is_active: true }) });
+        }
         toast('FAQ saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
@@ -10766,7 +10871,7 @@
       if (!url) return toast('Enter a URL', 'error');
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url, caption: caption }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url, caption: caption }) });
         if (!res.ok) throw new Error('Failed');
         document.getElementById('bd-media-url').value = ''; document.getElementById('bd-media-caption').value = '';
         var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
@@ -10776,7 +10881,7 @@
     async function deleteBizPhoto(id) {
       if (!confirm('Delete photo?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (_bdData && _bdData.media) _bdData.media = _bdData.media.filter(function(m){ return m.id !== id; });
       renderBizMedia(); toast('Deleted', 'success');
     }
@@ -10797,7 +10902,7 @@
           } else {
             dataUrl = await new Promise(function(resolve){ var r = new FileReader(); r.onload = function(e){ resolve(e.target.result); }; r.readAsDataURL(f); });
           }
-          var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: dataUrl, caption: f.name }) });
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: dataUrl, caption: f.name }) });
           if (res.ok) uploaded++;
         } catch(e) { console.error(e); }
       }
@@ -10810,9 +10915,9 @@
     // ── GCR Settings ──
     async function saveBizDashGCRSettings() {
       var token = getAuthToken();
-      var b = { gcr_listed: document.getElementById('bd-gcr-listed').checked, featured: document.getElementById('bd-gcr-featured').checked, type: document.getElementById('bd-gcr-type').value };
+      var entity = { is_active: document.getElementById('bd-gcr-listed').checked, featured: document.getElementById('bd-gcr-featured').checked, entity_type: document.getElementById('bd-gcr-type').value };
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error('Save failed');
         toast('GCR settings saved!', 'success');
         clearBdDirty();
@@ -10822,9 +10927,15 @@
     // ── SEO ──
     async function saveBizDashSEO() {
       var token = getAuthToken();
-      var c = { seo_title: document.getElementById('bd-seo-title').value, seo_description: document.getElementById('bd-seo-desc').value, seo_keywords: document.getElementById('bd-seo-keywords').value };
+      var entity = {
+        seo_title: document.getElementById('bd-seo-title') ? document.getElementById('bd-seo-title').value : undefined,
+        seo_description: document.getElementById('bd-seo-desc') ? document.getElementById('bd-seo-desc').value : undefined,
+        seo_keywords: document.getElementById('bd-seo-keywords') ? document.getElementById('bd-seo-keywords').value : undefined
+      };
+      // Remove undefined keys
+      Object.keys(entity).forEach(function(k){ if (entity[k] === undefined) delete entity[k]; });
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ content: c }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error('Save failed');
         toast('SEO saved!', 'success');
         clearBdDirty();
@@ -10834,9 +10945,9 @@
     // ── Social ──
     async function saveBizDashSocial() {
       var token = getAuthToken();
-      var b = { instagram: document.getElementById('bd-social-instagram').value, facebook: document.getElementById('bd-social-facebook').value, tiktok: document.getElementById('bd-social-tiktok').value };
+      var entity = { social_instagram: document.getElementById('bd-social-instagram').value, social_facebook: document.getElementById('bd-social-facebook').value, social_tiktok: document.getElementById('bd-social-tiktok').value };
       try {
-        var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/full', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ business: b }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSlug, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Social links saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -11342,7 +11453,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','hours','photos','tags','features','content','sections','pages','wavegent'].forEach(function(t) {
+      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -11354,12 +11465,260 @@
           con.style.display = 'none';
         }
       });
-      if (tab === 'pages'  && _currentEntityId) loadEntPages();
+      if (tab === 'pages'    && _currentEntityId) loadEntPages();
       if (tab === 'wavegent' && _currentEntityId) loadWavegentTab();
-      if (tab === 'photos' && _currentEntityId) loadEntPhotos();
+      if (tab === 'photos'   && _currentEntityId) loadEntPhotos();
+      if (tab === 'pricing'  && _currentEntitySlug) loadPricingTab();
+      if (tab === 'schedule' && _currentEntitySlug) loadScheduleTab();
+      if (tab === 'faqs'     && _currentEntitySlug) loadFaqsTab();
+      if (tab === 'team'     && _currentEntitySlug) loadTeamTab();
+      if (tab === 'blog'     && _currentEntitySlug) loadBlogTab();
+      if (tab === 'sechours' && _currentEntitySlug) loadSecHoursTab();
     }
 
     var loadEntityForEdit = function(entityId) { openEntEditor(entityId); };
+
+    // ── GCR_ADMIN_API base for new tabs ───────────────
+    var GCR_API = window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app';
+    function gcrAuthHeaders() {
+      return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.cc_admin_token || '') };
+    }
+    function renderList(containerId, items, renderFn, emptyMsg) {
+      var el = document.getElementById(containerId);
+      if (!el) return;
+      if (!items || !items.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">' + (emptyMsg || 'None yet.') + '</p>'; return; }
+      el.innerHTML = items.map(renderFn).join('');
+    }
+
+    // ── PRICING TAB ───────────────────────────────────
+    async function loadPricingTab() {
+      var slug = _currentEntitySlug;
+      try {
+        var [pRes, wRes, rRes] = await Promise.all([
+          fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/pricing-items', {headers:gcrAuthHeaders()}),
+          fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/whats-included', {headers:gcrAuthHeaders()}),
+          fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/requirements',   {headers:gcrAuthHeaders()}),
+        ]);
+        var pData = pRes.ok ? await pRes.json() : {pricing_items:[]};
+        var wData = wRes.ok ? await wRes.json() : {whats_included:[]};
+        var rData = rRes.ok ? await rRes.json() : {requirements:[]};
+        renderList('pricing-items-list', pData.pricing_items || pData, function(item) {
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<div><div style="font-weight:600;">' + (item.label||'') + '</div><div style="font-size:12px;color:var(--text-muted);">' + (item.description||'') + '</div></div>' +
+            '<div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;color:var(--primary);">$' + (item.price||0) + '</span>' +
+            '<button onclick="deletePricingItem(' + item.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">🗑</button></div></div>';
+        }, 'No pricing items yet.');
+        renderList('whats-included-list', wData.whats_included || wData, function(item) {
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<span>✅ ' + (item.item||item.text||'') + '</span>' +
+            '<button onclick="deleteIncluded(' + item.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;">🗑</button></div>';
+        }, 'Nothing added yet.');
+        renderList('requirements-list', rData.requirements || rData, function(item) {
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<span>⚠️ ' + (item.item||item.text||item.requirement||'') + '</span>' +
+            '<button onclick="deleteRequirement(' + item.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;">🗑</button></div>';
+        }, 'No requirements added.');
+      } catch(e) { console.error('loadPricingTab', e); }
+    }
+    function openAddPricingItem() {
+      var label = prompt('Price label (e.g. "Adult", "Child", "Per Person"):'); if (!label) return;
+      var price = prompt('Price (number only):'); if (!price) return;
+      var desc  = prompt('Description (optional):') || '';
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/pricing-items', {
+        method:'POST', headers:gcrAuthHeaders(),
+        body: JSON.stringify({label:label, price:parseFloat(price), description:desc})
+      }).then(function(r){ if(r.ok) loadPricingTab(); else alert('Failed to add.'); });
+    }
+    function deletePricingItem(id) {
+      if (!confirm('Delete this price?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/pricing-items/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadPricingTab(); });
+    }
+    function openAddIncluded() {
+      var text = prompt('What\'s included item:'); if (!text) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/whats-included', {
+        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify({item:text})
+      }).then(function(r){ if(r.ok) loadPricingTab(); else alert('Failed to add.'); });
+    }
+    function deleteIncluded(id) {
+      if (!confirm('Delete this item?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/whats-included/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadPricingTab(); });
+    }
+    function openAddRequirement() {
+      var text = prompt('Requirement (e.g. "Must be 18+", "Bring sunscreen"):'); if (!text) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/requirements', {
+        method:'POST', headers:gcrAuthHeaders(), body: JSON.stringify({item:text})
+      }).then(function(r){ if(r.ok) loadPricingTab(); else alert('Failed to add.'); });
+    }
+    function deleteRequirement(id) {
+      if (!confirm('Delete this requirement?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/requirements/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadPricingTab(); });
+    }
+
+    // ── SCHEDULE TAB ──────────────────────────────────
+    async function loadScheduleTab() {
+      var slug = _currentEntitySlug;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/schedules', {headers:gcrAuthHeaders()});
+        var data = res.ok ? await res.json() : {schedules:[]};
+        renderList('schedules-list', data.schedules || data, function(s) {
+          var days = Array.isArray(s.days_of_week) ? s.days_of_week.join(', ') : (s.days_of_week||'');
+          return '<div style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div><div style="font-weight:600;">' + (s.title||s.name||'Schedule') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);">' + (s.start_time||'') + (s.end_time?' – '+s.end_time:'') + (days?' · '+days:'') + '</div>' +
+            (s.description?'<div style="font-size:13px;margin-top:4px;">'+s.description+'</div>':'') + '</div>' +
+            '<button onclick="deleteSchedule(' + s.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">🗑</button></div></div>';
+        }, 'No schedules yet.');
+      } catch(e) { console.error('loadScheduleTab', e); }
+    }
+    function openAddSchedule() {
+      var title = prompt('Schedule title (e.g. "Morning Tour", "Sunset Cruise"):'); if (!title) return;
+      var start = prompt('Start time (e.g. 9:00 AM):') || '';
+      var end   = prompt('End time (e.g. 11:00 AM):') || '';
+      var days  = prompt('Days (e.g. Mon,Wed,Fri or leave blank for daily):') || '';
+      var desc  = prompt('Description (optional):') || '';
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/schedules', {
+        method:'POST', headers:gcrAuthHeaders(),
+        body: JSON.stringify({title:title, start_time:start, end_time:end, days_of_week:days?days.split(',').map(function(d){return d.trim();}):[], description:desc})
+      }).then(function(r){ if(r.ok) loadScheduleTab(); else alert('Failed to add.'); });
+    }
+    function deleteSchedule(id) {
+      if (!confirm('Delete this schedule?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/schedules/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadScheduleTab(); });
+    }
+
+    // ── FAQS TAB ─────────────────────────────────────
+    var _faqItems = [];
+    async function loadFaqsTab() {
+      var slug = _currentEntitySlug;
+      try {
+        var res = await fetch(GCR_API + '/api/faqs/' + encodeURIComponent(slug));
+        var data = res.ok ? await res.json() : {faqs:[]};
+        _faqItems = data.faqs || data || [];
+        renderList('faqs-list', _faqItems, function(f) {
+          return '<div style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;"><div style="font-weight:600;margin-bottom:4px;">' + (f.question||'') + '</div>' +
+            '<div style="font-size:13px;color:var(--text-muted);">' + (f.answer||'') + '</div>' +
+            (f.category?'<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Category: '+f.category+'</div>':'') + '</div>' +
+            '<button onclick="deleteFaq(' + f.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;margin-left:10px;">🗑</button></div></div>';
+        }, 'No FAQs yet.');
+      } catch(e) { console.error('loadFaqsTab', e); }
+    }
+    function openAddFaq() {
+      var question = prompt('Question:'); if (!question) return;
+      var answer   = prompt('Answer:'); if (!answer) return;
+      var category = prompt('Category (optional — e.g. cancellation, refund, accessibility, general):') || 'general';
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/faqs', {
+        method:'POST', headers:gcrAuthHeaders(),
+        body: JSON.stringify({question:question, answer:answer, category:category})
+      }).then(function(r){ if(r.ok) loadFaqsTab(); else alert('Failed to add.'); });
+    }
+    function deleteFaq(id) {
+      if (!confirm('Delete this FAQ?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/faqs/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadFaqsTab(); });
+    }
+
+    // ── TEAM TAB ─────────────────────────────────────
+    async function loadTeamTab() {
+      var slug = _currentEntitySlug;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/team', {headers:gcrAuthHeaders()});
+        var data = res.ok ? await res.json() : {team:[]};
+        renderList('team-members-list', data.team || data, function(m) {
+          return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            (m.photo_url?'<img src="'+m.photo_url+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">':'<div style="width:48px;height:48px;border-radius:50%;background:var(--card-border);display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>') +
+            '<div style="flex:1;"><div style="font-weight:600;">' + (m.name||'') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);">' + (m.title||m.role||'') + '</div>' +
+            (m.bio?'<div style="font-size:13px;margin-top:4px;">'+m.bio+'</div>':'') + '</div>' +
+            '<button onclick="deleteTeamMember(' + m.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">🗑</button></div>';
+        }, 'No team members yet.');
+      } catch(e) { console.error('loadTeamTab', e); }
+    }
+    function openAddTeamMember() {
+      var name  = prompt('Name:'); if (!name) return;
+      var title = prompt('Title / Role (e.g. Captain, Guide, Chef):') || '';
+      var bio   = prompt('Short bio (optional):') || '';
+      var photo = prompt('Photo URL (optional):') || '';
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/team', {
+        method:'POST', headers:gcrAuthHeaders(),
+        body: JSON.stringify({name:name, title:title, bio:bio, photo_url:photo||null})
+      }).then(function(r){ if(r.ok) loadTeamTab(); else alert('Failed to add.'); });
+    }
+    function deleteTeamMember(id) {
+      if (!confirm('Remove this team member?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/team/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadTeamTab(); });
+    }
+
+    // ── BLOG TAB ─────────────────────────────────────
+    async function loadBlogTab() {
+      var slug = _currentEntitySlug;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/blog', {headers:gcrAuthHeaders()});
+        var data = res.ok ? await res.json() : {posts:[]};
+        renderList('blog-posts-list', data.posts || data, function(p) {
+          var date = p.published_at ? new Date(p.published_at).toLocaleDateString() : '';
+          return '<div style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;"><div style="font-weight:600;">' + (p.title||'') + '</div>' +
+            (date?'<div style="font-size:12px;color:var(--text-muted);">'+date+'</div>':'') +
+            (p.excerpt?'<div style="font-size:13px;margin-top:4px;color:var(--text-muted);">'+p.excerpt+'</div>':'') + '</div>' +
+            '<button onclick="deleteBlogPost(' + p.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;margin-left:10px;">🗑</button></div></div>';
+        }, 'No blog posts yet.');
+      } catch(e) { console.error('loadBlogTab', e); }
+    }
+    function openAddBlogPost() {
+      var title   = prompt('Post title:'); if (!title) return;
+      var excerpt = prompt('Short excerpt / summary:') || '';
+      var body    = prompt('Full post body (paste text):') || '';
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/blog', {
+        method:'POST', headers:gcrAuthHeaders(),
+        body: JSON.stringify({title:title, excerpt:excerpt, body:body, published_at:new Date().toISOString()})
+      }).then(function(r){ if(r.ok) loadBlogTab(); else alert('Failed to add.'); });
+    }
+    function deleteBlogPost(id) {
+      if (!confirm('Delete this post?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/blog/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadBlogTab(); });
+    }
+
+    // ── SECONDARY HOURS TAB ───────────────────────────
+    async function loadSecHoursTab() {
+      var slug = _currentEntitySlug;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/secondary-hours', {headers:gcrAuthHeaders()});
+        var data = res.ok ? await res.json() : {secondary_hours:[]};
+        renderList('sec-hours-list', data.secondary_hours || data, function(h) {
+          var days = Array.isArray(h.days_of_week) ? h.days_of_week.join(', ') : (h.days_of_week||'All days');
+          return '<div style="padding:12px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<div><div style="font-weight:600;">' + (h.label||h.name||'Hours Block') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);">' + (h.opens_at||h.start_time||'') + ' – ' + (h.closes_at||h.end_time||'') + ' · ' + days + '</div></div>' +
+            '<button onclick="deleteSecHours(' + h.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">🗑</button></div></div>';
+        }, 'No secondary hours added.');
+      } catch(e) { console.error('loadSecHoursTab', e); }
+    }
+    function openAddSecHours() {
+      var label = prompt('Label (e.g. "Kitchen Hours", "Bar Hours", "Happy Hour"):'); if (!label) return;
+      var open  = prompt('Opens at (e.g. 11:00):') || '';
+      var close = prompt('Closes at (e.g. 22:00):') || '';
+      var days  = prompt('Days (e.g. Mon,Tue,Wed or leave blank for all days):') || '';
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/secondary-hours', {
+        method:'POST', headers:gcrAuthHeaders(),
+        body: JSON.stringify({label:label, opens_at:open, closes_at:close, days_of_week:days?days.split(',').map(function(d){return d.trim();}):[]})
+      }).then(function(r){ if(r.ok) loadSecHoursTab(); else alert('Failed to add.'); });
+    }
+    function deleteSecHours(id) {
+      if (!confirm('Delete this hours block?')) return;
+      fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/secondary-hours/' + id, {method:'DELETE',headers:gcrAuthHeaders()})
+        .then(function(r){ if(r.ok) loadSecHoursTab(); });
+    }
 
     // ── Save entity info ──────────────────────────────
 
