@@ -11596,7 +11596,7 @@
     async function loadFaqsTab() {
       var slug = _currentEntitySlug;
       try {
-        var res = await fetch(GCR_API + '/api/faqs/' + encodeURIComponent(slug));
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/faqs', {headers:gcrAuthHeaders()});
         var data = res.ok ? await res.json() : {faqs:[]};
         _faqItems = data.faqs || data || [];
         renderList('faqs-list', _faqItems, function(f) {
