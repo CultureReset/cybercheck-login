@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GCR Entity Manager — CyberCheck Admin</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh;color:#1a2433;}
+
+    /* ── Top bar ── */
+    .topbar{background:#0b2d42;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+    .topbar h1{font-size:1.1rem;font-weight:900;letter-spacing:-.02em;}
+    .topbar .badge{background:#0b7a75;padding:4px 12px;border-radius:999px;font-size:.78rem;font-weight:800;}
+    .topbar-right{margin-left:auto;display:flex;gap:10px;align-items:center;}
+    .back-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 14px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;}
+
+    /* ── Controls bar ── */
+    .controls{background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:53px;z-index:99;}
+    .search-wrap{display:flex;align-items:center;gap:8px;background:#f5f7fb;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;flex:1;min-width:200px;}
+    .search-wrap input{border:none;background:none;outline:none;font-size:.9rem;width:100%;font-family:inherit;}
+    select.filter{border:1.5px solid #e2e8f0;background:#f5f7fb;border-radius:10px;padding:8px 12px;font-size:.82rem;font-weight:700;color:#1a2433;cursor:pointer;font-family:inherit;}
+    .btn{border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s;}
+    .btn-teal{background:#0b7a75;color:#fff;}
+    .btn-teal:hover{background:#065f5b;}
+    .btn-navy{background:#0b2d42;color:#fff;}
+    .btn-navy:hover{background:#071e2d;}
+    .btn-gold{background:#f5b731;color:#1a1a1a;}
+    .stat-bar{display:flex;gap:16px;font-size:.82rem;font-weight:700;color:#64748b;}
+    .stat-bar span{display:flex;align-items:center;gap:4px;}
+    .dot{width:8px;height:8px;border-radius:50%;}
+    .dot-green{background:#22c55e;}.dot-red{background:#ef4444;}.dot-gray{background:#94a3b8;}
+
+    /* ── Table ── */
+    .table-wrap{overflow-x:auto;padding:16px 20px;}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.07);}
+    th{background:#f5f7fb;padding:11px 14px;text-align:left;font-size:.75rem;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;border-bottom:1px solid #e2e8f0;}
+    td{padding:11px 14px;font-size:.84rem;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+    tr:hover td{background:#f8faff;}
+    tr:last-child td{border-bottom:none;}
+    .thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#e2e8f0;flex-shrink:0;}
+    .thumb-placeholder{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#e8f7f5,#f0f4f8);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+    .entity-name{font-weight:800;color:#1a2433;max-width:200px;}
+    .entity-slug{font-size:.72rem;color:#94a3b8;font-family:monospace;margin-top:2px;}
+    .type-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:800;white-space:nowrap;}
+    .tb-restaurant{background:#fff7ed;color:#92400e;}
+    .tb-activity{background:#f0fdf4;color:#14532d;}
+    .tb-service{background:#f0f9ff;color:#0c4a6e;}
+    .tb-shopping{background:#fdf4ff;color:#6b21a8;}
+    .tb-hotel{background:#fefce8;color:#713f12;}
+    .tb-park{background:#f0fdf4;color:#166534;}
+    .tb-condo{background:#fef3c7;color:#92400e;}
+    .tb-coffee{background:#fff7ed;color:#9a3412;}
+    .tb-other{background:#f8fafc;color:#475569;}
+    .active-toggle{display:flex;align-items:center;gap:8px;}
+    .toggle{width:40px;height:22px;border-radius:999px;border:none;cursor:pointer;position:relative;transition:.2s;flex-shrink:0;}
+    .toggle.on{background:#22c55e;}
+    .toggle.off{background:#cbd5e1;}
+    .toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+    .toggle.on::after{left:21px;}
+    .toggle.off::after{left:3px;}
+    .rating{font-weight:800;color:#1a2433;}
+    .rating-sub{font-size:.72rem;color:#94a3b8;font-weight:600;}
+    .action-btns{display:flex;gap:6px;}
+    .edit-btn{background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;padding:5px 12px;border-radius:7px;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;font-family:inherit;}
+    .edit-btn:hover{background:#e0f2fe;}
+    .view-btn{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:5px 10px;border-radius:7px;font-size:.78rem;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:none;}
+    .no-img-flag{color:#f59e0b;font-size:.72rem;font-weight:800;}
+    .no-desc-flag{color:#94a3b8;font-size:.72rem;}
+
+    /* ── Empty / Loading ── */
+    .state-msg{text-align:center;padding:60px 20px;color:#94a3b8;font-size:1rem;}
+    .spinner-wrap{display:flex;align-items:center;justify-content:center;padding:60px;}
+    .spinner{width:36px;height:36px;border:3px solid #e8f7f5;border-top-color:#0b7a75;border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ── Edit Drawer ── */
+    .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;}
+    .drawer-overlay.open{display:block;}
+    .drawer{position:fixed;right:0;top:0;bottom:0;width:min(680px,100vw);background:#fff;z-index:201;overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .25s;}
+    .drawer.open{transform:translateX(0);}
+    .drawer-header{background:#0b2d42;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+    .drawer-title{font-size:1rem;font-weight:900;flex:1;}
+    .drawer-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:8px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .drawer-tabs{display:flex;overflow-x:auto;scrollbar-width:none;background:#f5f7fb;border-bottom:1px solid #e2e8f0;}
+    .drawer-tabs::-webkit-scrollbar{display:none;}
+    .dtab{padding:11px 16px;font-size:.82rem;font-weight:800;color:#64748b;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;background:none;border-left:none;border-right:none;border-top:none;font-family:inherit;}
+    .dtab.active{color:#0b7a75;border-bottom-color:#0b7a75;}
+    .drawer-body{padding:20px;}
+    .dpanel{display:none;}.dpanel.active{display:block;}
+    .dfield{margin-bottom:16px;}
+    .dfield label{display:block;font-size:.78rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+    .dfield input,.dfield textarea,.dfield select{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:.88rem;font-family:inherit;color:#1a2433;background:#fff;transition:.15s;}
+    .dfield input:focus,.dfield textarea:focus,.dfield select:focus{border-color:#0b7a75;outline:none;box-shadow:0 0 0 3px rgba(11,122,117,.1);}
+    .dfield textarea{min-height:100px;resize:vertical;line-height:1.5;}
+    .drow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .drow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    .dtoggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f1f5f9;}
+    .dtoggle-label{font-size:.88rem;font-weight:700;color:#1a2433;}
+    .dtoggle-sub{font-size:.75rem;color:#94a3b8;margin-top:2px;}
+    .section-head{font-size:.85rem;font-weight:900;color:#0b2d42;margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid #e8f7f5;display:flex;align-items:center;gap:6px;}
+    .save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #e2e8f0;padding:14px 20px;display:flex;gap:10px;justify-content:flex-end;}
+    .save-btn{background:#0b7a75;color:#fff;border:none;border-radius:10px;padding:10px 28px;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;}
+    .save-btn:hover{background:#065f5b;}
+    .cancel-btn{background:#f5f7fb;color:#64748b;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 20px;font-size:.9rem;font-weight:800;cursor:pointer;font-family:inherit;}
+    .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+    .photo-item{position:relative;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:#f1f5f9;}
+    .photo-item img{width:100%;height:100%;object-fit:cover;}
+    .photo-del{position:absolute;top:4px;right:4px;background:rgba(239,68,68,.9);color:#fff;border:none;border-radius:6px;width:24px;height:24px;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .add-photo-row{display:flex;gap:8px;margin-top:8px;}
+    .add-photo-row input{flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:.84rem;font-family:inherit;}
+    .add-photo-row button{background:#0b2d42;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:.82rem;font-weight:800;cursor:pointer;white-space:nowrap;font-family:inherit;}
+    .hours-grid{display:grid;grid-template-columns:90px 1fr 1fr 80px;gap:8px;align-items:center;margin-bottom:8px;}
+    .hours-grid .day-label{font-size:.82rem;font-weight:800;color:#64748b;}
+    .hours-input{border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.82rem;font-family:inherit;width:100%;}
+    .closed-cb{accent-color:#0b7a75;}
+    .event-list,.tag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+    .event-item,.tag-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+    .item-del{background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;}
+    .add-event-form,.add-tag-form{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:14px;margin-top:8px;}
+    .add-event-form .drow,.add-tag-form .drow{gap:8px;}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2433;color:#fff;padding:12px 24px;border-radius:12px;font-size:.88rem;font-weight:700;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;}
+    .toast.show{opacity:1;}
+    .parking-fields{background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:14px;margin-bottom:16px;}
+    .parking-fields .section-head{color:#92400e;border-bottom-color:#fed7aa;}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>🌊</div>
+  <h1>GCR Entity Manager</h1>
+  <span class="badge">Admin</span>
+  <div class="topbar-right">
+    <a href="/admin-dashboard.html" class="back-btn">← Dashboard</a>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span>🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by name, slug, city..." oninput="applyFilters()">
+  </div>
+  <select class="filter" id="typeFilter" onchange="applyFilters()">
+    <option value="">All Types</option>
+    <option value="restaurant">Restaurants</option>
+    <option value="activity">Activities</option>
+    <option value="service">Services</option>
+    <option value="shopping">Shopping</option>
+    <option value="hotel">Hotels</option>
+    <option value="park">Parks</option>
+    <option value="condo">Condos</option>
+    <option value="coffee">Coffee</option>
+    <option value="vacation-rental">Vacation Rentals</option>
+  </select>
+  <select class="filter" id="activeFilter" onchange="applyFilters()">
+    <option value="">All Status</option>
+    <option value="active">Active Only</option>
+    <option value="inactive">Inactive Only</option>
+  </select>
+  <select class="filter" id="imgFilter" onchange="applyFilters()">
+    <option value="">All Images</option>
+    <option value="no-img">Missing Image</option>
+    <option value="has-img">Has Image</option>
+  </select>
+  <button class="btn btn-teal" onclick="openNewEntityDrawer()">+ New Entity</button>
+  <div class="stat-bar">
+    <span><span class="dot dot-green"></span><span id="statActive">-</span> active</span>
+    <span><span class="dot dot-red"></span><span id="statInactive">-</span> inactive</span>
+    <span><span class="dot dot-gray"></span><span id="statShowing">-</span> shown</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div class="spinner-wrap" id="loadingState"><div class="spinner"></div></div>
+  <div class="state-msg" id="emptyState" style="display:none">No entities match your filters.</div>
+  <table id="entityTable" style="display:none">
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Name / Slug</th>
+        <th>Type</th>
+        <th>City</th>
+        <th>Rating</th>
+        <th>Active</th>
+        <th>Flags</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- Edit Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="editDrawer">
+  <div class="drawer-header">
+    <span>✏️</span>
+    <div class="drawer-title" id="drawerTitle">Edit Entity</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-tabs">
+    <button class="dtab active" onclick="showTab('info')">📋 Info</button>
+    <button class="dtab" onclick="showTab('status')">🔘 Status</button>
+    <button class="dtab" onclick="showTab('photos')">📸 Photos</button>
+    <button class="dtab" onclick="showTab('hours')">🕐 Hours</button>
+    <button class="dtab" onclick="showTab('content')">📝 Content</button>
+    <button class="dtab" onclick="showTab('events')">🎤 Events</button>
+    <button class="dtab" onclick="showTab('parking')">🅿️ Parking</button>
+    <button class="dtab" onclick="showTab('links')">🔗 Links</button>
+    <button class="dtab" onclick="showTab('social')">📱 Social</button>
+  </div>
+  <div class="drawer-body">
+
+    <!-- TAB: Info -->
+    <div class="dpanel active" id="panel-info">
+      <div class="drow">
+        <div class="dfield"><label>Business Name *</label><input type="text" id="f-name"></div>
+        <div class="dfield"><label>Slug</label><input type="text" id="f-slug" placeholder="auto-from-name"></div>
+      </div>
+      <div class="dfield"><label>Subtitle / Tagline</label><input type="text" id="f-subtitle"></div>
+      <div class="dfield"><label>Description</label><textarea id="f-description" rows="4"></textarea></div>
+      <div class="drow">
+        <div class="dfield"><label>Entity Type</label>
+          <select id="f-entity_type">
+            <option value="restaurant">Restaurant</option>
+            <option value="activity">Activity</option>
+            <option value="service">Service</option>
+            <option value="shopping">Shopping</option>
+            <option value="hotel">Hotel</option>
+            <option value="park">Park</option>
+            <option value="condo">Condo</option>
+            <option value="coffee">Coffee</option>
+            <option value="vacation-rental">Vacation Rental</option>
+          </select>
+        </div>
+        <div class="dfield"><label>Subtype</label><input type="text" id="f-entity_subtype" placeholder="e.g. seafood_restaurant, marina"></div>
+      </div>
+      <div class="drow">
+        <div class="dfield"><label>Icon (emoji)</label><input type="text" id="f-icon" placeholder="🍽️"></div>
+        <div class="dfield"><label>Price Range</label>
+          <select id="f-price_range">
+            <option value="">Unknown</option>
+            <option value="$">$ — Budget</option>
+            <option value="$$">$$ — Moderate</option>
+            <option value="$$$">$$$ — Upscale</option>
+            <option value="$$$$">$$$$ — Fine Dining</option>
+          </select>
+        </div>
+      </div>
+      <div class="drow3">
+        <div class="dfield"><label>Rating</label><input type="number" id="f-rating" min="0" max="5" step="0.1"></div>
+        <div class="dfield"><label>Review Count</label><input type="number" id="f-review_count" min="0"></div>
+        <div class="dfield"><label>Phone</label><input type="tel" id="f-phone"></div>
+      </div>
+      <div class="section-head">📍 Location</div>
+      <div class="dfield"><label>Address</label><input type="text" id="f-address_line_1"></div>
+      <div class="drow3">
+        <div class="dfield"><label>City</label><input type="text" id="f-city"></div>
+        <div class="dfield"><label>State</label><input type="text" id="f-state" value="AL"></div>
+        <div class="dfield"><label>Zip</label><input type="text" id="f-zip"></div>
+      </div>
+      <div class="drow">
+        <div class="dfield"><label>Latitude</label><input type="number" id="f-latitude" step="any"></div>
+        <div class="dfield"><label>Longitude</label><input type="number" id="f-longitude" step="any"></div>
+      </div>
+    </div>
+
+    <!-- TAB: Status -->
+    <div class="dpanel" id="panel-status">
+      <div class="section-head">🔘 Visibility & Display</div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Active on GCR</div><div class="dtoggle-sub">Shows up in all listings and search</div></div>
+        <button class="toggle" id="t-is_active" onclick="toggleField('is_active')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Featured</div><div class="dtoggle-sub">Appears in featured section on landing page</div></div>
+        <button class="toggle" id="t-featured" onclick="toggleField('featured')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Sponsored</div><div class="dtoggle-sub">Boosted placement in listings</div></div>
+        <button class="toggle" id="t-is_sponsored" onclick="toggleField('is_sponsored')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Waterfront</div><div class="dtoggle-sub">Shows waterfront badge</div></div>
+        <button class="toggle" id="t-waterfront" onclick="toggleField('waterfront')"></button>
+      </div>
+      <div class="section-head">🎸 Features</div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Live Music</div></div>
+        <button class="toggle" id="t-live_music" onclick="toggleField('live_music')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Outdoor Seating</div></div>
+        <button class="toggle" id="t-outdoor_seating" onclick="toggleField('outdoor_seating')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Serves Beer</div></div>
+        <button class="toggle" id="t-serves_beer" onclick="toggleField('serves_beer')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Serves Cocktails</div></div>
+        <button class="toggle" id="t-serves_cocktails" onclick="toggleField('serves_cocktails')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Pet Friendly</div></div>
+        <button class="toggle" id="t-pet_friendly" onclick="toggleField('pet_friendly')"></button>
+      </div>
+      <div class="dtoggle-row">
+        <div><div class="dtoggle-label">Family Friendly</div></div>
+        <button class="toggle" id="t-family_friendly" onclick="toggleField('family_friendly')"></button>
+      </div>
+    </div>
+
+    <!-- TAB: Photos -->
+    <div class="dpanel" id="panel-photos">
+      <div class="section-head">🖼️ Hero Image</div>
+      <div class="dfield"><label>Hero Image URL</label><input type="url" id="f-hero_image_url" placeholder="https://..."></div>
+      <div id="heroPreview" style="margin-bottom:16px;"></div>
+      <div class="section-head">📷 Photo Gallery</div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <div class="add-photo-row">
+        <input type="url" id="newPhotoUrl" placeholder="Paste image URL...">
+        <input type="text" id="newPhotoCaption" placeholder="Caption (optional)" style="max-width:160px;">
+        <button onclick="addPhoto()">+ Add</button>
+      </div>
+    </div>
+
+    <!-- TAB: Hours -->
+    <div class="dpanel" id="panel-hours">
+      <div class="section-head">🕐 Business Hours</div>
+      <div id="hoursGrid"></div>
+      <div class="section-head" style="margin-top:24px;">🍹 Happy Hour</div>
+      <div class="drow">
+        <div class="dfield"><label>HH Days (e.g. Mon-Fri)</label><input type="text" id="f-hh_days"></div>
+        <div class="dfield"><label>Start Time</label><input type="time" id="f-hh_start"></div>
+        <div class="dfield"><label>End Time</label><input type="time" id="f-hh_end"></div>
+      </div>
+      <div class="dfield"><label>Happy Hour Description</label><textarea id="f-hh_description" rows="2"></textarea></div>
+    </div>
+
+    <!-- TAB: Content -->
+    <div class="dpanel" id="panel-content">
+      <div class="section-head">✍️ SEO & Content</div>
+      <div class="dfield"><label>Meta Description (for search)</label><textarea id="f-meta_description" rows="2"></textarea></div>
+      <div class="section-head">💰 Pricing</div>
+      <div class="drow3">
+        <div class="dfield"><label>Price From ($)</label><input type="number" id="f-price_from" min="0" step="0.01"></div>
+        <div class="dfield"><label>Price To ($)</label><input type="number" id="f-price_to" min="0" step="0.01"></div>
+        <div class="dfield"><label>Price Unit</label>
+          <select id="f-price_unit">
+            <option value="">None</option>
+            <option value="per_person">Per Person</option>
+            <option value="per_day">Per Day</option>
+            <option value="per_hour">Per Hour</option>
+            <option value="per_night">Per Night</option>
+            <option value="per_vehicle">Per Vehicle</option>
+            <option value="flat">Flat Rate</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-head">📋 Additional Info</div>
+      <div class="dfield"><label>Google Places ID</label><input type="text" id="f-google_place_id"></div>
+      <div class="dfield"><label>Sort Order (higher = shown first)</label><input type="number" id="f-sort_order" min="0"></div>
+    </div>
+
+    <!-- TAB: Events -->
+    <div class="dpanel" id="panel-events">
+      <div class="section-head">🎤 Events & Live Music</div>
+      <div class="event-list" id="eventList"><div class="state-msg" style="padding:20px">Loading events...</div></div>
+      <div class="add-event-form">
+        <div style="font-size:.82rem;font-weight:900;color:#0b2d42;margin-bottom:10px;">+ Add Event</div>
+        <div class="drow">
+          <div class="dfield"><label>Event Name</label><input type="text" id="ne-name" placeholder="e.g. Live Music - Jake Allen"></div>
+          <div class="dfield"><label>Date</label><input type="date" id="ne-date"></div>
+        </div>
+        <div class="drow">
+          <div class="dfield"><label>Start Time</label><input type="time" id="ne-start"></div>
+          <div class="dfield"><label>End Time</label><input type="time" id="ne-end"></div>
+        </div>
+        <div class="dfield"><label>Event Type</label>
+          <select id="ne-type">
+            <option value="live_music">🎸 Live Music</option>
+            <option value="dj">🎧 DJ Night</option>
+            <option value="karaoke">🎤 Karaoke</option>
+            <option value="trivia">🎯 Trivia</option>
+            <option value="happy_hour">🍺 Happy Hour</option>
+            <option value="food_special">🍽️ Food Special</option>
+            <option value="brunch_event">🥂 Brunch</option>
+            <option value="open_mic">🎙️ Open Mic</option>
+            <option value="special_event">⭐ Special Event</option>
+            <option value="other">📅 Other</option>
+          </select>
+        </div>
+        <div class="dfield"><label>Artist Name (optional)</label><input type="text" id="ne-artist" placeholder="Links to artist profile if exists"></div>
+        <div class="dfield"><label>Description</label><textarea id="ne-desc" rows="2" placeholder="Brief description..."></textarea></div>
+        <button class="btn btn-teal" style="width:100%;margin-top:4px" onclick="addEvent()">Add Event</button>
+      </div>
+    </div>
+
+    <!-- TAB: Parking -->
+    <div class="dpanel" id="panel-parking">
+      <div class="parking-fields">
+        <div class="section-head">🅿️ Parking Info</div>
+        <div class="drow">
+          <div class="dfield"><label>Display Name</label><input type="text" id="f-parking_name" placeholder="e.g. Shell Beach Public Parking"></div>
+          <div class="dfield"><label>Cost Per Day ($)</label><input type="number" id="f-price_from_p" min="0" step="0.5" placeholder="e.g. 20"></div>
+        </div>
+        <div class="drow">
+          <div class="dfield"><label>Cost Per Hour ($)</label><input type="number" id="f-ph_hourly" min="0" step="0.5" placeholder="e.g. 5"></div>
+          <div class="dfield"><label>Max Daily ($)</label><input type="number" id="f-ph_max" min="0" step="0.5" placeholder="e.g. 25"></div>
+        </div>
+        <div class="dtoggle-row">
+          <div><div class="dtoggle-label">Beach Access</div><div class="dtoggle-sub">Walking distance to beach</div></div>
+          <button class="toggle" id="t-beach_access" onclick="toggleField('beach_access')"></button>
+        </div>
+        <div class="dtoggle-row">
+          <div><div class="dtoggle-label">Overflow / Seasonal</div><div class="dtoggle-sub">Peak season overflow parking</div></div>
+          <button class="toggle" id="t-overflow_parking" onclick="toggleField('overflow_parking')"></button>
+        </div>
+        <div class="dtoggle-row">
+          <div><div class="dtoggle-label">Restrooms Available</div></div>
+          <button class="toggle" id="t-has_restrooms" onclick="toggleField('has_restrooms')"></button>
+        </div>
+        <div class="dtoggle-row">
+          <div><div class="dtoggle-label">ADA Accessible</div></div>
+          <button class="toggle" id="t-wheelchair_accessible" onclick="toggleField('wheelchair_accessible')"></button>
+        </div>
+        <div class="dfield" style="margin-top:14px"><label>Distance to Beach</label><input type="text" id="f-beach_distance" placeholder="e.g. 50 yards, 2 min walk"></div>
+        <div class="dfield"><label>Parking Notes</label><textarea id="f-parking_notes" rows="3" placeholder="Payment method, hours, restrictions..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- TAB: Links -->
+    <div class="dpanel" id="panel-links">
+      <div class="section-head">🔗 Booking & Online Presence</div>
+      <div class="dfield"><label>Website URL</label><input type="url" id="f-website_url"></div>
+      <div class="dfield"><label>Booking / Reservation URL</label><input type="url" id="f-reservation_url"></div>
+      <div class="dfield"><label>Order Online URL</label><input type="url" id="f-order_url"></div>
+      <div class="dfield"><label>Menu URL</label><input type="url" id="f-menu_url"></div>
+      <div class="dfield"><label>Directions URL</label><input type="url" id="f-directions_url"></div>
+      <div class="dfield"><label>Call URL (tel:)</label><input type="url" id="f-call_url" placeholder="tel:+12511234567"></div>
+    </div>
+
+    <!-- TAB: Social -->
+    <div class="dpanel" id="panel-social">
+      <div class="section-head">📱 Social Media</div>
+      <div class="dfield"><label>Instagram URL</label><input type="url" id="f-social_instagram" placeholder="https://instagram.com/..."></div>
+      <div class="dfield"><label>Facebook URL</label><input type="url" id="f-social_facebook"></div>
+      <div class="dfield"><label>TikTok URL</label><input type="url" id="f-social_tiktok"></div>
+    </div>
+
+  </div><!-- /drawer-body -->
+  <div class="save-bar">
+    <button class="cancel-btn" onclick="closeDrawer()">Cancel</button>
+    <button class="save-btn" onclick="saveEntity()">💾 Save Changes</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://gcr-api-clean.vercel.app';
+const SUPABASE_URL = 'https://mkepugvdlktfsossumox.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZXB1Z3ZkbGt0ZnNvc3N1bW94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI2MDY1MDcsImV4cCI6MjAyODE4MjUwN30.mT5CXLQ9nCvqnAHt7pwmXaqkSwdxY1yYIfbumm_Hqk4';
+
+let allEntities = [];
+let filtered = [];
+let currentEntity = null;
+let toggleState = {};
+let photos = [];
+let events = [];
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+// ── Load all entities ──────────────────────────────────────────────────────
+async function loadEntities() {
+  try {
+    let all = [], from = 0;
+    while (true) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/entity?select=id,slug,name,entity_type,entity_subtype,city,is_active,featured,is_sponsored,hero_image_url,description,rating,review_count,icon,price_from&order=name&offset=${from}&limit=1000`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const batch = await res.json();
+      all = all.concat(batch);
+      if (batch.length < 1000) break;
+      from += 1000;
+    }
+    allEntities = all;
+    applyFilters();
+    document.getElementById('loadingState').style.display = 'none';
+  } catch(e) {
+    document.getElementById('loadingState').innerHTML = `<div class="state-msg" style="color:#ef4444">Failed to load: ${e.message}</div>`;
+  }
+}
+
+// ── Filter ─────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const type = document.getElementById('typeFilter').value;
+  const active = document.getElementById('activeFilter').value;
+  const img = document.getElementById('imgFilter').value;
+
+  filtered = allEntities.filter(e => {
+    if (q && !((e.name||'').toLowerCase().includes(q) || (e.slug||'').toLowerCase().includes(q) || (e.city||'').toLowerCase().includes(q))) return false;
+    if (type && e.entity_type !== type) return false;
+    if (active === 'active' && !e.is_active) return false;
+    if (active === 'inactive' && e.is_active) return false;
+    if (img === 'no-img' && e.hero_image_url) return false;
+    if (img === 'has-img' && !e.hero_image_url) return false;
+    return true;
+  });
+
+  const activeCount = allEntities.filter(e => e.is_active).length;
+  const inactiveCount = allEntities.length - activeCount;
+  document.getElementById('statActive').textContent = activeCount;
+  document.getElementById('statInactive').textContent = inactiveCount;
+  document.getElementById('statShowing').textContent = filtered.length;
+
+  renderTable();
+}
+
+// ── Render table ───────────────────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const table = document.getElementById('entityTable');
+  const empty = document.getElementById('emptyState');
+
+  if (!filtered.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(e => {
+    const typeCls = `tb-${e.entity_type || 'other'}`;
+    const hasImg = !!e.hero_image_url;
+    const hasDesc = !!e.description;
+    const img = hasImg
+      ? `<img class="thumb" src="${e.hero_image_url}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" loading="lazy"><div class="thumb-placeholder" style="display:none">${e.icon||'🏢'}</div>`
+      : `<div class="thumb-placeholder">${e.icon||'🏢'}</div>`;
+    const rating = e.rating ? `<div class="rating">⭐ ${Number(e.rating).toFixed(1)}</div><div class="rating-sub">(${e.review_count||0})</div>` : '<div class="rating-sub">No rating</div>';
+    const flags = [
+      !hasImg ? '<span class="no-img-flag">📷 No image</span>' : '',
+      !hasDesc ? '<span class="no-desc-flag">No desc</span>' : '',
+    ].filter(Boolean).join('<br>');
+
+    return `<tr>
+      <td><div style="display:flex">${img}</div></td>
+      <td>
+        <div class="entity-name">${e.name||'—'}</div>
+        <div class="entity-slug">${e.slug}</div>
+      </td>
+      <td><span class="type-badge ${typeCls}">${e.entity_type||'?'}</span>${e.entity_subtype ? `<div style="font-size:.7rem;color:#94a3b8;margin-top:3px">${e.entity_subtype}</div>` : ''}</td>
+      <td style="font-size:.84rem;color:#64748b">${e.city||'—'}</td>
+      <td>${rating}</td>
+      <td>
+        <div class="active-toggle">
+          <button class="toggle ${e.is_active ? 'on' : 'off'}" onclick="quickToggleActive('${e.slug}',${!e.is_active},this)" title="${e.is_active ? 'Click to deactivate' : 'Click to activate'}"></button>
+        </div>
+      </td>
+      <td>${flags||'<span style="color:#94a3b8;font-size:.75rem">OK</span>'}</td>
+      <td>
+        <div class="action-btns">
+          <button class="edit-btn" onclick="openEditDrawer('${e.slug}')">✏️ Edit</button>
+          <a class="view-btn" href="https://gcr-unified.vercel.app/business/${e.slug}" target="_blank" rel="noopener">↗</a>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Quick active toggle (inline in table) ──────────────────────────────────
+async function quickToggleActive(slug, newVal, btn) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/entity?slug=eq.${slug}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ is_active: newVal })
+    });
+    btn.className = `toggle ${newVal ? 'on' : 'off'}`;
+    const e = allEntities.find(x => x.slug === slug);
+    if (e) e.is_active = newVal;
+    applyFilters();
+    showToast(newVal ? '✅ Activated' : '🔴 Deactivated');
+  } catch(err) {
+    showToast('Error: ' + err.message, true);
+  }
+}
+
+// ── Open edit drawer ────────────────────────────────────────────────────────
+async function openEditDrawer(slug) {
+  document.getElementById('drawerTitle').textContent = 'Loading...';
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('editDrawer').classList.add('open');
+  showTab('info');
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entity?slug=eq.${slug}&select=*`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const [entity] = await res.json();
+    currentEntity = entity;
+    populateDrawer(entity);
+
+    // Load photos
+    const pRes = await fetch(`${SUPABASE_URL}/rest/v1/entity_photos?entity_slug=eq.${slug}&order=sort_order`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    photos = await pRes.json();
+    renderPhotos();
+
+    // Load events
+    const eRes = await fetch(`${SUPABASE_URL}/rest/v1/entity_events?entity_slug=eq.${slug}&is_active=eq.true&order=event_date`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    events = await eRes.json();
+    renderEvents();
+
+    // Load hours
+    const hRes = await fetch(`${SUPABASE_URL}/rest/v1/entity_hours?entity_slug=eq.${slug}&order=day_of_week`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const hours = await hRes.json();
+    renderHours(hours);
+
+  } catch(e) {
+    showToast('Load error: ' + e.message, true);
+  }
+}
+
+function populateDrawer(e) {
+  document.getElementById('drawerTitle').textContent = e.name || e.slug;
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  setVal('f-name', e.name); setVal('f-slug', e.slug); setVal('f-subtitle', e.subtitle);
+  setVal('f-description', e.description); setVal('f-entity_type', e.entity_type);
+  setVal('f-entity_subtype', e.entity_subtype); setVal('f-icon', e.icon);
+  setVal('f-price_range', e.price_range); setVal('f-rating', e.rating);
+  setVal('f-review_count', e.review_count); setVal('f-phone', e.phone);
+  setVal('f-address_line_1', e.address_line_1); setVal('f-city', e.city);
+  setVal('f-state', e.state || 'AL'); setVal('f-zip', e.zip);
+  setVal('f-latitude', e.latitude); setVal('f-longitude', e.longitude);
+  setVal('f-hero_image_url', e.hero_image_url);
+  setVal('f-website_url', e.website_url); setVal('f-reservation_url', e.reservation_url);
+  setVal('f-order_url', e.order_url); setVal('f-menu_url', e.menu_url);
+  setVal('f-directions_url', e.directions_url); setVal('f-call_url', e.call_url);
+  setVal('f-social_instagram', e.social_instagram); setVal('f-social_facebook', e.social_facebook);
+  setVal('f-social_tiktok', e.social_tiktok); setVal('f-google_place_id', e.google_place_id);
+  setVal('f-sort_order', e.sort_order); setVal('f-meta_description', e.meta_description);
+  setVal('f-price_from', e.price_from); setVal('f-price_to', e.price_to);
+  setVal('f-price_unit', e.price_unit);
+  setVal('f-hh_days', e.hh_days); setVal('f-hh_start', e.hh_start); setVal('f-hh_end', e.hh_end);
+  setVal('f-hh_description', e.hh_description);
+  setVal('f-beach_distance', e.beach_distance); setVal('f-parking_notes', e.parking_notes);
+
+  // Hero preview
+  const prev = document.getElementById('heroPreview');
+  prev.innerHTML = e.hero_image_url ? `<img src="${e.hero_image_url}" style="width:100%;border-radius:10px;max-height:160px;object-fit:cover">` : '';
+
+  // Toggles
+  const boolFields = ['is_active','featured','is_sponsored','waterfront','live_music','outdoor_seating','serves_beer','serves_cocktails','pet_friendly','family_friendly','beach_access','overflow_parking','has_restrooms','wheelchair_accessible'];
+  toggleState = {};
+  boolFields.forEach(f => {
+    toggleState[f] = !!e[f];
+    const btn = document.getElementById('t-' + f);
+    if (btn) btn.className = `toggle ${toggleState[f] ? 'on' : 'off'}`;
+  });
+}
+
+function toggleField(field) {
+  toggleState[field] = !toggleState[field];
+  const btn = document.getElementById('t-' + field);
+  if (btn) btn.className = `toggle ${toggleState[field] ? 'on' : 'off'}`;
+}
+
+// ── Photos ──────────────────────────────────────────────────────────────────
+function renderPhotos() {
+  const grid = document.getElementById('photoGrid');
+  if (!photos.length) { grid.innerHTML = '<div style="color:#94a3b8;font-size:.82rem">No photos yet.</div>'; return; }
+  grid.innerHTML = photos.map(p => `
+    <div class="photo-item">
+      <img src="${p.url||p.image_url||''}" alt="${p.caption||''}">
+      <button class="photo-del" onclick="deletePhoto('${p.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function addPhoto() {
+  const url = document.getElementById('newPhotoUrl').value.trim();
+  const caption = document.getElementById('newPhotoCaption').value.trim();
+  if (!url || !currentEntity) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entity_photos`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ entity_slug: currentEntity.slug, url, caption, sort_order: photos.length })
+    });
+    const [added] = await res.json();
+    photos.push(added);
+    renderPhotos();
+    document.getElementById('newPhotoUrl').value = '';
+    document.getElementById('newPhotoCaption').value = '';
+    showToast('Photo added');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+async function deletePhoto(id) {
+  if (!confirm('Delete this photo?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/entity_photos?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  photos = photos.filter(p => p.id !== id);
+  renderPhotos();
+  showToast('Photo deleted');
+}
+
+// ── Hours ───────────────────────────────────────────────────────────────────
+function renderHours(hoursData) {
+  const grid = document.getElementById('hoursGrid');
+  grid.innerHTML = DAYS.map((day, i) => {
+    const h = hoursData.find(x => x.day_of_week === i + 1) || {};
+    return `<div class="hours-grid">
+      <div class="day-label">${day}</div>
+      <input class="hours-input" id="ho-open-${i}" type="time" value="${h.open_time||''}">
+      <input class="hours-input" id="ho-close-${i}" type="time" value="${h.close_time||''}">
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;color:#94a3b8">
+        <input type="checkbox" class="closed-cb" id="ho-closed-${i}" ${h.is_closed ? 'checked' : ''}> Closed
+      </label>
+    </div>`;
+  }).join('');
+}
+
+// ── Events ──────────────────────────────────────────────────────────────────
+function renderEvents() {
+  const list = document.getElementById('eventList');
+  if (!events.length) { list.innerHTML = '<div style="color:#94a3b8;font-size:.82rem;padding:10px 0">No events yet.</div>'; return; }
+  list.innerHTML = events.map(ev => `
+    <div class="event-item">
+      <div style="flex:1">
+        <div style="font-weight:800;font-size:.88rem">${ev.event_name||'Untitled'}</div>
+        <div style="font-size:.75rem;color:#64748b">${ev.event_date||'Recurring'} ${ev.start_time ? '· ' + ev.start_time : ''} ${ev.artist_name ? '· 🎤 '+ev.artist_name : ''}</div>
+      </div>
+      <button class="item-del" onclick="deleteEvent(${ev.id})">Delete</button>
+    </div>`).join('');
+}
+
+async function addEvent() {
+  if (!currentEntity) return;
+  const payload = {
+    entity_slug: currentEntity.slug,
+    event_name: document.getElementById('ne-name').value.trim(),
+    event_date: document.getElementById('ne-date').value || null,
+    start_time: document.getElementById('ne-start').value || null,
+    end_time: document.getElementById('ne-end').value || null,
+    event_type: document.getElementById('ne-type').value,
+    artist_name: document.getElementById('ne-artist').value.trim() || null,
+    description: document.getElementById('ne-desc').value.trim() || null,
+    is_active: true
+  };
+  if (!payload.event_name) { showToast('Event name required', true); return; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entity_events`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(payload)
+    });
+    const [added] = await res.json();
+    events.push(added);
+    renderEvents();
+    ['ne-name','ne-date','ne-start','ne-end','ne-artist','ne-desc'].forEach(id => document.getElementById(id).value = '');
+    showToast('Event added ✅');
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/entity_events?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  events = events.filter(e => e.id !== id);
+  renderEvents();
+  showToast('Event deleted');
+}
+
+// ── Save ────────────────────────────────────────────────────────────────────
+async function saveEntity() {
+  if (!currentEntity) return;
+  const getVal = id => document.getElementById(id)?.value?.trim() || null;
+  const getNum = id => { const v = document.getElementById(id)?.value; return v !== '' && v != null ? Number(v) : null; };
+
+  const payload = {
+    name: getVal('f-name'), slug: getVal('f-slug'), subtitle: getVal('f-subtitle'),
+    description: getVal('f-description'), entity_type: getVal('f-entity_type'),
+    entity_subtype: getVal('f-entity_subtype'), icon: getVal('f-icon'),
+    price_range: getVal('f-price_range'), rating: getNum('f-rating'),
+    review_count: getNum('f-review_count'), phone: getVal('f-phone'),
+    address_line_1: getVal('f-address_line_1'), city: getVal('f-city'),
+    state: getVal('f-state'), zip: getVal('f-zip'),
+    latitude: getNum('f-latitude'), longitude: getNum('f-longitude'),
+    hero_image_url: getVal('f-hero_image_url'),
+    website_url: getVal('f-website_url'), reservation_url: getVal('f-reservation_url'),
+    order_url: getVal('f-order_url'), menu_url: getVal('f-menu_url'),
+    directions_url: getVal('f-directions_url'), call_url: getVal('f-call_url'),
+    social_instagram: getVal('f-social_instagram'), social_facebook: getVal('f-social_facebook'),
+    social_tiktok: getVal('f-social_tiktok'), google_place_id: getVal('f-google_place_id'),
+    sort_order: getNum('f-sort_order'), meta_description: getVal('f-meta_description'),
+    price_from: getNum('f-price_from'), price_to: getNum('f-price_to'),
+    price_unit: getVal('f-price_unit'),
+    hh_days: getVal('f-hh_days'), hh_start: getVal('f-hh_start') || null,
+    hh_end: getVal('f-hh_end') || null, hh_description: getVal('f-hh_description'),
+    beach_distance: getVal('f-beach_distance'), parking_notes: getVal('f-parking_notes'),
+    ...toggleState
+  };
+
+  // Remove nulls to avoid overwriting with empty
+  Object.keys(payload).forEach(k => { if (payload[k] === null && currentEntity[k] !== null) delete payload[k]; });
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entity?slug=eq.${currentEntity.slug}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    // Save hours
+    for (let i = 0; i < 7; i++) {
+      const open_time = document.getElementById(`ho-open-${i}`)?.value || null;
+      const close_time = document.getElementById(`ho-close-${i}`)?.value || null;
+      const is_closed = document.getElementById(`ho-closed-${i}`)?.checked || false;
+      if (open_time || is_closed) {
+        await fetch(`${SUPABASE_URL}/rest/v1/entity_hours`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ entity_slug: currentEntity.slug, day_of_week: i + 1, open_time, close_time, is_closed })
+        });
+      }
+    }
+
+    // Update local cache
+    Object.assign(currentEntity, payload);
+    const idx = allEntities.findIndex(e => e.slug === currentEntity.slug);
+    if (idx >= 0) Object.assign(allEntities[idx], payload);
+    applyFilters();
+
+    showToast('✅ Saved successfully!');
+  } catch(e) {
+    showToast('❌ Save failed: ' + e.message, true);
+  }
+}
+
+// ── New entity ───────────────────────────────────────────────────────────────
+function openNewEntityDrawer() {
+  currentEntity = { slug: '' };
+  toggleState = { is_active: true };
+  document.getElementById('drawerTitle').textContent = 'New Entity';
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('editDrawer').classList.add('open');
+  showTab('info');
+  // Clear all fields
+  document.querySelectorAll('.drawer input, .drawer textarea, .drawer select').forEach(el => el.value = '');
+  document.getElementById('t-is_active').className = 'toggle on';
+  document.getElementById('photoGrid').innerHTML = '';
+  document.getElementById('eventList').innerHTML = '';
+  document.getElementById('hoursGrid').innerHTML = '';
+}
+
+// ── UI Helpers ────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.dpanel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+  event?.target?.classList.add('active');
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('editDrawer').classList.remove('open');
+  currentEntity = null;
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#dc2626' : '#1a2433';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Hero image live preview ───────────────────────────────────────────────────
+document.getElementById('f-hero_image_url')?.addEventListener('input', function() {
+  const prev = document.getElementById('heroPreview');
+  prev.innerHTML = this.value ? `<img src="${this.value}" style="width:100%;border-radius:10px;max-height:160px;object-fit:cover" onerror="this.style.opacity='.3'">` : '';
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadEntities();
+</script>
+</body>
+</html>
