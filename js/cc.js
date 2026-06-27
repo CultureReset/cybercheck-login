@@ -1,109 +1,118 @@
 // ============================================
-// cc.js — CyberCheck API Client (Supabase Direct)
+// cc.js — CyberCheck API Client
+// ALL calls go through gcr-api-clean /api/dashboard/*
+// NO direct Supabase calls for dashboard data
 // ============================================
-//
-// Same CC.dashboard.* API surface as before, but queries
-// Supabase directly instead of going through Express.
-// Modules call CC.dashboard.getBookings() etc. — no changes needed.
-//
-// Requires: supabase-client.js loaded first (provides supabase, getSiteId, etc.)
-//
 
 const CC = (function() {
 
-  // ---- Token / Session Management ----
-  // Kept for backwards compat with auth guard + modules that check CC.getToken()
+  var API_BASE = window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
 
+  // ---- Token / Session ----
   function getToken() {
-    // Check Supabase session first — return actual JWT, not a placeholder
     try {
-      var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+      var sbKey = Object.keys(localStorage).find(function(k) {
+        return k.startsWith('sb-') && k.endsWith('-auth-token');
+      });
       if (sbKey) {
         var s = JSON.parse(localStorage.getItem(sbKey));
         if (s && s.access_token) return s.access_token;
       }
     } catch(e) {}
-    // Fallback to legacy token
     return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || null;
   }
 
   function setToken(token, remember) {
-    if (remember) {
-      localStorage.setItem('cc_token', token);
-    } else {
-      sessionStorage.setItem('cc_token', token);
-    }
+    if (remember) { localStorage.setItem('cc_token', token); }
+    else { sessionStorage.setItem('cc_token', token); }
   }
 
   function setSession(userData) {
     if (userData && userData.business) {
-      try {
-        localStorage.setItem('cc_session_business', JSON.stringify(userData.business));
-      } catch(e) {}
+      try { localStorage.setItem('cc_session_business', JSON.stringify(userData.business)); } catch(e) {}
     }
   }
 
   function getStoredBusiness() {
     try {
-      var stored = localStorage.getItem('cc_session_business');
-      return stored ? JSON.parse(stored) : null;
-    } catch(e) {
-      return null;
-    }
+      var s = localStorage.getItem('cc_session_business');
+      return s ? JSON.parse(s) : null;
+    } catch(e) { return null; }
   }
 
   function clearToken() {
     localStorage.removeItem('cc_token');
     sessionStorage.removeItem('cc_token');
     localStorage.removeItem('cc_session_business');
-    if (typeof clearSupabaseCache === 'function') clearSupabaseCache();
   }
 
-  // ---- Auth ----
-  // Login: Uses Supabase Auth directly (establishes RLS session for dashboard queries)
-  // Signup: Routes through backend API (uses service key to bypass RLS for initial record creation)
+  // ---- Core fetch — always sends token, always hits gcr-api-clean ----
+  async function request(method, path, body) {
+    try {
+      var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+      var token = getToken();
+      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+      if (body && method !== 'GET') opts.body = JSON.stringify(body);
+      var res = await fetch(API_BASE + path, opts);
+      if (!res.ok) {
+        var err = null;
+        try { err = await res.json(); } catch(e) {}
+        console.error('CC API error', method, path, res.status, err);
+        return null;
+      }
+      return await res.json();
+    } catch(e) {
+      console.error('CC request failed', method, path, e);
+      return null;
+    }
+  }
 
+  function get(path)         { return request('GET',    path); }
+  function post(path, body)  { return request('POST',   path, body); }
+  function put(path, body)   { return request('PUT',    path, body); }
+  function patch(path, body) { return request('PATCH',  path, body); }
+  function del(path)         { return request('DELETE', path); }
+
+  // ---- Auth ----
   async function login(email, password, remember) {
-    // 1. Try Supabase Auth first (new accounts)
-    if (supabase && supabase.auth) {
+    // Try Supabase auth first (sets session for gcr-api-clean JWT verify)
+    if (window.supabase && window.supabase.auth) {
       try {
-        var { data, error } = await supabase.auth.signInWithPassword({ email: email, password: password });
+        var { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
         if (!error && data && data.session) {
-          clearSupabaseCache();
-          var biz = await getSupabaseBusiness();
-          // Fetch role from API so admin redirect works
+          // Verify with gcr-api-clean to get role + business info
           try {
             var roleRes = await fetch(API_BASE + '/api/auth/verify', {
               headers: { 'Authorization': 'Bearer ' + data.session.access_token }
             });
             var roleData = await roleRes.json();
-            if (roleData && roleData.user && roleData.user.role) data.user.role = roleData.user.role;
+            if (roleData && roleData.user) {
+              data.user.role = roleData.user.role;
+              if (roleData.business) setSession({ business: roleData.business });
+            }
           } catch(e) {}
-          setSession({ business: biz });
-          return { token: data.session.access_token, user: data.user, business: biz };
+          return { token: data.session.access_token, user: data.user, business: getStoredBusiness() };
         }
-      } catch (e) { /* fall through to Express fallback */ }
+      } catch(e) {}
     }
-    // 2. Fallback: Express JWT login (accounts created before Supabase Auth migration)
+    // Fallback: legacy Express login
     try {
       var res = await fetch(API_BASE + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, password: password })
+        body: JSON.stringify({ email, password })
       });
       var data = await res.json();
       if (!res.ok) return { error: data.error || 'Invalid credentials' };
       setToken(data.token, remember !== false);
       setSession(data);
       return { token: data.token, user: data.user, business: data.business };
-    } catch (e) {
-      return { error: e.message || 'Login failed — check your connection and try again' };
+    } catch(e) {
+      return { error: 'Login failed — check your connection' };
     }
   }
 
   async function signup(payload) {
-    // Route signup through backend API — it creates both the Supabase Auth user
-    // and the business/user/site_content records using the service key (bypasses RLS)
     try {
       var res = await fetch(API_BASE + '/api/auth/signup', {
         method: 'POST',
@@ -113,1120 +122,376 @@ const CC = (function() {
           password: payload.password,
           name: payload.name || payload.businessName,
           businessName: payload.businessName || payload.name,
-          businessType: payload.businessType || 'rental'
+          businessType: payload.businessType || 'restaurant'
         })
       });
       var data = await res.json();
       if (!res.ok) return { error: data.error || 'Signup failed' };
       return data;
-    } catch (e) {
-      return { error: 'Cannot reach server. Make sure the backend API is running.' };
+    } catch(e) {
+      return { error: 'Cannot reach server' };
     }
   }
 
   async function logout() {
     try {
-      if (supabase && supabase.auth) await supabase.auth.signOut();
-    } catch (e) { console.error('Logout error:', e); }
+      if (window.supabase && window.supabase.auth) await window.supabase.auth.signOut();
+    } catch(e) {}
     clearToken();
     window.location.href = 'login.html';
   }
 
   async function getSession() {
-    // Try Supabase Auth first
-    var session = await getSupabaseSession();
-    if (session) {
-      var biz = await getSupabaseBusiness();
-      return { user: session.user, business: biz };
-    }
-    // Fallback: use legacy Express JWT
-    var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
-    if (legacyToken) {
+    // Try Supabase session first
+    if (window.supabase && window.supabase.auth) {
       try {
-        // Decode JWT (third part is the payload, base64url encoded)
-        var parts = legacyToken.split('.');
-        if (parts.length === 3) {
-          var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-          // Try stored business data first (set at login time)
+        var { data } = await window.supabase.auth.getSession();
+        if (data && data.session) {
           var biz = getStoredBusiness();
-          if (!biz && payload.siteId) {
-            // If not in storage, try to fetch from Supabase
-            var { data: fetchedBiz } = await supabase.from('businesses').select('*').eq('site_id', payload.siteId).single();
-            biz = fetchedBiz;
+          if (!biz) {
+            // Load from gcr-api-clean
+            var profile = await get('/api/dashboard/profile');
+            if (profile) {
+              setSession({ business: profile });
+              biz = profile;
+            }
           }
-          if (biz) {
-            return { user: { id: payload.userId, email: '' }, business: biz, legacy: true };
-          }
+          return { user: data.session.user, business: biz };
         }
-      } catch (e) {
-        console.error('Failed to handle legacy token:', e);
-      }
-      // Last resort: return whatever stored business we have, even if incomplete
-      var storedBiz = getStoredBusiness();
-      return { user: { id: 'legacy', email: '' }, business: storedBiz, legacy: true };
+      } catch(e) {}
+    }
+    // Fallback: legacy token
+    var token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
+    if (token) {
+      var biz = getStoredBusiness();
+      return { user: { id: 'legacy', email: '' }, business: biz, legacy: true };
     }
     return null;
   }
 
-  // ---- Legacy fetch (for any remaining Express calls) ----
-
-  var API_BASE = window.CC_API_BASE || window.location.origin;
-
-  async function request(method, path, body) {
-    try {
-      var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-      var token = getToken();
-      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-      if (body && method !== 'GET') opts.body = JSON.stringify(body);
-      var res = await fetch(API_BASE + path, opts);
-      if (!res.ok) return null;
-      return await res.json();
-    } catch(e) { return null; }
+  // ---- Dashboard cache ----
+  var _cache = {};
+  var _cacheTTL = 2 * 60 * 1000;
+  function cacheGet(k) { var e = _cache[k]; return (e && Date.now()-e.ts < _cacheTTL) ? e.data : undefined; }
+  function cacheSet(k, d) { _cache[k] = { data: d, ts: Date.now() }; }
+  function cacheClear(prefix) {
+    if (!prefix) { _cache = {}; return; }
+    Object.keys(_cache).forEach(function(k) { if (k.indexOf(prefix) === 0) delete _cache[k]; });
   }
 
-  function get(path) { return request('GET', path); }
-  function post(path, body) { return request('POST', path, body); }
-  function put(path, body) { return request('PUT', path, body); }
-  function del(path) { return request('DELETE', path); }
-
-  // ---- Helper: ensure site_id is resolved ----
-
-  async function ensureSiteId() {
-    if (_siteId) return _siteId;
-    await getSupabaseBusiness();
-    return _siteId;
-  }
-
-  // ---- Dashboard Cache — reduces Supabase calls, instant page switches ----
-  var _dashCache = {};
-  var _dashCacheTTL = 2 * 60 * 1000; // 2 minutes default
-
-  function dashCacheGet(key) {
-    var entry = _dashCache[key];
-    if (entry && (Date.now() - entry.ts < _dashCacheTTL)) return entry.data;
-    return undefined;
-  }
-  function dashCacheSet(key, data) {
-    _dashCache[key] = { data: data, ts: Date.now() };
-  }
-  function dashCacheClear(prefix) {
-    if (!prefix) { _dashCache = {}; return; }
-    Object.keys(_dashCache).forEach(function(k) { if (k.indexOf(prefix) === 0) delete _dashCache[k]; });
-  }
-
-  // ---- Dashboard API (Supabase Direct) ----
-  // Each method replicates the exact query from backend/routes/dashboard.js
-  // GET methods check cache first. Write methods clear relevant cache.
-
+  // ---- Dashboard — all calls go to /api/dashboard/* on gcr-api-clean ----
   var dashboard = {
 
-    // --- Profile & Content ---
-    getProfile: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data: business } = await supabase.from('businesses').select('*').eq('site_id', siteId).single();
-      var { data: content } = await supabase.from('site_content').select('*').eq('site_id', siteId).single();
-      return { business: business, content: content };
+    // PROFILE
+    getProfile:    function() { return get('/api/dashboard/profile'); },
+    updateProfile: function(d) { cacheClear('getProfile'); return put('/api/dashboard/profile', d); },
+
+    // HOURS
+    getHours:    function() { return get('/api/dashboard/hours'); },
+    updateHours: function(d) { cacheClear('getHours'); return put('/api/dashboard/hours', d); },
+
+    // SERVICES
+    getServices:    function() { return get('/api/dashboard/services'); },
+    createService:  function(d) { cacheClear('getServices'); return post('/api/dashboard/services', d); },
+    updateService:  function(id, d) { cacheClear('getServices'); return put('/api/dashboard/services/' + id, d); },
+    deleteService:  function(id) { cacheClear('getServices'); return del('/api/dashboard/services/' + id); },
+
+    // GALLERY / MEDIA
+    getGallery:   function() { return get('/api/dashboard/gallery'); },
+    uploadMedia:  function(d) { cacheClear('getGallery'); return post('/api/dashboard/gallery', d); },
+    updateMedia:  function(id, d) { cacheClear('getGallery'); return put('/api/dashboard/gallery/' + id, d); },
+    deleteMedia:  function(id) { cacheClear('getGallery'); return del('/api/dashboard/gallery/' + id); },
+
+    // FAQS
+    getFaqs:    function() { return get('/api/dashboard/faqs'); },
+    getFAQs:    function() { return get('/api/dashboard/faqs'); },
+    createFaq:  function(d) { cacheClear('getFaq'); return post('/api/dashboard/faqs', d); },
+    createFAQ:  function(d) { cacheClear('getFaq'); return post('/api/dashboard/faqs', d); },
+    updateFaq:  function(id, d) { cacheClear('getFaq'); return put('/api/dashboard/faqs/' + id, d); },
+    updateFAQ:  function(id, d) { cacheClear('getFaq'); return put('/api/dashboard/faqs/' + id, d); },
+    deleteFaq:  function(id) { cacheClear('getFaq'); return del('/api/dashboard/faqs/' + id); },
+    deleteFAQ:  function(id) { cacheClear('getFaq'); return del('/api/dashboard/faqs/' + id); },
+
+    // SOCIAL
+    getSocial:    function() { return get('/api/dashboard/social'); },
+    updateSocial: function(d) { cacheClear('getSocial'); return put('/api/dashboard/social', d); },
+
+    // TEAM / STAFF
+    getTeam:     function() { return get('/api/dashboard/team'); },
+    getStaff:    function() { return get('/api/dashboard/team'); },
+    createTeam:  function(d) { cacheClear('getTeam'); return post('/api/dashboard/team', d); },
+    createStaff: function(d) { cacheClear('getTeam'); return post('/api/dashboard/team', d); },
+    updateTeam:  function(id, d) { cacheClear('getTeam'); return put('/api/dashboard/team/' + id, d); },
+    updateStaff: function(id, d) { cacheClear('getTeam'); return put('/api/dashboard/team/' + id, d); },
+    deleteTeam:  function(id) { cacheClear('getTeam'); return del('/api/dashboard/team/' + id); },
+    deleteStaff: function(id) { cacheClear('getTeam'); return del('/api/dashboard/team/' + id); },
+
+    // MENU ITEMS
+    getMenu:         function() { return get('/api/dashboard/menu-items'); },
+    createMenuItem:  function(d) { cacheClear('getMenu'); return post('/api/dashboard/menu-items', d); },
+    updateMenuItem:  function(id, d) { cacheClear('getMenu'); return put('/api/dashboard/menu-items/' + id, d); },
+    deleteMenuItem:  function(id) { cacheClear('getMenu'); return del('/api/dashboard/menu-items/' + id); },
+
+    // MENU CATEGORIES
+    getMenuCategories:    function() { return get('/api/dashboard/menu-categories'); },
+    createMenuCategory:   function(d) { cacheClear('getMenuCategories'); return post('/api/dashboard/menu-categories', d); },
+    updateMenuCategory:   function(id, d) { cacheClear('getMenuCategories'); return put('/api/dashboard/menu-categories/' + id, d); },
+    deleteMenuCategory:   function(id) { cacheClear('getMenuCategories'); return del('/api/dashboard/menu-categories/' + id); },
+
+    // MENU SUBCATEGORIES
+    getMenuSubcategories:   function() { return get('/api/dashboard/menu-subcategories'); },
+    createMenuSubcategory:  function(d) { cacheClear('getMenuSubcategories'); return post('/api/dashboard/menu-subcategories', d); },
+    updateMenuSubcategory:  function(id, d) { cacheClear('getMenuSubcategories'); return put('/api/dashboard/menu-subcategories/' + id, d); },
+    deleteMenuSubcategory:  function(id) { cacheClear('getMenuSubcategories'); return del('/api/dashboard/menu-subcategories/' + id); },
+
+    // EVENTS
+    getEvents:    function() { return get('/api/dashboard/events'); },
+    createEvent:  function(d) { cacheClear('getEvents'); return post('/api/dashboard/events', d); },
+    updateEvent:  function(id, d) { cacheClear('getEvents'); return put('/api/dashboard/events/' + id, d); },
+    deleteEvent:  function(id) { cacheClear('getEvents'); return del('/api/dashboard/events/' + id); },
+
+    // SPECIALS
+    getSpecials:    function() { return get('/api/dashboard/specials'); },
+    createSpecial:  function(d) { cacheClear('getSpecials'); return post('/api/dashboard/specials', d); },
+    updateSpecial:  function(id, d) { cacheClear('getSpecials'); return put('/api/dashboard/specials/' + id, d); },
+    deleteSpecial:  function(id) { cacheClear('getSpecials'); return del('/api/dashboard/specials/' + id); },
+
+    // FLEET (charter/rental)
+    getFleetTypes:    function() { return get('/api/dashboard/fleet'); },
+    createFleetType:  function(d) { cacheClear('getFleet'); return post('/api/dashboard/fleet', d); },
+    updateFleetType:  function(id, d) { cacheClear('getFleet'); return put('/api/dashboard/fleet/' + id, d); },
+    deleteFleetType:  function(id) { cacheClear('getFleet'); return del('/api/dashboard/fleet/' + id); },
+
+    // FLEET ITEMS
+    getFleetItems:    function() { return get('/api/dashboard/fleet-items'); },
+    createFleetItem:  function(d) { cacheClear('getFleetItems'); return post('/api/dashboard/fleet-items', d); },
+    updateFleetItem:  function(id, d) { cacheClear('getFleetItems'); return put('/api/dashboard/fleet-items/' + id, d); },
+    deleteFleetItem:  function(id) { cacheClear('getFleetItems'); return del('/api/dashboard/fleet-items/' + id); },
+
+    // TIME SLOTS
+    getTimeSlots:    function() { return get('/api/dashboard/time-slots'); },
+    createTimeSlot:  function(d) { cacheClear('getTimeSlots'); return post('/api/dashboard/time-slots', d); },
+    updateTimeSlot:  function(id, d) { cacheClear('getTimeSlots'); return put('/api/dashboard/time-slots/' + id, d); },
+    deleteTimeSlot:  function(id) { cacheClear('getTimeSlots'); return del('/api/dashboard/time-slots/' + id); },
+
+    // PRICING
+    getPricing:  function() { return get('/api/dashboard/pricing'); },
+    setPricing:  function(d) { cacheClear('getPricing'); return post('/api/dashboard/pricing', d); },
+    updatePricing: function(id, d) { cacheClear('getPricing'); return put('/api/dashboard/pricing/' + id, d); },
+    deletePricing: function(id) { cacheClear('getPricing'); return del('/api/dashboard/pricing/' + id); },
+
+    // ADDONS
+    getAddons:    function() { return get('/api/dashboard/addons'); },
+    createAddon:  function(d) { cacheClear('getAddons'); return post('/api/dashboard/addons', d); },
+    updateAddon:  function(id, d) { cacheClear('getAddons'); return put('/api/dashboard/addons/' + id, d); },
+    deleteAddon:  function(id) { cacheClear('getAddons'); return del('/api/dashboard/addons/' + id); },
+
+    // GROUP RATES
+    getGroupRates:    function() { return get('/api/dashboard/group-rates'); },
+    createGroupRate:  function(d) { cacheClear('getGroupRates'); return post('/api/dashboard/group-rates', d); },
+    deleteGroupRate:  function(id) { cacheClear('getGroupRates'); return del('/api/dashboard/group-rates/' + id); },
+
+    // BOOKINGS
+    getBookings:    function(params) {
+      var q = params ? '?' + new URLSearchParams(params).toString() : '';
+      return get('/api/dashboard/bookings' + q);
     },
-    updateProfile: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      if (d.business) {
-        var biz = d.business;
-        var bizUpdate = { name: biz.name, type: biz.type, logo_url: biz.logo_url, cover_url: biz.cover_url, updated_at: new Date().toISOString() };
-        if (biz.metadata !== undefined) {
-          // Merge metadata patch instead of replacing entire object
-          var { data: existing } = await supabase.from('businesses').select('metadata').eq('site_id', siteId).single();
-          bizUpdate.metadata = Object.assign({}, (existing && existing.metadata) || {}, biz.metadata);
-        }
-        await supabase.from('businesses').update(bizUpdate).eq('site_id', siteId);
-      }
-      if (d.content) {
-        var c = Object.assign({}, d.content); delete c.site_id;
-        c.updated_at = new Date().toISOString();
-        await supabase.from('site_content').upsert(Object.assign({ site_id: siteId }, c)).select();
-      }
-      var { data: business } = await supabase.from('businesses').select('*').eq('site_id', siteId).single();
-      var { data: content } = await supabase.from('site_content').select('*').eq('site_id', siteId).single();
-      return { business: business, content: content };
+    getBooking:     function(id) { return get('/api/dashboard/bookings/' + id); },
+    createBooking:  function(d) { cacheClear('getBookings'); return post('/api/dashboard/bookings', d); },
+    updateBooking:  function(id, d) { cacheClear('getBookings'); return put('/api/dashboard/bookings/' + id, d); },
+    deleteBooking:  function(id) { cacheClear('getBookings'); return del('/api/dashboard/bookings/' + id); },
+
+    // ORDERS
+    getOrders:    function(params) {
+      var q = params ? '?' + new URLSearchParams(params).toString() : '';
+      return get('/api/dashboard/orders' + q);
+    },
+    updateOrder:  function(id, d) { cacheClear('getOrders'); return put('/api/dashboard/orders/' + id, d); },
+
+    // CUSTOMERS
+    getCustomers:    function(params) {
+      var q = params ? '?' + new URLSearchParams(params).toString() : '';
+      return get('/api/dashboard/customers' + q);
+    },
+    getCustomer:     function(id) { return get('/api/dashboard/customers/' + id); },
+    createCustomer:  function(d) { cacheClear('getCustomers'); return post('/api/dashboard/customers', d); },
+    updateCustomer:  function(id, d) { cacheClear('getCustomers'); return put('/api/dashboard/customers/' + id, d); },
+    deleteCustomer:  function(id) { cacheClear('getCustomers'); return del('/api/dashboard/customers/' + id); },
+
+    // REVIEWS
+    getReviews:           function() { return get('/api/dashboard/reviews'); },
+    updateReview:         function(id, d) { cacheClear('getReviews'); return put('/api/dashboard/reviews/' + id, d); },
+    deleteReview:         function(id) { cacheClear('getReviews'); return del('/api/dashboard/reviews/' + id); },
+    getPendingReviews:    function() { return get('/api/dashboard/reviews/pending'); },
+    sendReviewRequest:    function(d) { return post('/api/dashboard/reviews/send-request', d); },
+
+    // REVIEW QUESTIONS
+    getReviewQuestions:    function() { return get('/api/dashboard/review-questions'); },
+    createReviewQuestion:  function(d) { cacheClear('getReviewQuestions'); return post('/api/dashboard/review-questions', d); },
+    updateReviewQuestion:  function(id, d) { cacheClear('getReviewQuestions'); return put('/api/dashboard/review-questions/' + id, d); },
+    deleteReviewQuestion:  function(id) { cacheClear('getReviewQuestions'); return del('/api/dashboard/review-questions/' + id); },
+
+    // WAIVERS
+    getWaivers:         function() { return get('/api/dashboard/waivers'); },
+    getWaiverTemplate:  function() { return get('/api/dashboard/waivers/template'); },
+    updateWaiverTemplate: function(d) { return put('/api/dashboard/waivers/template', d); },
+    getWaiverByBooking: function(bookingId) { return get('/api/dashboard/waivers/booking/' + bookingId); },
+    getWaiverLink:      function() { return get('/api/dashboard/waivers/link'); },
+    createWaiverLink:   function(d) { return post('/api/dashboard/waivers/link', d); },
+
+    // COUPONS
+    getCoupons:    function() { return get('/api/dashboard/coupons'); },
+    createCoupon:  function(d) { cacheClear('getCoupons'); return post('/api/dashboard/coupons', d); },
+    updateCoupon:  function(id, d) { cacheClear('getCoupons'); return put('/api/dashboard/coupons/' + id, d); },
+    deleteCoupon:  function(id) { cacheClear('getCoupons'); return del('/api/dashboard/coupons/' + id); },
+
+    // QR THEME
+    getQrTheme:    function() { return get('/api/dashboard/qr-theme'); },
+    updateQrTheme: function(d) { return put('/api/dashboard/qr-theme', d); },
+
+    // CONNECTIONS
+    getConnections: function() { return get('/api/dashboard/connections'); },
+    disconnect:     function(id) { return del('/api/dashboard/connections/' + id); },
+
+    // PAGES
+    getPages:    function() { return get('/api/dashboard/pages'); },
+    createPage:  function(d) { cacheClear('getPages'); return post('/api/dashboard/pages', d); },
+    updatePage:  function(id, d) { cacheClear('getPages'); return put('/api/dashboard/pages/' + id, d); },
+    deletePage:  function(id) { cacheClear('getPages'); return del('/api/dashboard/pages/' + id); },
+
+    // THEME
+    getTheme:    function() { return get('/api/dashboard/theme'); },
+    updateTheme: function(d) { cacheClear('getTheme'); return put('/api/dashboard/theme', d); },
+
+    // SEO
+    getSeo:    function() { return get('/api/dashboard/seo'); },
+    getSEO:    function() { return get('/api/dashboard/seo'); },
+    updateSeo: function(d) { cacheClear('getSeo'); return put('/api/dashboard/seo', d); },
+    updateSEO: function(d) { cacheClear('getSeo'); return put('/api/dashboard/seo', d); },
+
+    // DOMAIN
+    getDomain:    function() { return get('/api/dashboard/domain'); },
+    updateDomain: function(d) { cacheClear('getDomain'); return put('/api/dashboard/domain', d); },
+
+    // BILLING
+    getBilling: function() { return get('/api/dashboard/billing'); },
+
+    // APPS
+    getApps:      function() { return get('/api/dashboard/apps'); },
+    installApp:   function(d) { cacheClear('getApps'); return post('/api/dashboard/apps/install', d); },
+    uninstallApp: function(d) { cacheClear('getApps'); return post('/api/dashboard/apps/uninstall', d); },
+
+    // NOTIFICATIONS
+    getNotifications: function() { return get('/api/dashboard/notifications'); },
+    markAllRead:      function() { cacheClear('getNotifications'); return put('/api/dashboard/notifications/read-all'); },
+
+    // SMS LOG
+    getSmsLog: function() { return get('/api/dashboard/sms-log'); },
+
+    // AVAILABILITY
+    getAvailability: function() { return get('/api/dashboard/availability'); },
+    setAvailability: function(d) { cacheClear('getAvailability'); return post('/api/dashboard/availability', d); },
+    updateAvailability: function(id, d) { cacheClear('getAvailability'); return put('/api/dashboard/availability/' + id, d); },
+    deleteAvailability: function(id) { cacheClear('getAvailability'); return del('/api/dashboard/availability/' + id); },
+
+    // BLACKOUT / BLOCKS
+    getBlackoutDates:   function() { return get('/api/dashboard/availability/blocks'); },
+    addBlackoutDate:    function(d) { cacheClear('getBlackout'); return post('/api/dashboard/availability/block', d); },
+    deleteBlackoutDate: function(id) { cacheClear('getBlackout'); return del('/api/dashboard/availability/block/' + id); },
+
+    // ACTIVITY LOG
+    getActivity: function() { return get('/api/dashboard/activity'); },
+
+    // ANALYTICS
+    getAnalytics: function() { return get('/api/dashboard/analytics'); },
+
+    // MEDIA (alias for gallery)
+    getMedia:    function() { return get('/api/dashboard/media'); },
+    uploadImage: function(d) { cacheClear('getMedia'); return post('/api/dashboard/media', d); },
+    deleteImage: function(id) { cacheClear('getMedia'); return del('/api/dashboard/media/' + id); },
+
+    // MESSAGING SETTINGS
+    getMessaging:    function() { return get('/api/dashboard/messaging-settings'); },
+    updateMessaging: function(d) { cacheClear('getMessaging'); return put('/api/dashboard/messaging-settings', d); },
+
+    // SMS CAMPAIGNS
+    getSmsCampaigns:  function() { return get('/api/dashboard/sms/campaigns'); },
+    createSmsCampaign: function(d) { return post('/api/dashboard/sms/campaign', d); },
+
+    // LOYALTY
+    getLoyaltySettings: function() { return get('/api/dashboard/loyalty/settings'); },
+    updateLoyaltySettings: function(d) { cacheClear('getLoyalty'); return put('/api/dashboard/loyalty/settings', d); },
+    getLoyaltyMembers:  function() { return get('/api/dashboard/loyalty/members'); },
+    earnLoyaltyPoints:  function(d) { return post('/api/dashboard/loyalty/earn', d); },
+    getLoyaltyHistory:  function(cid) { return get('/api/dashboard/loyalty/history/' + cid); },
+
+    // MODULES
+    getModules:    function() { return get('/api/dashboard/modules'); },
+    updateModules: function(d) { cacheClear('getModules'); return put('/api/dashboard/modules', d); },
+
+    // ONBOARDING
+    getOnboarding:    function() { return get('/api/dashboard/onboarding'); },
+    updateOnboarding: function(d) { cacheClear('getOnboarding'); return put('/api/dashboard/onboarding', d); },
+
+    // WEBSITE CONTENT
+    getWebsiteContent:    function() { return get('/api/dashboard/website-content'); },
+    updateWebsiteContent: function(section, d) {
+      cacheClear('getWebsiteContent');
+      return put('/api/dashboard/website-content/' + section, d);
     },
 
-    // --- Hours ---
-    getHours: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return {};
-      var { data } = await supabase.from('site_content').select('hours').eq('site_id', siteId).single();
-      return (data && data.hours) || {};
-    },
-    updateHours: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_content').update({ hours: d.hours || d, updated_at: new Date().toISOString() }).eq('site_id', siteId).select('hours').single();
-      return data ? data.hours : {};
-    },
+    // AI PROFILE / CHAT
+    getAiProfile:    function() { return get('/api/dashboard/ai-profile'); },
+    updateAiProfile: function(d) { return put('/api/dashboard/ai-profile', d); },
+    aiChat:          function(d) { return post('/api/dashboard/ai-chat', d); },
+    getAiConversations: function() { return get('/api/dashboard/ai-chat/conversations'); },
+    getAiConversation:  function(id) { return get('/api/dashboard/ai-chat/conversations/' + id); },
+    deleteAiConversation: function(id) { return del('/api/dashboard/ai-chat/conversations/' + id); },
 
-    // --- Services ---
-    getServices: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('services').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-    createService: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('services').insert(obj).select().single();
-      return data;
-    },
-    updateService: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('services').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteService: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('services').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
+    // QA PAIRS
+    getQaPairs:    function() { return get('/api/dashboard/qa-pairs'); },
+    createQaPair:  function(d) { cacheClear('getQaPairs'); return post('/api/dashboard/qa-pairs', d); },
+    updateQaPair:  function(id, d) { cacheClear('getQaPairs'); return put('/api/dashboard/qa-pairs/' + id, d); },
+    deleteQaPair:  function(id) { cacheClear('getQaPairs'); return del('/api/dashboard/qa-pairs/' + id); },
 
-    // --- Gallery / Media ---
-    getGallery: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('media').select('*').eq('site_id', siteId).order('uploaded_at', { ascending: false });
-      return data || [];
-    },
-    uploadMedia: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('media').insert({ site_id: siteId, url: d.url, filename: d.filename, alt_text: d.alt_text, file_size: d.file_size, file_type: d.file_type || 'image', folder: d.folder || 'gallery' }).select().single();
-      return data;
-    },
-    deleteMedia: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('media').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
+    // PROMOTIONS
+    getPromotions:    function() { return get('/api/dashboard/promotions'); },
+    createPromotion:  function(d) { cacheClear('getPromotions'); return post('/api/dashboard/promotions', d); },
+    updatePromotion:  function(id, d) { cacheClear('getPromotions'); return put('/api/dashboard/promotions/' + id, d); },
+    deletePromotion:  function(id) { cacheClear('getPromotions'); return del('/api/dashboard/promotions/' + id); },
 
-    // --- FAQs ---
-    getFaqs: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('faqs').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-    createFaq: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('faqs').insert(obj).select().single();
-      return data;
-    },
-    updateFaq: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('faqs').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteFaq: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('faqs').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
+    // PUBLISH
+    publish: function() { return post('/api/dashboard/publish', {}); },
 
-    // --- Social Links ---
-    getSocial: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return {};
-      var { data } = await supabase.from('site_content').select('social_links').eq('site_id', siteId).single();
-      return (data && data.social_links) || {};
-    },
-    updateSocial: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_content').update({ social_links: d, updated_at: new Date().toISOString() }).eq('site_id', siteId).select('social_links').single();
-      return data ? data.social_links : {};
-    },
+    // OVERVIEW
+    getOverview:         function() { return get('/api/dashboard/overview'); },
+    getDeclinedBookings: function() { return get('/api/dashboard/declined-bookings'); },
 
-    // --- Staff ---
-    getStaff: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('staff').select('*').eq('site_id', siteId).order('created_at', { ascending: true });
-      return data || [];
-    },
-    createStaff: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('staff').insert(obj).select().single();
-      return data;
-    },
-    updateStaff: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('staff').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteStaff: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('staff').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
+    // CALENDAR
+    getCalendar: function() { return get('/api/dashboard/calendar'); },
 
-    // --- Menu Items ---
-    getMenu: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('menu_items').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-    createMenuItem: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('menu_items').insert(obj).select().single();
-      return data;
-    },
-    updateMenuItem: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('menu_items').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteMenuItem: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('menu_items').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
+    // STRIPE STATUS
+    getStripeStatus: function() { return get('/api/dashboard/stripe-status'); },
 
-    // --- Events ---
-    getEvents: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('events').select('*').eq('site_id', siteId).order('event_date', { ascending: true });
-      return data || [];
-    },
-    createEvent: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('events').insert(obj).select().single();
-      return data;
-    },
-    updateEvent: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('events').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteEvent: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('events').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Fleet Types (rentals) ---
-    getFleetTypes: async function() {
-      try {
-        var sbKey = Object.keys(localStorage).find(function(k) { return k.startsWith('sb-') && k.endsWith('-auth-token'); });
-        var token = null;
-        if (sbKey) { try { var s = JSON.parse(localStorage.getItem(sbKey)); token = s && s.access_token ? s.access_token : null; } catch(e) {} }
-        if (!token) token = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
-        var res = await fetch(API_BASE + '/api/dashboard/fleet', { headers: { 'Authorization': 'Bearer ' + token } });
-        var data = await res.json();
-        return Array.isArray(data) ? data : [];
-      } catch(e) { return []; }
-    },
-    createFleetType: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id; delete obj.fleet_items;
-      var { data } = await supabase.from('fleet_types').insert(obj).select().single();
-      return data;
-    },
-    updateFleetType: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id; delete obj.fleet_items;
-      var { data } = await supabase.from('fleet_types').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteFleetType: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('fleet_types').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Fleet Items ---
-    getFleetItems: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('fleet_items').select('*, fleet_types(name)').eq('site_id', siteId);
-      return data || [];
-    },
-    createFleetItem: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('fleet_items').insert(obj).select().single();
-      return data;
-    },
-    updateFleetItem: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('fleet_items').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteFleetItem: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('fleet_items').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Time Slots ---
-    getTimeSlots: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('rental_time_slots').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-    createTimeSlot: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('rental_time_slots').insert(obj).select().single();
-      return data;
-    },
-    updateTimeSlot: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('rental_time_slots').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteTimeSlot: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('rental_time_slots').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Pricing ---
-    getPricing: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('rental_pricing').select('*, fleet_types(name), rental_time_slots(name)').eq('site_id', siteId);
-      return data || [];
-    },
-    setPricing: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('rental_pricing').upsert(obj).select().single();
-      return data;
-    },
-
-    // --- Addons ---
-    getAddons: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('rental_addons').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-    createAddon: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('rental_addons').insert(obj).select().single();
-      return data;
-    },
-    updateAddon: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('rental_addons').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteAddon: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('rental_addons').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Bookings ---
-    getBookings: async function(params) {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var query = supabase.from('bookings')
-        .select('*, fleet_types(name, image_url), rental_time_slots(name, start_time, end_time)')
-        .eq('site_id', siteId).order('booking_date', { ascending: false });
-      if (params) {
-        if (params.status) query = query.eq('status', params.status);
-        if (params.date) query = query.eq('booking_date', params.date);
-        if (params.from) query = query.gte('booking_date', params.from);
-        if (params.to) query = query.lte('booking_date', params.to);
-      }
-      var { data } = await query;
-      return data || [];
-    },
-    createBooking: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('bookings').insert(obj).select().single();
-      return data;
-    },
-    updateBooking: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('bookings').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteBooking: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('bookings').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Orders ---
-    getOrders: async function(params) {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var query = supabase.from('orders').select('*').eq('site_id', siteId).order('created_at', { ascending: false });
-      if (params && params.status) query = query.eq('status', params.status);
-      var { data } = await query;
-      return data || [];
-    },
-    updateOrder: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('orders').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-
-    // --- Customers ---
-    getCustomers: async function(params) {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var query = supabase.from('customers').select('*').eq('site_id', siteId).order('created_at', { ascending: false });
-      if (params && params.search) {
-        query = query.or('name.ilike.%' + params.search + '%,email.ilike.%' + params.search + '%,phone.ilike.%' + params.search + '%');
-      }
-      var { data } = await query;
-      return data || [];
-    },
-    getCustomer: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('customers').select('*').eq('id', id).eq('site_id', siteId).single();
-      return data;
-    },
-    createCustomer: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('customers').insert(obj).select().single();
-      return data;
-    },
-    updateCustomer: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('customers').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-
-    // --- Reviews ---
-    getReviews: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('reviews').select('*').eq('site_id', siteId).order('created_at', { ascending: false });
-      return data || [];
-    },
-    updateReview: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('reviews').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-
-    // --- Review Questions (per-business) ---
-    getReviewQuestions: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('review_questions').select('*').eq('site_id', siteId).order('display_order', { ascending: true });
-      return data || [];
-    },
-    createReviewQuestion: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId });
-      var { data } = await supabase.from('review_questions').insert(obj).select().single();
-      return data;
-    },
-    updateReviewQuestion: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('review_questions').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteReviewQuestion: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return false;
-      var { error } = await supabase.from('review_questions').delete().eq('id', id).eq('site_id', siteId);
-      return !error;
-    },
-
-    // --- Review Request (create with token & send SMS) ---
-    createReviewWithToken: async function(reviewData) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, reviewData, { site_id: siteId });
-      var { data, error } = await supabase.from('reviews').insert(obj).select().single();
-      if (error) throw new Error(error.message);
-      return data;
-    },
-
-    sendSMS: async function(smsData) {
-      // Call backend SMS API to send message
-      var response = await fetch('/api/sms/send', {
+    // SEND SMS
+    sendSMS: async function(d) {
+      var res = await fetch(API_BASE + '/api/sms/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(smsData)
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (getToken() || '') },
+        body: JSON.stringify(d)
       });
-      if (!response.ok) {
-        var err = await response.json();
-        throw new Error(err.error || 'SMS send failed');
-      }
-      return await response.json();
+      if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'SMS failed'); }
+      return await res.json();
     },
 
-    // --- Waivers ---
-    getWaivers: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('waivers').select('*').eq('site_id', siteId).order('signed_at', { ascending: false });
-      return data || [];
-    },
+    // RESEND CONFIRMATION
+    resendConfirmation: function(d) { return post('/api/public/resend-confirmation', d); },
 
-    // --- Coupons ---
-    getCoupons: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('coupons').select('*').eq('site_id', siteId).order('created_at', { ascending: false });
-      return data || [];
-    },
-    createCoupon: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('coupons').insert(obj).select().single();
-      return data;
-    },
-    updateCoupon: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('coupons').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteCoupon: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('coupons').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Specials ---
-    getSpecials: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('specials').select('*').eq('site_id', siteId);
-      return data || [];
-    },
-    createSpecial: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('specials').insert(obj).select().single();
-      return data;
-    },
-    updateSpecial: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('specials').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteSpecial: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('specials').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Connections (OAuth) ---
-    getConnections: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('connections').select('id, provider, account_name, status, connected_at').eq('site_id', siteId);
-      return data || [];
-    },
-    connect: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId });
-      var { data } = await supabase.from('connections').upsert(obj).select().single();
-      return data;
-    },
-    disconnect: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('connections').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Pages ---
-    getPages: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('site_pages').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-    createPage: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { site_id: siteId }); delete obj.id;
-      var { data } = await supabase.from('site_pages').insert(obj).select().single();
-      return data;
-    },
-    updatePage: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var obj = Object.assign({}, d, { updated_at: new Date().toISOString() }); delete obj.site_id; delete obj.id;
-      var { data } = await supabase.from('site_pages').update(obj).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deletePage: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('site_pages').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Theme ---
-    getTheme: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return {};
-      var { data } = await supabase.from('site_content').select('theme_color, theme_font, custom_css').eq('site_id', siteId).single();
-      return data || {};
-    },
-    updateTheme: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_content').update({ theme_color: d.theme_color, theme_font: d.theme_font, custom_css: d.custom_css, updated_at: new Date().toISOString() }).eq('site_id', siteId).select('theme_color, theme_font, custom_css').single();
-      return data;
-    },
-
-    // --- SEO ---
-    getSeo: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return {};
-      var { data } = await supabase.from('site_content').select('seo_title, seo_description').eq('site_id', siteId).single();
-      return data || {};
-    },
-    updateSeo: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_content').update({ seo_title: d.seo_title, seo_description: d.seo_description, updated_at: new Date().toISOString() }).eq('site_id', siteId).select('seo_title, seo_description').single();
-      return data;
-    },
-
-    // --- Domain ---
-    getDomain: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return {};
-      var { data } = await supabase.from('businesses').select('domain, subdomain').eq('site_id', siteId).single();
-      return data || {};
-    },
-    updateDomain: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('businesses').update({ domain: d.domain, updated_at: new Date().toISOString() }).eq('site_id', siteId).select('domain, subdomain').single();
-      return data;
-    },
-
-    // --- Billing ---
-    getBilling: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return {};
-      var { data: business } = await supabase.from('businesses').select('plan, status').eq('site_id', siteId).single();
-      var { data: apps } = await supabase.from('site_apps').select('app_id, apps(name, monthly_price)').eq('site_id', siteId).eq('enabled', true);
-      var appsCost = (apps || []).reduce(function(sum, a) { return sum + ((a.apps && a.apps.monthly_price) || 0); }, 0);
-      return { plan: business ? business.plan : 'free', status: business ? business.status : 'active', installed_apps: apps || [], monthly_apps_cost: appsCost };
-    },
-
-    // --- Apps ---
-    getApps: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data: allApps } = await supabase.from('apps').select('*').eq('status', 'active');
-      var { data: installed } = await supabase.from('site_apps').select('app_id, enabled').eq('site_id', siteId);
-      var installedMap = {};
-      (installed || []).forEach(function(a) { installedMap[a.app_id] = a.enabled; });
-      return (allApps || []).map(function(app) { return Object.assign({}, app, { installed: app.app_id in installedMap, enabled: installedMap[app.app_id] || false }); });
-    },
-    installApp: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_apps').upsert({ site_id: siteId, app_id: d.app_id, enabled: true }).select().single();
-      return data;
-    },
-    uninstallApp: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('site_apps').update({ enabled: false }).eq('site_id', siteId).eq('app_id', d.app_id);
-      return { success: true };
-    },
-
-    // --- Notifications ---
-    getNotifications: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('notifications').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(50);
-      return data || [];
-    },
-    markAllRead: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('notifications').update({ read: true }).eq('site_id', siteId).eq('read', false);
-      return { success: true };
-    },
-
-    // --- SMS Log ---
-    getSmsLog: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('sms_log').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(100);
-      return data || [];
-    },
-
-    // --- Activity ---
-    getActivity: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('activity_log').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(100);
-      return data || [];
-    },
-
-    // --- Availability ---
-    getAvailability: async function(date) {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('availability').select('*').eq('site_id', siteId);
-      return data || [];
-    },
-    setAvailability: async function(itemId, dateKey, status) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      if (status === 'available') {
-        await supabase.from('availability').delete().eq('site_id', siteId).eq('item_id', itemId).eq('date', dateKey);
-        return { success: true };
-      }
-      var { data } = await supabase.from('availability').upsert({ site_id: siteId, item_id: itemId, date: dateKey, status: status }, { onConflict: 'site_id,item_id,date' }).select().single();
-      return data;
-    },
-
-    // --- Blackout Dates ---
-    getBlackoutDates: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('blackout_dates').select('*').eq('site_id', siteId).order('date_from', { ascending: true });
-      return data || [];
-    },
-    addBlackoutDate: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var payload = { site_id: siteId, date_from: d.date_from, date_to: d.date_to, label: d.label || null };
-      var { data } = await supabase.from('blackout_dates').insert(payload).select().single();
-      return data;
-    },
-    deleteBlackoutDate: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('blackout_dates').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Messaging Settings ---
-    getMessaging: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('messaging_settings').select('*').eq('site_id', siteId).single();
-      return data || null;
-    },
-    updateMessaging: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var payload = Object.assign({}, d, { site_id: siteId, updated_at: new Date().toISOString() });
-      var { data } = await supabase.from('messaging_settings').upsert(payload, { onConflict: 'site_id' }).select().single();
-      return data;
-    },
-
-    // --- Waitlist ---
-    getWaitlist: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return { settings: {}, entries: [] };
-      var { data: settings } = await supabase.from('waitlist_settings').select('*').eq('site_id', siteId).single();
-      var { data: entries } = await supabase.from('waitlist').select('*').eq('site_id', siteId).order('created_at', { ascending: true });
-      return { settings: settings || {}, entries: entries || [] };
-    },
-    updateWaitlistSettings: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var payload = Object.assign({}, d, { site_id: siteId, updated_at: new Date().toISOString() });
-      var { data } = await supabase.from('waitlist_settings').upsert(payload, { onConflict: 'site_id' }).select().single();
-      return data;
-    },
-    updateWaitlistEntry: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('waitlist').update(Object.assign({}, d, { updated_at: new Date().toISOString() })).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteWaitlistEntry: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('waitlist').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Locations ---
-    getLocations: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('locations').select('*').eq('site_id', siteId).order('sort_order').order('created_at');
-      return data || [];
-    },
-    createLocation: async function(d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('locations').insert(Object.assign({}, d, { site_id: siteId })).select().single();
-      return data;
-    },
-    updateLocation: async function(id, d) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('locations').update(Object.assign({}, d, { updated_at: new Date().toISOString() })).eq('id', id).eq('site_id', siteId).select().single();
-      return data;
-    },
-    deleteLocation: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('locations').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Publish ---
-    publish: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('businesses').update({ status: 'active', updated_at: new Date().toISOString() }).eq('site_id', siteId);
-      return { success: true, message: 'Site published', published_at: new Date().toISOString() };
-    },
-
-    // --- Export ---
-    exportData: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      return { site_id: siteId };
-    },
-
-    // --- Analytics ---
-    getAnalytics: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-
-      var today = new Date().toISOString().split('T')[0];
-      var weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      var monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-      // Fetch all data in parallel
-      var [todayViewsRes, todayConvRes, monthViewsRes, funnelRes, monthConvRes] = await Promise.all([
-        supabase.from('page_views').select('session_id, ip_address').eq('site_id', siteId).gte('created_at', today + 'T00:00:00'),
-        supabase.from('conversions').select('revenue').eq('site_id', siteId).gte('created_at', today + 'T00:00:00'),
-        supabase.from('page_views').select('utm_source, utm_medium, session_id, device_type, created_at').eq('site_id', siteId).gte('created_at', monthAgo + 'T00:00:00'),
-        supabase.from('booking_funnel').select('step_name, booking_ref').eq('site_id', siteId).gte('created_at', monthAgo + 'T00:00:00'),
-        supabase.from('conversions').select('revenue, created_at').eq('site_id', siteId).gte('created_at', monthAgo + 'T00:00:00')
-      ]);
-
-      var todayViews = todayViewsRes.data || [];
-      var todayConversions = todayConvRes.data || [];
-      var monthViews = monthViewsRes.data || [];
-      var funnelRows = funnelRes.data || [];
-      var monthConversions = monthConvRes.data || [];
-
-      // Today stats
-      var todayRevenue = todayConversions.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
-      var todaySessions = new Set(todayViews.map(function(v) { return v.session_id || v.ip_address; })).size;
-
-      // Week stats
-      var weekViews = monthViews.filter(function(v) { return v.created_at >= weekAgo; });
-      var weekSessions = new Set(weekViews.map(function(v) { return v.session_id; })).size;
-      var weekRev = monthConversions.filter(function(c) { return c.created_at >= weekAgo + 'T00:00:00'; })
-        .reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
-
-      // Month stats
-      var monthSessions = new Set(monthViews.map(function(v) { return v.session_id; })).size;
-      var monthRev = monthConversions.reduce(function(s, c) { return s + (parseFloat(c.revenue) || 0); }, 0);
-
-      // Booking funnel — count unique booking_refs per step
-      var funnelSets = {};
-      funnelRows.forEach(function(r) {
-        if (!funnelSets[r.step_name]) funnelSets[r.step_name] = new Set();
-        if (r.booking_ref) funnelSets[r.step_name].add(r.booking_ref);
-      });
-      var bookingFunnel = {
-        opened:    (funnelSets['opened']          || new Set()).size,
-        step2:     (funnelSets['step2_boat_time'] || new Set()).size,
-        step3:     (funnelSets['step3_extras']    || new Set()).size,
-        step4:     (funnelSets['step4_checkout']  || new Set()).size,
-        completed: (funnelSets['completed']        || new Set()).size,
-        abandoned: (funnelSets['abandoned']        || new Set()).size
-      };
-
-      // UTM source breakdown
-      var utmMap = {};
-      monthViews.forEach(function(v) {
-        var src = v.utm_source || 'direct';
-        var med = v.utm_medium || 'none';
-        var key = src + '|' + med;
-        if (!utmMap[key]) utmMap[key] = { source: src, medium: med, sessions: new Set() };
-        if (v.session_id) utmMap[key].sessions.add(v.session_id);
-      });
-      var utmSources = Object.values(utmMap).map(function(u) {
-        return { source: u.source, medium: u.medium, visitors: u.sessions.size };
-      }).sort(function(a, b) { return b.visitors - a.visitors; }).slice(0, 10);
-
-      // Device breakdown
-      var deviceMap = {};
-      monthViews.forEach(function(v) {
-        var d = v.device_type || 'unknown';
-        deviceMap[d] = (deviceMap[d] || 0) + 1;
-      });
-      var deviceBreakdown = Object.entries(deviceMap).map(function(kv) {
-        return { device: kv[0], count: kv[1] };
-      }).sort(function(a, b) { return b.count - a.count; });
-
-      return {
-        today: { visitors: todaySessions, pageviews: todayViews.length, conversions: todayConversions.length, revenue: todayRevenue },
-        week:  { visitors: weekSessions, revenue: weekRev },
-        month: { visitors: monthSessions, revenue: monthRev },
-        topPages: [],
-        trafficSources: utmSources,
-        conversionFunnel: { views: monthSessions, clicks: bookingFunnel.opened, bookings: bookingFunnel.completed },
-        bookingFunnel: bookingFunnel,
-        deviceBreakdown: deviceBreakdown,
-        revenueChart: []
-      };
-    },
-
-    // --- SEO ---
-    getSEO: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data: pages } = await supabase.from('seo_meta_tags').select('*').eq('site_id', siteId);
-      var { data: sitemap } = await supabase.from('sitemap_config').select('*').eq('site_id', siteId).single();
-      var { data: robots } = await supabase.from('robots_config').select('*').eq('site_id', siteId).single();
-      return { pages: pages || [], sitemap: sitemap || {}, robots: (robots && robots.robots_txt) || '' };
-    },
-
-    createSEOPage: async function(pageData) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('seo_meta_tags').insert(Object.assign({ site_id: siteId }, pageData)).select().single();
-      return data;
-    },
-
-    updateSEOPage: async function(id, pageData) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      pageData.updated_at = new Date().toISOString();
-      await supabase.from('seo_meta_tags').update(pageData).eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    generateSitemap: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.rpc('generate_sitemap', { p_site_id: siteId });
-      return { xml: data };
-    },
-
-    updateSitemapConfig: async function(config) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      config.updated_at = new Date().toISOString();
-      await supabase.from('sitemap_config').upsert(Object.assign({ site_id: siteId }, config));
-      return { success: true };
-    },
-
-    updateRobotsTxt: async function(robotsTxt) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('robots_config').upsert({ site_id: siteId, robots_txt: robotsTxt, updated_at: new Date().toISOString() });
-      return { success: true };
-    },
-
-    getTrackingSettings: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_content').select('ga4_id, facebook_pixel_id').eq('site_id', siteId).single();
-      return data || {};
-    },
-
-    updateTrackingSettings: async function(settings) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('site_content').update({ ga4_id: settings.ga4_id || null, facebook_pixel_id: settings.facebook_pixel_id || null, updated_at: new Date().toISOString() }).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Social Media ---
-    getSocialMedia: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data: accounts } = await supabase.from('social_media_accounts').select('*').eq('site_id', siteId);
-      var { data: posts } = await supabase.from('social_media_posts').select('*').eq('site_id', siteId).order('created_at', { ascending: false }).limit(50);
-      var { data: analytics } = await supabase.from('social_media_analytics').select('*').eq('site_id', siteId).gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-      return { accounts: accounts || [], posts: posts || [], analytics: analytics || [] };
-    },
-
-    createSocialPost: async function(postData) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var session = await getSupabaseSession();
-      var { data } = await supabase.from('social_media_posts').insert(Object.assign({
-        site_id: siteId,
-        created_by: session ? session.user.id : null
-      }, postData)).select().single();
-      return data;
-    },
-
-    updateSocialPost: async function(id, postData) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      postData.updated_at = new Date().toISOString();
-      await supabase.from('social_media_posts').update(postData).eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    deleteSocialPost: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('social_media_posts').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    disconnectSocialAccount: async function(platform) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('social_media_accounts').update({ is_connected: false, access_token: null, updated_at: new Date().toISOString() }).eq('site_id', siteId).eq('platform', platform);
-      return { success: true };
-    },
-
-    // --- FAQ ---
-    getFAQs: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return [];
-      var { data } = await supabase.from('faqs').select('*').eq('site_id', siteId).order('sort_order', { ascending: true });
-      return data || [];
-    },
-
-    createFAQ: async function(faq) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data: last } = await supabase.from('faqs').select('sort_order').eq('site_id', siteId).order('sort_order', { ascending: false }).limit(1).single();
-      var nextSort = ((last && last.sort_order) || 0) + 1;
-      var { data } = await supabase.from('faqs').insert(Object.assign({ site_id: siteId, sort_order: nextSort }, faq)).select().single();
-      return data;
-    },
-
-    updateFAQ: async function(id, updates) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('faqs').update(updates).eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    deleteFAQ: async function(id) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('faqs').delete().eq('id', id).eq('site_id', siteId);
-      return { success: true };
-    },
-
-    // --- Modules (site page layout) ---
-    getModules: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('site_content').select('modules').eq('site_id', siteId).single();
-      return data ? data.modules : null;
-    },
-
-    updateModules: async function(modules) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('site_content').upsert({ site_id: siteId, modules: modules, updated_at: new Date().toISOString() });
-      return { success: true };
-    },
-
-    // --- Onboarding progress ---
-    getOnboarding: async function() {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      var { data } = await supabase.from('onboarding_progress').select('*').eq('site_id', siteId).single();
-      return data || { step1_done: false, step2_done: false, step3_done: false, step4_done: false, step5_done: false, step6_done: false };
-    },
-
-    updateOnboarding: async function(updates) {
-      var siteId = await ensureSiteId(); if (!siteId) return null;
-      await supabase.from('onboarding_progress').upsert(Object.assign({ site_id: siteId }, updates));
-      return { success: true };
-    }
+    // EXPORT
+    exportData: function(type) { return post('/api/dashboard/export/' + type, {}); }
   };
 
-  // ---- Auto-cache wrapper for dashboard methods ----
-  // GET methods (get*) cache results for 2 min.
-  // Write methods (create*, update*, delete*, set*, upload*, install*, uninstall*,
-  //   publish, connect, disconnect, markAllRead) clear related cache on success.
-  (function wrapDashboardCache() {
-    var original = {};
-    Object.keys(dashboard).forEach(function(key) {
-      original[key] = dashboard[key];
-
-      // Identify GET methods (start with "get" or are read-only names)
-      if (key.indexOf('get') === 0 || key === 'exportData') {
-        dashboard[key] = async function() {
-          var cacheKey = key + '_' + JSON.stringify(Array.prototype.slice.call(arguments));
-          var cached = dashCacheGet(cacheKey);
-          if (cached !== undefined) { console.log('DashCache hit:', key); return cached; }
-          var result = await original[key].apply(null, arguments);
-          dashCacheSet(cacheKey, result);
-          return result;
-        };
-      }
-      // Identify WRITE methods — clear related cache after mutation
-      else if (/^(create|update|delete|set|upload|install|uninstall|publish|connect|disconnect|mark)/.test(key)) {
-        dashboard[key] = async function() {
-          var result = await original[key].apply(null, arguments);
-          // Extract the resource name: updateBooking -> booking, createFleetType -> fleettype
-          var resource = key.replace(/^(create|update|delete|set|upload|install|uninstall)/, '').toLowerCase();
-          // Clear all cached gets for this resource type
-          dashCacheClear('get' + resource);
-          // Also clear generic gets (getProfile covers updateProfile, etc.)
-          dashCacheClear('get');
-          console.log('DashCache cleared after:', key);
-          return result;
-        };
-      }
-    });
-  })();
-
-  // iPhone HEIC/HEIF detection — MIME type is often empty on macOS/desktop
-  // so we fall back to extension.
+  // ---- Image helpers (no change — these are client-side only) ----
   function isHeicFile(file) {
     if (!file) return false;
     var t = (file.type || '').toLowerCase();
@@ -1234,21 +499,16 @@ const CC = (function() {
     return /\.hei[cf]$/i.test(file.name || '');
   }
 
-  // Check for HEIC by magic bytes: bytes 4–7 are 'ftyp', and brand contains 'heic'/'heis'/'hevx'/'mif1'
-  // Needed because iOS camera sometimes delivers HEIC with type="" or type="image/jpeg"
   async function isHeicByMagicBytes(file) {
     try {
       var buf = await file.slice(0, 12).arrayBuffer();
       var v = new Uint8Array(buf);
-      // bytes 4-7 must be 'ftyp'
       if (v[4]!==0x66||v[5]!==0x74||v[6]!==0x79||v[7]!==0x70) return false;
-      // major brand at bytes 8-11: heic, heis, hevx, hevc, mif1, msf1
       var brand = String.fromCharCode(v[8],v[9],v[10],v[11]);
       return /^(heic|heis|hevx|hevc|mif1|msf1)/i.test(brand);
     } catch(e) { return false; }
   }
 
-  // Lazy-load heic2any from CDN only when a HEIC is encountered.
   var _heic2anyPromise = null;
   function loadHeic2Any() {
     if (window.heic2any) return Promise.resolve(window.heic2any);
@@ -1271,15 +531,11 @@ const CC = (function() {
     return new File([blob], name, { type: 'image/jpeg' });
   }
 
-  // Resize + re-encode to JPEG so uploads stay under Vercel's 4.5MB body limit
-  // and cut vision-token cost on the backend. Returns { dataUrl, blob, mimeType }.
-  // Transparently converts HEIC/HEIF (iPhone default) to JPEG first.
   async function compressImage(file, maxDim, quality) {
     maxDim = maxDim || 1280;
     quality = quality == null ? 0.75 : quality;
     if (isHeicFile(file) || await isHeicByMagicBytes(file)) {
-      try { file = await heicToJpeg(file); }
-      catch (e) { throw new Error('HEIC conversion failed: ' + e.message); }
+      try { file = await heicToJpeg(file); } catch(e) { throw new Error('HEIC conversion failed: ' + e.message); }
     }
     return new Promise(function(resolve, reject) {
       var reader = new FileReader();
@@ -1305,8 +561,6 @@ const CC = (function() {
     });
   }
 
-  // Compress a File if it's an image; otherwise return the original (for videos, etc).
-  // Returns a File/Blob suitable for FormData.
   async function compressImageFile(file, maxDim, quality) {
     if (!file) return file;
     var isImg = (file.type || '').indexOf('image/') === 0 || isHeicFile(file);
@@ -1316,51 +570,38 @@ const CC = (function() {
       if (!c.blob) return file;
       var name = (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg';
       return new File([c.blob], name, { type: 'image/jpeg' });
-    } catch (e) { return file; }
+    } catch(e) { return file; }
   }
 
-  // Adds a search input above a <select> that live-filters its <option>s
-  // as the user types. Idempotent — safe to call again after repopulating.
   function attachSelectSearch(sel, placeholder) {
     if (!sel || sel.dataset.ccSearch === '1') { if (sel) ccSyncSearchOptions(sel); return; }
     sel.dataset.ccSearch = '1';
     var input = document.createElement('input');
     input.type = 'search';
     input.placeholder = placeholder || 'Type to filter...';
-    input.setAttribute('aria-label', placeholder || 'Filter list');
-    input.style.cssText = 'display:block;width:100%;margin-top:6px;padding:7px 10px;' +
-      'background:var(--bg);border:1px solid var(--card-border);border-radius:8px;' +
-      'color:var(--text);font-size:13px;box-sizing:border-box;';
+    input.style.cssText = 'display:block;width:100%;margin-top:6px;padding:7px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;box-sizing:border-box;';
     input.addEventListener('input', function() {
       var q = (input.value || '').trim().toLowerCase();
-      var any = false;
       Array.prototype.forEach.call(sel.options, function(o, i) {
         if (i === 0 && o.value === '') { o.hidden = false; return; }
-        var match = !q || (o.textContent || '').toLowerCase().indexOf(q) !== -1;
-        o.hidden = !match;
-        if (match) any = true;
+        o.hidden = !(!q || (o.textContent || '').toLowerCase().indexOf(q) !== -1);
       });
-      if (!any && sel.options[0]) sel.options[0].hidden = false;
     });
     if (sel.parentNode) sel.parentNode.insertBefore(input, sel.nextSibling);
     sel._ccSearchInput = input;
   }
 
   function ccSyncSearchOptions(sel) {
-    // Re-apply current filter after options are repopulated.
-    if (sel._ccSearchInput) {
-      var ev = new Event('input', { bubbles: true });
-      sel._ccSearchInput.dispatchEvent(ev);
-    }
+    if (sel._ccSearchInput) sel._ccSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   // ---- Public API ----
   return {
-    get: get, post: post, put: put, del: del,
+    get: get, post: post, put: put, patch: patch, del: del,
     login: login, signup: signup, logout: logout, getSession: getSession,
     getToken: getToken, setToken: setToken, clearToken: clearToken,
     dashboard: dashboard,
-    clearDashCache: dashCacheClear,
+    clearDashCache: cacheClear,
     compressImage: compressImage,
     compressImageFile: compressImageFile,
     attachSelectSearch: attachSelectSearch,
