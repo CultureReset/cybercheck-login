@@ -121,6 +121,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="14" y2="18"/></svg>
           <span>Page Rails</span>
         </div>
+        <div class="nav-item" data-page="ai-config" onclick="showPage('ai-config')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          <span>AI Config</span>
+        </div>
         <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span>Coupons 🤖</span>
@@ -5563,6 +5567,20 @@
 
       <!-- GCR BUSINESS DASHBOARD -->
       <div id="page-biz-dashboard" class="page-content" style="display:none;padding:0;">
+
+      <!-- ── AI CONFIG ──────────────────────────────────── -->
+      <div id="page-ai-config" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>AI Configuration</h1>
+        </div>
+        <div class="card" style="padding:16px;margin-bottom:16px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);">
+          <div style="font-size:14px;color:#a78bfa;font-weight:600;margin-bottom:4px;">Choose your AI providers</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">Each task can use a different AI. Add your API keys to Vercel env vars and select which model handles each job. Changes take effect immediately — no deploy needed.</div>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="ai-config-body"><div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div></div>
+        </div>
+      </div>
         <div style="display:flex;height:calc(100vh - 60px);overflow:hidden;">
 
           <!-- LEFT SIDEBAR -->
@@ -6790,6 +6808,7 @@
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
       if (page === 'gcr-ads' && !_adsLoaded) loadGCRAds();
       if (page === 'gcr-rails') loadPageRails();
+      if (page === 'ai-config') loadAIConfig();
       if (page === 'leads' && !_leadsLoaded) loadLeads();
       if (page === 'ar-hunts') renderHuntsGrid();
       if (page === 'users' && !_usersLoaded) loadUsers();
@@ -8396,6 +8415,103 @@
         await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rail-items/' + itemId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Removed', 'success');
         loadRailItems();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── AI CONFIG ──────────────────────────────────────────
+    var _aiConfigs = [];
+    var _aiProviders = [];
+
+    const TASK_LABELS = {
+      post_analysis:        { label: 'Social Post Analysis', desc: 'Classifies images, extracts hours changes from social posts' },
+      hours_extraction:     { label: 'Hours Extraction',     desc: 'Reads time/date changes from any text' },
+      image_classification: { label: 'Image Classification', desc: 'Identifies food, exterior, interior, outdoor photos' },
+      email_parser:         { label: 'Email Parser',         desc: 'Extracts booking/order data from confirmation emails' },
+      review_trigger:       { label: 'Review Questions',     desc: 'Generates personalized post-visit review questions' },
+      chat:                 { label: 'Business Chat Widget', desc: 'Answers tourist questions about a specific business' },
+    };
+
+    async function loadAIConfig() {
+      var body = document.getElementById('ai-config-body');
+      if (!body) return;
+      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div>';
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/ai-config', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var d = await res.json();
+        _aiConfigs = d.configs || [];
+        _aiProviders = d.providers || [];
+        renderAIConfig();
+      } catch(e) { body.innerHTML = '<div style="color:#ef4444;padding:20px;">' + escHtml(e.message) + '</div>'; }
+    }
+
+    function renderAIConfig() {
+      var body = document.getElementById('ai-config-body');
+      if (!body) return;
+
+      var providerOptions = _aiProviders.map(function(p) {
+        return '<option value="' + escHtml(p.value) + '">' + escHtml(p.label) + '</option>';
+      }).join('');
+
+      body.innerHTML = '<div style="display:flex;flex-direction:column;gap:16px;">' +
+        _aiConfigs.map(function(cfg) {
+          var info = TASK_LABELS[cfg.task] || { label: cfg.task, desc: '' };
+          var provider = _aiProviders.find(function(p) { return p.value === cfg.provider; }) || {};
+          var modelOptions = (provider.models || [cfg.model]).map(function(m) {
+            return '<option value="' + escHtml(m) + '"' + (m === cfg.model ? ' selected' : '') + '>' + escHtml(m) + '</option>';
+          }).join('');
+
+          return '<div style="padding:16px;border:1px solid var(--card-border);border-radius:12px;background:var(--bg);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">' +
+              '<div>' +
+                '<div style="font-weight:700;font-size:15px;">' + escHtml(info.label) + '</div>' +
+                '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + escHtml(info.desc) + '</div>' +
+              '</div>' +
+              '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(139,92,246,.15);color:#a78bfa;">' + escHtml(cfg.provider.toUpperCase()) + '</span>' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+              '<div>' +
+                '<label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Provider</label>' +
+                '<select id="ai-provider-' + escHtml(cfg.task) + '" onchange="updateModelOptions(\'' + escHtml(cfg.task) + '\')" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">' +
+                  _aiProviders.map(function(p) {
+                    return '<option value="' + escHtml(p.value) + '"' + (p.value === cfg.provider ? ' selected' : '') + '>' + escHtml(p.label) + '</option>';
+                  }).join('') +
+                '</select>' +
+              '</div>' +
+              '<div>' +
+                '<label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Model</label>' +
+                '<select id="ai-model-' + escHtml(cfg.task) + '" style="width:100%;padding:8px 10px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">' +
+                  modelOptions +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+            '<button onclick="saveAIConfig(\'' + escHtml(cfg.task) + '\')" class="btn btn-primary btn-sm" style="margin-top:12px;">Save</button>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }
+
+    function updateModelOptions(task) {
+      var providerSel = document.getElementById('ai-provider-' + task);
+      var modelSel = document.getElementById('ai-model-' + task);
+      if (!providerSel || !modelSel) return;
+      var provider = _aiProviders.find(function(p) { return p.value === providerSel.value; });
+      var models = provider ? provider.models : [];
+      modelSel.innerHTML = models.map(function(m) { return '<option value="' + escHtml(m) + '">' + escHtml(m) + '</option>'; }).join('');
+    }
+
+    async function saveAIConfig(task) {
+      var provider = (document.getElementById('ai-provider-' + task) || {}).value;
+      var model    = (document.getElementById('ai-model-' + task) || {}).value;
+      if (!provider || !model) return;
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/ai-config/' + task, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider, model })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast(task + ' → ' + provider + ' / ' + model, 'success');
+        loadAIConfig();
       } catch(e) { toast(e.message, 'error'); }
     }
 
