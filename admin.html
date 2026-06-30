@@ -8958,9 +8958,14 @@
     var _hunts = [];
     var _huntFilter = 'all';
 
-    try { _hunts = JSON.parse(localStorage.getItem('gcr_ar_hunts') || '[]'); } catch(e) { _hunts = []; }
-
-    function saveHuntsToStorage() { localStorage.setItem('gcr_ar_hunts', JSON.stringify(_hunts)); }
+    async function loadHuntsFromApi() {
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        _hunts = res.ok ? await res.json() : [];
+      } catch(e) { _hunts = []; }
+      renderHuntsGrid();
+    }
+    loadHuntsFromApi();
 
     function renderHuntsGrid() {
       var filtered = _hunts.filter(function(h) {
@@ -9022,11 +9027,10 @@
       });
     }
 
-    function saveHunt(e) {
+    async function saveHunt(e) {
       e.preventDefault();
       var img = document.getElementById('brand-image-preview');
       var hunt = {
-        id: 'hunt_' + Date.now(),
         brandName: document.getElementById('hunt-brand-name').value,
         imageData: img._dataUrl || null,
         latitude: parseFloat(document.getElementById('hunt-latitude').value),
@@ -9034,29 +9038,57 @@
         hint: document.getElementById('hunt-hint').value,
         difficulty: document.getElementById('hunt-difficulty').value,
         reward: document.getElementById('hunt-reward-desc').value,
-        points: parseInt(document.getElementById('hunt-points').value) || 100,
-        active: true,
-        captures: 0,
-        createdAt: new Date().toISOString()
+        points: parseInt(document.getElementById('hunt-points').value) || 100
       };
-      _hunts.push(hunt);
-      saveHuntsToStorage();
-      closeHuntModal();
-      renderHuntsGrid();
-      toast('Hunt created!');
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify(hunt)
+        });
+        var data = await res.json();
+        if (!res.ok) { alert('Error: ' + (data.error || 'Failed to save')); return; }
+        _hunts.unshift(data.hunt);
+        closeHuntModal();
+        renderHuntsGrid();
+        toast('Hunt created!');
+      } catch(err) {
+        alert('Failed to save: ' + err.message);
+      }
     }
 
-    function toggleHuntActive(id) {
+    async function toggleHuntActive(id) {
       var h = _hunts.find(function(x) { return x.id === id; });
-      if (h) { h.active = !h.active; saveHuntsToStorage(); renderHuntsGrid(); }
+      if (!h) return;
+      var newActive = !h.active;
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ active: newActive })
+        });
+        if (!res.ok) { var err = await res.json(); alert('Error: ' + (err.error || 'Failed to update')); return; }
+        h.active = newActive;
+        renderHuntsGrid();
+      } catch(err) {
+        alert('Failed to update: ' + err.message);
+      }
     }
 
-    function deleteHunt(id) {
+    async function deleteHunt(id) {
       if (!confirm('Delete this hunt?')) return;
-      _hunts = _hunts.filter(function(x) { return x.id !== id; });
-      saveHuntsToStorage();
-      renderHuntsGrid();
-      toast('Hunt deleted.');
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts/' + id, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        if (!res.ok) { var err = await res.json(); alert('Error: ' + (err.error || 'Failed to delete')); return; }
+        _hunts = _hunts.filter(function(x) { return x.id !== id; });
+        renderHuntsGrid();
+        toast('Hunt deleted.');
+      } catch(err) {
+        alert('Failed to delete: ' + err.message);
+      }
     }
 
     // ── FULL BUSINESS EDITOR ──────────────────────────
