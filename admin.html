@@ -117,6 +117,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
           <span>Ad Network</span>
         </div>
+        <div class="nav-item" data-page="gcr-rails" onclick="showPage('gcr-rails')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="14" y2="18"/></svg>
+          <span>Page Rails</span>
+        </div>
         <div class="nav-item" data-page="gcr-coupons" onclick="showPage('gcr-coupons')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span>Coupons 🤖</span>
@@ -1904,6 +1908,111 @@
         </div>
         <div class="card" style="padding:24px;">
           <div id="ads-list-body"><div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── PAGE RAILS ──────────────────────────────── -->
+      <div id="page-gcr-rails" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Page Rails</h1>
+          <button class="btn btn-primary" onclick="openRailModal()">+ New Rail</button>
+        </div>
+        <div class="card" style="padding:16px;margin-bottom:16px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);">
+          <div style="font-size:14px;color:#38bdf8;font-weight:600;margin-bottom:4px;">How it works</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.6;">Each listing page (Restaurants, Coffee & Sweets, Things To Do, etc.) is built from stacked rails — sliding rows of ~5-12 cards. A <strong style="color:var(--text);">Sponsored</strong> rail is a fixed list of businesses you pick (sellable ad inventory). An <strong style="color:var(--text);">Algorithm</strong> rail auto-fills live (Top Rated, Near You, For You, Newest). The first rail at the top of a page is what shows first — use the order arrows to control that.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+          <label style="font-size:13px;color:var(--text-muted);">Page:</label>
+          <select id="rail-page-select" onchange="loadPageRails()" style="padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;min-width:200px;">
+            <option value="restaurants">Restaurants</option>
+            <option value="coffee">Coffee & Sweets</option>
+            <option value="things-to-do">Things To Do</option>
+            <option value="shopping">Shopping</option>
+            <option value="nightlife">Nightlife</option>
+            <option value="wellness">Wellness</option>
+            <option value="services">Services</option>
+            <option value="public-spots">Public Spots</option>
+            <option value="staying">Staying</option>
+          </select>
+          <input type="text" id="rail-page-custom" placeholder="or type a custom page key…" oninput="if(this.value)document.getElementById('rail-page-select').value='';" style="padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;width:220px;">
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="rails-list-body"><div style="text-align:center;padding:40px;color:var(--text-muted);">Select a page to view its rails.</div></div>
+        </div>
+      </div>
+
+      <!-- Rail Edit Modal -->
+      <div id="railModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+        <div style="max-width:560px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;" id="rail-modal-title">New Rail</h2>
+            <button onclick="closeRailModal()" style="background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-muted);">×</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <input type="hidden" id="rail-id">
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Title *</label>
+              <input type="text" id="rail-title" placeholder="Top Rated Restaurants" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Eyebrow (small label)</label>
+                <input type="text" id="rail-eyebrow" placeholder="FEATURED" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Emoji</label>
+                <input type="text" id="rail-emoji" placeholder="⭐" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Rail Type *</label>
+              <select id="rail-type" onchange="updateRailTypeFields()" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="sponsored">Sponsored (I pick the businesses)</option>
+                <option value="algorithm">Algorithm (auto-fills live)</option>
+              </select>
+            </div>
+            <div id="rail-algorithm-field">
+              <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Algorithm</label>
+              <select id="rail-algorithm" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <option value="top_rated">Top Rated</option>
+                <option value="near_you">Near You (needs user location)</option>
+                <option value="for_you">For You (needs user history)</option>
+                <option value="newest">Newest</option>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Card Limit</label>
+                <input type="number" id="rail-card-limit" value="12" min="1" max="30" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-muted);margin-top:32px;">
+                  <input type="checkbox" id="rail-active" checked style="width:16px;height:16px;"> Active
+                </label>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:24px;">
+            <button class="btn btn-primary" onclick="saveRail()" style="flex:1;">Save Rail</button>
+            <button class="btn btn-outline" onclick="closeRailModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rail Items (Sponsored Slots) Modal -->
+      <div id="railItemsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+        <div style="max-width:640px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:28px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 id="rail-items-title" style="margin:0;font-size:18px;">Manage Slots</h2>
+            <button onclick="closeRailItemsModal()" class="btn btn-outline btn-sm">✕</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <input id="rail-item-slug-input" type="text" placeholder="Search business name or slug…" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;" oninput="railItemSearchEntity(this.value)">
+          </div>
+          <div id="rail-item-search-results" style="margin-bottom:16px;max-height:160px;overflow-y:auto;"></div>
+          <div id="rail-items-list" style="max-height:40vh;overflow-y:auto;">
+            <p style="color:var(--text-muted);font-size:13px;">Loading…</p>
+          </div>
         </div>
       </div>
 
@@ -6680,6 +6789,7 @@
       if (page === 'gcr-artists') loadArtists(document.getElementById('artist-search') ? document.getElementById('artist-search').value : '');
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
       if (page === 'gcr-ads' && !_adsLoaded) loadGCRAds();
+      if (page === 'gcr-rails') loadPageRails();
       if (page === 'leads' && !_leadsLoaded) loadLeads();
       if (page === 'ar-hunts') renderHuntsGrid();
       if (page === 'users' && !_usersLoaded) loadUsers();
@@ -8067,6 +8177,228 @@
       } catch(e) { toast(e.message, 'error'); }
     }
 
+    // ── PAGE RAILS ──────────────────────────────────────
+    var _rails = [];
+    var _railItemsRailId = null;
+    var _railItemSearchTimer = null;
+
+    function currentRailPage() {
+      var custom = (document.getElementById('rail-page-custom') || {}).value || '';
+      if (custom.trim()) return custom.trim();
+      return (document.getElementById('rail-page-select') || {}).value || 'restaurants';
+    }
+
+    async function loadPageRails() {
+      var page = currentRailPage();
+      var body = document.getElementById('rails-list-body');
+      if (!body) return;
+      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div>';
+      var token = getAuthToken();
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rails?page=' + encodeURIComponent(page), { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = await res.json();
+        _rails = (d.rails || []).sort(function(a,b){ return (a.sort_order||0) - (b.sort_order||0); });
+        renderRailsList();
+      } catch(e) { body.innerHTML = '<div style="color:#ef4444;padding:20px;">' + escHtml(e.message) + '</div>'; }
+    }
+
+    function renderRailsList() {
+      var body = document.getElementById('rails-list-body');
+      if (!body) return;
+      if (!_rails.length) {
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">No rails yet for this page. Click "+ New Rail" to add the first one — it will show at the top.</div>';
+        return;
+      }
+      body.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">' + _rails.map(function(r, idx) {
+        var typeLabel = r.rail_type === 'sponsored'
+          ? '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(251,191,36,.15);color:#fbbf24;">SPONSORED</span>'
+          : '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(56,189,248,.15);color:#38bdf8;">' + escHtml((r.algorithm||'ALGORITHM').toUpperCase().replace(/_/g,' ')) + '</span>';
+        var statusLabel = r.is_active
+          ? '<span style="font-size:11px;font-weight:700;color:#4ade80;">LIVE</span>'
+          : '<span style="font-size:11px;font-weight:700;color:#ef4444;">PAUSED</span>';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--card-border);border-radius:12px;background:var(--bg);">' +
+          '<div style="display:flex;flex-direction:column;gap:2px;">' +
+            '<button onclick="moveRail(\'' + r.id + '\',-1)" ' + (idx===0?'disabled':'') + ' style="background:none;border:1px solid var(--card-border);border-radius:4px;cursor:pointer;color:var(--text);font-size:11px;padding:2px 6px;' + (idx===0?'opacity:.3;':'') + '">▲</button>' +
+            '<button onclick="moveRail(\'' + r.id + '\',1)" ' + (idx===_rails.length-1?'disabled':'') + ' style="background:none;border:1px solid var(--card-border);border-radius:4px;cursor:pointer;color:var(--text);font-size:11px;padding:2px 6px;' + (idx===_rails.length-1?'opacity:.3;':'') + '">▼</button>' +
+          '</div>' +
+          '<div style="font-size:20px;width:28px;text-align:center;flex-shrink:0;">' + (r.emoji || '🎯') + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:700;font-size:15px;">' + (idx===0 ? '🔝 ' : '') + escHtml(r.title) + '</div>' +
+            (r.eyebrow ? '<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">' + escHtml(r.eyebrow) + '</div>' : '') +
+            '<div style="display:flex;gap:8px;margin-top:6px;align-items:center;">' + typeLabel + statusLabel + '<span style="font-size:12px;color:var(--text-muted);">Limit: ' + (r.card_limit||12) + '</span></div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">' +
+            (r.rail_type === 'sponsored' ? '<button class="btn btn-sm btn-outline" onclick="openRailItemsModal(\'' + r.id + '\',\'' + escHtml(r.title).replace(/\'/g,"\\\'") + '\')">Manage Slots</button>' : '') +
+            '<button class="btn btn-sm btn-outline" onclick="openRailModal(\'' + r.id + '\')">Edit</button>' +
+            '<button class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;" onclick="deleteRail(\'' + r.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+    }
+
+    async function moveRail(id, dir) {
+      var idx = _rails.findIndex(function(r){ return r.id === id; });
+      var swapIdx = idx + dir;
+      if (idx < 0 || swapIdx < 0 || swapIdx >= _rails.length) return;
+      // Swap sort_order values and persist both
+      var a = _rails[idx], b = _rails[swapIdx];
+      var aOrder = a.sort_order, bOrder = b.sort_order;
+      a.sort_order = bOrder; b.sort_order = aOrder;
+      _rails.sort(function(x,y){ return (x.sort_order||0) - (y.sort_order||0); });
+      renderRailsList();
+      var token = getAuthToken();
+      try {
+        await Promise.all([
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rails/' + a.id, { method:'PUT', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ sort_order: a.sort_order }) }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rails/' + b.id, { method:'PUT', headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ sort_order: b.sort_order }) }),
+        ]);
+      } catch(e) { toast('Reorder failed: ' + e.message, 'error'); loadPageRails(); }
+    }
+
+    function updateRailTypeFields() {
+      var type = document.getElementById('rail-type').value;
+      document.getElementById('rail-algorithm-field').style.display = type === 'algorithm' ? '' : 'none';
+    }
+
+    function openRailModal(id) {
+      document.getElementById('rail-id').value = id || '';
+      document.getElementById('rail-modal-title').textContent = id ? 'Edit Rail' : 'New Rail';
+      if (!id) {
+        document.getElementById('rail-title').value = '';
+        document.getElementById('rail-eyebrow').value = '';
+        document.getElementById('rail-emoji').value = '';
+        document.getElementById('rail-type').value = 'sponsored';
+        document.getElementById('rail-algorithm').value = 'top_rated';
+        document.getElementById('rail-card-limit').value = 12;
+        document.getElementById('rail-active').checked = true;
+      } else {
+        var r = _rails.find(function(x){ return x.id === id; });
+        if (r) {
+          document.getElementById('rail-title').value = r.title || '';
+          document.getElementById('rail-eyebrow').value = r.eyebrow || '';
+          document.getElementById('rail-emoji').value = r.emoji || '';
+          document.getElementById('rail-type').value = r.rail_type || 'sponsored';
+          document.getElementById('rail-algorithm').value = r.algorithm || 'top_rated';
+          document.getElementById('rail-card-limit').value = r.card_limit || 12;
+          document.getElementById('rail-active').checked = r.is_active !== false;
+        }
+      }
+      updateRailTypeFields();
+      document.getElementById('railModal').style.display = 'block';
+    }
+
+    function closeRailModal() { document.getElementById('railModal').style.display = 'none'; }
+
+    async function saveRail() {
+      var id = document.getElementById('rail-id').value;
+      var title = document.getElementById('rail-title').value.trim();
+      if (!title) { toast('Title is required', 'error'); return; }
+      var railType = document.getElementById('rail-type').value;
+      var payload = {
+        page: currentRailPage(),
+        title: title,
+        eyebrow: document.getElementById('rail-eyebrow').value.trim() || null,
+        emoji: document.getElementById('rail-emoji').value.trim() || null,
+        rail_type: railType,
+        algorithm: railType === 'algorithm' ? document.getElementById('rail-algorithm').value : null,
+        category: currentRailPage(),
+        card_limit: parseInt(document.getElementById('rail-card-limit').value) || 12,
+        is_active: document.getElementById('rail-active').checked,
+      };
+      if (!id) payload.sort_order = _rails.length; // new rails go to the bottom by default
+      var token = getAuthToken();
+      try {
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/page-rails/' + id : GCR_ADMIN_API + '/api/admin/gcr/page-rails';
+        var res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        toast(id ? 'Rail updated!' : 'Rail created!', 'success');
+        closeRailModal();
+        loadPageRails();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function deleteRail(id) {
+      if (!confirm('Delete this rail? This removes it from the page entirely.')) return;
+      try {
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rails/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        toast('Rail deleted', 'success');
+        loadPageRails();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    // ── Sponsored rail slots ──
+    async function openRailItemsModal(railId, title) {
+      _railItemsRailId = railId;
+      document.getElementById('rail-items-title').textContent = 'Manage Slots — ' + title;
+      document.getElementById('rail-item-slug-input').value = '';
+      document.getElementById('rail-item-search-results').innerHTML = '';
+      document.getElementById('railItemsModal').style.display = 'block';
+      await loadRailItems();
+    }
+
+    function closeRailItemsModal() { document.getElementById('railItemsModal').style.display = 'none'; _railItemsRailId = null; }
+
+    async function loadRailItems() {
+      var listEl = document.getElementById('rail-items-list');
+      listEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rails/' + _railItemsRailId + '/items', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        var d = await res.json();
+        var items = (d.items || []).sort(function(a,b){ return (a.sort_order||0) - (b.sort_order||0); });
+        if (!items.length) { listEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">No businesses in this rail yet. Search above to add one.</p>'; return; }
+        listEl.innerHTML = items.map(function(it, idx) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--card-border);">' +
+            '<span style="font-size:12px;color:var(--text-muted);width:20px;">#' + (idx+1) + '</span>' +
+            '<div style="flex:1;font-size:14px;font-weight:600;">' + escHtml(it.entity_slug) + '</div>' +
+            (it.badge_text ? '<span style="font-size:11px;background:rgba(251,191,36,.15);color:#fbbf24;padding:2px 8px;border-radius:999px;">' + escHtml(it.badge_text) + '</span>' : '') +
+            '<button onclick="removeRailItem(\'' + it.id + '\')" class="btn btn-sm" style="background:#ef4444;color:#fff;border:none;">Remove</button>' +
+          '</div>';
+        }).join('');
+      } catch(e) { listEl.innerHTML = '<p style="color:#ef4444;font-size:13px;">' + escHtml(e.message) + '</p>'; }
+    }
+
+    function railItemSearchEntity(q) {
+      clearTimeout(_railItemSearchTimer);
+      var resultsEl = document.getElementById('rail-item-search-results');
+      if (!q || q.trim().length < 2) { resultsEl.innerHTML = ''; return; }
+      _railItemSearchTimer = setTimeout(async function() {
+        try {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=8', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+          var d = await res.json();
+          var ents = d.entities || [];
+          resultsEl.innerHTML = ents.map(function(e) {
+            return '<div onclick="addRailItem(\'' + e.slug + '\')" style="padding:8px 10px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:4px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'transparent\'">' +
+              '<span>' + escHtml(e.name) + ' <span style="color:var(--text-muted);">(' + escHtml(e.slug) + ')</span></span>' +
+              '<span style="color:var(--primary);font-weight:700;">+ Add</span>' +
+            '</div>';
+          }).join('') || '<p style="color:var(--text-muted);font-size:12px;">No matches.</p>';
+        } catch(e) { resultsEl.innerHTML = ''; }
+      }, 300);
+    }
+
+    async function addRailItem(slug) {
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rails/' + _railItemsRailId + '/items', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entity_slug: slug })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Failed to add');
+        document.getElementById('rail-item-slug-input').value = '';
+        document.getElementById('rail-item-search-results').innerHTML = '';
+        toast('Added to rail', 'success');
+        loadRailItems();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
+    async function removeRailItem(itemId) {
+      if (!confirm('Remove this business from the rail?')) return;
+      try {
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-rail-items/' + itemId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        toast('Removed', 'success');
+        loadRailItems();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+
     // ── BULK EVENTS ───────────────────────────────────
     var _bulkEventsData = [];
 
@@ -8147,7 +8479,7 @@
       document.getElementById('bulk-format-help').innerHTML = '<strong>Required Columns:</strong><br>' + (_bulkFormats[type] || '');
     }
 
-    function processBulkCSV() { toast('Select a business to attach this data to — CSV bulk upload coming soon.', 'error'); }
+    // processBulkCSV is defined below (real implementation)
     function applyJSONUpload() { toast('Select a business to apply this JSON to — coming soon.', 'error'); }
 
     // ── ARTISTS ──────────────────────────────────────────────────────────────
@@ -13809,83 +14141,23 @@
       }
 
       if (type === 'gcr_items') {
-        var success = 0, skipped = 0, errors = 0;
-        // Group rows by entity_slug + section_key + group_title
-        var entitySectionMap = {};
-        rows.forEach(function(r) {
-          var key = r.entity_slug + '|' + r.section_key;
-          if (!entitySectionMap[key]) entitySectionMap[key] = { entity_slug: r.entity_slug, section_key: r.section_key, groups: {} };
-          var gKey = r.group_title || 'default';
-          if (!entitySectionMap[key].groups[gKey]) entitySectionMap[key].groups[gKey] = [];
-          entitySectionMap[key].groups[gKey].push(r);
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/import-gcr-items', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(rows)
         });
-
-        for (var key in entitySectionMap) {
-          var entry = entitySectionMap[key];
-          try {
-            // Find entity by slug or name
-            var entRes = await fetch(API_BASE + '/api/gcr/entities?search=' + encodeURIComponent(entry.entity_slug));
-            var entData = await entRes.json();
-            var entity = (entData.entities||[]).find(function(e){ return e.slug === entry.entity_slug || e.name.toLowerCase() === entry.entity_slug.toLowerCase(); });
-            if (!entity) { errors++; console.warn('Entity not found:', entry.entity_slug); continue; }
-
-            // Get or create section
-            var secCreateRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entity.id + '/sections', {
-              method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ section_key: entry.section_key, section_label: entry.section_key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}), section_type: 'grouped_items', sort_order: 99 })
-            });
-            var secCreateData = await secCreateRes.json();
-            var sectionId = secCreateData.section?.id;
-            if (!sectionId) {
-              // Already exists — fetch it
-              var secListRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entity.id + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
-              var secListData = await secListRes.json();
-              var existSec = (secListData.sections||[]).find(function(s){ return s.section_key === entry.section_key; });
-              if (!existSec) { errors++; continue; }
-              sectionId = existSec.id;
-            }
-
-            // Fetch existing items in this section to prevent duplicates
-            var existItemsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
-            var existItemsData = await existItemsRes.json();
-            var existingNames = new Set();
-            (existItemsData.groups||[]).forEach(function(g) {
-              (g.items||[]).forEach(function(i){ existingNames.add(i.item_name.toLowerCase().trim()); });
-            });
-            (existItemsData.ungrouped||[]).forEach(function(i){ existingNames.add(i.item_name.toLowerCase().trim()); });
-
-            for (var gTitle in entry.groups) {
-              var items = entry.groups[gTitle];
-              // Get or create group
-              var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', {
-                method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: gTitle === 'default' ? '' : gTitle, sort_order: 0 })
-              });
-              var grpId = (await grpRes.json()).group?.id;
-              if (!grpId) {
-                // Group may already exist — find it
-                var existGrp = (existItemsData.groups||[]).find(function(g){ return g.title === (gTitle === 'default' ? '' : gTitle); });
-                if (existGrp) grpId = existGrp.id;
-              }
-
-              for (var ii = 0; ii < items.length; ii++) {
-                var item = items[ii];
-                var nameKey = (item.item_name||'').toLowerCase().trim();
-                if (existingNames.has(nameKey)) { skipped++; continue; } // duplicate — skip
-                await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/items', {
-                  method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ group_id: grpId||null, item_name: item.item_name, item_description: item.item_description||null, price_text: item.price_text||null, price_numeric: parseFloat(item.price_numeric)||null, item_type: item.item_type||'menu_item', sort_order: ii })
-                });
-                existingNames.add(nameKey); // prevent dupes within same upload
-                success++;
-              }
-            }
-          } catch(e) { errors++; console.error(e.message); }
-        }
-        var msg = success + ' items added';
-        if (skipped) msg += ' · ' + skipped + ' skipped (already exist)';
-        if (errors) msg += ' · ' + errors + ' errors';
-        toast(msg, errors ? 'error' : 'success');
+        var r = await res.json();
+        var msg = (r.inserted || 0) + ' items added';
+        if (r.updated) msg += ' · ' + r.updated + ' updated';
+        if (r.errors && r.errors.length) msg += ' · ' + r.errors.length + ' errors (check console)';
+        if (r.errors && r.errors.length) console.warn('Import errors:', r.errors);
+        var isErr = !res.ok;
+        resultEl.style.display = 'block';
+        resultEl.style.background = isErr ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.15)';
+        resultEl.style.color = isErr ? '#fca5a5' : '#86efac';
+        resultEl.style.border = '1px solid ' + (isErr ? '#7f1d1d' : '#14532d');
+        resultEl.textContent = msg;
+        toast(msg, isErr ? 'error' : 'success');
         return;
       }
 
