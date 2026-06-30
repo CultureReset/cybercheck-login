@@ -3716,6 +3716,19 @@
         </div>
       </div>
 
+      <!-- AR Hunt Captures Modal -->
+      <div id="hunt-captures-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;overflow-y:auto;">
+        <div style="max-width:640px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:28px;border:1px solid var(--card-border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 id="hunt-captures-title" style="margin:0;font-size:18px;">Captures</h2>
+            <button onclick="closeHuntCapturesModal()" class="btn btn-outline btn-sm">✕</button>
+          </div>
+          <div id="hunt-captures-list" style="max-height:60vh;overflow-y:auto;">
+            <p style="color:var(--text-muted);font-size:13px;">Loading…</p>
+          </div>
+        </div>
+      </div>
+
       <!-- ── USERS ──────────────────────────────────── -->
       <div id="page-users" class="page-content" style="display:none;">
         <div class="page-header"><h1>Users</h1></div>
@@ -9007,12 +9020,20 @@
       }
       document.getElementById('hunts-empty').style.display = 'none';
       document.getElementById('hunts-grid').innerHTML = filtered.map(function(h) {
+        var supplyText = h.maxCaptures != null ? (h.captures || 0) + ' / ' + h.maxCaptures + ' claimed' : (h.captures || 0) + ' captures';
+        var soldOut = h.maxCaptures != null && (h.captures || 0) >= h.maxCaptures;
+        var scheduleText = '';
+        if (h.startsAt && new Date(h.startsAt) > new Date()) scheduleText = 'Starts ' + new Date(h.startsAt).toLocaleDateString();
+        else if (h.endsAt) scheduleText = 'Ends ' + new Date(h.endsAt).toLocaleDateString();
         return '<div class="card" style="padding:20px;">' +
           (h.imageData ? '<img src="' + h.imageData + '" style="width:100%;height:120px;object-fit:contain;margin-bottom:12px;border-radius:8px;background:var(--bg);">' : '') +
           '<div style="font-size:16px;font-weight:700;margin-bottom:4px;">' + escHtml(h.brandName) + '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + escHtml(h.difficulty) + ' · ' + (h.active ? 'Active' : 'Inactive') + '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">' + escHtml(h.hint || '') + '</div>' +
-          '<div style="display:flex;gap:8px;">' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + escHtml(h.difficulty) + ' · ' + (h.active ? 'Active' : 'Inactive') + (soldOut ? ' · <span style="color:#f59e0b;">Sold Out</span>' : '') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + escHtml(h.hint || '') + '</div>' +
+          '<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:4px;">🎯 ' + supplyText + '</div>' +
+          (scheduleText ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">📅 ' + scheduleText + '</div>' : '<div style="margin-bottom:12px;"></div>') +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button onclick="viewHuntCaptures(\'' + h.id + '\', \'' + escHtml(h.brandName).replace(/\'/g,"\\\'") + '\')" class="btn btn-outline btn-sm">View Captures</button>' +
           '<button onclick="toggleHuntActive(\'' + h.id + '\')" class="btn btn-outline btn-sm">' + (h.active ? 'Deactivate' : 'Activate') + '</button>' +
           '<button onclick="deleteHunt(\'' + h.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
           '</div></div>';
@@ -9146,6 +9167,50 @@
         resultDiv.style.color = '#f87171';
         resultDiv.textContent = 'Failed to redeem: ' + err.message;
       }
+    }
+
+    async function viewHuntCaptures(huntId, brandName) {
+      document.getElementById('hunt-captures-title').textContent = 'Captures — ' + brandName;
+      var listEl = document.getElementById('hunt-captures-list');
+      listEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
+      document.getElementById('hunt-captures-modal').style.display = '';
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts/' + huntId + '/captures', {
+          headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+        });
+        var captures = res.ok ? await res.json() : [];
+        if (!captures.length) {
+          listEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:12px 0;">No captures yet.</p>';
+          return;
+        }
+        listEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+          '<thead><tr style="border-bottom:1px solid var(--card-border);">' +
+            '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">When</th>' +
+            '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Distance</th>' +
+            '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Code</th>' +
+            '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Status</th>' +
+          '</tr></thead><tbody>' +
+          captures.map(function(c) {
+            var when = c.captured_at ? new Date(c.captured_at).toLocaleString() : '—';
+            var dist = c.distance_meters != null ? Math.round(c.distance_meters) + 'm' : '—';
+            var status = c.redeemed_at
+              ? '<span style="color:#22c55e;">✓ Redeemed ' + new Date(c.redeemed_at).toLocaleDateString() + (c.redeemed_by ? ' by ' + escHtml(c.redeemed_by) : '') + '</span>'
+              : '<span style="color:var(--text-muted);">Unredeemed</span>';
+            return '<tr style="border-top:1px solid var(--card-border);">' +
+              '<td style="padding:8px;">' + when + '</td>' +
+              '<td style="padding:8px;">' + dist + '</td>' +
+              '<td style="padding:8px;font-family:monospace;">' + escHtml(c.reward_code || '—') + '</td>' +
+              '<td style="padding:8px;">' + status + '</td>' +
+            '</tr>';
+          }).join('') +
+          '</tbody></table>';
+      } catch(err) {
+        listEl.innerHTML = '<p style="color:#f87171;font-size:13px;">Failed to load: ' + err.message + '</p>';
+      }
+    }
+
+    function closeHuntCapturesModal() {
+      document.getElementById('hunt-captures-modal').style.display = 'none';
     }
 
     // ── FULL BUSINESS EDITOR ──────────────────────────
