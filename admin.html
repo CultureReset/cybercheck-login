@@ -3604,6 +3604,17 @@
           <h1>AR Hunts</h1>
           <button class="btn btn-primary" onclick="showCreateHuntModal()">+ Create Hunt</button>
         </div>
+
+        <!-- Redeem a reward code at point of sale -->
+        <div class="card" style="padding:18px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Redeem Reward Code</label>
+            <input type="text" id="redeem-code-input" placeholder="e.g. AB3K9XQR" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;text-transform:uppercase;letter-spacing:1px;" onkeydown="if(event.key==='Enter'){event.preventDefault();redeemHuntCode();}">
+          </div>
+          <button class="btn btn-primary" onclick="redeemHuntCode()">Redeem</button>
+          <div id="redeem-result" style="width:100%;font-size:13px;margin-top:4px;"></div>
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
           <div class="card" style="padding:20px;text-align:center;">
             <div style="font-size:28px;font-weight:700;color:var(--primary);" id="stat-active-hunts">0</div>
@@ -3683,6 +3694,18 @@
               <div>
                 <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Points Value</label>
                 <input type="number" id="hunt-points" value="100" min="0" step="10" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Max Rewards (blank = unlimited)</label>
+                <input type="number" id="hunt-max-captures" placeholder="e.g., 50" min="1" step="1" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Starts (optional)</label>
+                <input type="datetime-local" id="hunt-starts-at" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Ends (optional)</label>
+                <input type="datetime-local" id="hunt-ends-at" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
               </div>
             </div>
             <div style="display:flex;gap:12px;margin-top:24px;">
@@ -9030,6 +9053,9 @@
     async function saveHunt(e) {
       e.preventDefault();
       var img = document.getElementById('brand-image-preview');
+      var maxCapVal = document.getElementById('hunt-max-captures').value;
+      var startsVal = document.getElementById('hunt-starts-at').value;
+      var endsVal = document.getElementById('hunt-ends-at').value;
       var hunt = {
         brandName: document.getElementById('hunt-brand-name').value,
         imageData: img._dataUrl || null,
@@ -9038,7 +9064,10 @@
         hint: document.getElementById('hunt-hint').value,
         difficulty: document.getElementById('hunt-difficulty').value,
         reward: document.getElementById('hunt-reward-desc').value,
-        points: parseInt(document.getElementById('hunt-points').value) || 100
+        points: parseInt(document.getElementById('hunt-points').value) || 100,
+        maxCaptures: maxCapVal ? parseInt(maxCapVal, 10) : null,
+        startsAt: startsVal ? new Date(startsVal).toISOString() : null,
+        endsAt: endsVal ? new Date(endsVal).toISOString() : null
       };
       try {
         var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts', {
@@ -9088,6 +9117,34 @@
         toast('Hunt deleted.');
       } catch(err) {
         alert('Failed to delete: ' + err.message);
+      }
+    }
+
+    async function redeemHuntCode() {
+      var input = document.getElementById('redeem-code-input');
+      var resultDiv = document.getElementById('redeem-result');
+      var code = (input.value || '').trim().toUpperCase();
+      if (!code) return;
+      resultDiv.style.color = 'var(--text-muted)';
+      resultDiv.textContent = 'Checking…';
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts/redeem', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ reward_code: code })
+        });
+        var data = await res.json();
+        if (!res.ok) {
+          resultDiv.style.color = '#f87171';
+          resultDiv.textContent = data.error + (data.redeemed_at ? ' (redeemed ' + new Date(data.redeemed_at).toLocaleString() + ')' : '');
+          return;
+        }
+        resultDiv.style.color = '#22c55e';
+        resultDiv.textContent = '✓ Redeemed: ' + (data.brand_name || '') + ' — ' + (data.reward || 'reward confirmed');
+        input.value = '';
+      } catch(err) {
+        resultDiv.style.color = '#f87171';
+        resultDiv.textContent = 'Failed to redeem: ' + err.message;
       }
     }
 
