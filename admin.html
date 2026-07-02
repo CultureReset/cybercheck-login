@@ -3841,6 +3841,11 @@
                 <input type="number" id="hunt-max-captures" placeholder="e.g., 50" min="1" step="1" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
               </div>
               <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Capture Radius, meters (blank = default 35m / ~115ft)</label>
+                <input type="number" id="hunt-capture-radius" placeholder="e.g., 35" min="5" max="500" step="1" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">How close a tourist must physically be to capture this hunt. Tighter for a small spot, looser for an open area.</div>
+              </div>
+              <div>
                 <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Starts (optional)</label>
                 <input type="datetime-local" id="hunt-starts-at" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;">
               </div>
@@ -9668,6 +9673,7 @@
           '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + escHtml(h.difficulty) + ' · ' + (h.active ? 'Active' : 'Inactive') + (soldOut ? ' · <span style="color:#f59e0b;">Sold Out</span>' : '') + '</div>' +
           '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">' + escHtml(h.hint || '') + '</div>' +
           '<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:4px;">🎯 ' + supplyText + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">📍 Capture radius: ' + Math.round(h.captureRadiusMeters) + 'm</div>' +
           (scheduleText ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">📅 ' + scheduleText + '</div>' : '<div style="margin-bottom:12px;"></div>') +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
           '<button onclick="editHunt(\'' + h.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
@@ -9705,6 +9711,7 @@
       document.getElementById('hunt-reward-desc').value = h.reward || '';
       document.getElementById('hunt-points').value = h.points != null ? h.points : 100;
       document.getElementById('hunt-max-captures').value = h.maxCaptures != null ? h.maxCaptures : '';
+      document.getElementById('hunt-capture-radius').value = h.captureRadiusMeters != null ? h.captureRadiusMeters : '';
       document.getElementById('hunt-starts-at').value = h.startsAt ? toLocalDatetimeInputValue(h.startsAt) : '';
       document.getElementById('hunt-ends-at').value = h.endsAt ? toLocalDatetimeInputValue(h.endsAt) : '';
       var img = document.getElementById('brand-image-preview');
@@ -9739,6 +9746,7 @@
       e.preventDefault();
       var img = document.getElementById('brand-image-preview');
       var maxCapVal = document.getElementById('hunt-max-captures').value;
+      var radiusVal = document.getElementById('hunt-capture-radius').value;
       var startsVal = document.getElementById('hunt-starts-at').value;
       var endsVal = document.getElementById('hunt-ends-at').value;
       var hunt = {
@@ -9751,6 +9759,7 @@
         reward: document.getElementById('hunt-reward-desc').value,
         points: parseInt(document.getElementById('hunt-points').value) || 100,
         maxCaptures: maxCapVal ? parseInt(maxCapVal, 10) : null,
+        captureRadiusMeters: radiusVal ? parseFloat(radiusVal) : null,
         startsAt: startsVal ? new Date(startsVal).toISOString() : null,
         endsAt: endsVal ? new Date(endsVal).toISOString() : null
       };
