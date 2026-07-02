@@ -9622,6 +9622,14 @@
     // ── AR HUNTS ──────────────────────────────────────
     var _hunts = [];
     var _huntFilter = 'all';
+    var _editingHuntId = null;
+
+    function toLocalDatetimeInputValue(iso) {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      var pad = function(n) { return String(n).padStart(2, '0'); };
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
 
     async function loadHuntsFromApi() {
       try {
@@ -9662,6 +9670,7 @@
           '<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:4px;">🎯 ' + supplyText + '</div>' +
           (scheduleText ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">📅 ' + scheduleText + '</div>' : '<div style="margin-bottom:12px;"></div>') +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button onclick="editHunt(\'' + h.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
           '<button onclick="viewHuntCaptures(\'' + h.id + '\', \'' + escHtml(h.brandName).replace(/\'/g,"\\\'") + '\')" class="btn btn-outline btn-sm">View Captures</button>' +
           '<button onclick="toggleHuntActive(\'' + h.id + '\')" class="btn btn-outline btn-sm">' + (h.active ? 'Deactivate' : 'Activate') + '</button>' +
           '<button onclick="deleteHunt(\'' + h.id + '\')" class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#ef4444;">Delete</button>' +
@@ -9672,11 +9681,37 @@
     function filterHunts(f) { _huntFilter = f; renderHuntsGrid(); }
 
     function showCreateHuntModal() {
+      _editingHuntId = null;
+      document.getElementById('hunt-modal-title').textContent = 'Create AR Hunt';
       document.getElementById('hunt-form').reset();
-      document.getElementById('brand-image-preview').style.display = 'none';
+      var img = document.getElementById('brand-image-preview');
+      img.style.display = 'none';
+      img._dataUrl = null;
       document.getElementById('hunt-modal').style.display = 'block';
     }
-    function closeHuntModal() { document.getElementById('hunt-modal').style.display = 'none'; }
+    function closeHuntModal() { document.getElementById('hunt-modal').style.display = 'none'; _editingHuntId = null; }
+
+    function editHunt(id) {
+      var h = _hunts.find(function(x) { return x.id === id; });
+      if (!h) return;
+      _editingHuntId = id;
+      document.getElementById('hunt-modal-title').textContent = 'Edit AR Hunt';
+      document.getElementById('hunt-form').reset();
+      document.getElementById('hunt-brand-name').value = h.brandName || '';
+      document.getElementById('hunt-latitude').value = h.latitude != null ? h.latitude : '';
+      document.getElementById('hunt-longitude').value = h.longitude != null ? h.longitude : '';
+      document.getElementById('hunt-hint').value = h.hint || '';
+      document.getElementById('hunt-difficulty').value = h.difficulty || 'medium';
+      document.getElementById('hunt-reward-desc').value = h.reward || '';
+      document.getElementById('hunt-points').value = h.points != null ? h.points : 100;
+      document.getElementById('hunt-max-captures').value = h.maxCaptures != null ? h.maxCaptures : '';
+      document.getElementById('hunt-starts-at').value = h.startsAt ? toLocalDatetimeInputValue(h.startsAt) : '';
+      document.getElementById('hunt-ends-at').value = h.endsAt ? toLocalDatetimeInputValue(h.endsAt) : '';
+      var img = document.getElementById('brand-image-preview');
+      if (h.imageData) { img.src = h.imageData; img.style.display = 'block'; img._dataUrl = h.imageData; }
+      else { img.style.display = 'none'; img._dataUrl = null; }
+      document.getElementById('hunt-modal').style.display = 'block';
+    }
 
     async function handleHuntImageUpload(e) {
       var file = e.target.files[0];
@@ -9720,17 +9755,23 @@
         endsAt: endsVal ? new Date(endsVal).toISOString() : null
       };
       try {
-        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts', {
-          method: 'POST',
+        var isEdit = !!_editingHuntId;
+        var res = await fetch(GCR_ADMIN_API + '/api/ar-hunts' + (isEdit ? '/' + _editingHuntId : ''), {
+          method: isEdit ? 'PATCH' : 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(hunt)
         });
         var data = await res.json();
         if (!res.ok) { alert('Error: ' + (data.error || 'Failed to save')); return; }
-        _hunts.unshift(data.hunt);
+        if (isEdit) {
+          var idx = _hunts.findIndex(function(x) { return x.id === _editingHuntId; });
+          if (idx !== -1) _hunts[idx] = data.hunt;
+        } else {
+          _hunts.unshift(data.hunt);
+        }
         closeHuntModal();
         renderHuntsGrid();
-        toast('Hunt created!');
+        toast(isEdit ? 'Hunt updated!' : 'Hunt created!');
       } catch(err) {
         alert('Failed to save: ' + err.message);
       }
