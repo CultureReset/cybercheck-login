@@ -56,12 +56,14 @@ The entity editor is the core of GCR management. Tabs:
 
 ## Auth Flow
 
-1. `login.html` → `POST /api/admin/login` → receives JWT → stored as `localStorage.cc_admin_token`
-2. `admin.html` checks `localStorage` on load — redirects to `login.html` if missing or role !== `admin`
-3. All API calls use: `var API_BASE = window.CC_API_BASE || 'https://cybercheck-api-database.vercel.app'`
+1. `login.html` → `POST https://gcr-api-clean.vercel.app/api/admin/login` → receives JWT → stored as `localStorage.cc_admin_token`
+2. `admin.html` checks `localStorage` on load, then confirms the token against `GET /api/admin/gcr/claims` before rendering anything (a decoded-but-unverified JWT payload can be spoofed client-side, so the page is hidden until the server round-trip confirms the token is real and role `admin`) — redirects to `login.html` if the token is missing, the decoded role isn't `admin`, or the server check fails
+3. All API calls (both `admin.html`'s own inline calls and `login.html`) use `https://gcr-api-clean.vercel.app` — `admin.html` reads this via `var API_BASE = window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app'` (`admin.html:6182`)
 4. Token sent as `Authorization: Bearer <token>` header
 
-`window.CC_API_BASE` is not set in `admin.html` itself — it falls back to the hardcoded Vercel URL. To point at a local API, set `window.CC_API_BASE = 'http://localhost:3000'` in the browser console or add it to `login.html`.
+`admin.html` does not load `js/cc.js` — its GCR panels are all inline `<script>` using their own local `API_BASE`/`GCR_ADMIN_API` variables. `js/cc.js` is only loaded by non-admin pages (`login.html`, `ai-chat.html`, `app-dashboard.html`, `app-store.html`), and it also points at `gcr-api-clean.vercel.app`.
+
+To point at a local API instead, set `window.GCR_ADMIN_API = 'http://localhost:3000'` in the browser console before `admin.html` loads.
 
 ## JS File Structure (`/js/`)
 
@@ -72,13 +74,13 @@ Key files:
 - `js/api-client.js` — legacy `APIClient` class (defaults to `localhost:3000`, used by older pages only, not GCR)
 - `js/admin-businesses.js` — ⚠️ stub file, not connected to API yet
 - `js/admin-dashboard.js` — ⚠️ uses `Math.random()` mock data, not connected to API yet
-- `js/csv-import-manager.js` — CSV import → `/api/admin/gcr/import-csv`
+- `js/csv-import-manager.js` — ⚠️ not loaded by any `.html` page, dead code. The actual reachable CSV/bulk-upload flows are inline `<script>` in `admin.html` (`handleCSVFileSelect`/`startCSVImport`, `handleBulkEventsFile`/`processBulkEvents`, `processBulkCSV`), all using the shared `parseCSVLine()` quoted-field parser.
 - `js/events.js` — event extraction via AI photo scan
 - `js/bookings.js` — booking management, Stripe refunds
 
 ## API Connection
 
-All GCR editing calls go to `https://cybercheck-api-database.vercel.app` (the `cybercheck-api-database` repo). The relevant API prefixes used from this dashboard:
+All GCR editing calls go to `https://gcr-api-clean.vercel.app` (the `gcr-api-clean` repo — this dashboard, the `gcr-unified` consumer app, and `gcr-api-clean` itself all agree on this host; `cybercheck-api-database.vercel.app` and `gcr-api-clean-fresh.vercel.app` appear elsewhere in `gcr-api-clean`'s own code/docs as legacy hostnames and should not be assumed current without verifying against the live Vercel deployment). The relevant API prefixes used from this dashboard:
 
 - `GET/PUT /api/admin/gcr/entities/:id` — entity CRUD
 - `PATCH /api/admin/gcr/entities/:id` — partial update (photos, hours, happy hour)

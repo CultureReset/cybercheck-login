@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <title>Admin Dashboard - CyberCheck</title>
   <link rel="stylesheet" href="css/dashboard.css">
   <script>
-    // Auth guard — must be admin role
+    // Auth guard — must be admin role, verified against the server.
+    // Decoding a JWT client-side has no signature check: anyone can hand-craft
+    // a JWT-shaped string with role:"admin" in devtools, or just set
+    // cc_user_role directly, and the old guard trusted that outright. Hide
+    // the page until the token is confirmed valid by an admin-only endpoint.
+    document.documentElement.style.visibility = 'hidden';
     (function() {
       var token = null;
       try {
@@ -18,15 +24,36 @@
         if (!token) token = localStorage.getItem('cc_admin_token');
       } catch(e) {}
 
-      if (!token) { window.location.replace('login.html'); return; }
+      function denyAccess() {
+        try {
+          localStorage.removeItem('cc_admin_token');
+          localStorage.removeItem('cc_user_role');
+        } catch(e) {}
+        window.location.replace('login.html');
+      }
 
+      if (!token) { denyAccess(); return; }
+
+      // Fast local pre-check — catches the common "no admin claim at all"
+      // case immediately, without waiting on a network round trip.
       try {
         var payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.role !== 'admin') { window.location.replace('login.html'); return; }
+        if (payload.role !== 'admin') { denyAccess(); return; }
       } catch(e) {
         var storedRole = localStorage.getItem('cc_user_role');
-        if (storedRole !== 'admin') { window.location.replace('login.html'); return; }
+        if (storedRole !== 'admin') { denyAccess(); return; }
       }
+
+      // Real check — the decode above proves nothing about the signature.
+      // Confirm the token actually authenticates against an admin-only
+      // endpoint before revealing the dashboard.
+      var API = (window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app');
+      fetch(API + '/api/admin/gcr/claims?limit=1', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(function(r) {
+          if (!r.ok) { denyAccess(); return; }
+          document.documentElement.style.visibility = 'visible';
+        })
+        .catch(function() { denyAccess(); });
     })();
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -7376,6 +7403,32 @@
       _csvRows = [];
     }
 
+    // Quoted-field-aware CSV line parser — plain line.split(',') silently
+    // misaligns columns whenever a free-text field (address, description)
+    // contains a comma. Handles "quoted, fields" and "" escaped quotes.
+    function parseCSVLine(line) {
+      var vals = [];
+      var cur = '';
+      var inQuotes = false;
+      for (var i = 0; i < line.length; i++) {
+        var ch = line[i];
+        if (inQuotes) {
+          if (ch === '"') {
+            if (line[i + 1] === '"') { cur += '"'; i++; }
+            else { inQuotes = false; }
+          } else {
+            cur += ch;
+          }
+        } else {
+          if (ch === '"') { inQuotes = true; }
+          else if (ch === ',') { vals.push(cur.trim()); cur = ''; }
+          else { cur += ch; }
+        }
+      }
+      vals.push(cur.trim());
+      return vals;
+    }
+
     function handleCSVFileSelect(e) {
       var file = e.target.files[0];
       if (!file) return;
@@ -7383,9 +7436,9 @@
       var reader = new FileReader();
       reader.onload = function(ev) {
         var lines = ev.target.result.split('\n').filter(function(l) { return l.trim(); });
-        var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
+        var headers = parseCSVLine(lines[0]);
         _csvRows = lines.slice(1).map(function(line) {
-          var vals = line.split(',').map(function(v) { return v.trim().replace(/^"|"$/g, ''); });
+          var vals = parseCSVLine(line);
           var obj = {};
           headers.forEach(function(h, i) { obj[h] = vals[i] || ''; });
           return obj;
@@ -8524,9 +8577,9 @@
       var reader = new FileReader();
       reader.onload = function(ev) {
         var lines = ev.target.result.split('\n').filter(function(l) { return l.trim(); });
-        var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
+        var headers = parseCSVLine(lines[0]);
         _bulkEventsData = lines.slice(1).map(function(line) {
-          var vals = line.split(',').map(function(v) { return v.trim().replace(/^"|"$/g, ''); });
+          var vals = parseCSVLine(line);
           var obj = {};
           headers.forEach(function(h, i) { obj[h] = vals[i] || ''; });
           return obj;
@@ -14207,9 +14260,9 @@
       resultEl.style.display = 'none';
       var text = await file.text();
       var lines = text.split('\n').filter(function(l){ return l.trim(); });
-      var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g,''); });
+      var headers = parseCSVLine(lines[0]);
       var rows = lines.slice(1).map(function(line) {
-        var vals = line.split(',').map(function(v){ return v.trim().replace(/^"|"$/g,''); });
+        var vals = parseCSVLine(line);
         var obj = {}; headers.forEach(function(h,i){ obj[h] = vals[i]||''; }); return obj;
       }).filter(function(r){ return Object.values(r).some(function(v){ return v; }); });
 
@@ -14352,9 +14405,9 @@
         if (!file) { toast('Select a CSV file', 'error'); return; }
         var text = await file.text();
         var lines = text.split('\n').filter(function(l){ return l.trim(); });
-        var headers = lines[0].split(',').map(function(h){ return h.trim().replace(/^"|"$/g,''); });
+        var headers = parseCSVLine(lines[0]);
         _bulkGCREvents = lines.slice(1).map(function(line) {
-          var vals = line.split(',').map(function(v){ return v.trim().replace(/^"|"$/g,''); });
+          var vals = parseCSVLine(line);
           var obj = {}; headers.forEach(function(h,i){ obj[h] = vals[i]||''; }); return obj;
         }).filter(function(r){ return r.business_name && (r.artist_name || r.title); });
 
