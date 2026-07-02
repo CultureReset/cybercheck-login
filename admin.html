@@ -535,12 +535,13 @@
               <thead><tr style="border-bottom:1px solid var(--card-border);">
                 <th onclick="sortGCRBy('name')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Name <span id="gcr-sort-name"></span></th>
                 <th onclick="sortGCRBy('entity_subtype')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Category <span id="gcr-sort-entity_subtype"></span></th>
+                <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);" title="Hub linkage — e.g. individual businesses that belong under The Wharf">Parent</th>
                 <th onclick="sortGCRBy('is_active')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Status <span id="gcr-sort-is_active"></span></th>
                 <th onclick="sortGCRBy('slug')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Subdomain <span id="gcr-sort-slug"></span></th>
                 <th onclick="sortGCRBy('updated_at')" style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none;">Last Edited <span id="gcr-sort-updated_at"></span></th>
                 <th style="text-align:left;padding:10px 8px;font-size:13px;color:var(--text-muted);">Actions</th>
               </tr></thead>
-              <tbody id="gcr-businesses-body"><tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
+              <tbody id="gcr-businesses-body"><tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -6934,6 +6935,18 @@
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
+    // For embedding text as a single-quoted JS string literal *inside* an
+    // onclick="..." HTML attribute. HTML entity decoding happens before the
+    // inline handler is compiled as JS, so escHtml's '&#39;' would decode
+    // back to a literal apostrophe and still break the JS string — this
+    // escapes the JS layer (backslash/quote) and the HTML layer (&/"/<)
+    // separately, since they're disjoint character sets.
+    function jsAttr(str) {
+      return String(str || '')
+        .replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
     // ── GCR BUSINESSES ────────────────────────────────
     var _gcrLoaded = false;
     var _allGCRBusinesses = [];
@@ -6981,7 +6994,7 @@
     async function loadGCRBusinesses() {
       _gcrLoaded = true;
       var token = getAuthToken();
-      document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
+      document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
       try {
         // Supabase caps each request at 1000 rows — page through to load all ~2,800.
         var all = [];
@@ -6998,14 +7011,43 @@
         _allGCRBusinesses = all;
         renderGCRBusinesses(_allGCRBusinesses);
       } catch(e) {
-        document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
+        document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Failed to load.</td></tr>';
       }
+    }
+
+    // Reorders a sorted list so children (parent_slug) render directly under
+    // their parent, indented — without disturbing the chosen sort order otherwise.
+    function nestGCRRows(list) {
+      var bySlug = {};
+      list.forEach(function(b) { if (b.slug) bySlug[b.slug] = b; });
+      var childrenOf = {};
+      list.forEach(function(b) {
+        if (b.parent_slug && bySlug[b.parent_slug] && b.parent_slug !== b.slug) {
+          if (!childrenOf[b.parent_slug]) childrenOf[b.parent_slug] = [];
+          childrenOf[b.parent_slug].push(b);
+        }
+      });
+      var placed = {};
+      var out = [];
+      function addWithChildren(b, depth) {
+        if (placed[b.slug || b.id]) return;
+        placed[b.slug || b.id] = true;
+        out.push({ b: b, depth: depth });
+        (childrenOf[b.slug] || []).forEach(function(c) { addWithChildren(c, depth + 1); });
+      }
+      list.forEach(function(b) {
+        if (b.parent_slug && bySlug[b.parent_slug] && b.parent_slug !== b.slug) return; // placed under its parent below
+        addWithChildren(b, 0);
+      });
+      // Parent filtered out of current view (e.g. by search) — still show the child, unindented.
+      list.forEach(function(b) { addWithChildren(b, 0); });
+      return out;
     }
 
     function renderGCRBusinesses(list) {
       document.getElementById('gcr-count').textContent = list.length + ' businesses';
       if (!list.length) {
-        document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">No businesses found.</td></tr>';
+        document.getElementById('gcr-businesses-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No businesses found.</td></tr>';
         return;
       }
       var sorted = _gcrSortKey ? list.slice().sort(function(a, b) {
@@ -7022,15 +7064,31 @@
         var el = document.getElementById('gcr-sort-' + k);
         if (el) el.textContent = _gcrSortKey === k ? (_gcrSortDir > 0 ? '▲' : '▼') : '';
       });
-      var html = sorted.map(function(b) {
+      var bySlugForParentName = {};
+      list.forEach(function(b) { if (b.slug) bySlugForParentName[b.slug] = b; });
+      var nested = nestGCRRows(sorted);
+      var html = nested.map(function(entry) {
+        var b = entry.b, depth = entry.depth;
         var liveChecked = b.is_active ? 'checked' : '';
         var liveLabel = b.is_active ? '<span style="color:#22c55e;font-weight:700;font-size:12px;">LIVE</span>' : '<span style="color:#94a3b8;font-size:12px;">Off</span>';
         var updated = b.updated_at || b.created_at;
         var updatedText = updated ? relativeTime(updated) : '—';
         var updatedTitle = updated ? new Date(updated).toLocaleString() : '';
+        var indent = depth > 0 ? ('<span style="color:var(--text-muted);margin-right:4px;">' + Array(depth).join('&nbsp;&nbsp;') + '↳</span>') : '';
+        var parentCell;
+        if (b.parent_slug) {
+          var parentName = (bySlugForParentName[b.parent_slug] || {}).name || b.parent_slug;
+          parentCell = '<span style="font-size:12px;color:var(--text);background:var(--bg);border:1px solid var(--card-border);border-radius:4px;padding:3px 7px;display:inline-flex;align-items:center;gap:5px;">' +
+            '🔗 ' + escHtml(parentName) +
+            '<span onclick="setGCRParent(\'' + b.id + '\',\'' + b.slug + '\',null)" style="cursor:pointer;color:#ef4444;font-weight:700;" title="Remove parent">✕</span>' +
+          '</span>';
+        } else {
+          parentCell = '<button onclick="openParentPicker(\'' + b.id + '\',\'' + b.slug + '\',\'' + jsAttr(b.name || '') + '\')" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;">+ Set parent</button>';
+        }
         return '<tr style="border-bottom:1px solid var(--card-border);">' +
-          '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + escHtml((b.icon || '') + ' ' + (b.name || '—')) + '</td>' +
+          '<td style="padding:10px 8px;font-size:13px;font-weight:600;">' + indent + escHtml((b.icon || '') + ' ' + (b.name || '—')) + '</td>' +
           '<td style="padding:10px 8px;font-size:13px;color:var(--text-muted);">' + escHtml(b.entity_subtype || '—') + '</td>' +
+          '<td style="padding:10px 8px;">' + parentCell + '</td>' +
           '<td style="padding:10px 8px;">' +
             '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;">' +
               '<input type="checkbox" ' + liveChecked + ' onchange="toggleGCRLive(\'' + b.id + '\',this.checked,this)" style="width:16px;height:16px;accent-color:#22c55e;cursor:pointer;">' +
@@ -7047,6 +7105,76 @@
           '</tr>';
       }).join('');
       document.getElementById('gcr-businesses-body').innerHTML = html;
+    }
+
+    // ── Parent/child hub linkage picker ─────────────────
+    var _parentPickerEntityId = null;
+    var _parentPickerSlug = null;
+
+    function openParentPicker(entityId, slug, name) {
+      _parentPickerEntityId = entityId;
+      _parentPickerSlug = slug;
+      var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;" id="parentPickerModal">' +
+        '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;max-width:520px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.6);">' +
+          '<h2 style="margin:0 0 8px;font-size:20px;">🔗 Set Parent for ' + escHtml(name || '') + '</h2>' +
+          '<p style="color:var(--text-muted);font-size:13px;margin:0 0 20px;">Search for the hub business this should be listed under — e.g. "The Wharf." It will appear nested under that hub in this directory and on its public profile page.</p>' +
+          '<div style="position:relative;">' +
+            '<input id="parent-picker-search" type="text" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;" ' +
+              'oninput="filterParentPicker()" onfocus="filterParentPicker()" onblur="setTimeout(function(){var d=document.getElementById(\'parent-picker-dd\');if(d)d.style.display=\'none\'},400)">' +
+            '<div id="parent-picker-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;max-height:260px;overflow-y:auto;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,.5);margin-top:2px;"></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">' +
+            '<button onclick="document.getElementById(\'parentPickerModal\').remove()" class="btn btn-outline">Cancel</button>' +
+          '</div>' +
+        '</div></div>';
+      document.body.insertAdjacentHTML('beforeend', html);
+      setTimeout(function() { var i = document.getElementById('parent-picker-search'); if (i) i.focus(); }, 0);
+    }
+
+    function filterParentPicker() {
+      var input = document.getElementById('parent-picker-search');
+      var dd = document.getElementById('parent-picker-dd');
+      if (!input || !dd) return;
+      var term = input.value.trim().toLowerCase();
+      var candidates = (_allGCRBusinesses || []).filter(function(e) { return e.slug && e.slug !== _parentPickerSlug; });
+      var matches = term
+        ? candidates.filter(function(e) { return (e.name||'').toLowerCase().includes(term) || (e.slug||'').toLowerCase().includes(term); })
+        : candidates.slice(0, 60);
+      if (!matches.length) {
+        dd.innerHTML = '<div style="padding:10px 14px;color:var(--text-muted);font-size:13px;">No results</div>';
+      } else {
+        dd.innerHTML = matches.map(function(e) {
+          var name = escHtml((e.icon||'') + ' ' + e.name);
+          var slugText = escHtml(e.slug||'');
+          return '<div style="padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #334155;" ' +
+            'onmouseover="this.style.background=\'#273548\'" onmouseout="this.style.background=\'\'" ' +
+            'onmousedown="event.preventDefault();selectGCRParent(\'' + jsAttr(e.slug) + '\')">' +
+            name + '<span style="color:var(--text-muted);font-size:11px;margin-left:6px;">— ' + slugText + '</span></div>';
+        }).join('');
+      }
+      dd.style.display = '';
+    }
+
+    function selectGCRParent(parentSlug) {
+      document.getElementById('parentPickerModal')?.remove();
+      setGCRParent(_parentPickerEntityId, _parentPickerSlug, parentSlug);
+    }
+
+    async function setGCRParent(entityId, slug, parentSlug) {
+      var token = getAuthToken();
+      try {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entity: { parent_slug: parentSlug } })
+        });
+        var data = await res.json().catch(function(){ return {}; });
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+        var row = (_allGCRBusinesses || []).find(function(b) { return b.id === entityId || b.slug === slug; });
+        if (row) row.parent_slug = parentSlug;
+        toast(parentSlug ? 'Parent set' : 'Parent removed');
+        renderGCRBusinesses(_allGCRBusinesses);
+      } catch (err) { toast('Error: ' + err.message, 'error'); }
     }
 
     function normName(n) {
