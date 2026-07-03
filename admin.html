@@ -2872,12 +2872,22 @@
                 </select>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);">Page size</label>
+                <select id="qr-p-page" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                  <option value="24x36" selected>Poster 24×36" (portrait)</option>
+                  <option value="36x24">Poster 36×24" (landscape)</option>
+                  <option value="18x24">Poster 18×24"</option>
+                  <option value="letter">Letter 8.5×11"</option>
+                  <option value="a4">A4</option>
+                </select>
+              </div>
               <div>
                 <label style="font-size:12px;color:var(--text-muted);">Show label under QR?</label>
                 <select id="qr-p-label" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
                   <option value="both">Number + Label</option>
-                  <option value="number">Number only</option>
+                  <option value="number" selected>Number only</option>
                   <option value="label">Label only</option>
                   <option value="none">No label</option>
                 </select>
@@ -16348,6 +16358,9 @@
       var size  = parseInt(document.getElementById('qr-p-size').value) || 120;
       var labelMode = document.getElementById('qr-p-label').value;
       var cropMarks = document.getElementById('qr-p-crop').value === 'yes';
+      var pageSel = document.getElementById('qr-p-page');
+      var pageKey = pageSel ? pageSel.value : 'letter';
+      var pageDims = { '24x36':'24in 36in', '36x24':'36in 24in', '18x24':'18in 24in', 'letter':'8.5in 11in', 'a4':'210mm 297mm' }[pageKey] || '8.5in 11in';
 
       if (to < from) { toast('To must be >= From', 'error'); return; }
       if (to - from > 999) { toast('Max 1000 codes per sheet', 'error'); return; }
@@ -16362,10 +16375,13 @@
       if (!Array.isArray(codes)) codes = codes.data || codes.codes || [];
       if (!codes.length) { toast('No codes found in that range', 'error'); return; }
 
+      // Print in ascending seq order so cut-outs come off the sheet numbered 1,2,3…
+      codes.sort(function(a, b){ return (a.seq_number || 0) - (b.seq_number || 0); });
+
       var pad   = cropMarks ? Math.round(size * 0.15) : 8;
-      var cell  = size + pad * 2 + (labelMode !== 'none' ? 32 : 0);
-      var cols  = Math.max(1, Math.floor((794 - 40) / cell)); // A4 ~794px
-      var qrApiBase = 'https://api.qrserver.com/v1/create-qr-code/?size=' + size + 'x' + size + '&data=';
+      // Request the QR at 2x (min 300px) so it prints crisp, but display it at `size`
+      var imgPx = Math.max(size * 2, 300);
+      var qrApiBase = 'https://api.qrserver.com/v1/create-qr-code/?size=' + imgPx + 'x' + imgPx + '&data=';
 
       var cropStyle = cropMarks
         ? 'outline: 1px dashed #ccc; outline-offset: ' + (pad - 2) + 'px;'
@@ -16383,14 +16399,15 @@
 
       var win = window.open('', '_blank');
       win.document.write('<!DOCTYPE html><html><head><title>QR Print Sheet #' + from + '–' + to + '</title>' +
-        '<style>body{margin:20px;font-family:sans-serif;background:#fff;color:#000;}' +
+        '<style>@page{size:' + pageDims + ';margin:0.4in;}' +
+        'body{margin:20px;font-family:sans-serif;background:#fff;color:#000;}' +
         'h2{font-size:14px;margin:0 0 16px;color:#555;}' +
-        '.grid{display:flex;flex-wrap:wrap;gap:0;}' +
+        '.grid{display:flex;flex-wrap:wrap;gap:0;align-content:flex-start;}' +
         '.print-btn{margin-bottom:16px;padding:10px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;}' +
         '@media print{.print-btn,.print-info{display:none;}body{margin:0;}}' +
         '</style></head><body>' +
         '<button class="print-btn" onclick="window.print()">🖨 Print</button>' +
-        '<div class="print-info" style="font-size:12px;color:#888;margin-bottom:12px;">Codes #' + from + '–' + to + ' &nbsp;|&nbsp; ' + codes.length + ' codes &nbsp;|&nbsp; QR size: ' + size + 'px</div>' +
+        '<div class="print-info" style="font-size:12px;color:#888;margin-bottom:12px;">Codes #' + from + '–' + to + ' &nbsp;|&nbsp; ' + codes.length + ' codes &nbsp;|&nbsp; page ' + pageKey + ' &nbsp;|&nbsp; QR ' + size + 'px</div>' +
         '<div class="grid">' + cells + '</div>' +
         '</body></html>');
       win.document.close();
