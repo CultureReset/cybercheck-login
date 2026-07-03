@@ -57,6 +57,8 @@
     })();
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 </head>
 <body>
   <div class="layout">
@@ -2902,8 +2904,10 @@
               </div>
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-              <button class="btn btn-primary" onclick="generateQRPrintSheet()" style="font-size:13px;padding:9px 20px;width:auto;">🖨 Generate Print Sheet</button>
-              <button class="btn btn-outline" onclick="downloadQRZip()" style="font-size:13px;padding:9px 20px;width:auto;">⬇ Download ZIP (PNGs)</button>
+              <button class="btn btn-primary" onclick="downloadQRPdf()" style="font-size:13px;padding:9px 20px;width:auto;">⬇ Download PDF (print-ready)</button>
+              <button class="btn btn-outline" onclick="downloadQRJpg()" style="font-size:13px;padding:9px 20px;width:auto;">⬇ Download JPG (CVS/Walgreens)</button>
+              <button class="btn btn-outline" onclick="generateQRPrintSheet()" style="font-size:13px;padding:9px 20px;width:auto;">🖨 Print Preview</button>
+              <button class="btn btn-outline" onclick="downloadQRZip()" style="font-size:13px;padding:9px 20px;width:auto;">⬇ ZIP (individual PNGs)</button>
               <span id="qr-zip-status" style="font-size:12px;color:var(--text-muted);"></span>
             </div>
           </div>
@@ -16468,6 +16472,144 @@
       URL.revokeObjectURL(a.href);
       status.textContent = 'Done — ' + total + ' PNGs downloaded.';
       setTimeout(function(){ status.textContent = ''; }, 5000);
+    }
+
+    // ── Shared helpers for the print-ready exports ──────────────────────────────
+    function _qrSheetParams() {
+      var pageSel = document.getElementById('qr-p-page');
+      var pageKey = pageSel ? pageSel.value : '24x36';
+      var pageIn = { '24x36':[24,36], '36x24':[36,24], '18x24':[18,24], 'letter':[8.5,11], 'a4':[8.27,11.69] }[pageKey] || [24,36];
+      return {
+        from: parseInt(document.getElementById('qr-p-from').value) || 1,
+        to:   parseInt(document.getElementById('qr-p-to').value) || 100,
+        size: parseFloat(document.getElementById('qr-p-size').value) || 1.5, // INCHES
+        labelMode: document.getElementById('qr-p-label').value,
+        cropMarks: document.getElementById('qr-p-crop').value === 'yes',
+        pageKey: pageKey, pageIn: pageIn
+      };
+    }
+    async function _fetchQRCodes(from, to) {
+      var res = await fetch(API_BASE + '/api/qr?seq_from=' + from + '&seq_to=' + to + '&limit=1000', {
+        headers: { 'Authorization': 'Bearer ' + getAuthToken() }
+      });
+      if (!res.ok) return null;
+      var codes = await res.json();
+      if (!Array.isArray(codes)) codes = codes.data || codes.codes || [];
+      codes.sort(function(a,b){ return (a.seq_number||0)-(b.seq_number||0); });
+      return codes;
+    }
+    // Render a QR to a PNG data URL entirely in-browser (QRious) — no CORS, keeps quiet zone
+    function _qrPng(url, px) { return new QRious({ value: url, size: px, level: 'M' }).toDataURL('image/png'); }
+    function _cellLabel(mode, c) {
+      if (mode === 'number') return '#' + c.seq_number;
+      if (mode === 'label')  return c.label || '';
+      return '#' + c.seq_number + '  ' + (c.label || '');
+    }
+
+    // Print-ready PDF at exact physical size (best for any print shop that takes PDF)
+    async function downloadQRPdf() {
+      var status = document.getElementById('qr-zip-status');
+      if (!window.jspdf || !window.jspdf.jsPDF || typeof QRious === 'undefined') { toast('Print libraries still loading — try again in a moment', 'error'); return; }
+      var p = _qrSheetParams();
+      if (p.to < p.from) { toast('To must be >= From', 'error'); return; }
+      if (p.to - p.from > 999) { toast('Max 1000 codes per PDF', 'error'); return; }
+
+      status.textContent = 'Loading codes…';
+      var codes = await _fetchQRCodes(p.from, p.to);
+      if (!codes) { status.textContent=''; toast('Failed to load codes', 'error'); return; }
+      if (!codes.length) { status.textContent=''; toast('No codes in that range', 'error'); return; }
+
+      var pageW = p.pageIn[0], pageH = p.pageIn[1], margin = 0.4;
+      var gutter = p.cropMarks ? (p.size * 0.12) : 0.08;
+      var labelH = (p.labelMode === 'none') ? 0 : 0.22;
+      var cellW = p.size + gutter*2, cellH = p.size + gutter*2 + labelH;
+      var cols = Math.max(1, Math.floor((pageW - margin*2) / cellW));
+      var rows = Math.max(1, Math.floor((pageH - margin*2) / cellH));
+      var perPage = cols * rows;
+      var imgPx = Math.min(1200, Math.round(p.size * 300)); // 300 DPI so cut-outs scan
+
+      var orient = pageW > pageH ? 'landscape' : 'portrait';
+      var doc = new window.jspdf.jsPDF({ unit: 'in', format: [pageW, pageH], orientation: orient });
+
+      for (var i = 0; i < codes.length; i++) {
+        var c = codes[i], onPage = i % perPage;
+        if (i > 0 && onPage === 0) doc.addPage([pageW, pageH], orient);
+        var col = onPage % cols, row = Math.floor(onPage / cols);
+        var cx = margin + col*cellW, cy = margin + row*cellH;
+        var qx = cx + gutter, qy = cy + gutter;
+        if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
+        var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        try { doc.addImage(_qrPng(url, imgPx), 'PNG', qx, qy, p.size, p.size); } catch(e) {}
+        if (p.cropMarks) {
+          doc.setDrawColor(170); doc.setLineWidth(0.006); doc.setLineDashPattern([0.05,0.05], 0);
+          doc.rect(cx + 0.02, cy + 0.02, cellW - 0.04, cellH - 0.04);
+          doc.setLineDashPattern([], 0);
+        }
+        if (p.labelMode !== 'none') {
+          doc.setFontSize(10); doc.setTextColor(0);
+          doc.text(String(_cellLabel(p.labelMode, c)), qx + p.size/2, qy + p.size + 0.16, { align:'center', maxWidth: p.size + gutter });
+        }
+      }
+      status.textContent = 'Saving PDF…';
+      doc.save('qr-sheet-' + p.from + '-' + p.to + '-' + p.size + 'in-' + p.pageKey + '.pdf');
+      status.textContent = codes.length + ' codes • ' + cols + '×' + rows + '/page • ' + p.size + '" each — PDF downloaded.';
+      setTimeout(function(){ status.textContent=''; }, 8000);
+    }
+
+    // Single flat JPG of one sheet — for CVS/Walgreens poster uploads that want an image
+    async function downloadQRJpg() {
+      var status = document.getElementById('qr-zip-status');
+      if (typeof QRious === 'undefined') { toast('QR library still loading — try again', 'error'); return; }
+      var p = _qrSheetParams();
+      if (p.to < p.from) { toast('To must be >= From', 'error'); return; }
+
+      status.textContent = 'Loading codes…';
+      var codes = await _fetchQRCodes(p.from, p.to);
+      if (!codes) { status.textContent=''; toast('Failed to load codes', 'error'); return; }
+      if (!codes.length) { status.textContent=''; toast('No codes in that range', 'error'); return; }
+
+      var DPI = 150; // one flat image; 150 DPI keeps the canvas within browser memory limits, plenty for QR
+      var pageW = p.pageIn[0], pageH = p.pageIn[1], margin = 0.4;
+      var gutter = p.cropMarks ? (p.size * 0.12) : 0.08;
+      var labelH = (p.labelMode === 'none') ? 0 : 0.22;
+      var cellW = p.size + gutter*2, cellH = p.size + gutter*2 + labelH;
+      var cols = Math.max(1, Math.floor((pageW - margin*2) / cellW));
+      var rows = Math.max(1, Math.floor((pageH - margin*2) / cellH));
+      var perPage = cols * rows, fullCount = codes.length, truncated = false;
+      if (codes.length > perPage) { truncated = true; codes = codes.slice(0, perPage); }
+
+      var cv = document.createElement('canvas');
+      cv.width = Math.round(pageW * DPI); cv.height = Math.round(pageH * DPI);
+      var ctx = cv.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+      var imgPx = Math.round(p.size * DPI);
+
+      for (var i = 0; i < codes.length; i++) {
+        var c = codes[i], col = i % cols, row = Math.floor(i / cols);
+        var cx = (margin + col*cellW)*DPI, cy = (margin + row*cellH)*DPI;
+        var qx = cx + gutter*DPI, qy = cy + gutter*DPI;
+        if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
+        var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        var dataUrl = new QRious({ value: url, size: imgPx, level: 'M' }).toDataURL('image/png');
+        var img = new Image();
+        await new Promise(function(res){ img.onload=res; img.onerror=res; img.src = dataUrl; });
+        ctx.drawImage(img, qx, qy, imgPx, imgPx);
+        if (p.cropMarks) { ctx.strokeStyle='#aaa'; ctx.lineWidth=1; ctx.setLineDash([6,6]); ctx.strokeRect(cx+3, cy+3, cellW*DPI-6, cellH*DPI-6); ctx.setLineDash([]); }
+        if (p.labelMode !== 'none') {
+          ctx.fillStyle='#000'; ctx.font='bold ' + Math.round(0.13*DPI) + 'px sans-serif'; ctx.textAlign='center';
+          ctx.fillText(String(_cellLabel(p.labelMode, c)), qx + imgPx/2, qy + imgPx + 0.18*DPI);
+        }
+      }
+      status.textContent = 'Building JPG…';
+      cv.toBlob(function(blob){
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'qr-sheet-' + p.from + '-' + p.to + '-' + p.pageKey + '.jpg';
+        a.click(); URL.revokeObjectURL(a.href);
+        status.textContent = codes.length + ' codes — JPG downloaded (' + p.pageKey + ').';
+        if (truncated) toast('A JPG is one page: ' + codes.length + ' of ' + fullCount + ' fit. Use Download PDF for the full set (multi-page).', 'error');
+        setTimeout(function(){ status.textContent=''; }, 9000);
+      }, 'image/jpeg', 0.92);
     }
 
     async function generateMultiQR() {
