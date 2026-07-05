@@ -138,6 +138,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
           <span>Artists</span>
         </div>
+        <div class="nav-item" data-page="artist-profiles" onclick="showPage('artist-profiles')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M2 12h4M18 8h4"/></svg>
+          <span>Song Requests &amp; Tips 🎤</span>
+        </div>
         <div class="nav-item" data-page="gcr-specials" onclick="showPage('gcr-specials')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Specials 🤖</span>
@@ -1609,6 +1613,97 @@
             <div style="display:flex;gap:12px;margin-top:24px;">
               <button onclick="saveArtist()" class="btn btn-primary" style="flex:1;">Save Artist</button>
               <button onclick="closeArtistEditor()" class="btn btn-outline">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Song Requests & Tips (artist_profiles — powers the standalone song-request.html page) ── -->
+      <div id="page-artist-profiles" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Song Requests &amp; Tips</h1>
+          <button class="btn btn-primary" onclick="openAPEditor(null)">+ Add Artist Profile</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:13px;margin:-8px 0 20px;">
+          Each profile here powers a live fan page (<code>song-request.html?slug=...</code>) where fans request songs and tip via Venmo/Cash App using a reference code — the payment parser matches the code from the artist's forwarded confirmation email and marks the request Verified.
+        </p>
+        <div id="ap-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"><p style="color:var(--text-muted);">Loading...</p></div>
+
+        <!-- Artist Profile Editor Modal -->
+        <div id="ap-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+          <div style="max-width:640px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;position:relative;">
+            <button onclick="closeAPEditor()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+            <h2 id="ap-editor-title" style="margin:0 0 20px;">Add Artist Profile</h2>
+
+            <div style="display:grid;gap:14px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Artist / Band Name *</label>
+                  <input type="text" id="ap-name" oninput="apAutoSlug()" placeholder="Get Sideways" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Slug * <span style="font-weight:400;">(used in the page URL)</span></label>
+                  <input type="text" id="ap-slug" oninput="this.dataset.touched='1'" placeholder="get-sideways" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Bio</label>
+                <textarea id="ap-bio" rows="2" placeholder="90s/2000s Pop-Rock + Party Country · Birmingham, AL" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Photo URL</label>
+                <input type="text" id="ap-photo" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Venmo Handle</label>
+                  <input type="text" id="ap-venmo" placeholder="get-sideways-band (no @)" style="width:100%;padding:10px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Cash App $Cashtag</label>
+                  <input type="text" id="ap-cashtag" placeholder="getsidewaysband (no $)" style="width:100%;padding:10px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Min Request $</label>
+                  <input type="number" id="ap-min-amount" value="10" min="1" step="0.5" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+                  <input type="checkbox" id="ap-request-enabled" checked style="width:18px;height:18px;">
+                  <label for="ap-request-enabled" style="font-size:13px;">Requests On</label>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+                  <input type="checkbox" id="ap-shoutout-enabled" style="width:18px;height:18px;">
+                  <label for="ap-shoutout-enabled" style="font-size:13px;">Shoutouts On</label>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Instagram URL</label>
+                  <input type="text" id="ap-instagram" placeholder="https://instagram.com/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Spotify URL</label>
+                  <input type="text" id="ap-spotify" placeholder="https://open.spotify.com/artist/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">YouTube URL</label>
+                  <input type="text" id="ap-youtube" placeholder="https://youtube.com/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Booking URL</label>
+                  <input type="text" id="ap-booking" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+            </div>
+
+            <div id="ap-save-result" style="margin-top:16px;"></div>
+            <div style="display:flex;gap:12px;margin-top:20px;">
+              <button onclick="saveAP()" class="btn btn-primary" id="ap-save-btn" style="flex:1;">Save Profile</button>
+              <button onclick="closeAPEditor()" class="btn btn-outline">Cancel</button>
             </div>
           </div>
         </div>
@@ -6915,6 +7010,7 @@
       if (page === 'gcr-claims' && !_claimsLoaded) loadGCRClaims();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
       if (page === 'gcr-artists') loadArtists(document.getElementById('artist-search') ? document.getElementById('artist-search').value : '');
+      if (page === 'artist-profiles') loadArtistProfiles();
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
       if (page === 'gcr-ads' && !_adsLoaded) loadGCRAds();
       if (page === 'gcr-rails') loadPageRails();
@@ -9013,6 +9109,154 @@
       toast('Artist ' + (method === 'POST' ? 'created' : 'updated') + '!', 'success');
       closeArtistEditor();
       loadArtists(document.getElementById('artist-search').value);
+    }
+
+    // ── ARTIST PROFILES (song_requests / Venmo-CashApp tip pages) ────────────
+    var _apList = [];
+    var _apEditSlug = null; // null = creating new
+
+    async function loadArtistProfiles() {
+      var wrap = document.getElementById('ap-list');
+      wrap.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
+      try {
+        var r = await fetch(API_BASE + '/api/artists');
+        _apList = r.ok ? await r.json() : [];
+        renderAPList(_apList);
+      } catch(e) {
+        wrap.innerHTML = '<p style="color:#f87171;">Failed to load — ' + e.message + '</p>';
+      }
+    }
+
+    function renderAPList(list) {
+      var wrap = document.getElementById('ap-list');
+      if (!list.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">No artist profiles yet — click "+ Add Artist Profile" to create the first one.</p>'; return; }
+      wrap.innerHTML = list.map(function(a) {
+        var pageUrl = location.origin + '/song-request.html?slug=' + encodeURIComponent(a.slug);
+        var pay = [a.venmo ? 'Venmo' : '', a.cashtag ? 'Cash App' : ''].filter(Boolean).join(' + ') || 'No payment method set';
+        return '<div class="card" style="padding:16px;">' +
+          '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">' +
+            '<div style="width:56px;height:56px;border-radius:50%;background:var(--bg);border:1px solid var(--card-border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;">' +
+              (a.photo_url ? '<img src="' + escHtml(a.photo_url) + '" style="width:100%;height:100%;object-fit:cover;">' : '🎤') +
+            '</div>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:700;font-size:15px;">' + escHtml(a.artist_name) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);">/' + escHtml(a.slug) + ' · ' + escHtml(pay) + '</div>' +
+            '</div>' +
+          '</div>' +
+          (a.bio ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">' + escHtml(a.bio.slice(0,110)) + (a.bio.length > 110 ? '…' : '') + '</div>' : '') +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<button class="btn btn-outline btn-sm" onclick="openAPEditor(\'' + a.slug + '\')" style="font-size:12px;">Edit</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="copyAPLink(\'' + escHtml(pageUrl) + '\')" style="font-size:12px;">Copy Link</button>' +
+            '<a class="btn btn-outline btn-sm" href="' + escHtml(pageUrl) + '" target="_blank" style="font-size:12px;">Open →</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function copyAPLink(url) {
+      navigator.clipboard.writeText(url).then(function(){ toast('Link copied!', 'success'); }).catch(function(){ prompt('Copy this link:', url); });
+    }
+
+    function apAutoSlug() {
+      if (_apEditSlug) return; // don't rewrite slug once editing an existing profile
+      var slugEl = document.getElementById('ap-slug');
+      if (slugEl.dataset.touched === '1') return;
+      slugEl.value = document.getElementById('ap-name').value.trim().toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function openAPEditor(slug) {
+      _apEditSlug = slug;
+      document.getElementById('ap-editor-title').textContent = slug ? 'Edit Artist Profile' : 'Add Artist Profile';
+      document.getElementById('ap-save-result').innerHTML = '';
+      var a = slug ? _apList.find(function(x){ return x.slug === slug; }) : null;
+      document.getElementById('ap-name').value = a ? a.artist_name || '' : '';
+      document.getElementById('ap-slug').value = a ? a.slug || '' : '';
+      document.getElementById('ap-slug').disabled = !!slug; // slug is the page URL — don't let it change once live
+      document.getElementById('ap-slug').dataset.touched = slug ? '1' : '0';
+      document.getElementById('ap-bio').value = a ? a.bio || '' : '';
+      document.getElementById('ap-photo').value = a ? a.photo_url || '' : '';
+      document.getElementById('ap-venmo').value = a ? (a.venmo || '').replace(/^@/,'') : '';
+      document.getElementById('ap-cashtag').value = a ? (a.cashtag || '').replace(/^\$/,'') : '';
+      document.getElementById('ap-min-amount').value = a ? (a.default_min_request_amount || 10) : 10;
+      document.getElementById('ap-request-enabled').checked = a ? a.request_enabled !== false : true;
+      document.getElementById('ap-shoutout-enabled').checked = a ? !!a.shoutout_enabled : false;
+      document.getElementById('ap-instagram').value = a ? a.instagram_url || '' : '';
+      document.getElementById('ap-spotify').value = a ? a.spotify_url || '' : '';
+      document.getElementById('ap-youtube').value = a ? a.youtube_url || '' : '';
+      document.getElementById('ap-booking').value = a ? a.booking_url || '' : '';
+      document.getElementById('ap-editor-modal').style.display = 'block';
+    }
+
+    function closeAPEditor() {
+      document.getElementById('ap-editor-modal').style.display = 'none';
+      _apEditSlug = null;
+    }
+
+    async function saveAP() {
+      var token = getAuthToken();
+      var name = document.getElementById('ap-name').value.trim();
+      var slug = document.getElementById('ap-slug').value.trim().toLowerCase();
+      var resultBox = document.getElementById('ap-save-result');
+      resultBox.innerHTML = '';
+      if (!name || !slug) { resultBox.innerHTML = '<div class="notice error" style="color:#f87171;font-size:13px;">Name and slug are required.</div>'; return; }
+
+      var fullPayload = {
+        artist_name: name,
+        bio: document.getElementById('ap-bio').value.trim() || null,
+        photo_url: document.getElementById('ap-photo').value.trim() || null,
+        venmo: document.getElementById('ap-venmo').value.trim().replace(/^@/,'') || null,
+        cashtag: document.getElementById('ap-cashtag').value.trim().replace(/^\$/,'') || null,
+        default_min_request_amount: parseFloat(document.getElementById('ap-min-amount').value) || 10,
+        request_enabled: document.getElementById('ap-request-enabled').checked,
+        shoutout_enabled: document.getElementById('ap-shoutout-enabled').checked,
+        instagram_url: document.getElementById('ap-instagram').value.trim() || null,
+        spotify_url: document.getElementById('ap-spotify').value.trim() || null,
+        youtube_url: document.getElementById('ap-youtube').value.trim() || null,
+        booking_url: document.getElementById('ap-booking').value.trim() || null,
+        is_active: true,
+      };
+
+      var btn = document.getElementById('ap-save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        if (_apEditSlug) {
+          // Existing profile — PATCH accepts any field, one round trip
+          var r = await fetch(API_BASE + '/api/artists/' + encodeURIComponent(_apEditSlug), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(fullPayload)
+          });
+          var d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'Save failed');
+        } else {
+          // New profile — POST only accepts a narrow field set, so create first, then
+          // PATCH the rest (venmo/cashtag/flags/links) onto the same row in one follow-up call.
+          var cr = await fetch(API_BASE + '/api/artists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ artist_name: name, slug: slug, cashtag: fullPayload.cashtag, venmo: fullPayload.venmo, bio: fullPayload.bio, photo_url: fullPayload.photo_url })
+          });
+          var cd = await cr.json();
+          if (!cr.ok) throw new Error(cd.error || 'Create failed');
+
+          var pr = await fetch(API_BASE + '/api/artists/' + encodeURIComponent(slug), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(fullPayload)
+          });
+          var pd = await pr.json();
+          if (!pr.ok) throw new Error(pd.error || 'Save failed after create');
+        }
+
+        toast('Artist profile saved!', 'success');
+        closeAPEditor();
+        await loadArtistProfiles();
+      } catch (err) {
+        resultBox.innerHTML = '<div style="color:#f87171;font-size:13px;">Error: ' + escHtml(err.message) + '</div>';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Profile';
+      }
     }
 
     // ── BULK ADD EVENTS ──────────────────────────────────────────────────────
