@@ -1625,7 +1625,7 @@
           <button class="btn btn-primary" onclick="openAPEditor(null)">+ Add Artist Profile</button>
         </div>
         <p style="color:var(--text-muted);font-size:13px;margin:-8px 0 20px;">
-          Each profile here powers a live fan page (<code>song-request.html?slug=...</code>) where fans request songs and tip via Venmo/Cash App using a reference code — the payment parser matches the code from the artist's forwarded confirmation email and marks the request Verified.
+          Each profile here powers a live fan page at <code>gulfcoastradar.com/&lt;slug&gt;/profile</code> — no header/nav, reachable only by direct link or QR code — where fans request songs and tip via Venmo/Cash App using a reference code. The payment parser matches the code from the artist's forwarded confirmation email and marks the request Verified.
         </p>
         <div id="ap-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"><p style="color:var(--text-muted);">Loading...</p></div>
 
@@ -9160,7 +9160,7 @@
       var wrap = document.getElementById('ap-list');
       if (!list.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">No artist profiles yet — click "+ Add Artist Profile" to create the first one.</p>'; return; }
       wrap.innerHTML = list.map(function(a) {
-        var pageUrl = 'https://gulfcoastradar.com/song-request.html?slug=' + encodeURIComponent(a.slug);
+        var pageUrl = 'https://gulfcoastradar.com/' + encodeURIComponent(a.slug) + '/profile';
         var pay = [a.venmo ? 'Venmo' : '', a.cashtag ? 'Cash App' : ''].filter(Boolean).join(' + ') || 'No payment method set';
         return '<div class="card" style="padding:16px;">' +
           '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">' +
