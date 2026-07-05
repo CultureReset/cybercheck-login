@@ -9160,7 +9160,7 @@
       var wrap = document.getElementById('ap-list');
       if (!list.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">No artist profiles yet — click "+ Add Artist Profile" to create the first one.</p>'; return; }
       wrap.innerHTML = list.map(function(a) {
-        var pageUrl = location.origin + '/song-request.html?slug=' + encodeURIComponent(a.slug);
+        var pageUrl = 'https://gulfcoastradar.com/song-request.html?slug=' + encodeURIComponent(a.slug);
         var pay = [a.venmo ? 'Venmo' : '', a.cashtag ? 'Cash App' : ''].filter(Boolean).join(' + ') || 'No payment method set';
         return '<div class="card" style="padding:16px;">' +
           '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">' +
