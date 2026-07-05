@@ -41,6 +41,10 @@ h3{margin:0 0 8px;font-size:20px}
 .form{display:grid;gap:12px}
 .field{display:grid;gap:6px}
 .field label{font-size:12px;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.7px}
+.mode-toggle{display:flex;gap:8px;margin-bottom:14px;}
+.mode-btn{flex:1;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--muted);font-weight:900;cursor:pointer;font-size:14px;}
+.mode-btn.active{background:linear-gradient(135deg,var(--accent),#7cf8c5);color:#031017;border-color:transparent;}
+#priorityLabel{text-transform:none;font-size:13px;color:var(--text);letter-spacing:normal;font-weight:600;cursor:pointer;}
 input,select,textarea{width:100%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:14px;padding:12px 13px;font:inherit}
 textarea{min-height:80px;resize:vertical}
 .two-pane{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -102,19 +106,25 @@ textarea{min-height:80px;resize:vertical}
   <section class="panel two-pane">
     <div>
       <h2>Fan Form</h2>
+      <div class="mode-toggle" id="modeToggle">
+        <button type="button" class="mode-btn active" data-mode="song" onclick="setMode('song')">🎵 Song Request</button>
+        <button type="button" class="mode-btn" data-mode="shoutout" onclick="setMode('shoutout')">📣 Shoutout</button>
+      </div>
       <form class="form" id="requestForm">
         <div class="field"><label>Your Name</label><input id="fanName" placeholder="Katie" required></div>
-        <div class="field"><label>Song Title</label><input id="songTitle" placeholder="Mr. Brightside" required></div>
-        <div class="field"><label>Original Artist (optional)</label><input id="origArtist" placeholder="The Killers"></div>
-        <div class="field"><label>Request Type</label>
-          <select id="requestType">
-            <option value="standard">Standard Request</option>
-            <option value="priority">Priority Request (+ rush)</option>
-            <option value="shoutout">Dedication / Shoutout</option>
-          </select>
+
+        <div id="songFields">
+          <div class="field"><label>Song Title</label><input id="songTitle" placeholder="Mr. Brightside"></div>
+          <div class="field"><label>Original Artist (optional)</label><input id="origArtist" placeholder="The Killers"></div>
         </div>
+        <div id="shoutoutFields" style="display:none;">
+          <div class="field"><label>Shoutout Message</label><textarea id="shoutoutMsg" placeholder="Happy Birthday Sarah! 🎉"></textarea></div>
+          <div class="field"><label>Who's it for? (optional)</label><input id="shoutoutFor" placeholder="Sarah at the front table"></div>
+        </div>
+
+        <div class="field"><label id="priorityLabel"><input type="checkbox" id="rushCheck" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;">Make it priority / rush</label></div>
         <div class="field"><label>Amount ($)</label><input id="amount" type="number" step="0.5" min="1"></div>
-        <div class="field"><label>Dedication / Note (optional)</label><textarea id="note" placeholder="For Sarah's birthday!"></textarea></div>
+        <div class="field" id="noteField"><label>Note (optional)</label><textarea id="note" placeholder="Anything else the artist should know"></textarea></div>
         <button class="btn hot" type="submit" id="submitBtn">Create Request + Code</button>
       </form>
       <div id="resultBox" class="notice" style="display:none;margin-top:14px"></div>
@@ -195,10 +205,20 @@ function renderArtist() {
   }
 }
 
-document.getElementById('requestType').addEventListener('change', function() {
+let MODE = 'song';
+function setMode(mode) {
+  MODE = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('songFields').style.display = mode === 'song' ? '' : 'none';
+  document.getElementById('shoutoutFields').style.display = mode === 'shoutout' ? '' : 'none';
+  document.getElementById('songTitle').required = mode === 'song';
+  document.getElementById('shoutoutMsg').required = mode === 'shoutout';
+  document.getElementById('submitBtn').textContent = mode === 'shoutout' ? 'Create Shoutout + Code' : 'Create Request + Code';
+}
+
+document.getElementById('rushCheck').addEventListener('change', function() {
   const base = ARTIST?.default_min_request_amount || 5;
-  const map = { standard: base, priority: base * 2, shoutout: Math.max(base, 15) };
-  document.getElementById('amount').value = map[this.value] ?? base;
+  document.getElementById('amount').value = this.checked ? base * 2 : base;
 });
 
 document.getElementById('requestForm').addEventListener('submit', async function(e) {
@@ -210,18 +230,26 @@ document.getElementById('requestForm').addEventListener('submit', async function
   resultBox.style.display = 'none';
   btn.disabled = true; btn.textContent = 'Creating…';
 
-  const requestType = document.getElementById('requestType').value;
-  const origArtist = document.getElementById('origArtist').value.trim();
   const noteVal = document.getElementById('note').value.trim();
-  const combinedNote = [origArtist ? `Originally by ${origArtist}` : '', noteVal].filter(Boolean).join(' — ');
+  let songTitle, combinedNote;
+
+  if (MODE === 'shoutout') {
+    songTitle = document.getElementById('shoutoutMsg').value.trim();
+    const forWhom = document.getElementById('shoutoutFor').value.trim();
+    combinedNote = [forWhom ? `For: ${forWhom}` : '', noteVal].filter(Boolean).join(' — ');
+  } else {
+    songTitle = document.getElementById('songTitle').value.trim();
+    const origArtist = document.getElementById('origArtist').value.trim();
+    combinedNote = [origArtist ? `Originally by ${origArtist}` : '', noteVal].filter(Boolean).join(' — ');
+  }
 
   const payload = {
     fan_name: document.getElementById('fanName').value.trim(),
-    song_title: document.getElementById('songTitle').value.trim(),
+    song_title: songTitle,
     note: combinedNote || null,
     amount: parseFloat(document.getElementById('amount').value) || undefined,
-    rush: requestType === 'priority',
-    request_type: requestType === 'shoutout' ? 'shoutout' : 'song',
+    rush: document.getElementById('rushCheck').checked,
+    request_type: MODE,
   };
 
   try {
@@ -240,7 +268,7 @@ document.getElementById('requestForm').addEventListener('submit', async function
     errorBox.style.display = '';
     errorBox.innerHTML = `<b>Error:</b> ${esc(err.message)}`;
   } finally {
-    btn.disabled = false; btn.textContent = 'Create Request + Code';
+    btn.disabled = false; btn.textContent = MODE === 'shoutout' ? 'Create Shoutout + Code' : 'Create Request + Code';
   }
 });
 
@@ -253,7 +281,7 @@ function showPaymentInstructions(data) {
   const cashUrl  = data.cashtag ? `https://cash.app/$${String(data.cashtag).replace(/^\$/,'')}/${amt}` : null;
 
   box.innerHTML = `
-    <b>Request created!</b>
+    <b>${MODE === 'shoutout' ? 'Shoutout' : 'Request'} created!</b>
     <p class="muted" style="margin:8px 0;">Your reference code — paste this in the payment note:</p>
     <div class="code" id="reqCodeText">${esc(data.req_code)}</div>
     <button class="copy-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${esc(data.req_code)}')">📋 Copy Code</button>
@@ -288,6 +316,7 @@ async function loadQueue() {
   } catch (e) {}
 }
 
+setMode('song');
 loadArtist();
 </script>
 </body>
