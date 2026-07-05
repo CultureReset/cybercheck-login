@@ -2948,7 +2948,7 @@
 
           <!-- Print Sheet form -->
           <div id="qr-form-print" style="display:none;border-top:1px solid var(--card-border);padding-top:16px;">
-            <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Generate a print-ready sheet of QR codes. Pick a size, enter a range, and print — then cut. For one giant reusable poster code, set From and To to the same # (e.g. a code from "+ Single Code" above), pick a large QR size (30–34″) and the 36×36 page.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Generate a print-ready sheet of QR codes. Pick a size, enter a range, and print — then cut. For one giant reusable poster code, set From and To to the same # (e.g. a code from "+ Single Code" above), pick a large QR size (30–34″) and the 36×36 page. For a 2ft×6ft banner with 3 codes side by side, use the 72×24 page size with the 22″ QR size — use "+ Batch" (same destination URL for all) if you want the same redirect repeated 3×, or "+ Multi-URL" if each of the 3 should go somewhere different — then set From/To to that range and download the PDF.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
               <div>
                 <label style="font-size:12px;color:var(--text-muted);">From # (seq number)</label>
@@ -2972,6 +2972,7 @@
                   <option value="24">24″ (large sign)</option>
                   <option value="30">30″ (storefront poster)</option>
                   <option value="34">34″ (fills a 36×36 poster)</option>
+                  <option value="22">22″ (3-across on a 72×24 banner)</option>
                 </select>
               </div>
             </div>
@@ -2982,6 +2983,7 @@
                   <option value="24x36" selected>Poster 24×36" (portrait)</option>
                   <option value="36x24">Poster 36×24" (landscape)</option>
                   <option value="36x36">Poster 36×36" (square)</option>
+                  <option value="72x24">Banner 72×24" (2ft×6ft, wide)</option>
                   <option value="18x24">Poster 18×24"</option>
                   <option value="letter">Letter 8.5×11"</option>
                   <option value="a4">A4</option>
@@ -16671,7 +16673,7 @@
       var cropMarks = document.getElementById('qr-p-crop').value === 'yes';
       var pageSel = document.getElementById('qr-p-page');
       var pageKey = pageSel ? pageSel.value : 'letter';
-      var pageDims = { '24x36':'24in 36in', '36x24':'36in 24in', '36x36':'36in 36in', '18x24':'18in 24in', 'letter':'8.5in 11in', 'a4':'210mm 297mm' }[pageKey] || '8.5in 11in';
+      var pageDims = { '24x36':'24in 36in', '36x24':'36in 24in', '36x36':'36in 36in', '72x24':'72in 24in', '18x24':'18in 24in', 'letter':'8.5in 11in', 'a4':'210mm 297mm' }[pageKey] || '8.5in 11in';
 
       if (to < from) { toast('To must be >= From', 'error'); return; }
       if (to - from > 999) { toast('Max 1000 codes per sheet', 'error'); return; }
@@ -16712,7 +16714,7 @@
         '<style>@page{size:' + pageDims + ';margin:0.4in;}' +
         'body{margin:20px;font-family:sans-serif;background:#fff;color:#000;}' +
         'h2{font-size:14px;margin:0 0 16px;color:#555;}' +
-        '.grid{display:flex;flex-wrap:wrap;gap:0;align-content:flex-start;}' +
+        '.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:0;align-content:flex-start;}' +
         '.print-btn{margin-bottom:16px;padding:10px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;}' +
         '@media print{.print-btn,.print-info{display:none;}body{margin:0;}}' +
         '</style></head><body>' +
@@ -16784,7 +16786,7 @@
     function _qrSheetParams() {
       var pageSel = document.getElementById('qr-p-page');
       var pageKey = pageSel ? pageSel.value : '24x36';
-      var pageIn = { '24x36':[24,36], '36x24':[36,24], '36x36':[36,36], '18x24':[18,24], 'letter':[8.5,11], 'a4':[8.27,11.69] }[pageKey] || [24,36];
+      var pageIn = { '24x36':[24,36], '36x24':[36,24], '36x36':[36,36], '72x24':[72,24], '18x24':[18,24], 'letter':[8.5,11], 'a4':[8.27,11.69] }[pageKey] || [24,36];
       return {
         from: parseInt(document.getElementById('qr-p-from').value) || 1,
         to:   parseInt(document.getElementById('qr-p-to').value) || 100,
@@ -16841,7 +16843,12 @@
         var c = codes[i], onPage = i % perPage;
         if (i > 0 && onPage === 0) doc.addPage([pageW, pageH], orient);
         var col = onPage % cols, row = Math.floor(onPage / cols);
-        var cx = margin + col*cellW, cy = margin + row*cellH;
+        // Center a partial row (e.g. 3 codes on a page sized for more) instead of hugging the left margin
+        var pageStartIdx = i - onPage;
+        var itemsOnPage = Math.min(perPage, codes.length - pageStartIdx);
+        var itemsInRow = Math.min(cols, itemsOnPage - row*cols);
+        var rowOffsetX = ((pageW - margin*2) - itemsInRow*cellW) / 2;
+        var cx = margin + rowOffsetX + col*cellW, cy = margin + row*cellH;
         var qx = cx + gutter, qy = cy + gutter;
         if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
         var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
@@ -16892,7 +16899,9 @@
 
       for (var i = 0; i < codes.length; i++) {
         var c = codes[i], col = i % cols, row = Math.floor(i / cols);
-        var cx = (margin + col*cellW)*DPI, cy = (margin + row*cellH)*DPI;
+        var itemsInRow = Math.min(cols, codes.length - row*cols);
+        var rowOffsetX = ((pageW - margin*2) - itemsInRow*cellW) / 2;
+        var cx = (margin + rowOffsetX + col*cellW)*DPI, cy = (margin + row*cellH)*DPI;
         var qx = cx + gutter*DPI, qy = cy + gutter*DPI;
         if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
         var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
