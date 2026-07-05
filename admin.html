@@ -2975,7 +2975,7 @@
 
           <!-- Print Sheet form -->
           <div id="qr-form-print" style="display:none;border-top:1px solid var(--card-border);padding-top:16px;">
-            <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Generate a print-ready sheet of QR codes. Pick a size, enter a range, and print — then cut. For one giant reusable poster code, set From and To to the same # (e.g. a code from "+ Single Code" above), pick a large QR size (30–34″) and the 36×36 page. For a 2ft×6ft banner with 3 codes side by side, use the 72×24 page size with the 22″ QR size — use "+ Batch" (same destination URL for all) if you want the same redirect repeated 3×, or "+ Multi-URL" if each of the 3 should go somewhere different — then set From/To to that range and download the PDF.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Generate a print-ready sheet of QR codes. Pick a size, enter a range, and print — then cut. For one giant reusable poster code, set From and To to the same # (e.g. a code from "+ Single Code" above), pick a large QR size (30–34″) and the 36×36 page. <b>For a 2ft×6ft banner with the SAME one code printed 3× side by side</b> (one URL, copied visually — not 3 separate codes): create ONE code with "+ Single Code", set From and To to that one number, set "Repeat each code ×" to 3, QR size 22″, page 72×24, then download the PDF. Only use "+ Batch" / "+ Multi-URL" instead if you actually want multiple *different* trackable codes.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
               <div>
                 <label style="font-size:12px;color:var(--text-muted);">From # (seq number)</label>
@@ -3031,6 +3031,11 @@
                   <option value="yes">Yes — show cut lines</option>
                   <option value="no">No crop marks</option>
                 </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);">Repeat each code ×</label>
+                <input type="number" id="qr-p-repeat" value="1" min="1" max="50" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Same From=To code, printed side by side (e.g. set 3 for one code repeated 3× on a banner — this is still just ONE code/URL, copied visually)</div>
               </div>
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -16773,6 +16778,7 @@
       var pageSel = document.getElementById('qr-p-page');
       var pageKey = pageSel ? pageSel.value : 'letter';
       var pageDims = { '24x36':'24in 36in', '36x24':'36in 24in', '36x36':'36in 36in', '72x24':'72in 24in', '18x24':'18in 24in', 'letter':'8.5in 11in', 'a4':'210mm 297mm' }[pageKey] || '8.5in 11in';
+      var repeat = Math.max(1, parseInt((document.getElementById('qr-p-repeat')||{}).value) || 1);
 
       if (to < from) { toast('To must be >= From', 'error'); return; }
       if (to - from > 999) { toast('Max 1000 codes per sheet', 'error'); return; }
@@ -16789,6 +16795,12 @@
 
       // Print in ascending seq order so cut-outs come off the sheet numbered 1,2,3…
       codes.sort(function(a, b){ return (a.seq_number || 0) - (b.seq_number || 0); });
+      // Repeat each code N times — same code/URL, printed side by side (NOT different codes)
+      if (repeat > 1) {
+        var expandedCodes = [];
+        codes.forEach(function(c) { for (var i = 0; i < repeat; i++) expandedCodes.push(c); });
+        codes = expandedCodes;
+      }
 
       var pad   = cropMarks ? (size * 0.12) : 0.08;            // white gutter around each code, in INCHES
       var imgPx = Math.min(1000, Math.round(size * 300));      // render at ~300 DPI so print is crisp
@@ -16892,10 +16904,11 @@
         size: parseFloat(document.getElementById('qr-p-size').value) || 1.5, // INCHES
         labelMode: document.getElementById('qr-p-label').value,
         cropMarks: document.getElementById('qr-p-crop').value === 'yes',
+        repeat: Math.max(1, parseInt((document.getElementById('qr-p-repeat')||{}).value) || 1),
         pageKey: pageKey, pageIn: pageIn
       };
     }
-    async function _fetchQRCodes(from, to) {
+    async function _fetchQRCodes(from, to, repeat) {
       var res = await fetch(API_BASE + '/api/qr?seq_from=' + from + '&seq_to=' + to + '&limit=1000', {
         headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
@@ -16903,6 +16916,13 @@
       var codes = await res.json();
       if (!Array.isArray(codes)) codes = codes.data || codes.codes || [];
       codes.sort(function(a,b){ return (a.seq_number||0)-(b.seq_number||0); });
+      // Repeat each code N times — same code/URL, printed side by side (e.g. one code
+      // repeated 3x on a banner), NOT 3 different codes. Order preserved: c1,c1,c1,c2,c2,c2...
+      if (repeat > 1) {
+        var expanded = [];
+        codes.forEach(function(c) { for (var i = 0; i < repeat; i++) expanded.push(c); });
+        codes = expanded;
+      }
       return codes;
     }
     // Render a QR to a PNG data URL entirely in-browser (QRious) — no CORS, keeps quiet zone
@@ -16922,7 +16942,7 @@
       if (p.to - p.from > 999) { toast('Max 1000 codes per PDF', 'error'); return; }
 
       status.textContent = 'Loading codes…';
-      var codes = await _fetchQRCodes(p.from, p.to);
+      var codes = await _fetchQRCodes(p.from, p.to, p.repeat);
       if (!codes) { status.textContent=''; toast('Failed to load codes', 'error'); return; }
       if (!codes.length) { status.textContent=''; toast('No codes in that range', 'error'); return; }
 
@@ -16976,7 +16996,7 @@
       if (p.to < p.from) { toast('To must be >= From', 'error'); return; }
 
       status.textContent = 'Loading codes…';
-      var codes = await _fetchQRCodes(p.from, p.to);
+      var codes = await _fetchQRCodes(p.from, p.to, p.repeat);
       if (!codes) { status.textContent=''; toast('Failed to load codes', 'error'); return; }
       if (!codes.length) { status.textContent=''; toast('No codes in that range', 'error'); return; }
 
