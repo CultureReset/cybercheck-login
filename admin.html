@@ -138,6 +138,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
           <span>Artists</span>
         </div>
+        <div class="nav-item" data-page="artist-profiles" onclick="showPage('artist-profiles')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M2 12h4M18 8h4"/></svg>
+          <span>Song Requests &amp; Tips 🎤</span>
+        </div>
         <div class="nav-item" data-page="gcr-specials" onclick="showPage('gcr-specials')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Specials 🤖</span>
@@ -1614,6 +1618,124 @@
         </div>
       </div>
 
+      <!-- ── Song Requests & Tips (artist_profiles — powers the standalone song-request.html page) ── -->
+      <div id="page-artist-profiles" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>Song Requests &amp; Tips</h1>
+          <button class="btn btn-primary" onclick="openAPEditor(null)">+ Add Artist Profile</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:13px;margin:-8px 0 20px;">
+          Each profile here powers a live fan page at <code>gulfcoastradar.com/&lt;slug&gt;/profile</code> — no header/nav, reachable only by direct link or QR code — where fans request songs and tip via Venmo/Cash App using a reference code. The payment parser matches the code from the artist's forwarded confirmation email and marks the request Verified.
+        </p>
+        <div id="ap-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"><p style="color:var(--text-muted);">Loading...</p></div>
+
+        <!-- Artist Profile Editor Modal -->
+        <div id="ap-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+          <div style="max-width:640px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;position:relative;">
+            <button onclick="closeAPEditor()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+            <h2 id="ap-editor-title" style="margin:0 0 20px;">Add Artist Profile</h2>
+
+            <div style="display:grid;gap:14px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Artist / Band Name *</label>
+                  <input type="text" id="ap-name" oninput="apAutoSlug()" placeholder="Get Sideways" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Slug * <span style="font-weight:400;">(used in the page URL)</span></label>
+                  <input type="text" id="ap-slug" oninput="this.dataset.touched='1'" placeholder="get-sideways" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Bio</label>
+                <textarea id="ap-bio" rows="2" placeholder="90s/2000s Pop-Rock + Party Country · Birmingham, AL" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+              </div>
+              <div>
+                <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Photo URL</label>
+                <input type="text" id="ap-photo" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Venmo Handle</label>
+                  <input type="text" id="ap-venmo" placeholder="get-sideways-band (no @)" style="width:100%;padding:10px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Cash App $Cashtag</label>
+                  <input type="text" id="ap-cashtag" placeholder="getsidewaysband (no $)" style="width:100%;padding:10px 14px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Min Request $</label>
+                  <input type="number" id="ap-min-amount" value="10" min="1" step="0.5" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+                  <input type="checkbox" id="ap-request-enabled" checked style="width:18px;height:18px;">
+                  <label for="ap-request-enabled" style="font-size:13px;">Requests On</label>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+                  <input type="checkbox" id="ap-shoutout-enabled" style="width:18px;height:18px;">
+                  <label for="ap-shoutout-enabled" style="font-size:13px;">Shoutouts On</label>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Instagram URL</label>
+                  <input type="text" id="ap-instagram" placeholder="https://instagram.com/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Spotify URL</label>
+                  <input type="text" id="ap-spotify" placeholder="https://open.spotify.com/artist/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">YouTube URL</label>
+                  <input type="text" id="ap-youtube" placeholder="https://youtube.com/..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:5px;">Booking URL</label>
+                  <input type="text" id="ap-booking" placeholder="https://..." style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+            </div>
+
+            <div id="ap-save-result" style="margin-top:16px;"></div>
+            <div style="display:flex;gap:12px;margin-top:20px;">
+              <button onclick="saveAP()" class="btn btn-primary" id="ap-save-btn" style="flex:1;">Save Profile</button>
+              <button onclick="closeAPEditor()" class="btn btn-outline">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crowdfund (song_cooperatives) Manager Modal -->
+        <div id="coop-manager-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;">
+          <div style="max-width:560px;margin:40px auto;background:var(--card-bg);border-radius:16px;padding:32px;position:relative;">
+            <button onclick="closeCoopManager()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+            <h2 style="margin:0 0 4px;">🔥 Crowdfund Goals</h2>
+            <p id="coop-manager-artist" style="color:var(--text-muted);font-size:13px;margin:0 0 20px;"></p>
+
+            <div id="coop-manager-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;"><p style="color:var(--text-muted);">Loading...</p></div>
+
+            <div style="border-top:1px solid var(--card-border);padding-top:16px;">
+              <h3 style="font-size:14px;margin:0 0 12px;">+ New Crowdfund Goal</h3>
+              <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px;">
+                <div>
+                  <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Song Title *</label>
+                  <input type="text" id="coop-new-song" placeholder="Free Bird" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Goal $ *</label>
+                  <input type="number" id="coop-new-target" value="25" min="1" step="1" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;">
+                </div>
+              </div>
+              <div id="coop-new-result" style="margin-bottom:10px;"></div>
+              <button class="btn btn-primary" onclick="createCoopGoal()" id="coop-new-btn" style="width:100%;">Create Goal</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="page-gcr-events" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>GCR Events</h1>
@@ -2853,7 +2975,7 @@
 
           <!-- Print Sheet form -->
           <div id="qr-form-print" style="display:none;border-top:1px solid var(--card-border);padding-top:16px;">
-            <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Generate a print-ready sheet of QR codes. Pick a size, enter a range, and print — then cut.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Generate a print-ready sheet of QR codes. Pick a size, enter a range, and print — then cut. For one giant reusable poster code, set From and To to the same # (e.g. a code from "+ Single Code" above), pick a large QR size (30–34″) and the 36×36 page. For a 2ft×6ft banner with 3 codes side by side, use the 72×24 page size with the 22″ QR size — use "+ Batch" (same destination URL for all) if you want the same redirect repeated 3×, or "+ Multi-URL" if each of the 3 should go somewhere different — then set From/To to that range and download the PDF.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
               <div>
                 <label style="font-size:12px;color:var(--text-muted);">From # (seq number)</label>
@@ -2872,6 +2994,12 @@
                   <option value="2">2″ (table tent)</option>
                   <option value="3" selected>3″ (poster cut-out)</option>
                   <option value="4">4″ (large)</option>
+                  <option value="12">12″ (window sign)</option>
+                  <option value="18">18″ (yard sign)</option>
+                  <option value="24">24″ (large sign)</option>
+                  <option value="30">30″ (storefront poster)</option>
+                  <option value="34">34″ (fills a 36×36 poster)</option>
+                  <option value="22">22″ (3-across on a 72×24 banner)</option>
                 </select>
               </div>
             </div>
@@ -2881,6 +3009,8 @@
                 <select id="qr-p-page" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
                   <option value="24x36" selected>Poster 24×36" (portrait)</option>
                   <option value="36x24">Poster 36×24" (landscape)</option>
+                  <option value="36x36">Poster 36×36" (square)</option>
+                  <option value="72x24">Banner 72×24" (2ft×6ft, wide)</option>
                   <option value="18x24">Poster 18×24"</option>
                   <option value="letter">Letter 8.5×11"</option>
                   <option value="a4">A4</option>
@@ -2997,6 +3127,62 @@
           </div>
           <div id="qr-table-wrap">
             <p style="color:var(--text-muted);font-size:14px;">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Edit QR Code Modal -->
+        <div id="qr-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px;">
+          <div style="background:var(--card-bg,#1e293b);border:1px solid var(--card-border);border-radius:12px;max-width:500px;margin:40px auto;padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <h3 style="margin:0;">Edit QR Code <span id="qre-seq" style="color:var(--text-muted);font-weight:400;"></span></h3>
+              <button onclick="closeQREditModal()" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:0 4px;">&times;</button>
+            </div>
+            <input type="hidden" id="qre-id">
+            <div style="margin-bottom:14px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Label</label>
+              <input type="text" id="qre-label" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Destination URL <span style="font-weight:400;">(where the scan redirects to — the printed QR never changes)</span></label>
+              <input type="url" id="qre-dest" placeholder="https://..." style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Type</label>
+                <select id="qre-type" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                  <option value="general">General</option>
+                  <option value="card">Business Card</option>
+                  <option value="table">Restaurant Table</option>
+                  <option value="menu">Menu</option>
+                  <option value="ad">Advertisement</option>
+                  <option value="condo">Condo / Rental</option>
+                  <option value="beach_chair">Beach Chair</option>
+                  <option value="boat">Boat / Watercraft</option>
+                  <option value="event">Event</option>
+                  <option value="door">Door-to-Door</option>
+                  <option value="location">Location</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Portable or Fixed?</label>
+                <select id="qre-placement" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;">
+                  <option value="fixed">Fixed Location</option>
+                  <option value="portable">Portable (hand-out)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Location</label>
+              <input type="text" id="qre-location" placeholder="e.g. 26251 Canal Rd, Orange Beach" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:18px;">
+              <label style="font-size:12px;color:var(--text-muted);font-weight:600;">Notes <span style="font-weight:400;">(private)</span></label>
+              <textarea id="qre-notes" rows="2" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="saveQREditModal()" id="qre-save-btn" style="flex:1;font-size:13px;padding:9px;">Save</button>
+              <button class="btn btn-outline" onclick="closeQREditModal()" style="flex:1;font-size:13px;padding:9px;">Cancel</button>
+            </div>
           </div>
         </div>
 
@@ -6853,6 +7039,7 @@
       if (page === 'gcr-claims' && !_claimsLoaded) loadGCRClaims();
       if (page === 'gcr-events' && !_eventsLoaded) loadGCREvents();
       if (page === 'gcr-artists') loadArtists(document.getElementById('artist-search') ? document.getElementById('artist-search').value : '');
+      if (page === 'artist-profiles') loadArtistProfiles();
       if (page === 'gcr-specials' && !_specialsLoaded) loadGCRSpecials();
       if (page === 'gcr-ads' && !_adsLoaded) loadGCRAds();
       if (page === 'gcr-rails') loadPageRails();
@@ -8951,6 +9138,226 @@
       toast('Artist ' + (method === 'POST' ? 'created' : 'updated') + '!', 'success');
       closeArtistEditor();
       loadArtists(document.getElementById('artist-search').value);
+    }
+
+    // ── ARTIST PROFILES (song_requests / Venmo-CashApp tip pages) ────────────
+    var _apList = [];
+    var _apEditSlug = null; // null = creating new
+
+    async function loadArtistProfiles() {
+      var wrap = document.getElementById('ap-list');
+      wrap.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
+      try {
+        var r = await fetch(API_BASE + '/api/artists');
+        _apList = r.ok ? await r.json() : [];
+        renderAPList(_apList);
+      } catch(e) {
+        wrap.innerHTML = '<p style="color:#f87171;">Failed to load — ' + e.message + '</p>';
+      }
+    }
+
+    function renderAPList(list) {
+      var wrap = document.getElementById('ap-list');
+      if (!list.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">No artist profiles yet — click "+ Add Artist Profile" to create the first one.</p>'; return; }
+      wrap.innerHTML = list.map(function(a) {
+        var pageUrl = 'https://gulfcoastradar.com/' + encodeURIComponent(a.slug) + '/profile';
+        var pay = [a.venmo ? 'Venmo' : '', a.cashtag ? 'Cash App' : ''].filter(Boolean).join(' + ') || 'No payment method set';
+        return '<div class="card" style="padding:16px;">' +
+          '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">' +
+            '<div style="width:56px;height:56px;border-radius:50%;background:var(--bg);border:1px solid var(--card-border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;">' +
+              (a.photo_url ? '<img src="' + escHtml(a.photo_url) + '" style="width:100%;height:100%;object-fit:cover;">' : '🎤') +
+            '</div>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:700;font-size:15px;">' + escHtml(a.artist_name) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);">/' + escHtml(a.slug) + ' · ' + escHtml(pay) + '</div>' +
+            '</div>' +
+          '</div>' +
+          (a.bio ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">' + escHtml(a.bio.slice(0,110)) + (a.bio.length > 110 ? '…' : '') + '</div>' : '') +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<button class="btn btn-outline btn-sm" onclick="openAPEditor(\'' + a.slug + '\')" style="font-size:12px;">Edit</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="openCoopManager(\'' + a.slug + '\',\'' + escHtml(a.artist_name).replace(/'/g,"\\'") + '\')" style="font-size:12px;">🔥 Crowdfund</button>' +
+            '<button class="btn btn-outline btn-sm" onclick="copyAPLink(\'' + escHtml(pageUrl) + '\')" style="font-size:12px;">Copy Link</button>' +
+            '<a class="btn btn-outline btn-sm" href="' + escHtml(pageUrl) + '" target="_blank" style="font-size:12px;">Open →</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function copyAPLink(url) {
+      navigator.clipboard.writeText(url).then(function(){ toast('Link copied!', 'success'); }).catch(function(){ prompt('Copy this link:', url); });
+    }
+
+    function apAutoSlug() {
+      if (_apEditSlug) return; // don't rewrite slug once editing an existing profile
+      var slugEl = document.getElementById('ap-slug');
+      if (slugEl.dataset.touched === '1') return;
+      slugEl.value = document.getElementById('ap-name').value.trim().toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function openAPEditor(slug) {
+      _apEditSlug = slug;
+      document.getElementById('ap-editor-title').textContent = slug ? 'Edit Artist Profile' : 'Add Artist Profile';
+      document.getElementById('ap-save-result').innerHTML = '';
+      var a = slug ? _apList.find(function(x){ return x.slug === slug; }) : null;
+      document.getElementById('ap-name').value = a ? a.artist_name || '' : '';
+      document.getElementById('ap-slug').value = a ? a.slug || '' : '';
+      document.getElementById('ap-slug').disabled = !!slug; // slug is the page URL — don't let it change once live
+      document.getElementById('ap-slug').dataset.touched = slug ? '1' : '0';
+      document.getElementById('ap-bio').value = a ? a.bio || '' : '';
+      document.getElementById('ap-photo').value = a ? a.photo_url || '' : '';
+      document.getElementById('ap-venmo').value = a ? (a.venmo || '').replace(/^@/,'') : '';
+      document.getElementById('ap-cashtag').value = a ? (a.cashtag || '').replace(/^\$/,'') : '';
+      document.getElementById('ap-min-amount').value = a ? (a.default_min_request_amount || 10) : 10;
+      document.getElementById('ap-request-enabled').checked = a ? a.request_enabled !== false : true;
+      document.getElementById('ap-shoutout-enabled').checked = a ? !!a.shoutout_enabled : false;
+      document.getElementById('ap-instagram').value = a ? a.instagram_url || '' : '';
+      document.getElementById('ap-spotify').value = a ? a.spotify_url || '' : '';
+      document.getElementById('ap-youtube').value = a ? a.youtube_url || '' : '';
+      document.getElementById('ap-booking').value = a ? a.booking_url || '' : '';
+      document.getElementById('ap-editor-modal').style.display = 'block';
+    }
+
+    function closeAPEditor() {
+      document.getElementById('ap-editor-modal').style.display = 'none';
+      _apEditSlug = null;
+    }
+
+    async function saveAP() {
+      var token = getAuthToken();
+      var name = document.getElementById('ap-name').value.trim();
+      var slug = document.getElementById('ap-slug').value.trim().toLowerCase();
+      var resultBox = document.getElementById('ap-save-result');
+      resultBox.innerHTML = '';
+      if (!name || !slug) { resultBox.innerHTML = '<div class="notice error" style="color:#f87171;font-size:13px;">Name and slug are required.</div>'; return; }
+
+      var fullPayload = {
+        artist_name: name,
+        bio: document.getElementById('ap-bio').value.trim() || null,
+        photo_url: document.getElementById('ap-photo').value.trim() || null,
+        venmo: document.getElementById('ap-venmo').value.trim().replace(/^@/,'') || null,
+        cashtag: document.getElementById('ap-cashtag').value.trim().replace(/^\$/,'') || null,
+        default_min_request_amount: parseFloat(document.getElementById('ap-min-amount').value) || 10,
+        request_enabled: document.getElementById('ap-request-enabled').checked,
+        shoutout_enabled: document.getElementById('ap-shoutout-enabled').checked,
+        instagram_url: document.getElementById('ap-instagram').value.trim() || null,
+        spotify_url: document.getElementById('ap-spotify').value.trim() || null,
+        youtube_url: document.getElementById('ap-youtube').value.trim() || null,
+        booking_url: document.getElementById('ap-booking').value.trim() || null,
+        is_active: true,
+      };
+
+      var btn = document.getElementById('ap-save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        if (_apEditSlug) {
+          // Existing profile — PATCH accepts any field, one round trip
+          var r = await fetch(API_BASE + '/api/artists/' + encodeURIComponent(_apEditSlug), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(fullPayload)
+          });
+          var d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'Save failed');
+        } else {
+          // New profile — POST only accepts a narrow field set, so create first, then
+          // PATCH the rest (venmo/cashtag/flags/links) onto the same row in one follow-up call.
+          var cr = await fetch(API_BASE + '/api/artists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ artist_name: name, slug: slug, cashtag: fullPayload.cashtag, venmo: fullPayload.venmo, bio: fullPayload.bio, photo_url: fullPayload.photo_url })
+          });
+          var cd = await cr.json();
+          if (!cr.ok) throw new Error(cd.error || 'Create failed');
+
+          var pr = await fetch(API_BASE + '/api/artists/' + encodeURIComponent(slug), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(fullPayload)
+          });
+          var pd = await pr.json();
+          if (!pr.ok) throw new Error(pd.error || 'Save failed after create');
+        }
+
+        toast('Artist profile saved!', 'success');
+        closeAPEditor();
+        await loadArtistProfiles();
+      } catch (err) {
+        resultBox.innerHTML = '<div style="color:#f87171;font-size:13px;">Error: ' + escHtml(err.message) + '</div>';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Profile';
+      }
+    }
+
+    // ── CROWDFUND GOALS (song_cooperatives — "Crowdfund a Song") ──────────────
+    var _coopSlug = null;
+
+    function openCoopManager(slug, artistName) {
+      _coopSlug = slug;
+      document.getElementById('coop-manager-artist').textContent = artistName + ' · /' + slug;
+      document.getElementById('coop-new-song').value = '';
+      document.getElementById('coop-new-target').value = 25;
+      document.getElementById('coop-new-result').innerHTML = '';
+      document.getElementById('coop-manager-modal').style.display = 'block';
+      loadCoopManagerList();
+    }
+
+    function closeCoopManager() {
+      document.getElementById('coop-manager-modal').style.display = 'none';
+      _coopSlug = null;
+    }
+
+    async function loadCoopManagerList() {
+      var wrap = document.getElementById('coop-manager-list');
+      wrap.innerHTML = '<p style="color:var(--text-muted);">Loading...</p>';
+      try {
+        var r = await fetch(API_BASE + '/api/cooperatives/' + encodeURIComponent(_coopSlug) + '/cooperatives');
+        var coops = r.ok ? await r.json() : [];
+        if (!coops.length) { wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">No crowdfund goals yet for this artist.</p>'; return; }
+        wrap.innerHTML = coops.map(function(c) {
+          var pct = Math.min(100, Math.round((c.current_amount || 0) / c.target_amount * 100));
+          var badge = c.status === 'funded' ? '<span style="color:#4ade80;font-size:11px;font-weight:700;">● Funded</span>' : '<span style="color:#94a3b8;font-size:11px;">● ' + escHtml(c.status) + '</span>';
+          return '<div style="border:1px solid var(--card-border);border-radius:10px;padding:12px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+              '<b style="font-size:14px;">' + escHtml(c.song_title) + '</b>' + badge +
+            '</div>' +
+            '<div style="height:8px;border-radius:99px;background:var(--bg);overflow:hidden;border:1px solid var(--card-border);margin-bottom:6px;">' +
+              '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#38bdf8,#4ade80);"></div>' +
+            '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);">$' + (c.current_amount||0) + ' raised of $' + c.target_amount + ' goal</div>' +
+          '</div>';
+        }).join('');
+      } catch (e) {
+        wrap.innerHTML = '<p style="color:#f87171;font-size:13px;">Failed to load — ' + e.message + '</p>';
+      }
+    }
+
+    async function createCoopGoal() {
+      var song = document.getElementById('coop-new-song').value.trim();
+      var target = parseFloat(document.getElementById('coop-new-target').value);
+      var resultBox = document.getElementById('coop-new-result');
+      resultBox.innerHTML = '';
+      if (!song || !target) { resultBox.innerHTML = '<div style="color:#f87171;font-size:13px;">Song title and goal amount are required.</div>'; return; }
+
+      var btn = document.getElementById('coop-new-btn');
+      btn.disabled = true; btn.textContent = 'Creating…';
+      try {
+        var r = await fetch(API_BASE + '/api/cooperatives/' + encodeURIComponent(_coopSlug) + '/cooperatives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify({ song_title: song, target_amount: target })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed to create goal');
+        toast('Crowdfund goal created!', 'success');
+        document.getElementById('coop-new-song').value = '';
+        document.getElementById('coop-new-target').value = 25;
+        await loadCoopManagerList();
+      } catch (err) {
+        resultBox.innerHTML = '<div style="color:#f87171;font-size:13px;">Error: ' + escHtml(err.message) + '</div>';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create Goal';
+      }
     }
 
     // ── BULK ADD EVENTS ──────────────────────────────────────────────────────
@@ -16365,7 +16772,7 @@
       var cropMarks = document.getElementById('qr-p-crop').value === 'yes';
       var pageSel = document.getElementById('qr-p-page');
       var pageKey = pageSel ? pageSel.value : 'letter';
-      var pageDims = { '24x36':'24in 36in', '36x24':'36in 24in', '18x24':'18in 24in', 'letter':'8.5in 11in', 'a4':'210mm 297mm' }[pageKey] || '8.5in 11in';
+      var pageDims = { '24x36':'24in 36in', '36x24':'36in 24in', '36x36':'36in 36in', '72x24':'72in 24in', '18x24':'18in 24in', 'letter':'8.5in 11in', 'a4':'210mm 297mm' }[pageKey] || '8.5in 11in';
 
       if (to < from) { toast('To must be >= From', 'error'); return; }
       if (to - from > 999) { toast('Max 1000 codes per sheet', 'error'); return; }
@@ -16406,7 +16813,7 @@
         '<style>@page{size:' + pageDims + ';margin:0.4in;}' +
         'body{margin:20px;font-family:sans-serif;background:#fff;color:#000;}' +
         'h2{font-size:14px;margin:0 0 16px;color:#555;}' +
-        '.grid{display:flex;flex-wrap:wrap;gap:0;align-content:flex-start;}' +
+        '.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:0;align-content:flex-start;}' +
         '.print-btn{margin-bottom:16px;padding:10px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;}' +
         '@media print{.print-btn,.print-info{display:none;}body{margin:0;}}' +
         '</style></head><body>' +
@@ -16478,7 +16885,7 @@
     function _qrSheetParams() {
       var pageSel = document.getElementById('qr-p-page');
       var pageKey = pageSel ? pageSel.value : '24x36';
-      var pageIn = { '24x36':[24,36], '36x24':[36,24], '18x24':[18,24], 'letter':[8.5,11], 'a4':[8.27,11.69] }[pageKey] || [24,36];
+      var pageIn = { '24x36':[24,36], '36x24':[36,24], '36x36':[36,36], '72x24':[72,24], '18x24':[18,24], 'letter':[8.5,11], 'a4':[8.27,11.69] }[pageKey] || [24,36];
       return {
         from: parseInt(document.getElementById('qr-p-from').value) || 1,
         to:   parseInt(document.getElementById('qr-p-to').value) || 100,
@@ -16526,7 +16933,7 @@
       var cols = Math.max(1, Math.floor((pageW - margin*2) / cellW));
       var rows = Math.max(1, Math.floor((pageH - margin*2) / cellH));
       var perPage = cols * rows;
-      var imgPx = Math.min(1200, Math.round(p.size * 300)); // 300 DPI so cut-outs scan
+      var imgPx = Math.min(3000, Math.round(p.size * 300)); // 300 DPI so cut-outs scan (QRious renders locally, no API size cap)
 
       var orient = pageW > pageH ? 'landscape' : 'portrait';
       var doc = new window.jspdf.jsPDF({ unit: 'in', format: [pageW, pageH], orientation: orient });
@@ -16535,7 +16942,12 @@
         var c = codes[i], onPage = i % perPage;
         if (i > 0 && onPage === 0) doc.addPage([pageW, pageH], orient);
         var col = onPage % cols, row = Math.floor(onPage / cols);
-        var cx = margin + col*cellW, cy = margin + row*cellH;
+        // Center a partial row (e.g. 3 codes on a page sized for more) instead of hugging the left margin
+        var pageStartIdx = i - onPage;
+        var itemsOnPage = Math.min(perPage, codes.length - pageStartIdx);
+        var itemsInRow = Math.min(cols, itemsOnPage - row*cols);
+        var rowOffsetX = ((pageW - margin*2) - itemsInRow*cellW) / 2;
+        var cx = margin + rowOffsetX + col*cellW, cy = margin + row*cellH;
         var qx = cx + gutter, qy = cy + gutter;
         if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
         var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
@@ -16586,7 +16998,9 @@
 
       for (var i = 0; i < codes.length; i++) {
         var c = codes[i], col = i % cols, row = Math.floor(i / cols);
-        var cx = (margin + col*cellW)*DPI, cy = (margin + row*cellH)*DPI;
+        var itemsInRow = Math.min(cols, codes.length - row*cols);
+        var rowOffsetX = ((pageW - margin*2) - itemsInRow*cellW) / 2;
+        var cx = (margin + rowOffsetX + col*cellW)*DPI, cy = (margin + row*cellH)*DPI;
         var qx = cx + gutter*DPI, qy = cy + gutter*DPI;
         if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
         var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
@@ -16877,6 +17291,7 @@
           '<td style="padding:10px 8px;font-size:11px;color:var(--text-muted);">' + esc(c.active ? 'Active' : 'Off') + '</td>' +
           '<td style="padding:10px 8px;">' +
             '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+              '<button onclick="openEditQR(\'' + c.id + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #38bdf8;background:none;color:#38bdf8;cursor:pointer;font-weight:600;">Edit</button>' +
               '<button onclick="viewQRScans(\'' + c.id + '\',\'' + esc(c.label).replace(/'/g,"\\'") + '\',' + (c.scan_count||0) + ',\'' + scanUrl + '\',\'' + esc(c.location||'').replace(/'/g,"\\'") + '\',\'' + esc(c.notes||'').replace(/'/g,"\\'") + '\',' + JSON.stringify(c.metadata||{}) + ',\'' + esc(c.alert_phone||'').replace(/'/g,"\\'") + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Scans</button>' +
               '<button onclick="copyQRUrl(\'' + scanUrl + '\')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:var(--text);cursor:pointer;">Copy</button>' +
               '<button onclick="toggleQRActive(\'' + c.id + '\',' + c.active + ')" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--card-border);background:none;color:' + (c.active ? '#f87171' : '#4ade80') + ';cursor:pointer;">' + (c.active ? 'Disable' : 'Enable') + '</button>' +
@@ -16894,6 +17309,57 @@
           '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Status</th>' +
           '<th style="text-align:left;padding:8px;color:var(--text-muted);font-weight:500;">Actions</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+
+    function openEditQR(id) {
+      var c = (_allQRCodes || []).find(function(x){ return String(x.id) === String(id); });
+      if (!c) { toast('Code not found — try refreshing the list', 'error'); return; }
+      document.getElementById('qre-id').value = c.id;
+      document.getElementById('qre-seq').textContent = c.seq_number ? '#' + c.seq_number : '';
+      document.getElementById('qre-label').value = c.label || '';
+      document.getElementById('qre-dest').value = c.destination_url || '';
+      document.getElementById('qre-type').value = c.type || 'general';
+      document.getElementById('qre-placement').value = c.placement || 'fixed';
+      document.getElementById('qre-location').value = c.location || '';
+      document.getElementById('qre-notes').value = c.notes || '';
+      document.getElementById('qr-edit-modal').style.display = 'block';
+    }
+
+    function closeQREditModal() {
+      document.getElementById('qr-edit-modal').style.display = 'none';
+    }
+
+    async function saveQREditModal() {
+      var id = document.getElementById('qre-id').value;
+      var label = document.getElementById('qre-label').value.trim();
+      if (!label) { alert('Label is required'); return; }
+      var body = {
+        label: label,
+        destination_url: document.getElementById('qre-dest').value.trim() || null,
+        type: document.getElementById('qre-type').value,
+        placement: document.getElementById('qre-placement').value,
+        location: document.getElementById('qre-location').value.trim() || null,
+        notes: document.getElementById('qre-notes').value.trim() || null,
+      };
+      var btn = document.getElementById('qre-save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        var res = await fetch(API_BASE + '/api/qr/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) { var e = await res.json(); alert('Error: ' + (e.error || 'Save failed')); return; }
+        var updated = await res.json();
+        _allQRCodes = _allQRCodes.map(function(c){ return String(c.id) === String(id) ? updated : c; });
+        filterQRTable();
+        closeQREditModal();
+        toast('Saved — this code now redirects to its new destination', 'success');
+      } catch(e) {
+        alert('Request failed');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save';
+      }
     }
 
     var _qrLocations = {};
