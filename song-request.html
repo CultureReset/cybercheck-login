@@ -72,6 +72,10 @@ textarea{min-height:80px;resize:vertical}
 .spinner{width:34px;height:34px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:60px auto;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .footer{margin-top:36px;color:var(--muted);font-size:13px}
+.coop-card{border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:rgba(255,255,255,.03);}
+.coop-progress{height:14px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--line);margin:10px 0;}
+.coop-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));}
+.coop-amounts{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);}
 @media(max-width:860px){.hero,.two-pane{grid-template-columns:1fr}.pay-buttons{grid-template-columns:1fr}}
 </style>
 </head>
@@ -109,6 +113,7 @@ textarea{min-height:80px;resize:vertical}
       <div class="mode-toggle" id="modeToggle">
         <button type="button" class="mode-btn active" data-mode="song" onclick="setMode('song')">🎵 Song Request</button>
         <button type="button" class="mode-btn" data-mode="shoutout" onclick="setMode('shoutout')">📣 Shoutout</button>
+        <button type="button" class="mode-btn" data-mode="crowdfund" onclick="setMode('crowdfund')">🔥 Crowdfund</button>
       </div>
       <form class="form" id="requestForm">
         <div class="field"><label>Your Name</label><input id="fanName" placeholder="Katie" required></div>
@@ -129,6 +134,22 @@ textarea{min-height:80px;resize:vertical}
       </form>
       <div id="resultBox" class="notice" style="display:none;margin-top:14px"></div>
       <div id="errorBox" class="notice error" style="display:none;margin-top:14px"></div>
+
+      <div id="crowdfundPanel" style="display:none;">
+        <p class="muted" style="font-size:13px;margin:0 0 14px;">Chip in with other fans to get a song played. Each contribution gets its own reference code — same payment flow as a request.</p>
+        <div id="coopList"><p class="muted">Loading crowdfund goals…</p></div>
+        <div id="coopContributeWrap" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px;">
+          <h3 id="coopContributeTitle" style="font-size:16px;"></h3>
+          <form class="form" id="coopForm">
+            <input type="hidden" id="coopId">
+            <div class="field"><label>Your Name</label><input id="coopFanName" placeholder="Katie" required></div>
+            <div class="field"><label>Amount ($)</label><input id="coopAmount" type="number" step="0.5" min="1" value="5" required></div>
+            <button class="btn hot" type="submit" id="coopSubmitBtn">Chip In + Get Code</button>
+          </form>
+          <div id="coopResultBox" class="notice" style="display:none;margin-top:14px"></div>
+          <div id="coopErrorBox" class="notice error" style="display:none;margin-top:14px"></div>
+        </div>
+      </div>
     </div>
     <div>
       <h2>Live Queue <button class="copy-btn" onclick="loadQueue()" style="float:right;">↻ Refresh</button></h2>
@@ -206,14 +227,26 @@ function renderArtist() {
 }
 
 let MODE = 'song';
+let coopsLoaded = false;
 function setMode(mode) {
   MODE = mode;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+
+  const isCrowdfund = mode === 'crowdfund';
+  document.getElementById('requestForm').style.display = isCrowdfund ? 'none' : '';
+  document.getElementById('crowdfundPanel').style.display = isCrowdfund ? '' : 'none';
+  if (!isCrowdfund) {
+    document.getElementById('resultBox').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
   document.getElementById('songFields').style.display = mode === 'song' ? '' : 'none';
   document.getElementById('shoutoutFields').style.display = mode === 'shoutout' ? '' : 'none';
   document.getElementById('songTitle').required = mode === 'song';
   document.getElementById('shoutoutMsg').required = mode === 'shoutout';
   document.getElementById('submitBtn').textContent = mode === 'shoutout' ? 'Create Shoutout + Code' : 'Create Request + Code';
+
+  if (isCrowdfund && !coopsLoaded) { coopsLoaded = true; loadCoops(); }
 }
 
 document.getElementById('rushCheck').addEventListener('change', function() {
@@ -314,6 +347,105 @@ async function loadQueue() {
     }).join('');
     table.innerHTML = '<tr><th>Song</th><th>Fan</th><th>Status</th></tr>' + (rows || '<tr><td colspan="3" class="muted">No requests yet — be the first!</td></tr>');
   } catch (e) {}
+}
+
+let COOPS = [];
+async function loadCoops() {
+  const list = document.getElementById('coopList');
+  try {
+    const res = await fetch(`${API_BASE}/api/cooperatives/${encodeURIComponent(SLUG)}/cooperatives`);
+    if (!res.ok) { list.innerHTML = '<p class="muted">Could not load crowdfund goals.</p>'; return; }
+    COOPS = (await res.json()).filter(c => c.status !== 'cancelled');
+    renderCoops();
+  } catch (e) {
+    list.innerHTML = '<p class="muted">Could not load crowdfund goals.</p>';
+  }
+}
+
+function renderCoops() {
+  const list = document.getElementById('coopList');
+  if (!COOPS.length) {
+    list.innerHTML = '<p class="muted">No crowdfund goals right now — check back later or ask the band to start one.</p>';
+    return;
+  }
+  const card = c => {
+    const pct = Math.min(100, Math.round((c.current_amount || 0) / c.target_amount * 100));
+    const isFunded = c.status === 'funded';
+    return `<div class="coop-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <b>${esc(c.song_title)}</b>
+        ${isFunded ? '<span class="status good">Funded!</span>' : ''}
+      </div>
+      <div class="coop-progress"><div class="coop-bar" style="width:${pct}%;"></div></div>
+      <div class="coop-amounts"><span>$${(c.current_amount||0).toFixed(0)} raised</span><span>$${c.target_amount} goal</span></div>
+      ${isFunded ? '' : `<button class="btn secondary" style="margin-top:10px;" onclick="openCoopContribute('${c.id}','${esc(c.song_title).replace(/'/g,"\\'")}')">Chip In</button>`}
+    </div>`;
+  };
+  const active = COOPS.filter(c => c.status !== 'funded');
+  const funded = COOPS.filter(c => c.status === 'funded');
+  list.innerHTML = active.map(card).join('') + funded.map(card).join('');
+}
+
+function openCoopContribute(id, title) {
+  document.getElementById('coopId').value = id;
+  document.getElementById('coopContributeTitle').textContent = `Chip in toward "${title}"`;
+  document.getElementById('coopContributeWrap').style.display = '';
+  document.getElementById('coopResultBox').style.display = 'none';
+  document.getElementById('coopErrorBox').style.display = 'none';
+  document.getElementById('coopContributeWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.getElementById('coopForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('coopSubmitBtn');
+  const errorBox = document.getElementById('coopErrorBox');
+  const resultBox = document.getElementById('coopResultBox');
+  errorBox.style.display = 'none'; resultBox.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const id = document.getElementById('coopId').value;
+  const amt = parseFloat(document.getElementById('coopAmount').value) || 5;
+  const payload = {
+    fan_name: document.getElementById('coopFanName').value.trim(),
+    amount: amt,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/cooperatives/${encodeURIComponent(SLUG)}/cooperatives/${id}/contribute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to contribute');
+    showCoopPaymentInstructions(data, amt);
+    loadCoops();
+  } catch (err) {
+    errorBox.style.display = '';
+    errorBox.innerHTML = `<b>Error:</b> ${esc(err.message)}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Chip In + Get Code';
+  }
+});
+
+function showCoopPaymentInstructions(data, amt) {
+  const box = document.getElementById('coopResultBox');
+  box.style.display = '';
+  const noteText = `${data.song_title} ${data.req_code}`;
+  const venmoUrl = ARTIST.venmo ? `https://venmo.com/${String(ARTIST.venmo).replace(/^@/,'')}?txn=pay&amount=${amt}&note=${encodeURIComponent(noteText)}` : null;
+  const cashUrl  = ARTIST.cashtag ? `https://cash.app/$${String(ARTIST.cashtag).replace(/^\$/,'')}/${amt}` : null;
+
+  box.innerHTML = `
+    <b>Contribution created!</b>
+    <p class="muted" style="margin:8px 0;">Your reference code — paste this in the payment note:</p>
+    <div class="code">${esc(data.req_code)}</div>
+    <button class="copy-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${esc(data.req_code)}')">📋 Copy Code</button>
+    <div class="pay-buttons">
+      ${venmoUrl ? `<a class="pay-btn venmo" href="${venmoUrl}" target="_blank" rel="noopener">Venmo<span class="sub">$${amt}</span></a>` : ''}
+      ${cashUrl ? `<a class="pay-btn cashapp" href="${cashUrl}" target="_blank" rel="noopener">Cash App<span class="sub">$${amt}</span></a>` : ''}
+    </div>
+    <p class="muted" style="margin-top:10px;font-size:12px;">This goal is at $${(data.current_amount||0)} of $${data.target_amount} — refresh once your payment is matched to see it update.</p>
+  `;
 }
 
 setMode('song');
