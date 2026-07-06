@@ -259,6 +259,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Points &amp; Rewards 👑</span>
         </div>
+        <div class="nav-item" data-page="tripswipe-sms-qr" onclick="showPage('tripswipe-sms-qr');loadTripSwipeQR()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14h1v1h-1zM14 20h1v1h-1zM17 17h1v1h-1zM20 20h1v1h-1z"/></svg>
+          <span>Text Sign-Up QR Codes 🔳</span>
+        </div>
         <div class="nav-item" data-page="platform-auth" onclick="showPage('platform-auth');loadAuthConfig()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>Auth Settings 🔐</span>
@@ -5013,6 +5017,27 @@
           <button onclick="savePointsConfig()" style="padding:11px 22px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Changes</button>
           <span id="pc-save-msg" style="font-size:13px;color:var(--text-muted);"></span>
         </div>
+      </div>
+
+      <!-- ── TEXT SIGN-UP QR CODES ── -->
+      <div id="page-tripswipe-sms-qr" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🔳 Text Sign-Up QR Codes</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Each code opens Messages pre-filled with "BEACHES" — one tap to send, one tap on the reply link to sign in. Make one per table, flyer, or sign so you know exactly where every sign-up came from.</div>
+        </div>
+
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;">
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;">Where is this going? (label)</label>
+              <input id="tsqr-label" type="text" placeholder="e.g. Dockside Bar — Table 5" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')tsqrCreate()">
+            </div>
+            <button onclick="tsqrCreate()" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Generate QR Code</button>
+          </div>
+          <span id="tsqr-create-msg" style="font-size:13px;color:var(--text-muted);display:block;margin-top:8px;"></span>
+        </div>
+
+        <div id="tsqr-list" style="display:flex;flex-direction:column;gap:14px;"></div>
       </div>
 
       <div id="page-tripswipe-tonight" class="page-content" style="display:none;">
@@ -21124,6 +21149,98 @@
         if (r.ok) { _pcConfig = body; renderPointsConfig(); msg.textContent = '✓ Saved'; setTimeout(function(){ msg.textContent=''; }, 2500); }
         else { var d = await r.json().catch(function(){return{};}); msg.textContent = 'Error: ' + (d.error || r.status); }
       } catch(e) { msg.textContent = 'Network error'; }
+    }
+
+    // ── Text Sign-Up QR Codes ──────────────────────────────────────────────
+    var _tsqrCodes = [];
+    var _tsqrScansCache = {};
+    async function loadTripSwipeQR() {
+      var token = getAuthToken();
+      try {
+        var r = await fetch(API_BASE + '/api/sms/qr-codes', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = r.ok ? await r.json() : { codes: [] };
+        _tsqrCodes = d.codes || [];
+        renderTripSwipeQR();
+      } catch(e) { console.error('loadTripSwipeQR', e); }
+    }
+    function renderTripSwipeQR() {
+      var list = document.getElementById('tsqr-list');
+      if (!_tsqrCodes.length) { list.innerHTML = '<div class="card" style="padding:20px;color:var(--text-muted);font-size:13px;">No QR codes yet — generate one above.</div>'; return; }
+      var esc = function(s){ return String(s == null ? '' : s).replace(/"/g,'&quot;'); };
+      list.innerHTML = _tsqrCodes.map(function(c){
+        var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(c.sms_link);
+        return '<div class="card" style="padding:20px;display:flex;gap:20px;flex-wrap:wrap;">' +
+          '<img src="' + qrImg + '" width="120" height="120" style="border-radius:8px;background:#fff;padding:6px;flex-shrink:0;" alt="QR code">' +
+          '<div style="flex:1;min-width:220px;">' +
+            '<div style="font-weight:700;font-size:15px;color:var(--text);">' + esc(c.label) + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Code ' + esc(c.keyword) + ' &middot; ' + c.scans + ' sign-up' + (c.scans === 1 ? '' : 's') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;font-family:monospace;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;padding:8px 10px;word-break:break-all;">' + esc(c.sms_link) + '</div>' +
+            '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">' +
+              '<button onclick="tsqrCopy(\'' + c.id + '\')" style="padding:6px 12px;background:var(--card-border);color:var(--text);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">📋 Copy link</button>' +
+              '<button onclick="tsqrToggleScans(\'' + c.id + '\')" id="tsqr-toggle-' + c.id + '" style="padding:6px 12px;background:var(--card-border);color:var(--text);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">▸ Who signed up</button>' +
+              '<button onclick="tsqrDelete(\'' + c.id + '\')" style="padding:6px 12px;background:none;color:#ef4444;border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Delete</button>' +
+            '</div>' +
+            '<div id="tsqr-scans-' + c.id + '" style="display:none;margin-top:12px;border-top:1px solid var(--card-border);padding-top:12px;"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    function tsqrCopy(id) {
+      var c = _tsqrCodes.find(function(x){ return String(x.id) === String(id); });
+      if (!c) return;
+      navigator.clipboard.writeText(c.sms_link).then(function(){ toast('Link copied', 'success'); }).catch(function(){ toast('Could not copy', 'error'); });
+    }
+    async function tsqrToggleScans(id) {
+      var box = document.getElementById('tsqr-scans-' + id);
+      var btn = document.getElementById('tsqr-toggle-' + id);
+      if (!box) return;
+      var open = box.style.display !== 'none';
+      if (open) { box.style.display = 'none'; btn.textContent = '▸ Who signed up'; return; }
+      box.style.display = 'block';
+      btn.textContent = '▾ Who signed up';
+      box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Loading…</div>';
+      try {
+        if (!_tsqrScansCache[id]) {
+          var token = getAuthToken();
+          var r = await fetch(API_BASE + '/api/sms/qr-codes/' + id + '/scans', { headers: { 'Authorization': 'Bearer ' + token } });
+          var d = r.ok ? await r.json() : { scans: [] };
+          _tsqrScansCache[id] = d.scans || [];
+        }
+        var scans = _tsqrScansCache[id];
+        if (!scans.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">No one has texted this code yet.</div>'; return; }
+        box.innerHTML = scans.map(function(s){
+          var when = new Date(s.created_at).toLocaleString();
+          return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--card-border);">' +
+            '<span>' + (s.name ? s.name + ' — ' : '') + s.phone + '</span>' +
+            '<span style="color:var(--text-muted);font-size:12px;white-space:nowrap;">' + when + '</span></div>';
+        }).join('');
+      } catch(e) { box.innerHTML = '<div style="font-size:12px;color:#ef4444;">Could not load.</div>'; }
+    }
+    async function tsqrCreate() {
+      var input = document.getElementById('tsqr-label');
+      var label = input.value.trim();
+      var msg = document.getElementById('tsqr-create-msg');
+      if (!label) { msg.textContent = 'Enter a label first.'; return; }
+      var token = getAuthToken();
+      msg.textContent = 'Generating…';
+      try {
+        var r = await fetch(API_BASE + '/api/sms/qr-codes', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: label }) });
+        var d = await r.json().catch(function(){ return {}; });
+        if (!r.ok) { msg.textContent = 'Error: ' + (d.error || r.status); return; }
+        input.value = '';
+        msg.textContent = '';
+        toast('QR code generated', 'success');
+        await loadTripSwipeQR();
+      } catch(e) { msg.textContent = 'Network error'; }
+    }
+    async function tsqrDelete(id) {
+      if (!confirm('Delete this QR code? Its scan history will be removed too.')) return;
+      var token = getAuthToken();
+      try {
+        var r = await fetch(API_BASE + '/api/sms/qr-codes/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        if (r.ok) { toast('Deleted', 'success'); delete _tsqrScansCache[id]; loadTripSwipeQR(); }
+        else { var d = await r.json().catch(function(){return{};}); toast('Error: ' + (d.error || r.status), 'error'); }
+      } catch(e) { toast('Network error', 'error'); }
     }
 
     async function loadTonightCards() {
