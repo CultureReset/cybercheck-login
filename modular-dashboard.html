@@ -572,6 +572,7 @@ function pageBuilder(){
   return '<div class="page active">'+
     '<div class="page-head"><div><h1>My Page</h1><p>Your public page — one link, one QR code. Drag to reorder, toggle to show or hide.</p></div>'+
     '<div style="display:flex;gap:10px"><button class="btn btn-outline" onclick="openBizSettings()">✏️ Edit Business Info</button>'+
+    '<button class="btn btn-outline" onclick="copyEmbed()">📋 Embed Code</button>'+
     '<button class="btn btn-primary" onclick="copyLink()">🔗 Copy Public Link</button></div></div>'+
     '<div class="builder-wrap">'+
       '<div><div class="nav-label" style="padding-left:0">Sections (drag to reorder • toggle to show)</div>'+
@@ -599,13 +600,24 @@ function dragDrop(e){
   state.pageOrder.splice(from,1); state.pageOrder.splice(to,0,_dragId);
   _dragId=null; save(); renderPage();
 }
-function copyLink(){
+var PUBLIC_HOST = window.CC_PUBLIC_BASE || 'https://gulfcoastradar.com'; // standalone pages live on the GCR domain, URL-only
+function publicUrl(){
   var slug = state.business.slug || (state.business.name||'your-business').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  var url = location.origin + '/p/' + slug;
-  if(location.protocol === 'file:') url = 'biz.html?b=' + slug;
+  return PUBLIC_HOST + '/p/' + slug;
+}
+function copyLink(){
   if(!token()) { toast('Demo mode — create an account to get your live page'); return; }
+  var url = publicUrl();
   if(navigator.clipboard) navigator.clipboard.writeText(url).then(function(){ toast('Copied: '+url); }, function(){ toast(url); });
   else toast(url);
+}
+/* Embed on ANY website — the page and checkout are hosted by the
+   platform, so a plain link or iframe works on any domain. */
+function copyEmbed(){
+  if(!token()) { toast('Demo mode — create an account first'); return; }
+  var code = '<iframe src="'+publicUrl()+'" style="width:100%;max-width:560px;height:720px;border:0;border-radius:24px" loading="lazy"></iframe>';
+  if(navigator.clipboard) navigator.clipboard.writeText(code).then(function(){ toast('Embed code copied — paste it into any website'); }, function(){ toast(code); });
+  else toast(code);
 }
 
 /* ── Public page preview renderer (the aWavegent-style output) ── */

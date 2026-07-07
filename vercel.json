@@ -8,14 +8,6 @@
     {
       "source": "/wavegent/:slug",
       "destination": "/api/wavegent/:slug"
-    },
-    {
-      "source": "/p/:slug",
-      "destination": "/biz.html"
-    },
-    {
-      "source": "/book/:slug/:app",
-      "destination": "/book.html"
     }
   ],
   "headers": [
