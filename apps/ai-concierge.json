@@ -1,0 +1,25 @@
+{
+  "id": "ai-concierge",
+  "name": "AI Concierge",
+  "icon": "🤖",
+  "cat": "connect",
+  "price": 29,
+  "desc": "AI that answers customer questions from your verified data only.",
+  "block": {
+    "title": "Ask Us Anything",
+    "sub": "Instant answers, 24/7"
+  },
+  "setup": [
+    {
+      "key": "tone",
+      "label": "Tone",
+      "type": "select",
+      "options": [
+        "Friendly",
+        "Professional",
+        "Fun"
+      ],
+      "def": "Friendly"
+    }
+  ]
+}

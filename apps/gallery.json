@@ -1,0 +1,34 @@
+{
+  "id": "gallery",
+  "name": "Gallery",
+  "icon": "📸",
+  "cat": "content",
+  "price": 0,
+  "desc": "Photos of your food, boats, work, or venue.",
+  "block": {
+    "title": "Gallery",
+    "sub": "Photos and highlights"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Section title",
+      "type": "text",
+      "def": "Gallery"
+    }
+  ],
+  "dataKey": "photos",
+  "fields": [
+    {
+      "key": "url",
+      "label": "Image URL",
+      "type": "text"
+    },
+    {
+      "key": "caption",
+      "label": "Caption",
+      "type": "text"
+    }
+  ],
+  "publicData": true
+}

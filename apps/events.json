@@ -1,0 +1,44 @@
+{
+  "id": "events",
+  "name": "Events & Live Music",
+  "icon": "🎶",
+  "cat": "content",
+  "price": 0,
+  "desc": "Shows, trivia nights, live music schedule.",
+  "block": {
+    "title": "Live Music & Events",
+    "sub": "See what’s coming up"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Section title",
+      "type": "text",
+      "def": "Live Music & Events"
+    }
+  ],
+  "dataKey": "events",
+  "fields": [
+    {
+      "key": "title",
+      "label": "Event / artist",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text"
+    },
+    {
+      "key": "detail",
+      "label": "Details",
+      "type": "text"
+    }
+  ],
+  "publicData": true
+}

@@ -1,0 +1,59 @@
+{
+  "id": "song-request",
+  "name": "Song Requests",
+  "icon": "🎵",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Let the crowd request songs, with optional tips. Built for musicians and venues.",
+  "block": {
+    "title": "Request a Song",
+    "sub": "Send a request to the stage"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Request a Song"
+    },
+    {
+      "key": "to",
+      "label": "Send requests to",
+      "type": "select",
+      "options": [
+        "Artist",
+        "Venue manager",
+        "Both"
+      ],
+      "def": "Artist"
+    },
+    {
+      "key": "approval",
+      "label": "Require approval before display?",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "def": "Yes"
+    }
+  ],
+  "dataKey": "song_requests",
+  "fields": [
+    {
+      "key": "song",
+      "label": "Song",
+      "type": "text"
+    },
+    {
+      "key": "from",
+      "label": "From",
+      "type": "text"
+    },
+    {
+      "key": "tip",
+      "label": "Tip ($)",
+      "type": "number"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "book-hairstylist",
+  "name": "Hairstylist Booking",
+  "icon": "💇",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Appointment booking for salons — service, stylist, time, optional deposit.",
+  "block": {
+    "title": "Book an Appointment",
+    "sub": "Pick a service, stylist and time"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Book an Appointment"
+    },
+    {
+      "key": "deposit",
+      "label": "No-show deposit % (0 = none)",
+      "type": "number",
+      "def": "0"
+    }
+  ],
+  "dataKey": "salon_bookings",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Client",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "service",
+      "label": "Service",
+      "type": "text"
+    },
+    {
+      "key": "stylist",
+      "label": "Stylist",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "no-show"
+      ]
+    }
+  ],
+  "checkout": true
+}

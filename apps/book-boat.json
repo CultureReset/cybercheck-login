@@ -1,0 +1,67 @@
+{
+  "id": "book-boat",
+  "name": "Boat Rental Booking",
+  "icon": "⛵",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Hourly, half-day and full-day rentals by boat.",
+  "block": {
+    "title": "Rent a Boat",
+    "sub": "See boats, rates and open slots"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Rent a Boat"
+    }
+  ],
+  "dataKey": "boat_rentals",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "boat",
+      "label": "Boat",
+      "type": "text"
+    },
+    {
+      "key": "duration",
+      "label": "Duration",
+      "type": "select",
+      "options": [
+        "Hourly",
+        "Half-day",
+        "Full-day",
+        "Multi-day"
+      ]
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "on water",
+        "returned",
+        "cancelled"
+      ]
+    }
+  ],
+  "checkout": true
+}

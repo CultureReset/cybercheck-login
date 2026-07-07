@@ -1,0 +1,9 @@
+{
+  "id": "analytics",
+  "name": "Analytics",
+  "icon": "📈",
+  "cat": "operate",
+  "price": 0,
+  "desc": "Views, clicks, scans, bookings and where they came from.",
+  "setup": []
+}

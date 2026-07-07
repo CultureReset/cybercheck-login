@@ -1,0 +1,65 @@
+{
+  "id": "rides",
+  "name": "Ride Requests",
+  "icon": "🚗",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Taxi / pickup dispatch — customers request, you confirm by SMS.",
+  "block": {
+    "title": "Need a Ride?",
+    "sub": "Pickup & drop-off around town"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Request a Ride"
+    }
+  ],
+  "dataKey": "ride_requests",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "pickup",
+      "label": "Pickup",
+      "type": "text"
+    },
+    {
+      "key": "dropoff",
+      "label": "Drop-off",
+      "type": "text"
+    },
+    {
+      "key": "when",
+      "label": "When",
+      "type": "text"
+    },
+    {
+      "key": "party",
+      "label": "Party size",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "requested",
+        "accepted",
+        "picked up",
+        "completed",
+        "cancelled"
+      ]
+    }
+  ]
+}

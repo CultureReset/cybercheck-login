@@ -1,0 +1,27 @@
+{
+  "id": "staff",
+  "name": "Staff",
+  "icon": "👔",
+  "cat": "operate",
+  "price": 0,
+  "desc": "Captains, stylists, servers — roles and contact info.",
+  "dataKey": "staff",
+  "setup": [],
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "role",
+      "label": "Role",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    }
+  ]
+}

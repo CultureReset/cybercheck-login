@@ -1,0 +1,72 @@
+{
+  "id": "book-charter",
+  "name": "Fishing Charter Booking",
+  "icon": "🎣",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Trip type, departure time, party size, deposit and waiver — the full charter flow.",
+  "block": {
+    "title": "Book a Trip",
+    "sub": "Check availability & reserve your spot"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Book a Trip"
+    },
+    {
+      "key": "deposit",
+      "label": "Deposit %",
+      "type": "number",
+      "def": "30"
+    }
+  ],
+  "dataKey": "charter_trips",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "trip",
+      "label": "Trip type",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "departure",
+      "label": "Departure",
+      "type": "text"
+    },
+    {
+      "key": "guests",
+      "label": "Guests",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "deposit paid",
+        "confirmed",
+        "completed",
+        "cancelled"
+      ]
+    }
+  ],
+  "checkout": true
+}

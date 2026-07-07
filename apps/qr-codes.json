@@ -1,0 +1,9 @@
+{
+  "id": "qr-codes",
+  "name": "QR Codes",
+  "icon": "📲",
+  "cat": "connect",
+  "price": 0,
+  "desc": "QR codes for tables, docks, flyers — all pointing at your page.",
+  "setup": []
+}

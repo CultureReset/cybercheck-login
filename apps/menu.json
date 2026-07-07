@@ -1,0 +1,55 @@
+{
+  "id": "menu",
+  "name": "Menu",
+  "icon": "🍽️",
+  "cat": "content",
+  "price": 0,
+  "desc": "Digital menu with sections, items, prices. One QR code, always current.",
+  "block": {
+    "title": "Full Menu",
+    "sub": "Browse the menu with prices"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Section title",
+      "type": "text",
+      "def": "Full Menu"
+    },
+    {
+      "key": "style",
+      "label": "Menu style",
+      "type": "select",
+      "options": [
+        "Text list",
+        "With photos"
+      ],
+      "def": "Text list"
+    }
+  ],
+  "dataKey": "menu_items",
+  "fields": [
+    {
+      "key": "section",
+      "label": "Menu section",
+      "type": "text",
+      "ph": "Appetizers"
+    },
+    {
+      "key": "name",
+      "label": "Item name",
+      "type": "text"
+    },
+    {
+      "key": "price",
+      "label": "Price ($)",
+      "type": "number"
+    },
+    {
+      "key": "desc",
+      "label": "Description",
+      "type": "textarea"
+    }
+  ],
+  "publicData": true
+}

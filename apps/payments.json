@@ -1,0 +1,39 @@
+{
+  "id": "payments",
+  "name": "Payments (Stripe/Square)",
+  "icon": "💳",
+  "cat": "connect",
+  "price": 0,
+  "desc": "Connect your own Stripe or Square. Your money goes directly to you.",
+  "setup": [
+    {
+      "key": "provider",
+      "label": "Payment provider",
+      "type": "select",
+      "options": [
+        "Stripe",
+        "Square",
+        "Clover",
+        "None yet"
+      ],
+      "def": "Stripe"
+    },
+    {
+      "key": "mode",
+      "label": "Collect at booking",
+      "type": "select",
+      "options": [
+        "Full payment",
+        "Deposit only",
+        "No payment (pay on site)"
+      ],
+      "def": "Deposit only"
+    },
+    {
+      "key": "deposit",
+      "label": "Deposit %",
+      "type": "number",
+      "def": "25"
+    }
+  ]
+}

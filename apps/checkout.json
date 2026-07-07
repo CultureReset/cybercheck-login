@@ -1,0 +1,55 @@
+{
+  "id": "checkout",
+  "name": "Simple Checkout",
+  "icon": "🛒",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Sell anything with a payment link — merch, gift cards, deposits.",
+  "block": {
+    "title": "Buy Now",
+    "sub": "Quick secure checkout"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Buy Now"
+    },
+    {
+      "key": "url",
+      "label": "Payment link",
+      "type": "text",
+      "def": ""
+    }
+  ],
+  "dataKey": "orders",
+  "fields": [
+    {
+      "key": "item",
+      "label": "Item",
+      "type": "text"
+    },
+    {
+      "key": "amount",
+      "label": "Amount ($)",
+      "type": "number"
+    },
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "text"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "paid",
+        "fulfilled",
+        "refunded"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "oauth-instagram",
+  "name": "Instagram Feed",
+  "icon": "📸",
+  "cat": "connect",
+  "price": 0,
+  "desc": "Show your latest posts on your page automatically. Connects via OAuth.",
+  "block": {
+    "title": "Latest Posts",
+    "sub": "Fresh from Instagram"
+  },
+  "setup": [
+    {
+      "key": "handle",
+      "label": "Instagram handle",
+      "type": "text",
+      "ph": "@yourbusiness"
+    }
+  ]
+}

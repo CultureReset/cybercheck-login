@@ -1,0 +1,38 @@
+{
+  "id": "loyalty",
+  "name": "Loyalty & Perks",
+  "icon": "💚",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Points, perks and repeat-customer rewards.",
+  "block": {
+    "title": "Loyalty Rewards",
+    "sub": "Earn perks every visit"
+  },
+  "setup": [
+    {
+      "key": "offer",
+      "label": "Starting perk",
+      "type": "text",
+      "def": "Leave a review → earn 50 points"
+    }
+  ],
+  "dataKey": "loyalty_members",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Member",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "points",
+      "label": "Points",
+      "type": "number"
+    }
+  ]
+}

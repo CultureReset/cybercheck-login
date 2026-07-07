@@ -1,0 +1,93 @@
+{
+  "id": "booking",
+  "name": "Bookings",
+  "icon": "📅",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Customers pick a service, date and time, and request or book online.",
+  "block": {
+    "title": "Book Now",
+    "sub": "Check availability & reserve online"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text on your page",
+      "type": "text",
+      "def": "Book Now"
+    },
+    {
+      "key": "mode",
+      "label": "How should bookings work?",
+      "type": "select",
+      "options": [
+        "Instant book",
+        "Request first (you confirm by SMS)",
+        "Send to my existing booking link"
+      ],
+      "def": "Request first (you confirm by SMS)"
+    },
+    {
+      "key": "external_url",
+      "label": "Existing booking link (if any)",
+      "type": "text",
+      "def": "",
+      "showIf": {
+        "key": "mode",
+        "val": "Send to my existing booking link"
+      }
+    },
+    {
+      "key": "notify",
+      "label": "Send new booking alerts to",
+      "type": "text",
+      "def": "",
+      "ph": "Phone or email"
+    }
+  ],
+  "dataKey": "bookings",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "service",
+      "label": "Service / item",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text"
+    },
+    {
+      "key": "party",
+      "label": "Party size",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled"
+      ]
+    }
+  ],
+  "checkout": true
+}

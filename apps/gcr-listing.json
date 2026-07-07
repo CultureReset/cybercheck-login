@@ -1,0 +1,25 @@
+{
+  "id": "gcr-listing",
+  "name": "Gulf Coast Radar Listing",
+  "icon": "📍",
+  "cat": "connect",
+  "price": 0,
+  "desc": "Appear in GCR discovery — search, categories and live availability.",
+  "setup": [
+    {
+      "key": "category",
+      "label": "GCR category",
+      "type": "select",
+      "options": [
+        "Restaurant",
+        "Charter",
+        "Boat Rental",
+        "Activity",
+        "Music/Artist",
+        "Transportation",
+        "Other"
+      ],
+      "def": "Restaurant"
+    }
+  ]
+}

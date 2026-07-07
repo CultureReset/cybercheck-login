@@ -1,0 +1,54 @@
+{
+  "id": "availability",
+  "name": "Availability Calendar",
+  "icon": "🗓️",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Open slots, blocked dates and capacity. Powers \"Live Availability\" on your page.",
+  "block": {
+    "title": "Live Availability",
+    "sub": "See open dates and time slots"
+  },
+  "setup": [
+    {
+      "key": "granularity",
+      "label": "How do you sell time?",
+      "type": "select",
+      "options": [
+        "Time slots per day",
+        "Whole days",
+        "Nights (check-in/out)"
+      ],
+      "def": "Time slots per day"
+    },
+    {
+      "key": "capacity",
+      "label": "Default capacity per slot",
+      "type": "number",
+      "def": "1"
+    }
+  ],
+  "dataKey": "blocks",
+  "fields": [
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "kind",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "blocked",
+        "open",
+        "booked"
+      ]
+    },
+    {
+      "key": "note",
+      "label": "Note",
+      "type": "text"
+    }
+  ]
+}

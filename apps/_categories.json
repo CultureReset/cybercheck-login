@@ -1,0 +1,22 @@
+[
+  {
+    "id": "booking",
+    "name": "Booking"
+  },
+  {
+    "id": "content",
+    "name": "Content"
+  },
+  {
+    "id": "engage",
+    "name": "Engage"
+  },
+  {
+    "id": "operate",
+    "name": "Operate"
+  },
+  {
+    "id": "connect",
+    "name": "Connect"
+  }
+]
