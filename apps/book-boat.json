@@ -11,7 +11,9 @@
   },
   "booking": {
     "mode": "date",
-    "resource": "fleet_items"
+    "resource": "fleet_items",
+    "addons": "addons",
+    "cutoff_hours": 2
   },
   "setup": [
     {

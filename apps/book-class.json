@@ -14,7 +14,14 @@
   "booking": {
     "mode": "slots",
     "slots": "6:00 AM, 9:00 AM, 12:00 PM, 5:30 PM",
-    "slot_capacity": 12
+    "slot_capacity": 12,
+    "party": {
+      "seats": true,
+      "tiers": [
+        { "key": "guests", "label": "People", "cfgPrice": "price_person", "def": 15 }
+      ]
+    },
+    "cutoff_hours": 1
   },
   "setup": [
     {
@@ -34,6 +41,18 @@
       "label": "Spots per class",
       "type": "number",
       "def": "12"
+    },
+    {
+      "key": "price_person",
+      "label": "Price per person ($)",
+      "type": "number",
+      "def": "15"
+    },
+    {
+      "key": "cutoff_hours",
+      "label": "Stop online booking X hours before class",
+      "type": "number",
+      "def": "1"
     }
   ],
   "dataKey": "class_bookings",

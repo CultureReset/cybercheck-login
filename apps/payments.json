@@ -5,6 +5,7 @@
   "cat": "connect",
   "price": 0,
   "desc": "Connect your own Stripe or Square. Your money goes directly to you.",
+  "provides": "payments",
   "setup": [
     {
       "key": "provider",

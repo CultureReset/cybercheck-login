@@ -12,7 +12,16 @@
   "booking": {
     "mode": "slots",
     "slots": "10:00 AM, 1:00 PM, 4:00 PM, Sunset",
-    "slot_capacity": 40
+    "slot_capacity": 40,
+    "party": {
+      "seats": true,
+      "tiers": [
+        { "key": "adults", "label": "Adults", "cfgPrice": "adult", "def": 35 },
+        { "key": "kids", "label": "Kids", "cfgPrice": "kid", "def": 20 }
+      ]
+    },
+    "addons": "addons",
+    "cutoff_hours": 1
   },
   "setup": [
     {
@@ -29,9 +38,15 @@
     },
     {
       "key": "slot_capacity",
-      "label": "Bookings per departure",
+      "label": "Seats per departure",
       "type": "number",
       "def": "40"
+    },
+    {
+      "key": "cutoff_hours",
+      "label": "Stop online booking X hours before departure",
+      "type": "number",
+      "def": "1"
     },
     {
       "key": "adult",

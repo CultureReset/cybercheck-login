@@ -4,7 +4,8 @@
   "icon": "🎟️",
   "cat": "operate",
   "price": 0,
-  "desc": "Discount codes and limited-time offers.",
+  "desc": "Discount codes and limited-time offers — codes work in every checkout on your page.",
+  "provides": "promos",
   "dataKey": "coupons",
   "setup": [],
   "fields": [

@@ -12,7 +12,10 @@
   "booking": {
     "mode": "slots",
     "slots": "6:00 AM, 12:00 PM",
-    "slot_capacity": 1
+    "slot_capacity": 1,
+    "addons": "addons",
+    "max_party": 6,
+    "cutoff_hours": 12
   },
   "setup": [
     {
@@ -38,6 +41,18 @@
       "label": "Trips per departure time",
       "type": "number",
       "def": "1"
+    },
+    {
+      "key": "max_party",
+      "label": "Max guests per trip",
+      "type": "number",
+      "def": "6"
+    },
+    {
+      "key": "cutoff_hours",
+      "label": "Stop online booking X hours before departure",
+      "type": "number",
+      "def": "12"
     }
   ],
   "dataKey": "charter_trips",
