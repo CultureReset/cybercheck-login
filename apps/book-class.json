@@ -1,0 +1,80 @@
+{
+  "id": "book-class",
+  "name": "Class Schedule & Booking",
+  "icon": "🧘",
+  "cat": "booking",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Time-slot class booking for gyms, yoga studios, lessons and workshops — set your class times and per-class capacity, spots fill up automatically.",
+  "block": {
+    "title": "Book a Class",
+    "sub": "Pick a day & class time"
+  },
+  "checkout": true,
+  "booking": {
+    "mode": "slots",
+    "slots": "6:00 AM, 9:00 AM, 12:00 PM, 5:30 PM",
+    "slot_capacity": 12
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Book a Class"
+    },
+    {
+      "key": "slot_times",
+      "label": "Class times (comma-separated)",
+      "type": "text",
+      "def": "6:00 AM, 9:00 AM, 12:00 PM, 5:30 PM"
+    },
+    {
+      "key": "slot_capacity",
+      "label": "Spots per class",
+      "type": "number",
+      "def": "12"
+    }
+  ],
+  "dataKey": "class_bookings",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "class",
+      "label": "Class",
+      "type": "text",
+      "ph": "Sunrise Yoga"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "no-show"
+      ]
+    }
+  ]
+}

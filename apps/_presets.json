@@ -8,6 +8,8 @@
       "specials",
       "events",
       "booking",
+      "ordering",
+      "gift-cards",
       "reviews",
       "hours",
       "gallery",
@@ -23,7 +25,7 @@
     "name": "Charter / Tours",
     "mods": [
       "services",
-      "booking",
+      "book-charter",
       "availability",
       "waivers",
       "payments",
@@ -35,7 +37,8 @@
       "email-parser",
       "fleet",
       "addons",
-      "locations"
+      "locations",
+      "gift-cards"
     ],
     "type": "Charter"
   },
@@ -45,7 +48,7 @@
     "name": "Boat / Rentals",
     "mods": [
       "services",
-      "booking",
+      "book-boat",
       "availability",
       "waivers",
       "payments",
@@ -67,9 +70,12 @@
     "name": "Salon / Services",
     "mods": [
       "services",
-      "booking",
+      "book-hairstylist",
       "availability",
+      "staff",
       "loyalty",
+      "gift-cards",
+      "memberships",
       "reviews",
       "hours",
       "messaging",
@@ -97,9 +103,9 @@
     "em": "🏖️",
     "name": "Condo / Lodging",
     "mods": [
-      "services",
+      "properties",
+      "book-lodging",
       "availability",
-      "booking",
       "faq",
       "payments",
       "email-parser",
@@ -107,6 +113,39 @@
       "customers"
     ],
     "type": "Lodging"
+  },
+  {
+    "id": "fitness",
+    "em": "🧘",
+    "name": "Gym / Classes",
+    "mods": [
+      "book-class",
+      "memberships",
+      "gift-cards",
+      "staff",
+      "hours",
+      "reviews",
+      "messaging",
+      "customers"
+    ],
+    "type": "Fitness"
+  },
+  {
+    "id": "photographer",
+    "em": "📸",
+    "name": "Photographer",
+    "mods": [
+      "services",
+      "book-photographer",
+      "client-galleries",
+      "gallery",
+      "gift-cards",
+      "reviews",
+      "links",
+      "messaging",
+      "customers"
+    ],
+    "type": "Photographer"
   },
   {
     "id": "blank",

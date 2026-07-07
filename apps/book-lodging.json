@@ -1,0 +1,72 @@
+{
+  "id": "book-lodging",
+  "name": "Lodging Booking",
+  "icon": "🛎️",
+  "cat": "booking",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Check-in / check-out date-range booking for condos, rooms and rentals. Guests pick a unit and a stay — nights that overlap Airbnb or VRBO blocks are rejected automatically.",
+  "block": {
+    "title": "Book Your Stay",
+    "sub": "Pick your dates & reserve"
+  },
+  "checkout": true,
+  "booking": {
+    "mode": "range",
+    "resource": "properties"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Book Your Stay"
+    },
+    {
+      "key": "deposit",
+      "label": "Deposit % (0 = full amount)",
+      "type": "number",
+      "def": "0"
+    }
+  ],
+  "dataKey": "lodging_bookings",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Guest",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Check-in",
+      "type": "date"
+    },
+    {
+      "key": "end_date",
+      "label": "Check-out",
+      "type": "date"
+    },
+    {
+      "key": "guests",
+      "label": "Guests",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "checked in",
+        "completed",
+        "cancelled"
+      ]
+    }
+  ]
+}

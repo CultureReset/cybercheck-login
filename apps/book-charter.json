@@ -9,6 +9,11 @@
     "title": "Book a Trip",
     "sub": "Check availability & reserve your spot"
   },
+  "booking": {
+    "mode": "slots",
+    "slots": "6:00 AM, 12:00 PM",
+    "slot_capacity": 1
+  },
   "setup": [
     {
       "key": "label",
@@ -21,6 +26,18 @@
       "label": "Deposit %",
       "type": "number",
       "def": "30"
+    },
+    {
+      "key": "slot_times",
+      "label": "Departure times (comma-separated)",
+      "type": "text",
+      "def": "6:00 AM, 12:00 PM"
+    },
+    {
+      "key": "slot_capacity",
+      "label": "Trips per departure time",
+      "type": "number",
+      "def": "1"
     }
   ],
   "dataKey": "charter_trips",

@@ -1,0 +1,75 @@
+{
+  "id": "properties",
+  "name": "Properties & Units",
+  "icon": "🏖️",
+  "cat": "booking",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Condos, rooms, houses or campsites — photos, sleeps, nightly rates. Pairs with Lodging Booking so each unit has its own availability.",
+  "block": {
+    "title": "Our Properties",
+    "sub": "Units, rates and photos"
+  },
+  "publicData": true,
+  "setup": [],
+  "dataKey": "properties",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Unit name",
+      "type": "text",
+      "ph": "Gulf View 2BR — Unit 204"
+    },
+    {
+      "key": "type",
+      "label": "Type",
+      "type": "text",
+      "ph": "Condo / House / Room / RV site"
+    },
+    {
+      "key": "sleeps",
+      "label": "Sleeps",
+      "type": "number"
+    },
+    {
+      "key": "beds",
+      "label": "Bedrooms",
+      "type": "number"
+    },
+    {
+      "key": "baths",
+      "label": "Bathrooms",
+      "type": "number"
+    },
+    {
+      "key": "rate_night",
+      "label": "Nightly rate ($)",
+      "type": "number"
+    },
+    {
+      "key": "min_nights",
+      "label": "Minimum nights",
+      "type": "number"
+    },
+    {
+      "key": "url",
+      "label": "Photo",
+      "type": "image"
+    },
+    {
+      "key": "desc",
+      "label": "Description",
+      "type": "textarea"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "active",
+        "maintenance",
+        "retired"
+      ]
+    }
+  ]
+}

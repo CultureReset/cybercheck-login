@@ -1,0 +1,81 @@
+{
+  "id": "ordering",
+  "name": "Online Ordering",
+  "icon": "🛒",
+  "cat": "booking",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Turns your Menu into a pickup ordering cart on your public page — guests add items, you get the order by text. Pay at pickup (v1).",
+  "block": {
+    "title": "Order Online",
+    "sub": "Pickup ordering from our menu"
+  },
+  "checkout": true,
+  "booking": {
+    "mode": "none"
+  },
+  "cart": {
+    "source": "menu_items",
+    "into": "items",
+    "totalInto": "total"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Order for Pickup"
+    },
+    {
+      "key": "lead_time",
+      "label": "Pickup lead time (minutes)",
+      "type": "number",
+      "def": "20"
+    }
+  ],
+  "dataKey": "orders",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "items",
+      "label": "Items",
+      "type": "textarea"
+    },
+    {
+      "key": "total",
+      "label": "Total ($)",
+      "type": "number"
+    },
+    {
+      "key": "pickup_time",
+      "label": "Pickup time",
+      "type": "text"
+    },
+    {
+      "key": "notes",
+      "label": "Notes",
+      "type": "textarea"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "ready",
+        "completed",
+        "cancelled"
+      ]
+    }
+  ]
+}

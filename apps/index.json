@@ -31,6 +31,8 @@
   "book-charter.json",
   "book-boat.json",
   "book-dolphin.json",
+  "book-lodging.json",
+  "book-class.json",
   "reserve-table.json",
   "rides.json",
   "shoutouts.json",
@@ -45,5 +47,10 @@
   "fleet.json",
   "addons.json",
   "inventory.json",
-  "locations.json"
+  "locations.json",
+  "properties.json",
+  "client-galleries.json",
+  "ordering.json",
+  "gift-cards.json",
+  "memberships.json"
 ]

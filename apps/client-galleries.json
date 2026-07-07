@@ -1,0 +1,56 @@
+{
+  "id": "client-galleries",
+  "name": "Client Galleries",
+  "icon": "📸",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Private photo delivery for photographers — one gallery per client with a share link, cover photo and delivery status.",
+  "setup": [],
+  "dataKey": "client_galleries",
+  "fields": [
+    {
+      "key": "client",
+      "label": "Client",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "shoot",
+      "label": "Shoot",
+      "type": "text",
+      "ph": "Beach family session — June 12"
+    },
+    {
+      "key": "cover",
+      "label": "Cover photo",
+      "type": "image"
+    },
+    {
+      "key": "link",
+      "label": "Gallery link",
+      "type": "text",
+      "ph": "https://…"
+    },
+    {
+      "key": "expires",
+      "label": "Expires",
+      "type": "date"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "editing",
+        "delivered",
+        "downloaded",
+        "expired"
+      ]
+    }
+  ]
+}
