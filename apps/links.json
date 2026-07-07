@@ -1,0 +1,31 @@
+{
+  "id": "links",
+  "name": "Custom Links",
+  "icon": "🔗",
+  "cat": "content",
+  "price": 0,
+  "desc": "Add any link to your page — socials, ordering, anything.",
+  "block": {
+    "title": "More Links",
+    "sub": "Everything else in one place"
+  },
+  "setup": [],
+  "dataKey": "links",
+  "fields": [
+    {
+      "key": "title",
+      "label": "Link title",
+      "type": "text"
+    },
+    {
+      "key": "url",
+      "label": "URL",
+      "type": "text"
+    },
+    {
+      "key": "desc",
+      "label": "Short description",
+      "type": "text"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "faq",
+  "name": "FAQ / What’s Included",
+  "icon": "🧾",
+  "cat": "content",
+  "price": 0,
+  "desc": "Answer the questions customers always ask.",
+  "block": {
+    "title": "What’s Included",
+    "sub": "Policies and what to bring"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Section title",
+      "type": "text",
+      "def": "What’s Included"
+    }
+  ],
+  "dataKey": "faqs",
+  "fields": [
+    {
+      "key": "q",
+      "label": "Question",
+      "type": "text"
+    },
+    {
+      "key": "a",
+      "label": "Answer",
+      "type": "textarea"
+    }
+  ]
+}

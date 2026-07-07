@@ -1,0 +1,16 @@
+{
+  "id": "oauth-google",
+  "name": "Google Calendar Sync",
+  "icon": "🗓️",
+  "cat": "connect",
+  "price": 0,
+  "desc": "Two-way sync: bookings land on your Google Calendar, busy blocks your availability. Connects via OAuth.",
+  "setup": [
+    {
+      "key": "account",
+      "label": "Google account email",
+      "type": "text",
+      "ph": "you@gmail.com"
+    }
+  ]
+}

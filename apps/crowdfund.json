@@ -1,0 +1,44 @@
+{
+  "id": "crowdfund",
+  "name": "Crowdfunding",
+  "icon": "🤝",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Collect supporter contributions toward a goal — gear, album, new boat.",
+  "block": {
+    "title": "Support Us",
+    "sub": "Help us hit the goal"
+  },
+  "setup": [
+    {
+      "key": "goal",
+      "label": "Goal amount ($)",
+      "type": "number",
+      "def": "1000"
+    },
+    {
+      "key": "url",
+      "label": "Payment link (Venmo/CashApp/Stripe)",
+      "type": "text",
+      "def": ""
+    }
+  ],
+  "dataKey": "contributions",
+  "fields": [
+    {
+      "key": "supporter",
+      "label": "Supporter",
+      "type": "text"
+    },
+    {
+      "key": "amount",
+      "label": "Amount ($)",
+      "type": "number"
+    },
+    {
+      "key": "message",
+      "label": "Message",
+      "type": "text"
+    }
+  ]
+}

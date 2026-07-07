@@ -205,6 +205,8 @@
   <div class="modal-box wide">
     <div class="modal-head"><h2>Welcome — let's build your platform</h2></div>
     <p class="muted small" style="margin-top:0">Pick a starting point. Every preset is just a bundle of tools — you can add or remove anything from the App Store afterward. Nothing is locked in.</p>
+    <label>Account email</label>
+    <input id="ob-email" type="email" placeholder="you@yourbusiness.com">
     <label>Business name</label>
     <input id="ob-name" placeholder="e.g. Harbor Tide Kitchen">
     <label>Tagline (optional)</label>
@@ -218,6 +220,7 @@
 </div>
 
 <div id="toast"></div>
+<input type="file" id="app-file" accept=".json,application/json" style="display:none" onchange="importAppFile(this)">
 
 <script src="js/app-registry.js"></script>
 <script>
@@ -267,13 +270,14 @@ function apiSync(){
 }
 
 /* ============================================================
-   APP CATALOG — loaded from js/app-registry.js (pure data).
-   The dashboard is a shell: nothing below is specific to any
-   tool, industry, or business.
+   APP CATALOG — every app is its own standalone file in /apps/,
+   loaded by js/app-registry.js. The dashboard is a shell: nothing
+   below is specific to any tool, industry, or business.
+   These are filled in at boot, after the registry finishes loading.
    ============================================================ */
-var MODULES = window.CC_SEED_APPS || [];
-var CATS    = window.CC_APP_CATS  || [];
-var PRESETS = window.CC_PRESETS   || [];
+var MODULES = [];
+var CATS    = [];
+var PRESETS = [];
 
 /* ============================================================
    OPEN APP REGISTRY
@@ -327,7 +331,9 @@ function renderNav(){
   var nav = document.getElementById('nav-modules');
   if(!list.length){ nav.innerHTML = '<div class="muted small" style="padding:6px 10px">No tools yet — open the App Store.</div>'; return; }
   nav.innerHTML = list.map(function(m){
-    return '<button class="nav-item'+(currentPage===m.id?' active':'')+'" onclick="showPage(\''+m.id+'\')"><span class="ic">'+m.icon+'</span> '+esc(m.name)+'</button>';
+    try{
+      return '<button class="nav-item'+(currentPage===m.id?' active':'')+'" onclick="showPage(\''+m.id+'\')"><span class="ic">'+(m.icon||'📦')+'</span> '+esc(m.name)+'</button>';
+    }catch(e){ console.error('Nav item failed:', m && m.id, e); return ''; }
   }).join('');
 }
 function installedList(){
@@ -346,12 +352,18 @@ function showPage(id){
    ============================================================ */
 function renderPage(){
   var host = document.getElementById('pages');
-  if(currentPage==='overview') host.innerHTML = pageOverview();
-  else if(currentPage==='appstore') host.innerHTML = pageStore();
-  else if(currentPage==='mypage') host.innerHTML = pageBuilder();
-  else if(currentPage==='studio') host.innerHTML = pageStudio();
-  else host.innerHTML = pageModule(currentPage);
-  if(currentPage==='mypage') renderPreview('pv-host');
+  try{
+    if(currentPage==='overview') host.innerHTML = pageOverview();
+    else if(currentPage==='appstore') host.innerHTML = pageStore();
+    else if(currentPage==='mypage') host.innerHTML = pageBuilder();
+    else if(currentPage==='studio') host.innerHTML = pageStudio();
+    else host.innerHTML = pageModule(currentPage);
+    if(currentPage==='mypage') renderPreview('pv-host');
+  }catch(e){
+    /* FAULT ISOLATION: one broken tool never breaks the dashboard */
+    console.error('Page render error ('+currentPage+'):', e);
+    host.innerHTML = '<div class="page active"><div class="empty">⚠️ This tool hit an error — everything else is unaffected.<br><span class="small">'+esc(e.message)+'</span><br><br><button class="btn btn-outline btn-sm" onclick="showPage(\'overview\')">← Back to Overview</button></div></div>';
+  }
 }
 
 /* ── Overview ── */
@@ -401,10 +413,14 @@ function pageStore(){
     return true;
   });
   var cards = list.map(function(m){
+    try{
     var inst = !!state.installed[m.id];
     var price = m.price>0 ? '$'+m.price+'/mo' : 'Free';
     var author = m.author || 'CyberCheck';
-    var typeBadge = m.type==='automation' ? '⚡ automation' : m.type==='tool' ? '🗂️ tool' : '🧩 block';
+    var typeBadge = m.type==='automation' ? '⚡ automation'
+      : (m.block && m.dataKey) ? '🧩 page + 🗂️ dashboard'
+      : m.block ? '🧩 page block'
+      : '🗂️ dashboard tool';
     var btn = inst
       ? '<button class="btn btn-danger btn-sm" onclick="uninstall(\''+m.id+'\')">Remove</button>'
       : '<button class="btn btn-primary btn-sm" onclick="startInstall(\''+m.id+'\')">Install</button>';
@@ -413,6 +429,7 @@ function pageStore(){
       (inst?'<span style="margin-left:auto;font-size:11px;color:var(--primary);font-weight:800">✓ Installed</span>':'')+'</div>'+
       '<div class="app-desc">'+esc(m.desc)+'</div>'+
       '<div class="app-foot"><span class="price">'+price+' · by '+esc(author)+(m.version?' · v'+m.version:'')+'</span>'+btn+'</div></div>';
+    }catch(e){ console.error('App card failed:', m && m.id, e); return '<div class="app-card"><div class="app-desc">⚠️ '+esc((m&&m.name)||'App')+' failed to render — other apps unaffected.</div></div>'; }
   }).join('');
   return '<div class="page active">'+
     '<div class="page-head"><div><h1>App Store</h1><p>Apps built by CyberCheck and the community. Build something once — every business on the platform can reuse it.</p></div>'+
@@ -561,14 +578,31 @@ function renderPreview(hostId, extraId, extraCfg){
     blocks.push({ m:mod(extraId), cfg:extraCfg||{}, isNew:true });
   }
   var linkRows = blocks.map(function(bl){
-    var t = bl.cfg.label || bl.m.block.title;
-    return '<div class="pv-link"'+(bl.isNew?' style="outline:2px solid '+accent+';outline-offset:2px"':'')+'>'+
-      '<div class="i">'+bl.m.icon+'</div><div><b>'+esc(t)+'</b><span>'+esc(bl.m.block.sub)+'</span></div><span class="ar">›</span></div>';
+    try{
+      var t = bl.cfg.label || bl.m.block.title;
+      var thumbs = '';
+      if(bl.m.dataKey){
+        var recs = (state.data[bl.m.dataKey]||[]).filter(function(r){ return r.url && /^https?:/i.test(r.url); }).slice(0,3);
+        if(recs.length) thumbs = '<div style="display:flex;gap:6px;margin-top:7px">'+recs.map(function(r){
+          return '<div style="flex:1;height:52px;border-radius:8px;background:url(\''+esc(r.url)+'\') center/cover"></div>';
+        }).join('')+'</div>';
+      }
+      return '<div>'+
+        '<div class="pv-link"'+(bl.isNew?' style="outline:2px solid '+accent+';outline-offset:2px"':'')+'>'+
+        '<div class="i">'+(bl.m.icon||'📦')+'</div><div><b>'+esc(t)+'</b><span>'+esc(bl.m.block.sub||'')+'</span></div><span class="ar">›</span></div>'+
+        thumbs+'</div>';
+    }catch(e){ console.error('Preview block failed:', bl.m && bl.m.id, e); return ''; }
   }).join('');
   var primary = blocks.length ? (blocks[0].cfg.label || blocks[0].m.block.title) : 'Book Now';
+  var heroStyle = b.hero && /^https?:/i.test(b.hero)
+    ? 'background:linear-gradient(180deg,rgba(8,12,20,.25),rgba(8,12,20,.68)),url(\''+esc(b.hero)+'\') center/cover'
+    : 'background:linear-gradient(180deg,'+accent+'cc,'+accent+'55),#20304a';
+  var avatar = b.logo && /^https?:/i.test(b.logo)
+    ? '<div class="pv-avatar" style="background:url(\''+esc(b.logo)+'\') center/cover"></div>'
+    : '<div class="pv-avatar">'+ (b.emoji||'🏪') +'</div>';
   host.innerHTML = '<div class="phone"><div class="phone-screen">'+
-    '<div class="pv-hero" style="background:linear-gradient(180deg,'+accent+'cc,'+accent+'55),#20304a">'+
-      '<div class="pv-avatar">'+ (b.emoji||'🏪') +'</div>'+
+    '<div class="pv-hero" style="'+heroStyle+'">'+
+      avatar+
       '<h3>'+esc(b.name||'Your Business')+'</h3><p>'+esc(b.tagline||'Your tagline appears here')+'</p></div>'+
     '<div class="pv-cta">'+
       '<div class="pv-btn" style="background:#1d9d67">📞 Call Now</div>'+
@@ -662,12 +696,16 @@ function openBizSettings(){
     '<label>Tagline</label><input id="bz-tag" value="'+esc(b.tagline)+'">'+
     '<label>Phone</label><input id="bz-phone" value="'+esc(b.phone)+'">'+
     '<label>Emoji / logo</label><input id="bz-emoji" value="'+esc(b.emoji)+'" maxlength="4">'+
+    '<label>Logo image URL (optional — overrides emoji)</label><input id="bz-logo" value="'+esc(b.logo||'')+'" placeholder="https://…/logo.jpg">'+
+    '<label>Hero photo URL (top of your page)</label><input id="bz-hero" value="'+esc(b.hero||'')+'" placeholder="https://…/hero.jpg">'+
     '<label>Accent color</label><input id="bz-accent" type="color" value="'+esc(b.accent||'#22c3a6')+'" style="height:44px;padding:4px">';
   document.getElementById('rec-save').onclick = function(){
     b.name=document.getElementById('bz-name').value;
     b.tagline=document.getElementById('bz-tag').value;
     b.phone=document.getElementById('bz-phone').value;
     b.emoji=document.getElementById('bz-emoji').value||'🏪';
+    b.logo=document.getElementById('bz-logo').value.trim();
+    b.hero=document.getElementById('bz-hero').value.trim();
     b.accent=document.getElementById('bz-accent').value;
     save(); closeModal('modal-rec'); refreshBizChip(); renderPage();
     bindRecSave(); // restore the default record-save handler
@@ -699,20 +737,22 @@ function refreshBizChip(){
    whether it came from the dashboard, the public page, the email
    parser or the POS. Build once, publish, every business can reuse.
    ============================================================ */
-var TRIGGERS = [
-  {id:'bookings',      label:'New booking'},
-  {id:'leads',         label:'New lead captured'},
-  {id:'reviews',       label:'New review'},
-  {id:'song_requests', label:'New song request'},
-  {id:'customers',     label:'New customer'},
-  {id:'waitlist',      label:'New waitlist signup'}
-];
+/* Triggers are DYNAMIC: every app that owns a data table is a
+   trigger source. Install a new app → its stream is instantly
+   available to automations. Nothing hardwired. */
+function dataStreams(){
+  var seen = {}, out = [];
+  allApps().forEach(function(a){
+    if(a.dataKey && !seen[a.dataKey]){ seen[a.dataKey]=1; out.push({id:a.dataKey, label:'New '+a.name+' entry'}); }
+  });
+  return out;
+}
 var AUTO_ACTIONS = [
   {id:'sms',    label:'Send SMS'},
   {id:'email',  label:'Send email'},
   {id:'notify', label:'Notify owner'}
 ];
-function trigLabel(id){ var t=TRIGGERS.filter(function(x){return x.id===id})[0]; return t?t.label:id; }
+function trigLabel(id){ var t=dataStreams().filter(function(x){return x.id===id})[0]; return t?t.label:('New '+id+' entry'); }
 function actLabel(id){ var a=AUTO_ACTIONS.filter(function(x){return x.id===id})[0]; return a?a.label:id; }
 
 function fireTrigger(dataKey, rec){
@@ -837,8 +877,8 @@ function pageStudio(){
   }
   if(st.type==='automation'){
     typeSection =
-      '<label>When… (trigger)</label><select onchange="stSet(\'trigger\',this.value)">'+
-      TRIGGERS.map(function(t){ return '<option value="'+t.id+'"'+(st.trigger===t.id?' selected':'')+'>'+t.label+'</option>'; }).join('')+'</select>'+
+      '<label>When… (trigger — any app’s data stream)</label><select onchange="stSet(\'trigger\',this.value)">'+
+      dataStreams().map(function(t){ return '<option value="'+t.id+'"'+(st.trigger===t.id?' selected':'')+'>'+t.label+'</option>'; }).join('')+'</select>'+
       '<label>Do… (action)</label><select onchange="stSet(\'action\',this.value)">'+
       AUTO_ACTIONS.map(function(a){ return '<option value="'+a.id+'"'+(st.action===a.id?' selected':'')+'>'+a.label+'</option>'; }).join('')+'</select>'+
       '<label>Message template — use {customer} {name} {date} {time} {service} {business} etc.</label>'+
@@ -849,12 +889,14 @@ function pageStudio(){
     return '<div class="sec-row"><span style="font-size:17px">'+a.icon+'</span>'+
       '<span class="nm">'+esc(a.name)+'<span>v'+(a.version||1)+' · '+a.type+' · by '+esc(a.author||'you')+'</span></span>'+
       '<button class="btn btn-outline btn-sm" onclick="editApp(\''+a.id+'\')">Edit</button>'+
+      '<button class="btn btn-outline btn-sm" onclick="exportApp(\''+a.id+'\')">Export</button>'+
       '<button class="btn btn-danger btn-sm" onclick="unpublishApp(\''+a.id+'\')">Unpublish</button></div>';
   }).join('');
 
   return '<div class="page active">'+
     '<div class="page-head"><div><h1>🧪 Build an App</h1>'+
-    '<p>Build it once, publish it, and any business on the platform can install and reuse it — a block, a tool, or an automation.</p></div></div>'+
+    '<p>Build it once, publish it, and any business on the platform can install and reuse it — a block, a tool, or an automation. An app is just a file — upload one and it connects.</p></div>'+
+    '<button class="btn btn-outline" onclick="document.getElementById(\'app-file\').click()">⬆️ Upload App File (.json)</button></div>'+
     '<div class="builder-wrap">'+
     '<div class="card">'+
       '<label style="margin-top:0">What are you building?</label><div class="preset-grid">'+typeCards+'</div>'+
@@ -930,6 +972,50 @@ function editApp(id){
   if(a.automation){ st.trigger = a.automation.trigger; st.action = a.automation.action; st.template = a.automation.template; }
   renderPage();
 }
+/* An app IS a file. Export any published app as .json; upload any
+   .json manifest (one app or an array) and it connects instantly —
+   sandbox-style, no build, no deploy. */
+function exportApp(id){
+  var a = mod(id); if(!a) return;
+  var blob = new Blob([JSON.stringify(a, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var l = document.createElement('a');
+  l.href = url; l.download = a.id + '.json';
+  document.body.appendChild(l); l.click(); l.remove();
+  URL.revokeObjectURL(url);
+}
+function importAppFile(input){
+  var f = input.files && input.files[0];
+  if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try{
+      var data = JSON.parse(r.result);
+      var list = Array.isArray(data) ? data : [data];
+      var added = 0;
+      list.forEach(function(a){
+        if(!a || !a.name) return;
+        if(!a.id) a.id = 'x-' + String(a.name).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        while(mod(a.id)) a.id += '-2';
+        if(!a.type) a.type = a.automation ? 'automation' : (a.block ? 'block' : 'tool');
+        if(!a.author) a.author = state.business.name || 'Imported';
+        if(!a.version) a.version = 1;
+        if(!a.icon) a.icon = '📦';
+        if(!a.cat || !CATS.some(function(c){return c.id===a.cat})) a.cat = CATS.length ? CATS[0].id : 'engage';
+        if(!a.setup) a.setup = [];
+        customApps.push(a); added++;
+      });
+      if(added){ saveRegistry(); renderPage(); }
+      toast(added ? '📦 '+added+' app'+(added>1?'s':'')+' imported — live in your App Store'
+                  : 'No valid app manifests in that file');
+    }catch(e){
+      toast('Could not read that file — is it an app .json?');
+    }
+    input.value = '';
+  };
+  r.readAsText(f);
+}
+
 function unpublishApp(id){
   var a = mod(id);
   if(!confirm('Unpublish '+(a?a.name:id)+' from the App Store? Businesses that installed it will lose it.')) return;
@@ -957,6 +1043,7 @@ function finishOnboard(){
   if(!name){ toast('Enter your business name'); return; }
   if(!obSel){ toast('Pick a starting bundle'); return; }
   var p = PRESETS.filter(function(x){return x.id===obSel})[0];
+  state.user = { email: (document.getElementById('ob-email').value||'').trim() };
   state.business.name = name;
   state.business.tagline = document.getElementById('ob-tag').value.trim();
   state.business.phone = document.getElementById('ob-phone').value.trim();
@@ -987,7 +1074,12 @@ function boot(){
   renderPage();
   if(!state.onboarded){ renderOnboard(); openModal('modal-onboard'); }
 }
-boot();
+(window.CC_REGISTRY_READY || Promise.resolve()).then(function(){
+  MODULES = window.CC_SEED_APPS || [];
+  CATS    = window.CC_APP_CATS  || [];
+  PRESETS = window.CC_PRESETS   || [];
+  boot();
+});
 </script>
 </body>
 </html>

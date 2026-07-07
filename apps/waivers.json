@@ -1,0 +1,38 @@
+{
+  "id": "waivers",
+  "name": "Digital Waivers",
+  "icon": "✍️",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Liability waivers signed at booking. Stored and searchable.",
+  "setup": [
+    {
+      "key": "text",
+      "label": "Waiver text (short version)",
+      "type": "textarea",
+      "def": "I acknowledge the risks involved and release the business from liability."
+    }
+  ],
+  "dataKey": "waivers",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Signed date",
+      "type": "date"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "sent",
+        "signed"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "services",
+  "name": "Services & Pricing",
+  "icon": "🛠️",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Your bookable services, trips, rentals or sessions with prices and durations.",
+  "block": {
+    "title": "Rates & Packages",
+    "sub": "Services, durations and pricing"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Section title on your page",
+      "type": "text",
+      "def": "Rates & Packages"
+    }
+  ],
+  "dataKey": "services",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Service name",
+      "type": "text"
+    },
+    {
+      "key": "price",
+      "label": "Price ($)",
+      "type": "number"
+    },
+    {
+      "key": "duration",
+      "label": "Duration",
+      "type": "text"
+    },
+    {
+      "key": "capacity",
+      "label": "Max guests",
+      "type": "number"
+    },
+    {
+      "key": "desc",
+      "label": "Description",
+      "type": "textarea"
+    }
+  ]
+}

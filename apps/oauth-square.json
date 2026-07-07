@@ -1,0 +1,15 @@
+{
+  "id": "oauth-square",
+  "name": "Square POS Sync",
+  "icon": "◻️",
+  "cat": "connect",
+  "price": 0,
+  "desc": "Pulls sales and items from Square into your data layer — feeds analytics, automations and the AI. Connects via OAuth.",
+  "setup": [
+    {
+      "key": "location",
+      "label": "Square location name",
+      "type": "text"
+    }
+  ]
+}

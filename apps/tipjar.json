@@ -1,0 +1,19 @@
+{
+  "id": "tipjar",
+  "name": "Tip Jar",
+  "icon": "💸",
+  "cat": "engage",
+  "price": 0,
+  "desc": "A simple tip button using your own payment links.",
+  "block": {
+    "title": "Leave a Tip",
+    "sub": "Support us directly"
+  },
+  "setup": [
+    {
+      "key": "url",
+      "label": "Your tip link (Venmo / CashApp / Stripe)",
+      "type": "text"
+    }
+  ]
+}

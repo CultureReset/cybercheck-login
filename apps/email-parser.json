@@ -1,0 +1,22 @@
+{
+  "id": "email-parser",
+  "name": "Platform Sync (Email)",
+  "icon": "📥",
+  "cat": "connect",
+  "price": 0,
+  "desc": "Forward confirmation emails from Airbnb, FareHarbor, VRBO, OpenTable — any platform — and bookings appear here automatically. No APIs, no permission needed.",
+  "setup": [
+    {
+      "key": "platforms",
+      "label": "Which platforms do you get booking emails from?",
+      "type": "text",
+      "ph": "e.g. FareHarbor, Airbnb"
+    },
+    {
+      "key": "note",
+      "label": "Your forwarding address is created on activation",
+      "type": "static",
+      "def": "gcr-yourbusiness@parse.cybercheckinc.com"
+    }
+  ]
+}

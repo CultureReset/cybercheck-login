@@ -1,0 +1,32 @@
+{
+  "id": "customers",
+  "name": "Customers (CRM)",
+  "icon": "👥",
+  "cat": "operate",
+  "price": 0,
+  "desc": "Every customer, their history and contact info in one list.",
+  "dataKey": "customers",
+  "setup": [],
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "email",
+      "label": "Email",
+      "type": "text"
+    },
+    {
+      "key": "notes",
+      "label": "Notes",
+      "type": "textarea"
+    }
+  ]
+}

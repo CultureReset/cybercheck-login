@@ -1,0 +1,76 @@
+{
+  "id": "book-dolphin",
+  "name": "Cruise & Tour Tickets",
+  "icon": "🐬",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Per-seat ticketing for dolphin cruises, sunset tours and group trips.",
+  "block": {
+    "title": "Get Tickets",
+    "sub": "Adults & kids pricing, instant confirmation"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Get Tickets"
+    },
+    {
+      "key": "adult",
+      "label": "Adult price ($)",
+      "type": "number",
+      "def": "35"
+    },
+    {
+      "key": "kid",
+      "label": "Kid price ($)",
+      "type": "number",
+      "def": "20"
+    }
+  ],
+  "dataKey": "tour_tickets",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Departure",
+      "type": "text"
+    },
+    {
+      "key": "adults",
+      "label": "Adults",
+      "type": "number"
+    },
+    {
+      "key": "kids",
+      "label": "Kids",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "paid",
+        "boarded",
+        "cancelled"
+      ]
+    }
+  ]
+}

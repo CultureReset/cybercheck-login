@@ -1,0 +1,38 @@
+{
+  "id": "waitlist",
+  "name": "Waitlist",
+  "icon": "⏳",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Collect names when you are fully booked. Text them when a spot opens.",
+  "block": {
+    "title": "Join the Waitlist",
+    "sub": "Get texted when a spot opens"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Join the Waitlist"
+    }
+  ],
+  "dataKey": "waitlist",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "wants",
+      "label": "Wants",
+      "type": "text"
+    }
+  ]
+}

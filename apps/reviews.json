@@ -1,0 +1,43 @@
+{
+  "id": "reviews",
+  "name": "Verified Reviews",
+  "icon": "⭐",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Collect reviews tied to real visits and bookings. Show the proof.",
+  "block": {
+    "title": "Verified Reviews",
+    "sub": "Real customer feedback"
+  },
+  "setup": [
+    {
+      "key": "ask_after",
+      "label": "Ask for a review after",
+      "type": "select",
+      "options": [
+        "Every booking",
+        "Only completed bookings",
+        "Manual only"
+      ],
+      "def": "Only completed bookings"
+    }
+  ],
+  "dataKey": "reviews",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Customer",
+      "type": "text"
+    },
+    {
+      "key": "stars",
+      "label": "Stars (1–5)",
+      "type": "number"
+    },
+    {
+      "key": "text",
+      "label": "Review",
+      "type": "textarea"
+    }
+  ]
+}

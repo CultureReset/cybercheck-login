@@ -1,0 +1,45 @@
+{
+  "id": "specials",
+  "name": "Specials & Happy Hour",
+  "icon": "🔥",
+  "cat": "content",
+  "price": 0,
+  "desc": "Daily specials and happy hour that update in seconds.",
+  "block": {
+    "title": "Today's Specials",
+    "sub": "Specials & happy hour, live"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Section title",
+      "type": "text",
+      "def": "Today's Specials"
+    }
+  ],
+  "dataKey": "specials",
+  "fields": [
+    {
+      "key": "title",
+      "label": "Special",
+      "type": "text"
+    },
+    {
+      "key": "detail",
+      "label": "Details",
+      "type": "text"
+    },
+    {
+      "key": "days",
+      "label": "Days",
+      "type": "text",
+      "ph": "Mon–Fri"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text",
+      "ph": "3–6 PM"
+    }
+  ]
+}

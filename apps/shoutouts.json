@@ -1,0 +1,70 @@
+{
+  "id": "shoutouts",
+  "name": "Paid Shoutouts",
+  "icon": "📣",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Fans pay for a live shoutout from the stage or booth.",
+  "block": {
+    "title": "Request a Shoutout",
+    "sub": "Get a live shoutout tonight"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Request a Shoutout"
+    },
+    {
+      "key": "price",
+      "label": "Shoutout price ($)",
+      "type": "number",
+      "def": "10"
+    },
+    {
+      "key": "approval",
+      "label": "Approve before reading?",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "def": "Yes"
+    }
+  ],
+  "dataKey": "shoutouts",
+  "fields": [
+    {
+      "key": "to",
+      "label": "Shoutout to",
+      "type": "text"
+    },
+    {
+      "key": "message",
+      "label": "Message",
+      "type": "textarea"
+    },
+    {
+      "key": "from",
+      "label": "From",
+      "type": "text"
+    },
+    {
+      "key": "paid",
+      "label": "Paid ($)",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "approved",
+        "read",
+        "declined"
+      ]
+    }
+  ]
+}

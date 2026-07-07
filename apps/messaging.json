@@ -1,0 +1,22 @@
+{
+  "id": "messaging",
+  "name": "SMS & Email",
+  "icon": "💬",
+  "cat": "operate",
+  "price": 0,
+  "desc": "Booking confirmations, reminders and campaigns. Templates included.",
+  "setup": [
+    {
+      "key": "confirm_tpl",
+      "label": "Booking confirmation text",
+      "type": "textarea",
+      "def": "Hi {name}! Your booking at {business} is confirmed for {date}. Reply here with questions."
+    },
+    {
+      "key": "remind_tpl",
+      "label": "Reminder text",
+      "type": "textarea",
+      "def": "Reminder: your booking at {business} is today at {time}!"
+    }
+  ]
+}

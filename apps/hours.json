@@ -1,0 +1,25 @@
+{
+  "id": "hours",
+  "name": "Hours & Location",
+  "icon": "🕒",
+  "cat": "content",
+  "price": 0,
+  "desc": "Open hours, address, directions and parking notes.",
+  "block": {
+    "title": "Hours, Location & Directions",
+    "sub": "When and where to find us"
+  },
+  "setup": [
+    {
+      "key": "address",
+      "label": "Address",
+      "type": "text"
+    },
+    {
+      "key": "hours",
+      "label": "Hours (short)",
+      "type": "text",
+      "ph": "Mon–Sun 9 AM – 6 PM"
+    }
+  ]
+}

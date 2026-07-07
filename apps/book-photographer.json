@@ -1,0 +1,80 @@
+{
+  "id": "book-photographer",
+  "name": "Photographer Sessions",
+  "icon": "📷",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Session booking with location, package and model release.",
+  "block": {
+    "title": "Book a Session",
+    "sub": "Beach, family, proposal & wedding shoots"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Book a Session"
+    },
+    {
+      "key": "deposit",
+      "label": "Deposit % to hold the date",
+      "type": "number",
+      "def": "25"
+    },
+    {
+      "key": "release",
+      "label": "Require model release?",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "def": "Yes"
+    }
+  ],
+  "dataKey": "photo_sessions",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Client",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "session",
+      "label": "Session type",
+      "type": "text"
+    },
+    {
+      "key": "location",
+      "label": "Location",
+      "type": "text"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "deposit paid",
+        "confirmed",
+        "delivered"
+      ]
+    }
+  ]
+}

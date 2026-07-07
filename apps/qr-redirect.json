@@ -1,0 +1,28 @@
+{
+  "id": "qr-redirect",
+  "name": "Dynamic QR Redirects",
+  "icon": "📲",
+  "cat": "operate",
+  "price": 0,
+  "desc": "Print a QR once, change where it points any time — tables, docks, flyers.",
+  "dataKey": "qr_redirects",
+  "setup": [],
+  "fields": [
+    {
+      "key": "label",
+      "label": "QR label",
+      "type": "text",
+      "ph": "Table 14 / Dock A"
+    },
+    {
+      "key": "destination",
+      "label": "Destination URL",
+      "type": "text"
+    },
+    {
+      "key": "scans",
+      "label": "Scans",
+      "type": "number"
+    }
+  ]
+}

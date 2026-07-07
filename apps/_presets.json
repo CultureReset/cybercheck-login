@@ -1,0 +1,113 @@
+[
+  {
+    "id": "restaurant",
+    "em": "🍽️",
+    "name": "Restaurant / Bar",
+    "mods": [
+      "menu",
+      "specials",
+      "events",
+      "booking",
+      "reviews",
+      "hours",
+      "gallery",
+      "messaging",
+      "customers",
+      "qr-codes"
+    ],
+    "type": "Restaurant"
+  },
+  {
+    "id": "charter",
+    "em": "🎣",
+    "name": "Charter / Tours",
+    "mods": [
+      "services",
+      "booking",
+      "availability",
+      "waivers",
+      "payments",
+      "reviews",
+      "hours",
+      "gallery",
+      "messaging",
+      "customers",
+      "email-parser"
+    ],
+    "type": "Charter"
+  },
+  {
+    "id": "rental",
+    "em": "🚤",
+    "name": "Boat / Rentals",
+    "mods": [
+      "services",
+      "booking",
+      "availability",
+      "waivers",
+      "payments",
+      "faq",
+      "hours",
+      "gallery",
+      "messaging",
+      "customers"
+    ],
+    "type": "Rentals"
+  },
+  {
+    "id": "salon",
+    "em": "✂️",
+    "name": "Salon / Services",
+    "mods": [
+      "services",
+      "booking",
+      "availability",
+      "loyalty",
+      "reviews",
+      "hours",
+      "messaging",
+      "customers"
+    ],
+    "type": "Salon"
+  },
+  {
+    "id": "creator",
+    "em": "🎤",
+    "name": "Artist / Creator",
+    "mods": [
+      "events",
+      "song-request",
+      "tipjar",
+      "links",
+      "gallery",
+      "forms",
+      "messaging"
+    ],
+    "type": "Artist"
+  },
+  {
+    "id": "lodging",
+    "em": "🏖️",
+    "name": "Condo / Lodging",
+    "mods": [
+      "services",
+      "availability",
+      "booking",
+      "faq",
+      "payments",
+      "email-parser",
+      "messaging",
+      "customers"
+    ],
+    "type": "Lodging"
+  },
+  {
+    "id": "blank",
+    "em": "🧩",
+    "name": "Start Blank",
+    "mods": [
+      "links"
+    ],
+    "type": "Business"
+  }
+]

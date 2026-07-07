@@ -1,0 +1,71 @@
+{
+  "id": "reserve-table",
+  "name": "Table Reservations",
+  "icon": "🪑",
+  "cat": "booking",
+  "price": 0,
+  "desc": "Party size, date, time, seating preference — confirmed by SMS.",
+  "block": {
+    "title": "Reserve a Table",
+    "sub": "Party size, date & seating"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Reserve a Table"
+    }
+  ],
+  "dataKey": "reservations",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "party",
+      "label": "Party size",
+      "type": "number"
+    },
+    {
+      "key": "date",
+      "label": "Date",
+      "type": "date"
+    },
+    {
+      "key": "time",
+      "label": "Time",
+      "type": "text"
+    },
+    {
+      "key": "seating",
+      "label": "Seating",
+      "type": "select",
+      "options": [
+        "Any",
+        "Indoor",
+        "Patio",
+        "Bar"
+      ]
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "seated",
+        "no-show",
+        "cancelled"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": "forms",
+  "name": "Forms & Lead Capture",
+  "icon": "📝",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Capture interest before customers disappear — name, phone, what they wanted.",
+  "block": {
+    "title": "Get a Quote",
+    "sub": "Tell us what you need"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Get a Quote"
+    }
+  ],
+  "dataKey": "leads",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "wants",
+      "label": "Interested in",
+      "type": "text"
+    },
+    {
+      "key": "source",
+      "label": "Source",
+      "type": "text",
+      "ph": "QR / social / GCR"
+    }
+  ]
+}
