@@ -1,4 +1,4 @@
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xbptmkpbiqzvxptjkfoi.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mkepugvdlktfsossumox.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 module.exports = async function handler(req, res) {
