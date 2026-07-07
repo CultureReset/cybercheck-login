@@ -1,0 +1,18 @@
+{
+  "id": "highlight",
+  "name": "Highlight / Offer",
+  "icon": "📣",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "A callout box for a group rate, seasonal deal or headline offer. Optional price and button. Universal.",
+  "section": { "layout": "highlight", "singleton": true },
+  "block": { "title": "Highlight", "sub": "Featured offer or callout" },
+  "setup": [
+    { "key": "heading", "label": "Heading", "type": "text", "ph": "Group Rate" },
+    { "key": "body", "label": "Details", "type": "textarea", "ph": "Parties of 6+ save 15%" },
+    { "key": "price", "label": "Price / badge (optional)", "type": "text", "ph": "$45/person" },
+    { "key": "button_label", "label": "Button text (optional)", "type": "text" },
+    { "key": "button_target", "label": "Button opens (app id or URL)", "type": "text" }
+  ]
+}

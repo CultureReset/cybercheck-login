@@ -1,0 +1,17 @@
+{
+  "id": "about",
+  "name": "About Section",
+  "icon": "ℹ️",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Tell your story — a heading, a paragraph and a photo. Any business, any industry.",
+  "section": { "layout": "about", "singleton": true },
+  "block": { "title": "About", "sub": "Your story + a photo" },
+  "setup": [
+    { "key": "heading", "label": "Heading", "type": "text", "def": "About Us" },
+    { "key": "body", "label": "Body text", "type": "textarea", "ph": "Family-owned since 2012…" },
+    { "key": "image", "label": "Photo", "type": "image" },
+    { "key": "align", "label": "Photo side", "type": "select", "options": ["Image left", "Image right"], "def": "Image right" }
+  ]
+}

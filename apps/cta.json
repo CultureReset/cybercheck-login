@@ -1,0 +1,17 @@
+{
+  "id": "cta",
+  "name": "Call-to-Action Banner",
+  "icon": "🎯",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "A bold banner with a headline and one button — drives the visitor to book, call or buy. Any industry.",
+  "section": { "layout": "cta", "singleton": true },
+  "block": { "title": "Call-to-Action", "sub": "Bold booking prompt" },
+  "setup": [
+    { "key": "headline", "label": "Headline", "type": "text", "def": "Ready when you are" },
+    { "key": "subhead", "label": "Sub-text", "type": "text", "ph": "Reserve your spot in under a minute" },
+    { "key": "button_label", "label": "Button text", "type": "text", "def": "Book Now" },
+    { "key": "button_target", "label": "Button opens (app id or URL)", "type": "text" }
+  ]
+}
