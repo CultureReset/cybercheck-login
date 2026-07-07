@@ -219,6 +219,7 @@
 
 <div id="toast"></div>
 
+<script src="js/app-registry.js"></script>
 <script>
 'use strict';
 /* ============================================================
@@ -266,286 +267,41 @@ function apiSync(){
 }
 
 /* ============================================================
-   MODULE CATALOG
-   Every tool is a module. Modules with `block` render a section
-   on the public page. `setup` questions ARE the install wizard.
-   `dataKey`+`fields` give a module a generic CRUD panel.
+   APP CATALOG — loaded from js/app-registry.js (pure data).
+   The dashboard is a shell: nothing below is specific to any
+   tool, industry, or business.
    ============================================================ */
-var MODULES = [
-  /* ── BOOKING ── */
-  { id:'booking', name:'Bookings', icon:'📅', cat:'booking', price:0,
-    desc:'Customers pick a service, date and time, and request or book online.',
-    block:{ title:'Book Now', sub:'Check availability & reserve online' },
-    setup:[
-      {key:'label', label:'Button text on your page', type:'text', def:'Book Now'},
-      {key:'mode', label:'How should bookings work?', type:'select', options:['Instant book','Request first (you confirm by SMS)','Send to my existing booking link'], def:'Request first (you confirm by SMS)'},
-      {key:'external_url', label:'Existing booking link (if any)', type:'text', def:'', showIf:{key:'mode', val:'Send to my existing booking link'}},
-      {key:'notify', label:'Send new booking alerts to', type:'text', def:'', ph:'Phone or email'}
-    ],
-    dataKey:'bookings',
-    fields:[
-      {key:'customer', label:'Customer name', type:'text'},
-      {key:'phone', label:'Phone', type:'text'},
-      {key:'service', label:'Service / item', type:'text'},
-      {key:'date', label:'Date', type:'date'},
-      {key:'time', label:'Time', type:'text'},
-      {key:'party', label:'Party size', type:'number'},
-      {key:'status', label:'Status', type:'select', options:['pending','confirmed','completed','cancelled']}
-    ] },
-  { id:'services', name:'Services & Pricing', icon:'🛠️', cat:'booking', price:0,
-    desc:'Your bookable services, trips, rentals or sessions with prices and durations.',
-    block:{ title:'Rates & Packages', sub:'Services, durations and pricing' },
-    setup:[{key:'label', label:'Section title on your page', type:'text', def:'Rates & Packages'}],
-    dataKey:'services',
-    fields:[
-      {key:'name', label:'Service name', type:'text'},
-      {key:'price', label:'Price ($)', type:'number'},
-      {key:'duration', label:'Duration', type:'text'},
-      {key:'capacity', label:'Max guests', type:'number'},
-      {key:'desc', label:'Description', type:'textarea'}
-    ] },
-  { id:'availability', name:'Availability Calendar', icon:'🗓️', cat:'booking', price:0,
-    desc:'Open slots, blocked dates and capacity. Powers "Live Availability" on your page.',
-    block:{ title:'Live Availability', sub:'See open dates and time slots' },
-    setup:[
-      {key:'granularity', label:'How do you sell time?', type:'select', options:['Time slots per day','Whole days','Nights (check-in/out)'], def:'Time slots per day'},
-      {key:'capacity', label:'Default capacity per slot', type:'number', def:'1'}
-    ],
-    dataKey:'blocks',
-    fields:[
-      {key:'date', label:'Date', type:'date'},
-      {key:'kind', label:'Type', type:'select', options:['blocked','open','booked']},
-      {key:'note', label:'Note', type:'text'}
-    ] },
-  { id:'waivers', name:'Digital Waivers', icon:'✍️', cat:'booking', price:0,
-    desc:'Liability waivers signed at booking. Stored and searchable.',
-    setup:[{key:'text', label:'Waiver text (short version)', type:'textarea', def:'I acknowledge the risks involved and release the business from liability.'}],
-    dataKey:'waivers',
-    fields:[
-      {key:'customer', label:'Customer', type:'text'},
-      {key:'date', label:'Signed date', type:'date'},
-      {key:'status', label:'Status', type:'select', options:['sent','signed']}
-    ] },
-  { id:'waitlist', name:'Waitlist', icon:'⏳', cat:'booking', price:0,
-    desc:'Collect names when you are fully booked. Text them when a spot opens.',
-    block:{ title:'Join the Waitlist', sub:'Get texted when a spot opens' },
-    setup:[{key:'label', label:'Button text', type:'text', def:'Join the Waitlist'}],
-    dataKey:'waitlist',
-    fields:[
-      {key:'name', label:'Name', type:'text'},
-      {key:'phone', label:'Phone', type:'text'},
-      {key:'wants', label:'Wants', type:'text'}
-    ] },
+var MODULES = window.CC_SEED_APPS || [];
+var CATS    = window.CC_APP_CATS  || [];
+var PRESETS = window.CC_PRESETS   || [];
 
-  /* ── CONTENT ── */
-  { id:'menu', name:'Menu', icon:'🍽️', cat:'content', price:0,
-    desc:'Digital menu with sections, items, prices. One QR code, always current.',
-    block:{ title:'Full Menu', sub:'Browse the menu with prices' },
-    setup:[
-      {key:'label', label:'Section title', type:'text', def:'Full Menu'},
-      {key:'style', label:'Menu style', type:'select', options:['Text list','With photos'], def:'Text list'}
-    ],
-    dataKey:'menu_items',
-    fields:[
-      {key:'section', label:'Menu section', type:'text', ph:'Appetizers'},
-      {key:'name', label:'Item name', type:'text'},
-      {key:'price', label:'Price ($)', type:'number'},
-      {key:'desc', label:'Description', type:'textarea'}
-    ] },
-  { id:'specials', name:'Specials & Happy Hour', icon:'🔥', cat:'content', price:0,
-    desc:'Daily specials and happy hour that update in seconds.',
-    block:{ title:"Today's Specials", sub:'Specials & happy hour, live' },
-    setup:[{key:'label', label:'Section title', type:'text', def:"Today's Specials"}],
-    dataKey:'specials',
-    fields:[
-      {key:'title', label:'Special', type:'text'},
-      {key:'detail', label:'Details', type:'text'},
-      {key:'days', label:'Days', type:'text', ph:'Mon–Fri'},
-      {key:'time', label:'Time', type:'text', ph:'3–6 PM'}
-    ] },
-  { id:'events', name:'Events & Live Music', icon:'🎶', cat:'content', price:0,
-    desc:'Shows, trivia nights, live music schedule.',
-    block:{ title:'Live Music & Events', sub:'See what’s coming up' },
-    setup:[{key:'label', label:'Section title', type:'text', def:'Live Music & Events'}],
-    dataKey:'events',
-    fields:[
-      {key:'title', label:'Event / artist', type:'text'},
-      {key:'date', label:'Date', type:'date'},
-      {key:'time', label:'Time', type:'text'},
-      {key:'detail', label:'Details', type:'text'}
-    ] },
-  { id:'gallery', name:'Gallery', icon:'📸', cat:'content', price:0,
-    desc:'Photos of your food, boats, work, or venue.',
-    block:{ title:'Gallery', sub:'Photos and highlights' },
-    setup:[{key:'label', label:'Section title', type:'text', def:'Gallery'}],
-    dataKey:'photos',
-    fields:[
-      {key:'url', label:'Image URL', type:'text'},
-      {key:'caption', label:'Caption', type:'text'}
-    ] },
-  { id:'links', name:'Custom Links', icon:'🔗', cat:'content', price:0,
-    desc:'Add any link to your page — socials, ordering, anything.',
-    block:{ title:'More Links', sub:'Everything else in one place' },
-    setup:[],
-    dataKey:'links',
-    fields:[
-      {key:'title', label:'Link title', type:'text'},
-      {key:'url', label:'URL', type:'text'},
-      {key:'desc', label:'Short description', type:'text'}
-    ] },
-  { id:'hours', name:'Hours & Location', icon:'🕒', cat:'content', price:0,
-    desc:'Open hours, address, directions and parking notes.',
-    block:{ title:'Hours, Location & Directions', sub:'When and where to find us' },
-    setup:[
-      {key:'address', label:'Address', type:'text'},
-      {key:'hours', label:'Hours (short)', type:'text', ph:'Mon–Sun 9 AM – 6 PM'}
-    ] },
-  { id:'faq', name:'FAQ / What’s Included', icon:'🧾', cat:'content', price:0,
-    desc:'Answer the questions customers always ask.',
-    block:{ title:'What’s Included', sub:'Policies and what to bring' },
-    setup:[{key:'label', label:'Section title', type:'text', def:'What’s Included'}],
-    dataKey:'faqs',
-    fields:[
-      {key:'q', label:'Question', type:'text'},
-      {key:'a', label:'Answer', type:'textarea'}
-    ] },
-
-  /* ── ENGAGE ── */
-  { id:'reviews', name:'Verified Reviews', icon:'⭐', cat:'engage', price:0,
-    desc:'Collect reviews tied to real visits and bookings. Show the proof.',
-    block:{ title:'Verified Reviews', sub:'Real customer feedback' },
-    setup:[{key:'ask_after', label:'Ask for a review after', type:'select', options:['Every booking','Only completed bookings','Manual only'], def:'Only completed bookings'}],
-    dataKey:'reviews',
-    fields:[
-      {key:'name', label:'Customer', type:'text'},
-      {key:'stars', label:'Stars (1–5)', type:'number'},
-      {key:'text', label:'Review', type:'textarea'}
-    ] },
-  { id:'song-request', name:'Song Requests', icon:'🎵', cat:'engage', price:0,
-    desc:'Let the crowd request songs, with optional tips. Built for musicians and venues.',
-    block:{ title:'Request a Song', sub:'Send a request to the stage' },
-    setup:[
-      {key:'label', label:'Button text', type:'text', def:'Request a Song'},
-      {key:'to', label:'Send requests to', type:'select', options:['Artist','Venue manager','Both'], def:'Artist'},
-      {key:'approval', label:'Require approval before display?', type:'select', options:['Yes','No'], def:'Yes'}
-    ],
-    dataKey:'song_requests',
-    fields:[
-      {key:'song', label:'Song', type:'text'},
-      {key:'from', label:'From', type:'text'},
-      {key:'tip', label:'Tip ($)', type:'number'}
-    ] },
-  { id:'tipjar', name:'Tip Jar', icon:'💸', cat:'engage', price:0,
-    desc:'A simple tip button using your own payment links.',
-    block:{ title:'Leave a Tip', sub:'Support us directly' },
-    setup:[{key:'url', label:'Your tip link (Venmo / CashApp / Stripe)', type:'text'}] },
-  { id:'loyalty', name:'Loyalty & Perks', icon:'💚', cat:'engage', price:0,
-    desc:'Points, perks and repeat-customer rewards.',
-    block:{ title:'Loyalty Rewards', sub:'Earn perks every visit' },
-    setup:[{key:'offer', label:'Starting perk', type:'text', def:'Leave a review → earn 50 points'}],
-    dataKey:'loyalty_members',
-    fields:[
-      {key:'name', label:'Member', type:'text'},
-      {key:'phone', label:'Phone', type:'text'},
-      {key:'points', label:'Points', type:'number'}
-    ] },
-  { id:'forms', name:'Forms & Lead Capture', icon:'📝', cat:'engage', price:0,
-    desc:'Capture interest before customers disappear — name, phone, what they wanted.',
-    block:{ title:'Get a Quote', sub:'Tell us what you need' },
-    setup:[{key:'label', label:'Button text', type:'text', def:'Get a Quote'}],
-    dataKey:'leads',
-    fields:[
-      {key:'name', label:'Name', type:'text'},
-      {key:'phone', label:'Phone', type:'text'},
-      {key:'wants', label:'Interested in', type:'text'},
-      {key:'source', label:'Source', type:'text', ph:'QR / social / GCR'}
-    ] },
-
-  /* ── OPERATE ── */
-  { id:'customers', name:'Customers (CRM)', icon:'👥', cat:'operate', price:0,
-    desc:'Every customer, their history and contact info in one list.',
-    dataKey:'customers',
-    setup:[],
-    fields:[
-      {key:'name', label:'Name', type:'text'},
-      {key:'phone', label:'Phone', type:'text'},
-      {key:'email', label:'Email', type:'text'},
-      {key:'notes', label:'Notes', type:'textarea'}
-    ] },
-  { id:'messaging', name:'SMS & Email', icon:'💬', cat:'operate', price:0,
-    desc:'Booking confirmations, reminders and campaigns. Templates included.',
-    setup:[
-      {key:'confirm_tpl', label:'Booking confirmation text', type:'textarea', def:'Hi {name}! Your booking at {business} is confirmed for {date}. Reply here with questions.'},
-      {key:'remind_tpl', label:'Reminder text', type:'textarea', def:'Reminder: your booking at {business} is today at {time}!'}
-    ] },
-  { id:'coupons', name:'Coupons & Promos', icon:'🎟️', cat:'operate', price:0,
-    desc:'Discount codes and limited-time offers.',
-    dataKey:'coupons',
-    setup:[],
-    fields:[
-      {key:'code', label:'Code', type:'text'},
-      {key:'off', label:'Discount', type:'text', ph:'10% or $5'},
-      {key:'until', label:'Valid until', type:'date'}
-    ] },
-  { id:'staff', name:'Staff', icon:'👔', cat:'operate', price:0,
-    desc:'Captains, stylists, servers — roles and contact info.',
-    dataKey:'staff',
-    setup:[],
-    fields:[
-      {key:'name', label:'Name', type:'text'},
-      {key:'role', label:'Role', type:'text'},
-      {key:'phone', label:'Phone', type:'text'}
-    ] },
-  { id:'analytics', name:'Analytics', icon:'📈', cat:'operate', price:0,
-    desc:'Views, clicks, scans, bookings and where they came from.',
-    setup:[] },
-
-  /* ── CONNECT ── */
-  { id:'payments', name:'Payments (Stripe/Square)', icon:'💳', cat:'connect', price:0,
-    desc:'Connect your own Stripe or Square. Your money goes directly to you.',
-    setup:[
-      {key:'provider', label:'Payment provider', type:'select', options:['Stripe','Square','Clover','None yet'], def:'Stripe'},
-      {key:'mode', label:'Collect at booking', type:'select', options:['Full payment','Deposit only','No payment (pay on site)'], def:'Deposit only'},
-      {key:'deposit', label:'Deposit %', type:'number', def:'25'}
-    ] },
-  { id:'email-parser', name:'Platform Sync (Email)', icon:'📥', cat:'connect', price:0,
-    desc:'Forward confirmation emails from Airbnb, FareHarbor, VRBO, OpenTable — any platform — and bookings appear here automatically. No APIs, no permission needed.',
-    setup:[
-      {key:'platforms', label:'Which platforms do you get booking emails from?', type:'text', ph:'e.g. FareHarbor, Airbnb'},
-      {key:'note', label:'Your forwarding address is created on activation', type:'static', def:'gcr-yourbusiness@parse.cybercheckinc.com'}
-    ] },
-  { id:'gcr-listing', name:'Gulf Coast Radar Listing', icon:'📍', cat:'connect', price:0,
-    desc:'Appear in GCR discovery — search, categories and live availability.',
-    setup:[{key:'category', label:'GCR category', type:'select', options:['Restaurant','Charter','Boat Rental','Activity','Music/Artist','Transportation','Other'], def:'Restaurant'}] },
-  { id:'qr-codes', name:'QR Codes', icon:'📲', cat:'connect', price:0,
-    desc:'QR codes for tables, docks, flyers — all pointing at your page.',
-    setup:[] },
-  { id:'ai-concierge', name:'AI Concierge', icon:'🤖', cat:'connect', price:29,
-    desc:'AI that answers customer questions from your verified data only.',
-    block:{ title:'Ask Us Anything', sub:'Instant answers, 24/7' },
-    setup:[{key:'tone', label:'Tone', type:'select', options:['Friendly','Professional','Fun'], def:'Friendly'}] }
-];
-
-var CATS = [
-  {id:'booking', name:'Booking'},
-  {id:'content', name:'Content'},
-  {id:'engage',  name:'Engage'},
-  {id:'operate', name:'Operate'},
-  {id:'connect', name:'Connect'}
-];
-
-/* Industry presets = starter bundles ONLY. Not hardwiring. */
-var PRESETS = [
-  { id:'restaurant', em:'🍽️', name:'Restaurant / Bar', mods:['menu','specials','events','booking','reviews','hours','gallery','messaging','customers','qr-codes'], type:'Restaurant' },
-  { id:'charter', em:'🎣', name:'Charter / Tours', mods:['services','booking','availability','waivers','payments','reviews','hours','gallery','messaging','customers','email-parser'], type:'Charter' },
-  { id:'rental', em:'🚤', name:'Boat / Rentals', mods:['services','booking','availability','waivers','payments','faq','hours','gallery','messaging','customers'], type:'Rentals' },
-  { id:'salon', em:'✂️', name:'Salon / Services', mods:['services','booking','availability','loyalty','reviews','hours','messaging','customers'], type:'Salon' },
-  { id:'creator', em:'🎤', name:'Artist / Creator', mods:['events','song-request','tipjar','links','gallery','forms','messaging'], type:'Artist' },
-  { id:'lodging', em:'🏖️', name:'Condo / Lodging', mods:['services','availability','booking','faq','payments','email-parser','messaging','customers'], type:'Lodging' },
-  { id:'blank', em:'🧩', name:'Start Blank', mods:['links'], type:'Business' }
-];
-
-function mod(id){ for(var i=0;i<MODULES.length;i++) if(MODULES[i].id===id) return MODULES[i]; return null; }
+/* ============================================================
+   OPEN APP REGISTRY
+   MODULES above is only the SEED catalog (author: CyberCheck).
+   Anyone can publish new apps — blocks, data tools, automations —
+   through the App Studio. Published apps live in the registry and
+   are installable by any business exactly like seed apps.
+   Backend contract: module_manifest table (gcr-api-clean).
+   ============================================================ */
+var REG_KEY = 'cc_registry_v1';
+var customApps = loadRegistry();
+function loadRegistry(){
+  try{ var r = localStorage.getItem(REG_KEY); if(r) return JSON.parse(r); }catch(e){}
+  return [];
+}
+function saveRegistry(){
+  try{ localStorage.setItem(REG_KEY, JSON.stringify(customApps)); }catch(e){}
+  var token = localStorage.getItem('cc_admin_token') || localStorage.getItem('cc_token');
+  if(token){
+    fetch(API + '/api/modules/publish', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' },
+      body: JSON.stringify({ apps: customApps })
+    }).catch(function(){});
+  }
+}
+function allApps(){ return MODULES.concat(customApps); }
+function mod(id){ var L=allApps(); for(var i=0;i<L.length;i++) if(L[i].id===id) return L[i]; return null; }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show')},2400); }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
@@ -557,7 +313,8 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 var CORE_PAGES = [
   {id:'overview', name:'Overview', icon:'📊'},
   {id:'mypage',   name:'My Page',  icon:'📱'},
-  {id:'appstore', name:'App Store',icon:'🛍️'}
+  {id:'appstore', name:'App Store',icon:'🛍️'},
+  {id:'studio',   name:'Build an App', icon:'🧪'}
 ];
 var currentPage = 'overview';
 
@@ -574,7 +331,7 @@ function renderNav(){
   }).join('');
 }
 function installedList(){
-  return MODULES.filter(function(m){ return state.installed[m.id]; })
+  return allApps().filter(function(m){ return state.installed[m.id]; })
     .sort(function(a,b){ return (state.installed[a.id].sort||0)-(state.installed[b.id].sort||0); });
 }
 function showPage(id){
@@ -592,6 +349,7 @@ function renderPage(){
   if(currentPage==='overview') host.innerHTML = pageOverview();
   else if(currentPage==='appstore') host.innerHTML = pageStore();
   else if(currentPage==='mypage') host.innerHTML = pageBuilder();
+  else if(currentPage==='studio') host.innerHTML = pageStudio();
   else host.innerHTML = pageModule(currentPage);
   if(currentPage==='mypage') renderPreview('pv-host');
 }
@@ -637,7 +395,7 @@ var storeCat = 'all', storeQ = '';
 function pageStore(){
   var chips = '<button class="chip'+(storeCat==='all'?' active':'')+'" onclick="setStoreCat(\'all\')">All</button>' +
     CATS.map(function(c){ return '<button class="chip'+(storeCat===c.id?' active':'')+'" onclick="setStoreCat(\''+c.id+'\')">'+c.name+'</button>'; }).join('');
-  var list = MODULES.filter(function(m){
+  var list = allApps().filter(function(m){
     if(storeCat!=='all' && m.cat!==storeCat) return false;
     if(storeQ && (m.name+' '+m.desc).toLowerCase().indexOf(storeQ)===-1) return false;
     return true;
@@ -645,18 +403,22 @@ function pageStore(){
   var cards = list.map(function(m){
     var inst = !!state.installed[m.id];
     var price = m.price>0 ? '$'+m.price+'/mo' : 'Free';
+    var author = m.author || 'CyberCheck';
+    var typeBadge = m.type==='automation' ? '⚡ automation' : m.type==='tool' ? '🗂️ tool' : '🧩 block';
     var btn = inst
       ? '<button class="btn btn-danger btn-sm" onclick="uninstall(\''+m.id+'\')">Remove</button>'
       : '<button class="btn btn-primary btn-sm" onclick="startInstall(\''+m.id+'\')">Install</button>';
     return '<div class="app-card'+(inst?' installed':'')+'">'+
-      '<div class="app-top"><div class="app-icon">'+m.icon+'</div><div><b>'+esc(m.name)+'</b><span class="cat">'+m.cat+'</span></div>'+
+      '<div class="app-top"><div class="app-icon">'+m.icon+'</div><div><b>'+esc(m.name)+'</b><span class="cat">'+m.cat+' · '+typeBadge+'</span></div>'+
       (inst?'<span style="margin-left:auto;font-size:11px;color:var(--primary);font-weight:800">✓ Installed</span>':'')+'</div>'+
       '<div class="app-desc">'+esc(m.desc)+'</div>'+
-      '<div class="app-foot"><span class="price">'+price+'</span>'+btn+'</div></div>';
+      '<div class="app-foot"><span class="price">'+price+' · by '+esc(author)+(m.version?' · v'+m.version:'')+'</span>'+btn+'</div></div>';
   }).join('');
   return '<div class="page active">'+
-    '<div class="page-head"><div><h1>App Store</h1><p>Install the tools you need. Setup takes a few questions, you preview it live, then publish.</p></div>'+
-    '<input style="max-width:240px" placeholder="🔍 Search apps…" value="'+esc(storeQ)+'" oninput="storeQ=this.value.toLowerCase();renderPage()"></div>'+
+    '<div class="page-head"><div><h1>App Store</h1><p>Apps built by CyberCheck and the community. Build something once — every business on the platform can reuse it.</p></div>'+
+    '<div style="display:flex;gap:10px;align-items:center">'+
+    '<input style="max-width:220px" placeholder="🔍 Search apps…" value="'+esc(storeQ)+'" oninput="storeQ=this.value.toLowerCase();renderPage()">'+
+    '<button class="btn btn-primary" onclick="showPage(\'studio\')">🧪 Build an App</button></div></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'+chips+'</div>'+
     '<div class="store-grid">'+cards+'</div></div>';
 }
@@ -852,13 +614,17 @@ function pageModule(id){
       '</div>';
   }
 
+  var extra = '';
+  if(id==='ai-concierge') extra = aiExtra();
+  if(m.type==='automation') extra = autoExtra(m);
+
   return '<div class="page active">'+
     '<div class="page-head"><div><h1>'+m.icon+' '+esc(m.name)+'</h1><p>'+esc(m.desc)+'</p></div>'+
     '<div style="display:flex;gap:10px">'+
     (m.block?'<button class="btn btn-outline" onclick="showPage(\'mypage\')">📱 View on My Page</button>':'')+
     '<button class="btn btn-danger" onclick="uninstall(\''+id+'\')">Remove Tool</button></div></div>'+
     (cfgHtml ? '<div class="card"><b style="font-size:14px">Settings</b>'+cfgHtml+'</div>' : '')+
-    dataHtml+'</div>';
+    dataHtml+extra+'</div>';
 }
 function updateCfg(id,key,val){ state.installed[id].config[key]=val; save(); toast('Saved'); }
 
@@ -914,15 +680,266 @@ function bindRecSave(){
     if(!recCtx) return;
     var m = recCtx.m;
     if(!state.data[m.dataKey]) state.data[m.dataKey]=[];
-    var rec = recCtx.idx>=0 ? state.data[m.dataKey][recCtx.idx] : {};
+    var isNew = recCtx.idx<0;
+    var rec = isNew ? {} : state.data[m.dataKey][recCtx.idx];
     m.fields.forEach(function(f){ rec[f.key] = document.getElementById('rf-'+f.key).value; });
-    if(recCtx.idx<0) state.data[m.dataKey].push(rec);
+    if(isNew){ state.data[m.dataKey].push(rec); fireTrigger(m.dataKey, rec); }
     save(); closeModal('modal-rec'); recCtx=null; renderPage(); toast('Saved');
   };
 }
 function refreshBizChip(){
   document.getElementById('biz-chip-name').textContent = state.business.name || 'Your Business';
   document.getElementById('biz-chip-type').textContent = state.business.type ? state.business.type+' · edit info' : 'Set up your business →';
+}
+
+/* ============================================================
+   AUTOMATION ENGINE
+   Automations are apps too: { automation:{trigger, action, template} }.
+   A trigger fires whenever a new record lands in that data stream —
+   whether it came from the dashboard, the public page, the email
+   parser or the POS. Build once, publish, every business can reuse.
+   ============================================================ */
+var TRIGGERS = [
+  {id:'bookings',      label:'New booking'},
+  {id:'leads',         label:'New lead captured'},
+  {id:'reviews',       label:'New review'},
+  {id:'song_requests', label:'New song request'},
+  {id:'customers',     label:'New customer'},
+  {id:'waitlist',      label:'New waitlist signup'}
+];
+var AUTO_ACTIONS = [
+  {id:'sms',    label:'Send SMS'},
+  {id:'email',  label:'Send email'},
+  {id:'notify', label:'Notify owner'}
+];
+function trigLabel(id){ var t=TRIGGERS.filter(function(x){return x.id===id})[0]; return t?t.label:id; }
+function actLabel(id){ var a=AUTO_ACTIONS.filter(function(x){return x.id===id})[0]; return a?a.label:id; }
+
+function fireTrigger(dataKey, rec){
+  var ran = 0;
+  Object.keys(state.installed).forEach(function(id){
+    var m = mod(id);
+    if(!m || m.type!=='automation' || !m.automation) return;
+    var inst = state.installed[id];
+    if(!inst.enabled || m.automation.trigger!==dataKey) return;
+    var tpl = (inst.config && inst.config.template) || m.automation.template || '';
+    var msg = tpl.replace(/\{(\w+)\}/g, function(_, k){
+      if(k==='business') return state.business.name || 'our business';
+      return rec[k]!=null ? String(rec[k]) : '';
+    });
+    if(!state.data.automation_log) state.data.automation_log = [];
+    state.data.automation_log.unshift({ when:new Date().toLocaleString(), appId:m.id, app:m.name, action:m.automation.action, message:msg });
+    state.data.automation_log = state.data.automation_log.slice(0, 100);
+    ran++;
+  });
+  if(ran) toast('⚡ '+ran+' automation'+(ran>1?'s':'')+' ran');
+}
+function autoExtra(m){
+  var log = (state.data.automation_log||[]).filter(function(l){ return l.appId===m.id; });
+  var rows = log.slice(0,10).map(function(l){
+    return '<tr><td class="muted small" style="white-space:nowrap">'+esc(l.when)+'</td><td><b>'+esc(actLabel(l.action))+'</b></td><td>'+esc(l.message)+'</td></tr>';
+  }).join('');
+  return '<div class="card" style="margin-top:16px">'+
+    '<b style="font-size:14px">⚡ '+esc(trigLabel(m.automation.trigger))+' → '+esc(actLabel(m.automation.action))+'</b>'+
+    '<p class="muted small" style="margin:6px 0 12px">Runs automatically whenever the trigger fires — from the dashboard, your public page, email sync or POS. (Live SMS/email delivery wires to Twilio/Brevo on the hosted backend.)</p>'+
+    (rows ? '<div style="overflow-x:auto"><table class="data"><thead><tr><th>When</th><th>Action</th><th>Message</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+          : '<div class="empty">No runs yet. Add a record that matches the trigger (e.g. a booking) and watch it fire.</div>')+
+    '</div>';
+}
+
+/* ============================================================
+   AI CONCIERGE — answers ONLY from this business's structured
+   data (menu, specials, events, services, FAQ, hours, contact).
+   The more tools feed the data layer, the smarter the site gets.
+   ============================================================ */
+function aiExtra(){
+  return '<div class="card" style="margin-top:16px">'+
+    '<b style="font-size:14px">🤖 Test your AI — ask anything about the business</b>'+
+    '<div style="display:flex;gap:8px;margin-top:10px">'+
+    '<input id="ai-q" placeholder="e.g. Do you have crab claws? When is happy hour?" onkeydown="if(event.key===\'Enter\')aiAsk()">'+
+    '<button class="btn btn-primary" onclick="aiAsk()">Ask</button></div>'+
+    '<div id="ai-a" style="margin-top:12px"></div></div>';
+}
+function aiAsk(){
+  var q = (document.getElementById('ai-q').value||'').toLowerCase();
+  var box = document.getElementById('ai-a');
+  if(!q){ box.innerHTML=''; return; }
+  var words = q.split(/[^a-z0-9]+/).filter(function(w){ return w.length>2; });
+  function match(txt){ txt=(txt||'').toLowerCase(); return words.some(function(w){ return txt.indexOf(w)!==-1; }); }
+  var out = [];
+  (state.data.menu_items||[]).forEach(function(it){ if(match(it.name)||match(it.desc)||match(it.section)) out.push('🍽️ <b>'+esc(it.name)+'</b>'+(it.price?' — $'+esc(it.price):'')+(it.section?' · '+esc(it.section):'')); });
+  (state.data.specials||[]).forEach(function(s){ if(match(s.title)||match(s.detail)||q.indexOf('special')!==-1||q.indexOf('happy')!==-1||q.indexOf('deal')!==-1) out.push('🔥 <b>'+esc(s.title)+'</b>'+(s.detail?' — '+esc(s.detail):'')+(s.time?' · '+esc(s.time):'')+(s.days?' · '+esc(s.days):'')); });
+  (state.data.events||[]).forEach(function(ev){ if(match(ev.title)||match(ev.detail)||q.indexOf('music')!==-1||q.indexOf('event')!==-1||q.indexOf('tonight')!==-1) out.push('🎶 <b>'+esc(ev.title)+'</b>'+(ev.date?' · '+esc(ev.date):'')+(ev.time?' '+esc(ev.time):'')); });
+  (state.data.services||[]).forEach(function(sv){ if(match(sv.name)||match(sv.desc)) out.push('🛠️ <b>'+esc(sv.name)+'</b>'+(sv.price?' — $'+esc(sv.price):'')+(sv.duration?' · '+esc(sv.duration):'')); });
+  (state.data.faqs||[]).forEach(function(f){ if(match(f.q)||match(f.a)) out.push('🧾 <b>'+esc(f.q)+'</b><br>'+esc(f.a)); });
+  if(state.installed.hours && (q.indexOf('hour')!==-1||q.indexOf('open')!==-1||q.indexOf('close')!==-1||q.indexOf('where')!==-1||q.indexOf('address')!==-1||q.indexOf('location')!==-1||q.indexOf('direction')!==-1)){
+    var hc = state.installed.hours.config||{};
+    if(hc.hours) out.push('🕒 Hours: '+esc(hc.hours));
+    if(hc.address) out.push('📍 '+esc(hc.address));
+  }
+  if(q.indexOf('phone')!==-1||q.indexOf('call')!==-1||q.indexOf('contact')!==-1){ if(state.business.phone) out.push('📞 '+esc(state.business.phone)); }
+  box.innerHTML = out.length
+    ? '<div class="card" style="background:var(--bg2)">'+out.slice(0,6).join('<div style="height:8px"></div>')+
+      '<div class="muted small" style="margin-top:10px">Answered from your verified business data only. Every tool that feeds the data layer (menu, specials, POS, email sync) makes this smarter.</div></div>'
+    : '<div class="empty">No verified data matches that yet. Add it through your tools (Menu, Specials, FAQ, Hours…) and the AI will answer from it — it never makes things up.</div>';
+}
+
+/* ============================================================
+   APP STUDIO — build once, publish, reused by everyone.
+   An app can be a page block, a data tool, or an automation.
+   Publishing writes a manifest into the open registry — the same
+   registry the seed catalog lives in. Nothing is hardwired.
+   ============================================================ */
+var st = null;
+function stDraft(){
+  return { editing:null, type:'block', name:'', icon:'✨', cat:'engage', desc:'', price:'',
+    blockTitle:'', blockSub:'', actionKind:'link', url:'',
+    trigger:'bookings', action:'sms',
+    template:'Hi {customer}! We got your booking for {date}. — {business}',
+    fields:[{label:'Name', type:'text'},{label:'Phone', type:'text'}] };
+}
+function stSet(k,v){ st[k]=v; if(k==='type'||k==='actionKind') renderPage(); }
+function stField(i,k,v){ st.fields[i][k]=v; }
+function stAddField(){ st.fields.push({label:'', type:'text'}); renderPage(); }
+function stDelField(i){ st.fields.splice(i,1); renderPage(); }
+
+function pageStudio(){
+  if(!st) st = stDraft();
+  var typeCards = [
+    {id:'block', em:'🧩', t:'Page Block', d:'A section on any business’s public page — a button, form or link'},
+    {id:'tool', em:'🗂️', t:'Data Tool', d:'A dashboard tool with its own fields and records'},
+    {id:'automation', em:'⚡', t:'Automation', d:'When X happens → do Y. Runs by itself'}
+  ].map(function(t){
+    return '<div class="preset'+(st.type===t.id?' sel':'')+'" onclick="stSet(\'type\',\''+t.id+'\')"><div class="em">'+t.em+'</div><b>'+t.t+'</b><span>'+t.d+'</span></div>';
+  }).join('');
+
+  var typeSection = '';
+  if(st.type==='block'){
+    typeSection =
+      '<label>Section title (shown on the page)</label><input value="'+esc(st.blockTitle)+'" placeholder="e.g. Request a Shoutout" oninput="stSet(\'blockTitle\',this.value)">'+
+      '<label>Subtitle</label><input value="'+esc(st.blockSub)+'" placeholder="e.g. Get a shoutout from the stage" oninput="stSet(\'blockSub\',this.value)">'+
+      '<label>When tapped, it should…</label><select onchange="stSet(\'actionKind\',this.value)">'+
+      '<option value="link"'+(st.actionKind==='link'?' selected':'')+'>Open a link</option>'+
+      '<option value="form"'+(st.actionKind==='form'?' selected':'')+'>Capture a form (name / phone / message)</option>'+
+      '<option value="info"'+(st.actionKind==='info'?' selected':'')+'>Just show info</option></select>'+
+      (st.actionKind==='link' ? '<label>Default link URL (installer can change it)</label><input value="'+esc(st.url)+'" placeholder="https://…" oninput="stSet(\'url\',this.value)">' : '');
+  }
+  if(st.type==='tool'){
+    typeSection = '<label>Fields for this tool’s records</label>'+
+      st.fields.map(function(f,i){
+        return '<div style="display:flex;gap:8px;margin-bottom:8px">'+
+          '<input placeholder="Field label" value="'+esc(f.label)+'" oninput="stField('+i+',\'label\',this.value)">'+
+          '<select style="max-width:130px" onchange="stField('+i+',\'type\',this.value)">'+
+          ['text','number','date','textarea'].map(function(t){ return '<option'+(f.type===t?' selected':'')+'>'+t+'</option>'; }).join('')+'</select>'+
+          '<button class="btn btn-danger btn-sm" onclick="stDelField('+i+')">✕</button></div>';
+      }).join('')+
+      '<button class="btn btn-outline btn-sm" onclick="stAddField()">+ Add field</button>';
+  }
+  if(st.type==='automation'){
+    typeSection =
+      '<label>When… (trigger)</label><select onchange="stSet(\'trigger\',this.value)">'+
+      TRIGGERS.map(function(t){ return '<option value="'+t.id+'"'+(st.trigger===t.id?' selected':'')+'>'+t.label+'</option>'; }).join('')+'</select>'+
+      '<label>Do… (action)</label><select onchange="stSet(\'action\',this.value)">'+
+      AUTO_ACTIONS.map(function(a){ return '<option value="'+a.id+'"'+(st.action===a.id?' selected':'')+'>'+a.label+'</option>'; }).join('')+'</select>'+
+      '<label>Message template — use {customer} {name} {date} {time} {service} {business} etc.</label>'+
+      '<textarea rows="3" oninput="stSet(\'template\',this.value)">'+esc(st.template)+'</textarea>';
+  }
+
+  var mine = customApps.map(function(a){
+    return '<div class="sec-row"><span style="font-size:17px">'+a.icon+'</span>'+
+      '<span class="nm">'+esc(a.name)+'<span>v'+(a.version||1)+' · '+a.type+' · by '+esc(a.author||'you')+'</span></span>'+
+      '<button class="btn btn-outline btn-sm" onclick="editApp(\''+a.id+'\')">Edit</button>'+
+      '<button class="btn btn-danger btn-sm" onclick="unpublishApp(\''+a.id+'\')">Unpublish</button></div>';
+  }).join('');
+
+  return '<div class="page active">'+
+    '<div class="page-head"><div><h1>🧪 Build an App</h1>'+
+    '<p>Build it once, publish it, and any business on the platform can install and reuse it — a block, a tool, or an automation.</p></div></div>'+
+    '<div class="builder-wrap">'+
+    '<div class="card">'+
+      '<label style="margin-top:0">What are you building?</label><div class="preset-grid">'+typeCards+'</div>'+
+      '<div class="grid g2"><div><label>App name</label><input value="'+esc(st.name)+'" placeholder="e.g. Shoutout Requests" oninput="stSet(\'name\',this.value)"></div>'+
+      '<div><label>Icon (emoji)</label><input value="'+esc(st.icon)+'" maxlength="4" oninput="stSet(\'icon\',this.value)"></div></div>'+
+      '<div class="grid g2"><div><label>Category</label><select onchange="stSet(\'cat\',this.value)">'+
+        CATS.map(function(c){ return '<option value="'+c.id+'"'+(st.cat===c.id?' selected':'')+'>'+c.name+'</option>'; }).join('')+'</select></div>'+
+      '<div><label>Price ($/mo, 0 = free)</label><input type="number" value="'+esc(st.price)+'" placeholder="0" oninput="stSet(\'price\',this.value)"></div></div>'+
+      '<label>Description (shown in the App Store)</label><textarea rows="2" oninput="stSet(\'desc\',this.value)">'+esc(st.desc)+'</textarea>'+
+      typeSection+
+      '<button class="btn btn-primary" style="width:100%;margin-top:18px" onclick="publishApp()">'+(st.editing?'🚀 Publish Update':'🚀 Publish to the App Store')+'</button>'+
+      (st.editing?'<button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="st=null;renderPage()">Cancel edit</button>':'')+
+    '</div>'+
+    '<div><div class="nav-label" style="padding-left:0">My published apps</div>'+
+      (mine || '<div class="empty">Nothing published yet. Your first app goes live in the App Store the moment you hit publish.</div>')+
+    '</div></div></div>';
+}
+
+function publishApp(){
+  if(!st.name.trim()){ toast('Give your app a name'); return; }
+  var slug = st.name.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var id = st.editing || ('x-'+slug);
+  if(!st.editing && mod(id)){ toast('An app with that name already exists'); return; }
+  var man = { id:id, name:st.name.trim(), icon:st.icon||'✨', cat:st.cat, desc:st.desc,
+    price:parseFloat(st.price)||0, author:state.business.name||'Community', version:1, type:st.type, setup:[] };
+
+  if(st.type==='block'){
+    man.block = { title: st.blockTitle||man.name, sub: st.blockSub||'' };
+    man.setup = [{key:'label', label:'Button text', type:'text', def:man.block.title}];
+    if(st.actionKind==='link') man.setup.push({key:'url', label:'Link URL', type:'text', def:st.url||''});
+    if(st.actionKind==='form'){
+      man.dataKey = 'x_'+slug;
+      man.fields = [{key:'name',label:'Name',type:'text'},{key:'phone',label:'Phone',type:'text'},{key:'message',label:'Message',type:'textarea'}];
+    }
+  }
+  if(st.type==='tool'){
+    man.dataKey = 'x_'+slug;
+    man.fields = st.fields.filter(function(f){ return f.label.trim(); }).map(function(f){
+      return { key:f.label.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'), label:f.label.trim(), type:f.type };
+    });
+    if(!man.fields.length){ toast('Add at least one field'); return; }
+  }
+  if(st.type==='automation'){
+    man.automation = { trigger:st.trigger, action:st.action, template:st.template };
+    man.setup = [{key:'template', label:'Message template', type:'textarea', def:st.template}];
+    if(!man.desc) man.desc = 'When '+trigLabel(st.trigger)+' → '+actLabel(st.action)+'.';
+  }
+  if(!man.desc) man.desc = man.name+' — built by '+man.author+'.';
+
+  if(st.editing){
+    for(var i=0;i<customApps.length;i++) if(customApps[i].id===st.editing){
+      man.version = (customApps[i].version||1)+1;
+      customApps[i] = man;
+    }
+  } else customApps.push(man);
+  saveRegistry();
+  st = null;
+  toast('🚀 Published — every business on the platform can now install it');
+  showPage('appstore');
+}
+function editApp(id){
+  var a = null;
+  for(var i=0;i<customApps.length;i++) if(customApps[i].id===id) a = customApps[i];
+  if(!a) return;
+  st = stDraft();
+  st.editing = a.id; st.type = a.type||'block'; st.name = a.name; st.icon = a.icon;
+  st.cat = a.cat; st.desc = a.desc; st.price = a.price||'';
+  if(a.block){ st.blockTitle = a.block.title; st.blockSub = a.block.sub;
+    st.actionKind = a.dataKey ? 'form' : (a.setup||[]).some(function(q){return q.key==='url'}) ? 'link' : 'info';
+    var uq = (a.setup||[]).filter(function(q){return q.key==='url'})[0]; if(uq) st.url = uq.def||'';
+  }
+  if(a.type==='tool' && a.fields) st.fields = a.fields.map(function(f){ return {label:f.label, type:f.type}; });
+  if(a.automation){ st.trigger = a.automation.trigger; st.action = a.automation.action; st.template = a.automation.template; }
+  renderPage();
+}
+function unpublishApp(id){
+  var a = mod(id);
+  if(!confirm('Unpublish '+(a?a.name:id)+' from the App Store? Businesses that installed it will lose it.')) return;
+  customApps = customApps.filter(function(x){ return x.id!==id; });
+  if(state.installed[id]){
+    delete state.installed[id];
+    state.pageOrder = state.pageOrder.filter(function(x){ return x!==id; });
+    save(); renderNav();
+  }
+  saveRegistry(); renderPage(); toast('Unpublished');
 }
 
 /* ============================================================
