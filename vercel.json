@@ -12,6 +12,10 @@
     {
       "source": "/p/:slug",
       "destination": "/biz.html"
+    },
+    {
+      "source": "/book/:slug/:app",
+      "destination": "/book.html"
     }
   ],
   "headers": [

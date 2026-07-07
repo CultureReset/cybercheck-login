@@ -123,6 +123,16 @@ function openBlock(i){
   document.getElementById('pop-title').textContent = bl.title;
   var body = document.getElementById('pop-body');
 
+  // 0. Booking block → its own standalone checkout page
+  if(bl.checkout){
+    if(bl.url){ window.open(bl.url, '_blank'); return; } // business uses an external booking link
+    var slug = slugFromUrl();
+    location.href = location.pathname.indexOf('/p/')===0
+      ? '/book/'+encodeURIComponent(slug)+'/'+encodeURIComponent(bl.id)
+      : 'book.html?b='+encodeURIComponent(slug)+'&app='+encodeURIComponent(bl.id);
+    return;
+  }
+
   // 1. Link block → just go
   if(bl.url && !bl.dataKey){ window.open(bl.url, '_blank'); return; }
 

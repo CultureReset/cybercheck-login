@@ -88,5 +88,6 @@
         "cancelled"
       ]
     }
-  ]
+  ],
+  "checkout": true
 }

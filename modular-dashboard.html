@@ -674,9 +674,18 @@ function pageModule(id){
   if(m.dataKey){
     var rows = state.data[m.dataKey]||[];
     var cols = m.fields.slice(0,4);
+    var hasStatus = m.fields.some(function(f){ return f.key==='status'; });
     var tbody = rows.map(function(r,ri){
+      var quick = '';
+      if(hasStatus){
+        if((r.status||'pending')==='pending')
+          quick = '<button class="btn btn-primary btn-sm" onclick="setStatus(\''+id+'\','+ri+',\'confirmed\')">✓ Confirm</button> '+
+                  '<button class="btn btn-danger btn-sm" onclick="setStatus(\''+id+'\','+ri+',\'declined\')">✕ Decline</button> ';
+        else if(r.status==='confirmed')
+          quick = '<button class="btn btn-outline btn-sm" onclick="setStatus(\''+id+'\','+ri+',\'completed\')">🏁 Complete</button> ';
+      }
       return '<tr>'+cols.map(function(f){ return '<td>'+esc(r[f.key]||'—')+'</td>'; }).join('')+
-        '<td style="text-align:right;white-space:nowrap">'+
+        '<td style="text-align:right;white-space:nowrap">'+quick+
         '<button class="btn btn-outline btn-sm" onclick="openRec(\''+id+'\','+ri+')">Edit</button> '+
         '<button class="btn btn-danger btn-sm" onclick="delRec(\''+id+'\','+ri+')">✕</button></td></tr>';
     }).join('');
@@ -722,6 +731,24 @@ function openRec(modId, idx){
   openModal('modal-rec');
 }
 /* save handler is bound in bindRecSave() at boot */
+/* One-tap status: confirm/decline/complete. Signed in, the server
+   updates the record AND texts the customer (completed = the
+   authentic-review request, tied to the transaction). */
+function setStatus(modId, idx, status){
+  var m = mod(modId);
+  var rec = state.data[m.dataKey][idx];
+  rec.status = status;
+  if(token() && rec._id){
+    apiFetch('/records/'+encodeURIComponent(m.dataKey)+'/'+encodeURIComponent(rec._id)+'/status', {
+      method:'POST', body: JSON.stringify({ status: status })
+    }).then(function(){
+      toast(status==='completed' ? '🏁 Done — review request texted to the customer' : '📱 Customer texted: '+status);
+    }).catch(function(e){ toast('⚠️ Saved locally — '+e.message); });
+  } else {
+    toast(status==='completed' ? '🏁 Marked complete (demo — live mode texts a review link)' : 'Status: '+status+' (demo — live mode texts the customer)');
+  }
+  save(); renderPage();
+}
 function delRec(modId, idx){
   var m = mod(modId);
   var rec = state.data[m.dataKey][idx];
