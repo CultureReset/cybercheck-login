@@ -1699,7 +1699,7 @@
   <script>
     // Auth guard — checks localStorage directly before any client loads
     (function() {
-      var sbToken = localStorage.getItem('sb-xbptmkpbiqzvxptjkfoi-auth-token');
+      var sbToken = localStorage.getItem('sb-mkepugvdlktfsossumox-auth-token'); // cyber check — the live DB (js/supabase-client.js)
       var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
       if (!sbToken && !legacyToken) {
         window.location.replace('login.html');

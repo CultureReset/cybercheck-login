@@ -8,6 +8,10 @@
     "name": "Content"
   },
   {
+    "id": "commerce",
+    "name": "Commerce"
+  },
+  {
     "id": "engage",
     "name": "Engage"
   },
