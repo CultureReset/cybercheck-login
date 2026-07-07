@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Photo Repair - CyberCheck Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0f1720; color: #e7edf3; min-height: 100vh; padding: 24px;
+    }
+    .wrap { max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 20px; margin-bottom: 6px; }
+    p.sub { color: #93a4b8; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+    .card { background: #16212c; border: 1px solid #253242; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; }
+    .row + .row { border-top: 1px solid #253242; }
+    .row b { font-variant-numeric: tabular-nums; }
+    button {
+      width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700;
+      background: #2b8a3e; color: white; cursor: pointer; margin-top: 8px;
+    }
+    button:disabled { background: #3a4756; cursor: not-allowed; }
+    button.secondary { background: #253242; }
+    #log { font-family: ui-monospace, monospace; font-size: 12px; color: #93a4b8; white-space: pre-wrap; max-height: 240px; overflow-y: auto; margin-top: 12px; }
+    .warn { color: #f0b429; font-size: 13px; margin-top: 10px; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📷 Photo Repair</h1>
+    <p class="sub">
+      Some businesses have photo rows pointing at storage paths where the file was never actually uploaded
+      (a legacy import problem, not something recent). Most of these already have real Google photo references
+      on file — this tool fetches those and uploads them to the exact path each broken row expects, so the
+      existing links heal. Nothing is guessed; unrecoverable rows (no Google photo available) are removed
+      instead of left permanently broken.
+    </p>
+
+    <div class="card">
+      <div class="row"><span>Status</span><b id="status">Checking…</b></div>
+      <div class="row"><span>Candidate businesses</span><b id="candEntities">–</b></div>
+      <div class="row"><span>Candidate photo rows</span><b id="candRows">–</b></div>
+    </div>
+
+    <div class="card">
+      <div class="row"><span>Processed this run</span><b id="processed">0</b></div>
+      <div class="row"><span>Photos repaired</span><b id="repaired" class="ok">0</b></div>
+      <div class="row"><span>Rows removed (unrecoverable)</span><b id="deleted">0</b></div>
+      <div class="row"><span>Errors</span><b id="errCount" class="err">0</b></div>
+      <button id="runBtn">Start Repair</button>
+      <button id="stopBtn" class="secondary" style="display:none">Stop</button>
+    </div>
+
+    <div id="warnBox"></div>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    var API = (window.GCR_ADMIN_API || 'https://gcr-api-clean.vercel.app');
+    function token() { return localStorage.getItem('cc_admin_token') || ''; }
+    var stopFlag = false;
+
+    function log(msg, cls) {
+      var el = document.getElementById('log');
+      var line = document.createElement('div');
+      if (cls) line.className = cls;
+      line.textContent = msg;
+      el.appendChild(line);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    async function api(path, opts) {
+      opts = opts || {};
+      var res = await fetch(API + path, Object.assign({
+        headers: Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() }, opts.headers || {})
+      }, opts));
+      var data = await res.json().catch(function(){ return {}; });
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      return data;
+    }
+
+    async function refreshStatus() {
+      try {
+        var s = await api('/api/admin/repair-photos/status');
+        document.getElementById('status').textContent = 'Ready';
+        document.getElementById('candEntities').textContent = s.candidate_entities;
+        document.getElementById('candRows').textContent = s.candidate_photo_rows;
+      } catch (e) {
+        document.getElementById('status').textContent = 'Error';
+        document.getElementById('warnBox').innerHTML = '<p class="warn">' + (token() ? e.message : 'Not signed in — open admin.html and log in first, then reload this page.') + '</p>';
+      }
+    }
+
+    document.getElementById('runBtn').onclick = async function() {
+      stopFlag = false;
+      document.getElementById('runBtn').disabled = true;
+      document.getElementById('stopBtn').style.display = 'block';
+      document.getElementById('status').textContent = 'Running…';
+      var totals = { processed: 0, repaired: 0, deleted: 0, errors: 0 };
+      var afterSlug = null;
+      try {
+        while (!stopFlag) {
+          var body = { limit: 15 };
+          if (afterSlug) body.after_slug = afterSlug;
+          var r = await api('/api/admin/repair-photos', { method: 'POST', body: JSON.stringify(body) });
+          totals.processed += r.entities_processed || 0;
+          totals.repaired += r.photos_repaired || 0;
+          totals.deleted += r.unrecoverable_rows_deleted || 0;
+          totals.errors += (r.errors || []).length;
+          document.getElementById('processed').textContent = totals.processed;
+          document.getElementById('repaired').textContent = totals.repaired;
+          document.getElementById('deleted').textContent = totals.deleted;
+          document.getElementById('errCount').textContent = totals.errors;
+          log('Batch: ' + r.entities_processed + ' businesses · ' + r.photos_repaired + ' photos repaired · ' + r.unrecoverable_rows_deleted + ' removed · ' + r.candidate_entities_remaining + ' remaining');
+          (r.errors || []).forEach(function(e) { log('  ⚠ ' + e.slug + ': ' + e.reason, 'err'); });
+          afterSlug = r.next_after_slug;
+          if (r.done || !r.entities_processed) break;
+        }
+        document.getElementById('status').textContent = stopFlag ? 'Stopped' : 'Done ✓';
+        log(stopFlag ? 'Stopped by user.' : 'All done — no more broken photos found.', 'ok');
+      } catch (e) {
+        document.getElementById('status').textContent = 'Error';
+        log('Fatal: ' + e.message, 'err');
+      } finally {
+        document.getElementById('runBtn').disabled = false;
+        document.getElementById('stopBtn').style.display = 'none';
+        refreshStatus();
+      }
+    };
+
+    document.getElementById('stopBtn').onclick = function() { stopFlag = true; };
+
+    refreshStatus();
+  </script>
+</body>
+</html>
