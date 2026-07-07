@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberCheck — Modular Dashboard</title>
+<!--
+  CYBERCHECK MODULAR DASHBOARD
+  ============================
+  The Wix/GoDaddy-style modular business platform.
+  - NOTHING here is hardwired to any business or industry.
+  - The sidebar, the public page, and the tools are all assembled from
+    the MODULES catalog + what this business has installed.
+  - Industry "presets" are just starter bundles of modules — the owner
+    can add/remove anything from the App Store afterward.
+  - State persists to localStorage (key: cc_modular_v1) and syncs to the
+    modules API (/api/modules/*) when a token + API are available.
+    Backend contract: gcr-api-clean/routes/modules.js
+    (module_manifest + user_modules tables).
+-->
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#0e1628; --card:#121c30; --card-border:rgba(255,255,255,.09);
+    --text:#eef4ff; --text-muted:#93a3bd; --primary:#22c3a6; --primary2:#1d8cff;
+    --danger:#ff5b6e; --warn:#ffb14a; --purple:#8d5cff;
+    --radius:14px; --shadow:0 18px 44px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit;background:var(--bg2);border:1px solid var(--card-border);border-radius:10px;color:var(--text);padding:10px 12px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)}
+  label{font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin:12px 0 6px;letter-spacing:.04em;text-transform:uppercase}
+
+  /* ── layout ─────────────────────────────── */
+  .sidebar{width:240px;min-width:240px;background:var(--bg2);border-right:1px solid var(--card-border);display:flex;flex-direction:column;padding:18px 12px;gap:4px;overflow-y:auto}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px;padding:6px 10px;margin-bottom:6px}
+  .logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:grid;place-items:center;color:#04121a;font-weight:900}
+  .biz-chip{padding:10px;border:1px solid var(--card-border);border-radius:12px;background:var(--card);margin-bottom:10px}
+  .biz-chip b{display:block;font-size:14px}
+  .biz-chip span{font-size:11px;color:var(--text-muted)}
+  .nav-label{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);padding:12px 10px 4px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--text-muted);font-size:13.5px;font-weight:600;border:1px solid transparent;background:transparent;width:100%;text-align:left}
+  .nav-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
+  .nav-item.active{color:var(--text);background:rgba(34,195,166,.10);border-color:rgba(34,195,166,.28)}
+  .nav-item .ic{width:20px;text-align:center}
+  .main{flex:1;overflow-y:auto;padding:26px 30px 60px}
+  .page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+  .page-head h1{margin:0;font-size:24px;letter-spacing:-.02em}
+  .page-head p{margin:4px 0 0;color:var(--text-muted);font-size:13px}
+  .page{display:none} .page.active{display:block}
+
+  /* ── shared bits ────────────────────────── */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:10px;font-weight:800;font-size:13.5px;border:1px solid transparent;transition:.15s}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),#3adbb8);color:#04121a}
+  .btn-primary:hover{transform:translateY(-1px)}
+  .btn-outline{border-color:var(--card-border);background:transparent;color:var(--text)}
+  .btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+  .btn-danger{border-color:rgba(255,91,110,.4);background:transparent;color:var(--danger)}
+  .btn-sm{min-height:30px;padding:0 10px;font-size:12px;border-radius:8px}
+  .card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:18px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  .muted{color:var(--text-muted)} .small{font-size:12px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid var(--card-border);font-size:12px;font-weight:700;color:var(--text-muted);background:transparent}
+  .chip.active{border-color:var(--primary);color:var(--primary)}
+  .toggle{width:40px;height:22px;border-radius:999px;background:#28344d;position:relative;border:none;flex-shrink:0;transition:.15s}
+  .toggle:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+  .toggle.on{background:var(--primary)}
+  .toggle.on:after{left:21px}
+  .empty{padding:34px;text-align:center;color:var(--text-muted);font-size:13px;border:1px dashed var(--card-border);border-radius:var(--radius)}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--primary);border-radius:12px;padding:12px 20px;font-size:13.5px;font-weight:700;z-index:300;opacity:0;transition:.25s;box-shadow:var(--shadow)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ── overview ───────────────────────────── */
+  .stat{padding:16px}
+  .stat .lbl{font-size:12px;color:var(--text-muted);font-weight:700}
+  .stat .val{font-size:26px;font-weight:900;margin-top:4px}
+
+  /* ── app store ──────────────────────────── */
+  .store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .app-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px}
+  .app-card.installed{border-color:rgba(34,195,166,.4)}
+  .app-top{display:flex;align-items:center;gap:10px}
+  .app-icon{width:42px;height:42px;border-radius:12px;background:var(--bg2);border:1px solid var(--card-border);display:grid;place-items:center;font-size:21px;flex-shrink:0}
+  .app-top b{font-size:14px;display:block}
+  .app-top .cat{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+  .app-desc{font-size:12.5px;color:var(--text-muted);line-height:1.5;flex:1}
+  .app-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+  .price{font-size:12px;font-weight:800;color:var(--text-muted)}
+
+  /* ── section builder ────────────────────── */
+  .builder-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:start}
+  .sec-row{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .sec-row.dragging{opacity:.4}
+  .sec-row .grip{cursor:grab;color:var(--text-muted);font-size:15px;letter-spacing:2px}
+  .sec-row .nm{flex:1;font-weight:700;font-size:13.5px}
+  .sec-row .nm span{display:block;font-weight:500;font-size:11px;color:var(--text-muted)}
+  .arrows{display:flex;flex-direction:column;gap:2px}
+  .arrows button{background:transparent;border:1px solid var(--card-border);border-radius:6px;color:var(--text-muted);width:24px;height:18px;font-size:9px;line-height:1;padding:0}
+  .arrows button:hover{color:var(--primary);border-color:var(--primary)}
+
+  /* ── phone preview ──────────────────────── */
+  .phone{width:300px;margin:0 auto;background:#04070f;border:2px solid #2a3146;border-radius:32px;padding:10px;box-shadow:var(--shadow)}
+  .phone-screen{border-radius:24px;overflow:hidden;background:#f7f5f1;color:#1d2329;min-height:520px}
+  .pv-hero{padding:22px 18px 18px;color:#fff;position:relative}
+  .pv-avatar{width:62px;height:62px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:28px;border:3px solid rgba(255,255,255,.7);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .pv-hero h3{margin:10px 0 2px;font-size:21px;letter-spacing:-.03em}
+  .pv-hero p{margin:0;font-size:12px;opacity:.92}
+  .pv-cta{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px 4px}
+  .pv-btn{min-height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;color:#fff}
+  .pv-links{padding:10px 14px 20px;display:flex;flex-direction:column;gap:9px}
+  .pv-link{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e6e0d8;border-radius:14px;padding:12px}
+  .pv-link .i{width:36px;height:36px;border-radius:10px;background:#f6f1ea;display:grid;place-items:center;font-size:17px;flex-shrink:0}
+  .pv-link b{font-size:13px;display:block}
+  .pv-link span{font-size:10.5px;color:#66758a;display:block;margin-top:1px}
+  .pv-link .ar{margin-left:auto;color:#a0a8b5}
+
+  /* ── modals ─────────────────────────────── */
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,8,16,.72);z-index:200;padding:20px}
+  .modal.open{display:flex}
+  .modal-box{background:var(--card);border:1px solid var(--card-border);border-radius:18px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;padding:22px;box-shadow:var(--shadow)}
+  .modal-box.wide{max-width:820px}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .modal-head h2{margin:0;font-size:18px}
+  .modal-x{background:transparent;border:none;color:var(--text-muted);font-size:18px}
+  .wizard-steps{display:flex;gap:8px;margin:10px 0 16px}
+  .wstep{flex:1;height:4px;border-radius:99px;background:#28344d}
+  .wstep.on{background:var(--primary)}
+  .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
+  .preset{background:var(--bg2);border:1px solid var(--card-border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}
+  .preset:hover,.preset.sel{border-color:var(--primary)}
+  .preset .em{font-size:26px}
+  .preset b{display:block;font-size:13px;margin-top:8px}
+  .preset span{font-size:10.5px;color:var(--text-muted);display:block;margin-top:3px;line-height:1.4}
+
+  /* ── data tables ────────────────────────── */
+  table.data{width:100%;border-collapse:collapse;font-size:13px}
+  table.data th{text-align:left;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;padding:8px 10px;border-bottom:1px solid var(--card-border)}
+  table.data td{padding:10px;border-bottom:1px solid rgba(255,255,255,.05)}
+
+  @media (max-width:960px){
+    .sidebar{position:fixed;left:-260px;top:0;bottom:0;z-index:100;transition:.2s}
+    .sidebar.open{left:0}
+    .main{padding:18px 14px 60px}
+    .builder-wrap,.g2,.g3,.g4{grid-template-columns:1fr}
+    .mobile-bar{display:flex!important}
+  }
+  .mobile-bar{display:none;position:sticky;top:0;z-index:90;background:var(--bg2);border-bottom:1px solid var(--card-border);padding:10px 14px;align-items:center;gap:10px;margin:-26px -30px 18px}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo"><span class="mark">C</span> Cyber<span style="color:var(--primary)">Check</span></div>
+  <div class="biz-chip" id="biz-chip" onclick="openBizSettings()" style="cursor:pointer">
+    <b id="biz-chip-name">Your Business</b>
+    <span id="biz-chip-type">Set up your business →</span>
+  </div>
+  <div id="nav-core"></div>
+  <div class="nav-label">My Tools</div>
+  <div id="nav-modules"></div>
+  <div style="margin-top:auto;padding-top:14px">
+    <button class="nav-item" onclick="showPage('appstore')"><span class="ic">🛍️</span> Add More Tools</button>
+    <a class="nav-item" href="login.html"><span class="ic">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<main class="main" id="main">
+  <div class="mobile-bar">
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <b style="font-size:14px">CyberCheck</b>
+  </div>
+  <div id="pages"></div>
+</main>
+
+<!-- install wizard modal -->
+<div class="modal" id="modal-install">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="iw-title">Install</h2><button class="modal-x" onclick="closeModal('modal-install')">✕</button></div>
+    <div class="wizard-steps" id="iw-steps"></div>
+    <div id="iw-body"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-outline" id="iw-back" style="flex:1">← Back</button>
+      <button class="btn btn-primary" id="iw-next" style="flex:2">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- generic record editor modal -->
+<div class="modal" id="modal-rec">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="rec-title">Add</h2><button class="modal-x" onclick="closeModal('modal-rec')">✕</button></div>
+    <div id="rec-body"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-outline" onclick="closeModal('modal-rec')" style="flex:1">Cancel</button>
+      <button class="btn btn-primary" id="rec-save" style="flex:2">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- onboarding modal -->
+<div class="modal" id="modal-onboard">
+  <div class="modal-box wide">
+    <div class="modal-head"><h2>Welcome — let's build your platform</h2></div>
+    <p class="muted small" style="margin-top:0">Pick a starting point. Every preset is just a bundle of tools — you can add or remove anything from the App Store afterward. Nothing is locked in.</p>
+    <label>Business name</label>
+    <input id="ob-name" placeholder="e.g. Harbor Tide Kitchen">
+    <label>Tagline (optional)</label>
+    <input id="ob-tag" placeholder="e.g. Fresh Gulf seafood • Happy hour • Live music">
+    <label>Phone (for the Call Now button)</label>
+    <input id="ob-phone" placeholder="(251) 555-0100">
+    <label>Choose a starting bundle</label>
+    <div class="preset-grid" id="ob-presets"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:18px" onclick="finishOnboard()">Create My Dashboard →</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   STATE
+   ============================================================ */
+var LS_KEY = 'cc_modular_v1';
+var API = window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
+
+var state = loadState();
+
+function defaultState(){
+  return {
+    onboarded:false,
+    business:{ name:'', tagline:'', phone:'', type:'', accent:'#22c3a6', emoji:'🏪' },
+    installed:{},            // moduleId -> {config:{}, enabled:true, showOnPublic:true, installedAt}
+    pageOrder:[],            // order of public page blocks
+    data:{}                  // dataKey -> array of records
+  };
+}
+function loadState(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return defaultState();
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  apiSync();
+}
+/* Best-effort sync to the modules API (gcr-api-clean routes/modules.js).
+   Silent no-op when offline / not logged in. */
+var _syncT = null;
+function apiSync(){
+  clearTimeout(_syncT);
+  _syncT = setTimeout(function(){
+    var token = localStorage.getItem('cc_admin_token') || localStorage.getItem('cc_token');
+    if(!token) return;
+    fetch(API + '/api/modules/state', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' },
+      body: JSON.stringify({ state: state })
+    }).catch(function(){});
+  }, 800);
+}
+
+/* ============================================================
+   MODULE CATALOG
+   Every tool is a module. Modules with `block` render a section
+   on the public page. `setup` questions ARE the install wizard.
+   `dataKey`+`fields` give a module a generic CRUD panel.
+   ============================================================ */
+var MODULES = [
+  /* ── BOOKING ── */
+  { id:'booking', name:'Bookings', icon:'📅', cat:'booking', price:0,
+    desc:'Customers pick a service, date and time, and request or book online.',
+    block:{ title:'Book Now', sub:'Check availability & reserve online' },
+    setup:[
+      {key:'label', label:'Button text on your page', type:'text', def:'Book Now'},
+      {key:'mode', label:'How should bookings work?', type:'select', options:['Instant book','Request first (you confirm by SMS)','Send to my existing booking link'], def:'Request first (you confirm by SMS)'},
+      {key:'external_url', label:'Existing booking link (if any)', type:'text', def:'', showIf:{key:'mode', val:'Send to my existing booking link'}},
+      {key:'notify', label:'Send new booking alerts to', type:'text', def:'', ph:'Phone or email'}
+    ],
+    dataKey:'bookings',
+    fields:[
+      {key:'customer', label:'Customer name', type:'text'},
+      {key:'phone', label:'Phone', type:'text'},
+      {key:'service', label:'Service / item', type:'text'},
+      {key:'date', label:'Date', type:'date'},
+      {key:'time', label:'Time', type:'text'},
+      {key:'party', label:'Party size', type:'number'},
+      {key:'status', label:'Status', type:'select', options:['pending','confirmed','completed','cancelled']}
+    ] },
+  { id:'services', name:'Services & Pricing', icon:'🛠️', cat:'booking', price:0,
+    desc:'Your bookable services, trips, rentals or sessions with prices and durations.',
+    block:{ title:'Rates & Packages', sub:'Services, durations and pricing' },
+    setup:[{key:'label', label:'Section title on your page', type:'text', def:'Rates & Packages'}],
+    dataKey:'services',
+    fields:[
+      {key:'name', label:'Service name', type:'text'},
+      {key:'price', label:'Price ($)', type:'number'},
+      {key:'duration', label:'Duration', type:'text'},
+      {key:'capacity', label:'Max guests', type:'number'},
+      {key:'desc', label:'Description', type:'textarea'}
+    ] },
+  { id:'availability', name:'Availability Calendar', icon:'🗓️', cat:'booking', price:0,
+    desc:'Open slots, blocked dates and capacity. Powers "Live Availability" on your page.',
+    block:{ title:'Live Availability', sub:'See open dates and time slots' },
+    setup:[
+      {key:'granularity', label:'How do you sell time?', type:'select', options:['Time slots per day','Whole days','Nights (check-in/out)'], def:'Time slots per day'},
+      {key:'capacity', label:'Default capacity per slot', type:'number', def:'1'}
+    ],
+    dataKey:'blocks',
+    fields:[
+      {key:'date', label:'Date', type:'date'},
+      {key:'kind', label:'Type', type:'select', options:['blocked','open','booked']},
+      {key:'note', label:'Note', type:'text'}
+    ] },
+  { id:'waivers', name:'Digital Waivers', icon:'✍️', cat:'booking', price:0,
+    desc:'Liability waivers signed at booking. Stored and searchable.',
+    setup:[{key:'text', label:'Waiver text (short version)', type:'textarea', def:'I acknowledge the risks involved and release the business from liability.'}],
+    dataKey:'waivers',
+    fields:[
+      {key:'customer', label:'Customer', type:'text'},
+      {key:'date', label:'Signed date', type:'date'},
+      {key:'status', label:'Status', type:'select', options:['sent','signed']}
+    ] },
+  { id:'waitlist', name:'Waitlist', icon:'⏳', cat:'booking', price:0,
+    desc:'Collect names when you are fully booked. Text them when a spot opens.',
+    block:{ title:'Join the Waitlist', sub:'Get texted when a spot opens' },
+    setup:[{key:'label', label:'Button text', type:'text', def:'Join the Waitlist'}],
+    dataKey:'waitlist',
+    fields:[
+      {key:'name', label:'Name', type:'text'},
+      {key:'phone', label:'Phone', type:'text'},
+      {key:'wants', label:'Wants', type:'text'}
+    ] },
+
+  /* ── CONTENT ── */
+  { id:'menu', name:'Menu', icon:'🍽️', cat:'content', price:0,
+    desc:'Digital menu with sections, items, prices. One QR code, always current.',
+    block:{ title:'Full Menu', sub:'Browse the menu with prices' },
+    setup:[
+      {key:'label', label:'Section title', type:'text', def:'Full Menu'},
+      {key:'style', label:'Menu style', type:'select', options:['Text list','With photos'], def:'Text list'}
+    ],
+    dataKey:'menu_items',
+    fields:[
+      {key:'section', label:'Menu section', type:'text', ph:'Appetizers'},
+      {key:'name', label:'Item name', type:'text'},
+      {key:'price', label:'Price ($)', type:'number'},
+      {key:'desc', label:'Description', type:'textarea'}
+    ] },
+  { id:'specials', name:'Specials & Happy Hour', icon:'🔥', cat:'content', price:0,
+    desc:'Daily specials and happy hour that update in seconds.',
+    block:{ title:"Today's Specials", sub:'Specials & happy hour, live' },
+    setup:[{key:'label', label:'Section title', type:'text', def:"Today's Specials"}],
+    dataKey:'specials',
+    fields:[
+      {key:'title', label:'Special', type:'text'},
+      {key:'detail', label:'Details', type:'text'},
+      {key:'days', label:'Days', type:'text', ph:'Mon–Fri'},
+      {key:'time', label:'Time', type:'text', ph:'3–6 PM'}
+    ] },
+  { id:'events', name:'Events & Live Music', icon:'🎶', cat:'content', price:0,
+    desc:'Shows, trivia nights, live music schedule.',
+    block:{ title:'Live Music & Events', sub:'See what’s coming up' },
+    setup:[{key:'label', label:'Section title', type:'text', def:'Live Music & Events'}],
+    dataKey:'events',
+    fields:[
+      {key:'title', label:'Event / artist', type:'text'},
+      {key:'date', label:'Date', type:'date'},
+      {key:'time', label:'Time', type:'text'},
+      {key:'detail', label:'Details', type:'text'}
+    ] },
+  { id:'gallery', name:'Gallery', icon:'📸', cat:'content', price:0,
+    desc:'Photos of your food, boats, work, or venue.',
+    block:{ title:'Gallery', sub:'Photos and highlights' },
+    setup:[{key:'label', label:'Section title', type:'text', def:'Gallery'}],
+    dataKey:'photos',
+    fields:[
+      {key:'url', label:'Image URL', type:'text'},
+      {key:'caption', label:'Caption', type:'text'}
+    ] },
+  { id:'links', name:'Custom Links', icon:'🔗', cat:'content', price:0,
+    desc:'Add any link to your page — socials, ordering, anything.',
+    block:{ title:'More Links', sub:'Everything else in one place' },
+    setup:[],
+    dataKey:'links',
+    fields:[
+      {key:'title', label:'Link title', type:'text'},
+      {key:'url', label:'URL', type:'text'},
+      {key:'desc', label:'Short description', type:'text'}
+    ] },
+  { id:'hours', name:'Hours & Location', icon:'🕒', cat:'content', price:0,
+    desc:'Open hours, address, directions and parking notes.',
+    block:{ title:'Hours, Location & Directions', sub:'When and where to find us' },
+    setup:[
+      {key:'address', label:'Address', type:'text'},
+      {key:'hours', label:'Hours (short)', type:'text', ph:'Mon–Sun 9 AM – 6 PM'}
+    ] },
+  { id:'faq', name:'FAQ / What’s Included', icon:'🧾', cat:'content', price:0,
+    desc:'Answer the questions customers always ask.',
+    block:{ title:'What’s Included', sub:'Policies and what to bring' },
+    setup:[{key:'label', label:'Section title', type:'text', def:'What’s Included'}],
+    dataKey:'faqs',
+    fields:[
+      {key:'q', label:'Question', type:'text'},
+      {key:'a', label:'Answer', type:'textarea'}
+    ] },
+
+  /* ── ENGAGE ── */
+  { id:'reviews', name:'Verified Reviews', icon:'⭐', cat:'engage', price:0,
+    desc:'Collect reviews tied to real visits and bookings. Show the proof.',
+    block:{ title:'Verified Reviews', sub:'Real customer feedback' },
+    setup:[{key:'ask_after', label:'Ask for a review after', type:'select', options:['Every booking','Only completed bookings','Manual only'], def:'Only completed bookings'}],
+    dataKey:'reviews',
+    fields:[
+      {key:'name', label:'Customer', type:'text'},
+      {key:'stars', label:'Stars (1–5)', type:'number'},
+      {key:'text', label:'Review', type:'textarea'}
+    ] },
+  { id:'song-request', name:'Song Requests', icon:'🎵', cat:'engage', price:0,
+    desc:'Let the crowd request songs, with optional tips. Built for musicians and venues.',
+    block:{ title:'Request a Song', sub:'Send a request to the stage' },
+    setup:[
+      {key:'label', label:'Button text', type:'text', def:'Request a Song'},
+      {key:'to', label:'Send requests to', type:'select', options:['Artist','Venue manager','Both'], def:'Artist'},
+      {key:'approval', label:'Require approval before display?', type:'select', options:['Yes','No'], def:'Yes'}
+    ],
+    dataKey:'song_requests',
+    fields:[
+      {key:'song', label:'Song', type:'text'},
+      {key:'from', label:'From', type:'text'},
+      {key:'tip', label:'Tip ($)', type:'number'}
+    ] },
+  { id:'tipjar', name:'Tip Jar', icon:'💸', cat:'engage', price:0,
+    desc:'A simple tip button using your own payment links.',
+    block:{ title:'Leave a Tip', sub:'Support us directly' },
+    setup:[{key:'url', label:'Your tip link (Venmo / CashApp / Stripe)', type:'text'}] },
+  { id:'loyalty', name:'Loyalty & Perks', icon:'💚', cat:'engage', price:0,
+    desc:'Points, perks and repeat-customer rewards.',
+    block:{ title:'Loyalty Rewards', sub:'Earn perks every visit' },
+    setup:[{key:'offer', label:'Starting perk', type:'text', def:'Leave a review → earn 50 points'}],
+    dataKey:'loyalty_members',
+    fields:[
+      {key:'name', label:'Member', type:'text'},
+      {key:'phone', label:'Phone', type:'text'},
+      {key:'points', label:'Points', type:'number'}
+    ] },
+  { id:'forms', name:'Forms & Lead Capture', icon:'📝', cat:'engage', price:0,
+    desc:'Capture interest before customers disappear — name, phone, what they wanted.',
+    block:{ title:'Get a Quote', sub:'Tell us what you need' },
+    setup:[{key:'label', label:'Button text', type:'text', def:'Get a Quote'}],
+    dataKey:'leads',
+    fields:[
+      {key:'name', label:'Name', type:'text'},
+      {key:'phone', label:'Phone', type:'text'},
+      {key:'wants', label:'Interested in', type:'text'},
+      {key:'source', label:'Source', type:'text', ph:'QR / social / GCR'}
+    ] },
+
+  /* ── OPERATE ── */
+  { id:'customers', name:'Customers (CRM)', icon:'👥', cat:'operate', price:0,
+    desc:'Every customer, their history and contact info in one list.',
+    dataKey:'customers',
+    setup:[],
+    fields:[
+      {key:'name', label:'Name', type:'text'},
+      {key:'phone', label:'Phone', type:'text'},
+      {key:'email', label:'Email', type:'text'},
+      {key:'notes', label:'Notes', type:'textarea'}
+    ] },
+  { id:'messaging', name:'SMS & Email', icon:'💬', cat:'operate', price:0,
+    desc:'Booking confirmations, reminders and campaigns. Templates included.',
+    setup:[
+      {key:'confirm_tpl', label:'Booking confirmation text', type:'textarea', def:'Hi {name}! Your booking at {business} is confirmed for {date}. Reply here with questions.'},
+      {key:'remind_tpl', label:'Reminder text', type:'textarea', def:'Reminder: your booking at {business} is today at {time}!'}
+    ] },
+  { id:'coupons', name:'Coupons & Promos', icon:'🎟️', cat:'operate', price:0,
+    desc:'Discount codes and limited-time offers.',
+    dataKey:'coupons',
+    setup:[],
+    fields:[
+      {key:'code', label:'Code', type:'text'},
+      {key:'off', label:'Discount', type:'text', ph:'10% or $5'},
+      {key:'until', label:'Valid until', type:'date'}
+    ] },
+  { id:'staff', name:'Staff', icon:'👔', cat:'operate', price:0,
+    desc:'Captains, stylists, servers — roles and contact info.',
+    dataKey:'staff',
+    setup:[],
+    fields:[
+      {key:'name', label:'Name', type:'text'},
+      {key:'role', label:'Role', type:'text'},
+      {key:'phone', label:'Phone', type:'text'}
+    ] },
+  { id:'analytics', name:'Analytics', icon:'📈', cat:'operate', price:0,
+    desc:'Views, clicks, scans, bookings and where they came from.',
+    setup:[] },
+
+  /* ── CONNECT ── */
+  { id:'payments', name:'Payments (Stripe/Square)', icon:'💳', cat:'connect', price:0,
+    desc:'Connect your own Stripe or Square. Your money goes directly to you.',
+    setup:[
+      {key:'provider', label:'Payment provider', type:'select', options:['Stripe','Square','Clover','None yet'], def:'Stripe'},
+      {key:'mode', label:'Collect at booking', type:'select', options:['Full payment','Deposit only','No payment (pay on site)'], def:'Deposit only'},
+      {key:'deposit', label:'Deposit %', type:'number', def:'25'}
+    ] },
+  { id:'email-parser', name:'Platform Sync (Email)', icon:'📥', cat:'connect', price:0,
+    desc:'Forward confirmation emails from Airbnb, FareHarbor, VRBO, OpenTable — any platform — and bookings appear here automatically. No APIs, no permission needed.',
+    setup:[
+      {key:'platforms', label:'Which platforms do you get booking emails from?', type:'text', ph:'e.g. FareHarbor, Airbnb'},
+      {key:'note', label:'Your forwarding address is created on activation', type:'static', def:'gcr-yourbusiness@parse.cybercheckinc.com'}
+    ] },
+  { id:'gcr-listing', name:'Gulf Coast Radar Listing', icon:'📍', cat:'connect', price:0,
+    desc:'Appear in GCR discovery — search, categories and live availability.',
+    setup:[{key:'category', label:'GCR category', type:'select', options:['Restaurant','Charter','Boat Rental','Activity','Music/Artist','Transportation','Other'], def:'Restaurant'}] },
+  { id:'qr-codes', name:'QR Codes', icon:'📲', cat:'connect', price:0,
+    desc:'QR codes for tables, docks, flyers — all pointing at your page.',
+    setup:[] },
+  { id:'ai-concierge', name:'AI Concierge', icon:'🤖', cat:'connect', price:29,
+    desc:'AI that answers customer questions from your verified data only.',
+    block:{ title:'Ask Us Anything', sub:'Instant answers, 24/7' },
+    setup:[{key:'tone', label:'Tone', type:'select', options:['Friendly','Professional','Fun'], def:'Friendly'}] }
+];
+
+var CATS = [
+  {id:'booking', name:'Booking'},
+  {id:'content', name:'Content'},
+  {id:'engage',  name:'Engage'},
+  {id:'operate', name:'Operate'},
+  {id:'connect', name:'Connect'}
+];
+
+/* Industry presets = starter bundles ONLY. Not hardwiring. */
+var PRESETS = [
+  { id:'restaurant', em:'🍽️', name:'Restaurant / Bar', mods:['menu','specials','events','booking','reviews','hours','gallery','messaging','customers','qr-codes'], type:'Restaurant' },
+  { id:'charter', em:'🎣', name:'Charter / Tours', mods:['services','booking','availability','waivers','payments','reviews','hours','gallery','messaging','customers','email-parser'], type:'Charter' },
+  { id:'rental', em:'🚤', name:'Boat / Rentals', mods:['services','booking','availability','waivers','payments','faq','hours','gallery','messaging','customers'], type:'Rentals' },
+  { id:'salon', em:'✂️', name:'Salon / Services', mods:['services','booking','availability','loyalty','reviews','hours','messaging','customers'], type:'Salon' },
+  { id:'creator', em:'🎤', name:'Artist / Creator', mods:['events','song-request','tipjar','links','gallery','forms','messaging'], type:'Artist' },
+  { id:'lodging', em:'🏖️', name:'Condo / Lodging', mods:['services','availability','booking','faq','payments','email-parser','messaging','customers'], type:'Lodging' },
+  { id:'blank', em:'🧩', name:'Start Blank', mods:['links'], type:'Business' }
+];
+
+function mod(id){ for(var i=0;i<MODULES.length;i++) if(MODULES[i].id===id) return MODULES[i]; return null; }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show')},2400); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+/* ============================================================
+   NAV + ROUTER — sidebar is built from installed modules
+   ============================================================ */
+var CORE_PAGES = [
+  {id:'overview', name:'Overview', icon:'📊'},
+  {id:'mypage',   name:'My Page',  icon:'📱'},
+  {id:'appstore', name:'App Store',icon:'🛍️'}
+];
+var currentPage = 'overview';
+
+function renderNav(){
+  var core = document.getElementById('nav-core');
+  core.innerHTML = CORE_PAGES.map(function(p){
+    return '<button class="nav-item'+(currentPage===p.id?' active':'')+'" onclick="showPage(\''+p.id+'\')"><span class="ic">'+p.icon+'</span> '+p.name+'</button>';
+  }).join('');
+  var list = installedList();
+  var nav = document.getElementById('nav-modules');
+  if(!list.length){ nav.innerHTML = '<div class="muted small" style="padding:6px 10px">No tools yet — open the App Store.</div>'; return; }
+  nav.innerHTML = list.map(function(m){
+    return '<button class="nav-item'+(currentPage===m.id?' active':'')+'" onclick="showPage(\''+m.id+'\')"><span class="ic">'+m.icon+'</span> '+esc(m.name)+'</button>';
+  }).join('');
+}
+function installedList(){
+  return MODULES.filter(function(m){ return state.installed[m.id]; })
+    .sort(function(a,b){ return (state.installed[a.id].sort||0)-(state.installed[b.id].sort||0); });
+}
+function showPage(id){
+  currentPage = id;
+  document.getElementById('sidebar').classList.remove('open');
+  renderNav();
+  renderPage();
+}
+
+/* ============================================================
+   PAGE RENDERERS
+   ============================================================ */
+function renderPage(){
+  var host = document.getElementById('pages');
+  if(currentPage==='overview') host.innerHTML = pageOverview();
+  else if(currentPage==='appstore') host.innerHTML = pageStore();
+  else if(currentPage==='mypage') host.innerHTML = pageBuilder();
+  else host.innerHTML = pageModule(currentPage);
+  if(currentPage==='mypage') renderPreview('pv-host');
+}
+
+/* ── Overview ── */
+function pageOverview(){
+  var list = installedList();
+  var stats = '';
+  stats += statCard('🧩 Tools installed', list.length);
+  var bookings = (state.data.bookings||[]);
+  if(state.installed.booking){
+    var pending = bookings.filter(function(b){return b.status==='pending'}).length;
+    stats += statCard('📅 Bookings', bookings.length);
+    stats += statCard('⏳ Pending', pending);
+  }
+  if(state.installed.customers) stats += statCard('👥 Customers', (state.data.customers||[]).length);
+  if(state.installed.reviews){
+    var rv=(state.data.reviews||[]); var avg = rv.length? (rv.reduce(function(s,r){return s+(parseFloat(r.stars)||0)},0)/rv.length).toFixed(1) : '—';
+    stats += statCard('⭐ Avg rating', avg);
+  }
+  if(state.installed.forms) stats += statCard('📝 Leads', (state.data.leads||[]).length);
+
+  var tiles = list.map(function(m){
+    return '<button class="app-card" style="text-align:left" onclick="showPage(\''+m.id+'\')">'+
+      '<div class="app-top"><div class="app-icon">'+m.icon+'</div><div><b>'+esc(m.name)+'</b><span class="cat">'+m.cat+'</span></div></div>'+
+      '<div class="app-desc">'+esc(m.desc)+'</div></button>';
+  }).join('');
+
+  return '<div class="page active">'+
+    '<div class="page-head"><div><h1>Welcome back'+(state.business.name?', '+esc(state.business.name):'')+'</h1>'+
+    '<p>Build, customize and run your business from one place. Everything here is modular — add or remove tools any time.</p></div>'+
+    '<div style="display:flex;gap:10px"><button class="btn btn-outline" onclick="showPage(\'mypage\')">📱 Preview My Page</button>'+
+    '<button class="btn btn-primary" onclick="showPage(\'appstore\')">🛍️ App Store</button></div></div>'+
+    '<div class="grid g4" style="margin-bottom:20px">'+stats+'</div>'+
+    (list.length? '<div class="nav-label" style="padding-left:0">Your tools</div><div class="store-grid">'+tiles+'</div>'
+      : '<div class="empty">No tools installed yet. Open the <b>App Store</b> to add your first one — most install in under 2 minutes.</div>')+
+    '</div>';
+}
+function statCard(lbl,val){ return '<div class="card stat"><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div></div>'; }
+
+/* ── App Store ── */
+var storeCat = 'all', storeQ = '';
+function pageStore(){
+  var chips = '<button class="chip'+(storeCat==='all'?' active':'')+'" onclick="setStoreCat(\'all\')">All</button>' +
+    CATS.map(function(c){ return '<button class="chip'+(storeCat===c.id?' active':'')+'" onclick="setStoreCat(\''+c.id+'\')">'+c.name+'</button>'; }).join('');
+  var list = MODULES.filter(function(m){
+    if(storeCat!=='all' && m.cat!==storeCat) return false;
+    if(storeQ && (m.name+' '+m.desc).toLowerCase().indexOf(storeQ)===-1) return false;
+    return true;
+  });
+  var cards = list.map(function(m){
+    var inst = !!state.installed[m.id];
+    var price = m.price>0 ? '$'+m.price+'/mo' : 'Free';
+    var btn = inst
+      ? '<button class="btn btn-danger btn-sm" onclick="uninstall(\''+m.id+'\')">Remove</button>'
+      : '<button class="btn btn-primary btn-sm" onclick="startInstall(\''+m.id+'\')">Install</button>';
+    return '<div class="app-card'+(inst?' installed':'')+'">'+
+      '<div class="app-top"><div class="app-icon">'+m.icon+'</div><div><b>'+esc(m.name)+'</b><span class="cat">'+m.cat+'</span></div>'+
+      (inst?'<span style="margin-left:auto;font-size:11px;color:var(--primary);font-weight:800">✓ Installed</span>':'')+'</div>'+
+      '<div class="app-desc">'+esc(m.desc)+'</div>'+
+      '<div class="app-foot"><span class="price">'+price+'</span>'+btn+'</div></div>';
+  }).join('');
+  return '<div class="page active">'+
+    '<div class="page-head"><div><h1>App Store</h1><p>Install the tools you need. Setup takes a few questions, you preview it live, then publish.</p></div>'+
+    '<input style="max-width:240px" placeholder="🔍 Search apps…" value="'+esc(storeQ)+'" oninput="storeQ=this.value.toLowerCase();renderPage()"></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'+chips+'</div>'+
+    '<div class="store-grid">'+cards+'</div></div>';
+}
+function setStoreCat(c){ storeCat=c; renderPage(); }
+
+/* ── Install wizard: questions → live preview → publish ── */
+var iw = null;
+function startInstall(id){
+  var m = mod(id);
+  iw = { m:m, step:0, config:{} };
+  (m.setup||[]).forEach(function(q){ if(q.def!=null) iw.config[q.key]=q.def; });
+  document.getElementById('iw-title').textContent = m.icon+'  Install '+m.name;
+  renderWizard();
+  openModal('modal-install');
+}
+function wizardSteps(){ return (iw.m.setup && iw.m.setup.length) ? ['Setup','Preview','Done'] : ['Preview','Done']; }
+function renderWizard(){
+  var steps = wizardSteps();
+  document.getElementById('iw-steps').innerHTML = steps.map(function(s,i){
+    return '<div class="wstep'+(i<=iw.step?' on':'')+'"></div>';
+  }).join('');
+  var body = document.getElementById('iw-body');
+  var stepName = steps[iw.step];
+  var back = document.getElementById('iw-back'), next = document.getElementById('iw-next');
+  back.style.visibility = iw.step===0 ? 'hidden' : 'visible';
+
+  if(stepName==='Setup'){
+    body.innerHTML = '<p class="muted small" style="margin:4px 0 0">A few quick questions — you can change all of this later.</p>' +
+      iw.m.setup.map(function(q,qi){
+        if(q.showIf && iw.config[q.showIf.key]!==q.showIf.val) return '';
+        if(q.type==='static') return '<label>'+esc(q.label)+'</label><div class="card" style="padding:10px 12px;font-size:13px">'+esc(q.def)+'</div>';
+        if(q.type==='select'){
+          return '<label>'+esc(q.label)+'</label><select onchange="iw.config[\''+q.key+'\']=this.value;renderWizard()">'+
+            q.options.map(function(o){ return '<option'+(iw.config[q.key]===o?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>';
+        }
+        if(q.type==='textarea') return '<label>'+esc(q.label)+'</label><textarea rows="3" oninput="iw.config[\''+q.key+'\']=this.value">'+esc(iw.config[q.key]||'')+'</textarea>';
+        return '<label>'+esc(q.label)+'</label><input type="'+(q.type==='number'?'number':'text')+'" placeholder="'+esc(q.ph||'')+'" value="'+esc(iw.config[q.key]||'')+'" oninput="iw.config[\''+q.key+'\']=this.value">';
+      }).join('');
+    next.textContent = 'Install & Preview →';
+  }
+  else if(stepName==='Preview'){
+    body.innerHTML = '<p class="muted small" style="margin:4px 0 12px">Here’s your public page with <b>'+esc(iw.m.name)+'</b> added. Nothing is live yet.</p><div id="iw-preview"></div>';
+    renderPreview('iw-preview', iw.m.id, iw.config);
+    next.textContent = '🚀 Publish to Live';
+  }
+  else {
+    body.innerHTML = '<div style="text-align:center;padding:26px 10px">'+
+      '<div style="font-size:44px">✅</div><h3 style="margin:10px 0 6px">'+esc(iw.m.name)+' is live</h3>'+
+      '<p class="muted small">It’s on your page and in your sidebar. Edit, reorder, pause or remove it any time from <b>My Page</b>.</p></div>';
+    next.textContent = 'Done';
+    back.style.visibility='hidden';
+  }
+}
+document.getElementById('iw-back').onclick = function(){ if(iw && iw.step>0){ iw.step--; renderWizard(); } };
+document.getElementById('iw-next').onclick = function(){
+  if(!iw) return;
+  var steps = wizardSteps();
+  if(steps[iw.step]==='Preview'){
+    // publish
+    var maxSort = 0; Object.keys(state.installed).forEach(function(k){ maxSort=Math.max(maxSort,state.installed[k].sort||0); });
+    state.installed[iw.m.id] = { config:iw.config, enabled:true, showOnPublic:!!iw.m.block, sort:maxSort+1, installedAt:new Date().toISOString() };
+    if(iw.m.block && state.pageOrder.indexOf(iw.m.id)===-1) state.pageOrder.push(iw.m.id);
+    save(); renderNav();
+  }
+  if(iw.step >= steps.length-1){ closeModal('modal-install'); iw=null; renderPage(); return; }
+  iw.step++; renderWizard();
+};
+function uninstall(id){
+  var m = mod(id);
+  if(!confirm('Remove '+m.name+' from your dashboard and public page? Your data is kept.')) return;
+  delete state.installed[id];
+  state.pageOrder = state.pageOrder.filter(function(x){ return x!==id; });
+  save(); renderNav();
+  if(currentPage===id) showPage('appstore'); else renderPage();
+  toast(m.name+' removed');
+}
+
+/* ── My Page (section builder + live preview) ── */
+function pageBuilder(){
+  var rows = state.pageOrder.map(function(id, idx){
+    var m = mod(id); if(!m || !state.installed[id]) return '';
+    var inst = state.installed[id];
+    var cfg = inst.config||{};
+    var title = cfg.label || (m.block&&m.block.title) || m.name;
+    return '<div class="sec-row" draggable="true" data-id="'+id+'" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">'+
+      '<span class="grip">⋮⋮</span>'+
+      '<span style="font-size:17px">'+m.icon+'</span>'+
+      '<span class="nm">'+esc(title)+'<span>'+esc(m.name)+'</span></span>'+
+      '<div class="arrows"><button onclick="moveSec('+idx+',-1)">▲</button><button onclick="moveSec('+idx+',1)">▼</button></div>'+
+      '<button class="btn btn-outline btn-sm" onclick="showPage(\''+id+'\')">Edit</button>'+
+      '<button class="toggle'+(inst.showOnPublic?' on':'')+'" onclick="toggleSec(\''+id+'\')" title="Show on public page"></button>'+
+      '</div>';
+  }).join('');
+  return '<div class="page active">'+
+    '<div class="page-head"><div><h1>My Page</h1><p>Your public page — one link, one QR code. Drag to reorder, toggle to show or hide.</p></div>'+
+    '<div style="display:flex;gap:10px"><button class="btn btn-outline" onclick="openBizSettings()">✏️ Edit Business Info</button>'+
+    '<button class="btn btn-primary" onclick="copyLink()">🔗 Copy Public Link</button></div></div>'+
+    '<div class="builder-wrap">'+
+      '<div><div class="nav-label" style="padding-left:0">Sections (drag to reorder • toggle to show)</div>'+
+        '<div class="sec-row" style="opacity:.75"><span style="font-size:17px">🏠</span><span class="nm">Hero — '+esc(state.business.name||'Your Business')+'<span>Always first · edit in Business Info</span></span></div>'+
+        (rows || '<div class="empty">No public sections yet. Install tools with a page block from the App Store.</div>')+
+      '</div>'+
+      '<div><div class="nav-label" style="padding-left:0">Live preview</div><div id="pv-host"></div></div>'+
+    '</div></div>';
+}
+function toggleSec(id){ state.installed[id].showOnPublic = !state.installed[id].showOnPublic; save(); renderPage(); }
+function moveSec(idx, dir){
+  var j = idx+dir; if(j<0||j>=state.pageOrder.length) return;
+  var t = state.pageOrder[idx]; state.pageOrder[idx]=state.pageOrder[j]; state.pageOrder[j]=t;
+  save(); renderPage();
+}
+var _dragId=null;
+function dragStart(e){ _dragId=e.currentTarget.dataset.id; e.currentTarget.classList.add('dragging'); }
+function dragOver(e){ e.preventDefault(); }
+function dragEnd(e){ e.currentTarget.classList.remove('dragging'); }
+function dragDrop(e){
+  e.preventDefault();
+  var overId = e.currentTarget.dataset.id;
+  if(!_dragId || _dragId===overId) return;
+  var from = state.pageOrder.indexOf(_dragId), to = state.pageOrder.indexOf(overId);
+  state.pageOrder.splice(from,1); state.pageOrder.splice(to,0,_dragId);
+  _dragId=null; save(); renderPage();
+}
+function copyLink(){
+  var slug = (state.business.name||'your-business').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var url = 'https://cybercheck.page/'+slug;
+  if(navigator.clipboard) navigator.clipboard.writeText(url).then(function(){ toast('Copied: '+url); }, function(){ toast(url); });
+  else toast(url);
+}
+
+/* ── Public page preview renderer (the aWavegent-style output) ── */
+function renderPreview(hostId, extraId, extraCfg){
+  var host = document.getElementById(hostId); if(!host) return;
+  var b = state.business;
+  var accent = b.accent || '#22c3a6';
+  var blocks = state.pageOrder.filter(function(id){
+    return state.installed[id] && state.installed[id].showOnPublic && mod(id) && mod(id).block;
+  }).map(function(id){ return { m:mod(id), cfg:state.installed[id].config||{} }; });
+  if(extraId && mod(extraId) && mod(extraId).block && !state.installed[extraId]){
+    blocks.push({ m:mod(extraId), cfg:extraCfg||{}, isNew:true });
+  }
+  var linkRows = blocks.map(function(bl){
+    var t = bl.cfg.label || bl.m.block.title;
+    return '<div class="pv-link"'+(bl.isNew?' style="outline:2px solid '+accent+';outline-offset:2px"':'')+'>'+
+      '<div class="i">'+bl.m.icon+'</div><div><b>'+esc(t)+'</b><span>'+esc(bl.m.block.sub)+'</span></div><span class="ar">›</span></div>';
+  }).join('');
+  var primary = blocks.length ? (blocks[0].cfg.label || blocks[0].m.block.title) : 'Book Now';
+  host.innerHTML = '<div class="phone"><div class="phone-screen">'+
+    '<div class="pv-hero" style="background:linear-gradient(180deg,'+accent+'cc,'+accent+'55),#20304a">'+
+      '<div class="pv-avatar">'+ (b.emoji||'🏪') +'</div>'+
+      '<h3>'+esc(b.name||'Your Business')+'</h3><p>'+esc(b.tagline||'Your tagline appears here')+'</p></div>'+
+    '<div class="pv-cta">'+
+      '<div class="pv-btn" style="background:#1d9d67">📞 Call Now</div>'+
+      '<div class="pv-btn" style="background:'+accent+'">'+esc(primary)+'</div></div>'+
+    '<div class="pv-links">'+ (linkRows || '<div style="text-align:center;color:#8a95a5;font-size:12px;padding:20px">Install tools to add sections here</div>') +'</div>'+
+    '</div></div>';
+}
+
+/* ── Generic module panel (config + data CRUD) ── */
+function pageModule(id){
+  var m = mod(id), inst = state.installed[id];
+  if(!m || !inst) return '<div class="page active"><div class="empty">Tool not installed.</div></div>';
+  var cfg = inst.config||{};
+
+  var cfgHtml = (m.setup||[]).map(function(q){
+    if(q.type==='static') return '<label>'+esc(q.label)+'</label><div class="card" style="padding:10px 12px;font-size:13px">'+esc(q.def)+'</div>';
+    if(q.showIf && cfg[q.showIf.key]!==q.showIf.val) return '';
+    if(q.type==='select'){
+      return '<label>'+esc(q.label)+'</label><select onchange="updateCfg(\''+id+'\',\''+q.key+'\',this.value)">'+
+        q.options.map(function(o){ return '<option'+(cfg[q.key]===o?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>';
+    }
+    if(q.type==='textarea') return '<label>'+esc(q.label)+'</label><textarea rows="3" onchange="updateCfg(\''+id+'\',\''+q.key+'\',this.value)">'+esc(cfg[q.key]||'')+'</textarea>';
+    return '<label>'+esc(q.label)+'</label><input type="'+(q.type==='number'?'number':'text')+'" placeholder="'+esc(q.ph||'')+'" value="'+esc(cfg[q.key]||'')+'" onchange="updateCfg(\''+id+'\',\''+q.key+'\',this.value)">';
+  }).join('');
+
+  var dataHtml = '';
+  if(m.dataKey){
+    var rows = state.data[m.dataKey]||[];
+    var cols = m.fields.slice(0,4);
+    var tbody = rows.map(function(r,ri){
+      return '<tr>'+cols.map(function(f){ return '<td>'+esc(r[f.key]||'—')+'</td>'; }).join('')+
+        '<td style="text-align:right;white-space:nowrap">'+
+        '<button class="btn btn-outline btn-sm" onclick="openRec(\''+id+'\','+ri+')">Edit</button> '+
+        '<button class="btn btn-danger btn-sm" onclick="delRec(\''+id+'\','+ri+')">✕</button></td></tr>';
+    }).join('');
+    dataHtml = '<div class="card" style="margin-top:16px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+      '<b style="font-size:14px">'+esc(m.name)+' data</b>'+
+      '<button class="btn btn-primary btn-sm" onclick="openRec(\''+id+'\',-1)">+ Add</button></div>'+
+      (rows.length
+        ? '<div style="overflow-x:auto"><table class="data"><thead><tr>'+cols.map(function(f){return '<th>'+esc(f.label)+'</th>';}).join('')+'<th></th></tr></thead><tbody>'+tbody+'</tbody></table></div>'
+        : '<div class="empty">Nothing here yet. Click <b>+ Add</b> to create your first entry — it shows up on your public page instantly.</div>')+
+      '</div>';
+  }
+
+  return '<div class="page active">'+
+    '<div class="page-head"><div><h1>'+m.icon+' '+esc(m.name)+'</h1><p>'+esc(m.desc)+'</p></div>'+
+    '<div style="display:flex;gap:10px">'+
+    (m.block?'<button class="btn btn-outline" onclick="showPage(\'mypage\')">📱 View on My Page</button>':'')+
+    '<button class="btn btn-danger" onclick="uninstall(\''+id+'\')">Remove Tool</button></div></div>'+
+    (cfgHtml ? '<div class="card"><b style="font-size:14px">Settings</b>'+cfgHtml+'</div>' : '')+
+    dataHtml+'</div>';
+}
+function updateCfg(id,key,val){ state.installed[id].config[key]=val; save(); toast('Saved'); }
+
+/* record editor */
+var recCtx = null;
+function openRec(modId, idx){
+  bindRecSave(); // ensure the default save handler (biz-settings may have swapped it)
+  var m = mod(modId);
+  recCtx = { m:m, idx:idx };
+  var rows = state.data[m.dataKey]||[];
+  var rec = idx>=0 ? rows[idx] : {};
+  document.getElementById('rec-title').textContent = (idx>=0?'Edit':'Add')+' — '+m.name;
+  document.getElementById('rec-body').innerHTML = m.fields.map(function(f){
+    var v = rec[f.key]!=null?rec[f.key]:'';
+    if(f.type==='select') return '<label>'+esc(f.label)+'</label><select id="rf-'+f.key+'">'+f.options.map(function(o){return '<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select>';
+    if(f.type==='textarea') return '<label>'+esc(f.label)+'</label><textarea rows="3" id="rf-'+f.key+'">'+esc(v)+'</textarea>';
+    return '<label>'+esc(f.label)+'</label><input id="rf-'+f.key+'" type="'+(f.type==='number'?'number':f.type==='date'?'date':'text')+'" placeholder="'+esc(f.ph||'')+'" value="'+esc(v)+'">';
+  }).join('');
+  openModal('modal-rec');
+}
+/* save handler is bound in bindRecSave() at boot */
+function delRec(modId, idx){
+  var m = mod(modId);
+  state.data[m.dataKey].splice(idx,1);
+  save(); renderPage();
+}
+
+/* ── business settings ── */
+function openBizSettings(){
+  recCtx = null;
+  document.getElementById('rec-title').textContent = 'Business Info';
+  var b = state.business;
+  document.getElementById('rec-body').innerHTML =
+    '<label>Business name</label><input id="bz-name" value="'+esc(b.name)+'">'+
+    '<label>Tagline</label><input id="bz-tag" value="'+esc(b.tagline)+'">'+
+    '<label>Phone</label><input id="bz-phone" value="'+esc(b.phone)+'">'+
+    '<label>Emoji / logo</label><input id="bz-emoji" value="'+esc(b.emoji)+'" maxlength="4">'+
+    '<label>Accent color</label><input id="bz-accent" type="color" value="'+esc(b.accent||'#22c3a6')+'" style="height:44px;padding:4px">';
+  document.getElementById('rec-save').onclick = function(){
+    b.name=document.getElementById('bz-name').value;
+    b.tagline=document.getElementById('bz-tag').value;
+    b.phone=document.getElementById('bz-phone').value;
+    b.emoji=document.getElementById('bz-emoji').value||'🏪';
+    b.accent=document.getElementById('bz-accent').value;
+    save(); closeModal('modal-rec'); refreshBizChip(); renderPage();
+    bindRecSave(); // restore the default record-save handler
+    toast('Business info saved');
+  };
+  openModal('modal-rec');
+}
+function bindRecSave(){
+  document.getElementById('rec-save').onclick = function(){
+    if(!recCtx) return;
+    var m = recCtx.m;
+    if(!state.data[m.dataKey]) state.data[m.dataKey]=[];
+    var rec = recCtx.idx>=0 ? state.data[m.dataKey][recCtx.idx] : {};
+    m.fields.forEach(function(f){ rec[f.key] = document.getElementById('rf-'+f.key).value; });
+    if(recCtx.idx<0) state.data[m.dataKey].push(rec);
+    save(); closeModal('modal-rec'); recCtx=null; renderPage(); toast('Saved');
+  };
+}
+function refreshBizChip(){
+  document.getElementById('biz-chip-name').textContent = state.business.name || 'Your Business';
+  document.getElementById('biz-chip-type').textContent = state.business.type ? state.business.type+' · edit info' : 'Set up your business →';
+}
+
+/* ============================================================
+   ONBOARDING — industry presets are starter bundles, not code
+   ============================================================ */
+var obSel = null;
+function renderOnboard(){
+  document.getElementById('ob-presets').innerHTML = PRESETS.map(function(p){
+    return '<div class="preset'+(obSel===p.id?' sel':'')+'" onclick="obSel=\''+p.id+'\';renderOnboard()">'+
+      '<div class="em">'+p.em+'</div><b>'+esc(p.name)+'</b><span>'+p.mods.length+' tools</span></div>';
+  }).join('');
+}
+function finishOnboard(){
+  var name = document.getElementById('ob-name').value.trim();
+  if(!name){ toast('Enter your business name'); return; }
+  if(!obSel){ toast('Pick a starting bundle'); return; }
+  var p = PRESETS.filter(function(x){return x.id===obSel})[0];
+  state.business.name = name;
+  state.business.tagline = document.getElementById('ob-tag').value.trim();
+  state.business.phone = document.getElementById('ob-phone').value.trim();
+  state.business.type = p.type;
+  state.business.emoji = p.em;
+  var sort = 0;
+  p.mods.forEach(function(id){
+    var m = mod(id); if(!m) return;
+    var config = {};
+    (m.setup||[]).forEach(function(q){ if(q.def!=null) config[q.key]=q.def; });
+    state.installed[id] = { config:config, enabled:true, showOnPublic:!!m.block, sort:++sort, installedAt:new Date().toISOString() };
+    if(m.block) state.pageOrder.push(id);
+  });
+  state.onboarded = true;
+  save();
+  closeModal('modal-onboard');
+  refreshBizChip(); renderNav(); renderPage();
+  toast('Your dashboard is ready — everything is editable');
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot(){
+  bindRecSave();
+  refreshBizChip();
+  renderNav();
+  renderPage();
+  if(!state.onboarded){ renderOnboard(); openModal('modal-onboard'); }
+}
+boot();
+</script>
+</body>
+</html>
