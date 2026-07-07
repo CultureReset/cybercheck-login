@@ -9,10 +9,10 @@
   "section": { "layout": "hero", "singleton": true },
   "block": { "title": "Hero Banner", "sub": "Top-of-page headline" },
   "setup": [
-    { "key": "headline", "label": "Headline", "type": "text", "ph": "Unforgettable days on the water" },
-    { "key": "subhead", "label": "Sub-headline", "type": "textarea", "ph": "Private trips for up to 6 guests — book in 60 seconds" },
+    { "key": "headline", "label": "Headline", "type": "text", "ph": "Your big headline goes here" },
+    { "key": "subhead", "label": "Sub-headline", "type": "textarea", "ph": "One line on what you do — book online in 60 seconds" },
     { "key": "image", "label": "Background image", "type": "image" },
     { "key": "button_label", "label": "Button text", "type": "text", "def": "Book Now" },
-    { "key": "button_target", "label": "Button opens (an app id like book-charter, or a URL)", "type": "text", "ph": "book-charter" }
+    { "key": "button_target", "label": "Button opens (an app id like booking, or a URL)", "type": "text", "ph": "booking" }
   ]
 }

@@ -1,0 +1,31 @@
+{
+  "id": "seo",
+  "name": "SEO & Google",
+  "icon": "🔍",
+  "cat": "grow",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Control how you show up on Google and in link previews — search title, description, share image, and the structured data that gets you into local search & maps. Any business, any industry.",
+  "provides": "seo",
+  "block": { "title": "SEO", "sub": "How you appear on Google" },
+  "setup": [
+    { "key": "title", "label": "Search title (aim for 55–60 characters)", "type": "text", "ph": "Sparkle Clean — House & Office Cleaning in Mobile, AL" },
+    { "key": "description", "label": "Search description (~155 characters)", "type": "textarea", "ph": "Trusted, insured house & office cleaning across Mobile & Baldwin County. Book online in 60 seconds." },
+    { "key": "keywords", "label": "Keywords (comma-separated)", "type": "text", "ph": "house cleaning, maid service, office cleaning, Mobile AL" },
+    { "key": "biz_type", "label": "Business type (for Google structured data)", "type": "select", "options": [
+      "Local Business (general)",
+      "Home & Cleaning Services",
+      "Professional / Consulting Services",
+      "Health, Beauty & Wellness",
+      "Restaurant / Food & Drink",
+      "Lodging / Vacation Rental",
+      "Tours, Activities & Recreation",
+      "Automotive / Repair",
+      "Retail / Store",
+      "Events & Entertainment"
+    ], "def": "Local Business (general)" },
+    { "key": "area_served", "label": "Areas you serve", "type": "text", "ph": "Mobile, Baldwin County, Gulf Shores, Daphne" },
+    { "key": "price_range", "label": "Price range", "type": "select", "options": ["$", "$$", "$$$", "$$$$"], "def": "$$" },
+    { "key": "og_image", "label": "Share image (shown in link previews)", "type": "image" }
+  ]
+}

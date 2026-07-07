@@ -12,6 +12,10 @@
     "name": "Engage"
   },
   {
+    "id": "grow",
+    "name": "Grow"
+  },
+  {
     "id": "operate",
     "name": "Operate"
   },

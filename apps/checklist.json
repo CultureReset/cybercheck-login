@@ -14,7 +14,7 @@
     { "key": "heading", "label": "Section heading", "type": "text", "def": "What's Included" }
   ],
   "fields": [
-    { "key": "text", "label": "Item", "type": "text", "ph": "All gear & bait" },
+    { "key": "text", "label": "Item", "type": "text", "ph": "What's included in your service" },
     { "key": "included", "label": "Included?", "type": "select", "options": ["Included", "Not included"], "def": "Included" }
   ]
 }

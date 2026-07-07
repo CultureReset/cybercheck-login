@@ -20,7 +20,8 @@
       "qr-codes",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Restaurant"
   },
@@ -52,7 +53,8 @@
       "fleet",
       "addons",
       "locations",
-      "gift-cards"
+      "gift-cards",
+      "seo"
     ],
     "type": "Charter"
   },
@@ -79,7 +81,8 @@
       "locations",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Rentals"
   },
@@ -103,7 +106,8 @@
       "customers",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Salon"
   },
@@ -123,7 +127,8 @@
       "messaging",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Artist"
   },
@@ -144,7 +149,8 @@
       "customers",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Lodging"
   },
@@ -165,7 +171,8 @@
       "customers",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Fitness"
   },
@@ -187,9 +194,35 @@
       "customers",
       "cta",
       "contact",
-      "footer"
+      "footer",
+      "seo"
     ],
     "type": "Photographer"
+  },
+  {
+    "id": "service",
+    "em": "\ud83e\uddf9",
+    "name": "Service Business",
+    "mods": [
+      "hero",
+      "about",
+      "services",
+      "booking",
+      "steps",
+      "features",
+      "checklist",
+      "reviews",
+      "faq",
+      "coupons",
+      "cta",
+      "contact",
+      "footer",
+      "customers",
+      "messaging",
+      "seo",
+      "qr-codes"
+    ],
+    "type": "Service"
   },
   {
     "id": "blank",
