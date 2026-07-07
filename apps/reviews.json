@@ -39,5 +39,6 @@
       "label": "Review",
       "type": "textarea"
     }
-  ]
+  ],
+  "publicData": true
 }

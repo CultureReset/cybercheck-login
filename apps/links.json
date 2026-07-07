@@ -27,5 +27,6 @@
       "label": "Short description",
       "type": "text"
     }
-  ]
+  ],
+  "publicData": true
 }

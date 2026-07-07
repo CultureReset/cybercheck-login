@@ -41,5 +41,6 @@
       "type": "text",
       "ph": "3–6 PM"
     }
-  ]
+  ],
+  "publicData": true
 }

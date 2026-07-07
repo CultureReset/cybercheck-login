@@ -44,5 +44,6 @@
       "label": "Description",
       "type": "textarea"
     }
-  ]
+  ],
+  "publicData": true
 }

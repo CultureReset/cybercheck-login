@@ -163,7 +163,7 @@
   <div id="nav-modules"></div>
   <div style="margin-top:auto;padding-top:14px">
     <button class="nav-item" onclick="showPage('appstore')"><span class="ic">🛍️</span> Add More Tools</button>
-    <a class="nav-item" href="login.html"><span class="ic">🚪</span> Logout</a>
+    <a class="nav-item" href="#" onclick="localStorage.removeItem('cc_token');localStorage.removeItem('cc_demo');location.reload();return false"><span class="ic">🚪</span> Logout</a>
   </div>
 </aside>
 
@@ -219,6 +219,25 @@
   </div>
 </div>
 
+<!-- auth gate: sign in / create account / demo -->
+<div class="modal" id="modal-auth">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="auth-title">Welcome to CyberCheck</h2></div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button class="chip" id="auth-tab-login" onclick="authTab('login')">Sign In</button>
+      <button class="chip" id="auth-tab-signup" onclick="authTab('signup')">Create Account</button>
+    </div>
+    <div id="auth-signup-fields" style="display:none">
+      <label>Business name</label><input id="au-bizname" placeholder="e.g. Harbor Tide Kitchen">
+    </div>
+    <label>Email</label><input id="au-email" type="email" placeholder="you@yourbusiness.com">
+    <label>Password</label><input id="au-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authGo()">
+    <div id="auth-err" style="display:none;background:rgba(255,91,110,.12);border:1px solid rgba(255,91,110,.4);color:var(--danger);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" id="auth-go" onclick="authGo()">Sign In →</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="enterDemo()">Try the demo (no account)</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 <input type="file" id="app-file" accept=".json,application/json" style="display:none" onchange="importAppFile(this)">
 
@@ -253,20 +272,31 @@ function save(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
   apiSync();
 }
-/* Best-effort sync to the modules API (gcr-api-clean routes/modules.js).
-   Silent no-op when offline / not logged in. */
+/* ── Server sync (gcr-api-clean /api/platform) ──────────────
+   With an account: state, records, and the app registry live on the
+   server; localStorage is the offline cache. Without an account
+   (demo mode): everything stays local. */
+function token(){ return localStorage.getItem('cc_token') || ''; }
+function authHeaders(){ return { 'Authorization':'Bearer '+token(), 'Content-Type':'application/json' }; }
+function apiFetch(path, opts){
+  opts = opts || {};
+  opts.headers = authHeaders();
+  return fetch(API + '/api/platform' + path, opts).then(function(r){
+    if(r.status === 401){ localStorage.removeItem('cc_token'); throw new Error('Session expired — sign in again'); }
+    return r.json();
+  });
+}
 var _syncT = null;
 function apiSync(){
+  if(!token()) return;
   clearTimeout(_syncT);
   _syncT = setTimeout(function(){
-    var token = localStorage.getItem('cc_admin_token') || localStorage.getItem('cc_token');
-    if(!token) return;
-    fetch(API + '/api/modules/state', {
-      method:'POST',
-      headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' },
-      body: JSON.stringify({ state: state })
-    }).catch(function(){});
-  }, 800);
+    apiFetch('/state', { method:'POST', body: JSON.stringify({
+      business: state.business, installed: state.installed, page_order: state.pageOrder
+    })}).then(function(d){
+      if(d && d.slug && state.business.slug !== d.slug){ state.business.slug = d.slug; try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+    }).catch(function(e){ console.warn('sync failed:', e.message); });
+  }, 700);
 }
 
 /* ============================================================
@@ -295,17 +325,27 @@ function loadRegistry(){
 }
 function saveRegistry(){
   try{ localStorage.setItem(REG_KEY, JSON.stringify(customApps)); }catch(e){}
-  var token = localStorage.getItem('cc_admin_token') || localStorage.getItem('cc_token');
-  if(token){
-    fetch(API + '/api/modules/publish', {
-      method:'POST',
-      headers:{ 'Authorization':'Bearer '+token, 'Content-Type':'application/json' },
-      body: JSON.stringify({ apps: customApps })
-    }).catch(function(){});
-  }
+}
+/* publish/unpublish one app to the SHARED registry (all businesses see it) */
+function publishToServer(man){
+  if(!token()) return Promise.resolve();
+  return apiFetch('/registry', { method:'POST', body: JSON.stringify({ manifest: man }) })
+    .then(function(d){ if(d && d.version) man.version = d.version; saveRegistry(); })
+    .catch(function(e){ console.warn('registry publish failed:', e.message); });
+}
+function unpublishFromServer(id){
+  if(!token()) return Promise.resolve();
+  return apiFetch('/registry/'+encodeURIComponent(id), { method:'DELETE' }).catch(function(){});
 }
 function allApps(){ return MODULES.concat(customApps); }
-function mod(id){ var L=allApps(); for(var i=0;i<L.length;i++) if(L[i].id===id) return L[i]; return null; }
+function mod(id){
+  var L=allApps();
+  for(var i=0;i<L.length;i++) if(L[i].id===id) return L[i];
+  // installed apps carry a manifest snapshot — works even if the app
+  // was later removed from the registry
+  var inst = state.installed[id];
+  return (inst && inst.manifest) || null;
+}
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show')},2400); }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
@@ -496,7 +536,7 @@ document.getElementById('iw-next').onclick = function(){
   if(steps[iw.step]==='Preview'){
     // publish
     var maxSort = 0; Object.keys(state.installed).forEach(function(k){ maxSort=Math.max(maxSort,state.installed[k].sort||0); });
-    state.installed[iw.m.id] = { config:iw.config, enabled:true, showOnPublic:!!iw.m.block, sort:maxSort+1, installedAt:new Date().toISOString() };
+    state.installed[iw.m.id] = { config:iw.config, enabled:true, showOnPublic:!!iw.m.block, sort:maxSort+1, installedAt:new Date().toISOString(), manifest: JSON.parse(JSON.stringify(iw.m)) };
     if(iw.m.block && state.pageOrder.indexOf(iw.m.id)===-1) state.pageOrder.push(iw.m.id);
     save(); renderNav();
   }
@@ -560,8 +600,10 @@ function dragDrop(e){
   _dragId=null; save(); renderPage();
 }
 function copyLink(){
-  var slug = (state.business.name||'your-business').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  var url = 'https://cybercheck.page/'+slug;
+  var slug = state.business.slug || (state.business.name||'your-business').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var url = location.origin + '/p/' + slug;
+  if(location.protocol === 'file:') url = 'biz.html?b=' + slug;
+  if(!token()) { toast('Demo mode — create an account to get your live page'); return; }
   if(navigator.clipboard) navigator.clipboard.writeText(url).then(function(){ toast('Copied: '+url); }, function(){ toast(url); });
   else toast(url);
 }
@@ -682,7 +724,11 @@ function openRec(modId, idx){
 /* save handler is bound in bindRecSave() at boot */
 function delRec(modId, idx){
   var m = mod(modId);
+  var rec = state.data[m.dataKey][idx];
   state.data[m.dataKey].splice(idx,1);
+  if(token() && rec && rec._id){
+    apiFetch('/records/'+encodeURIComponent(m.dataKey)+'/'+encodeURIComponent(rec._id), { method:'DELETE' }).catch(function(){});
+  }
   save(); renderPage();
 }
 
@@ -721,8 +767,19 @@ function bindRecSave(){
     var isNew = recCtx.idx<0;
     var rec = isNew ? {} : state.data[m.dataKey][recCtx.idx];
     m.fields.forEach(function(f){ rec[f.key] = document.getElementById('rf-'+f.key).value; });
-    if(isNew){ state.data[m.dataKey].push(rec); fireTrigger(m.dataKey, rec); }
-    save(); closeModal('modal-rec'); recCtx=null; renderPage(); toast('Saved');
+    if(isNew) state.data[m.dataKey].push(rec);
+    if(token()){
+      // server is the source of truth: it stores the record AND runs automations
+      var call = isNew
+        ? apiFetch('/records/'+encodeURIComponent(m.dataKey), { method:'POST', body: JSON.stringify({ record: rec }) })
+            .then(function(d){ if(d && d.id) rec._id = d.id; })
+        : apiFetch('/records/'+encodeURIComponent(m.dataKey)+'/'+encodeURIComponent(rec._id||''), { method:'PATCH', body: JSON.stringify({ record: rec }) });
+      call.catch(function(e){ toast('⚠️ Saved locally — server sync failed'); console.warn(e); });
+      if(isNew) toast('Saved — automations run on the server');
+    } else if(isNew){
+      fireTrigger(m.dataKey, rec); // demo mode: simulate automations locally
+    }
+    save(); closeModal('modal-rec'); recCtx=null; renderPage(); if(!isNew || !token()) toast('Saved');
   };
 }
 function refreshBizChip(){
@@ -953,6 +1010,7 @@ function publishApp(){
     }
   } else customApps.push(man);
   saveRegistry();
+  publishToServer(man);
   st = null;
   toast('🚀 Published — every business on the platform can now install it');
   showPage('appstore');
@@ -1020,6 +1078,7 @@ function unpublishApp(id){
   var a = mod(id);
   if(!confirm('Unpublish '+(a?a.name:id)+' from the App Store? Businesses that installed it will lose it.')) return;
   customApps = customApps.filter(function(x){ return x.id!==id; });
+  unpublishFromServer(id);
   if(state.installed[id]){
     delete state.installed[id];
     state.pageOrder = state.pageOrder.filter(function(x){ return x!==id; });
@@ -1054,7 +1113,7 @@ function finishOnboard(){
     var m = mod(id); if(!m) return;
     var config = {};
     (m.setup||[]).forEach(function(q){ if(q.def!=null) config[q.key]=q.def; });
-    state.installed[id] = { config:config, enabled:true, showOnPublic:!!m.block, sort:++sort, installedAt:new Date().toISOString() };
+    state.installed[id] = { config:config, enabled:true, showOnPublic:!!m.block, sort:++sort, installedAt:new Date().toISOString(), manifest: JSON.parse(JSON.stringify(m)) };
     if(m.block) state.pageOrder.push(id);
   });
   state.onboarded = true;
@@ -1074,11 +1133,93 @@ function boot(){
   renderPage();
   if(!state.onboarded){ renderOnboard(); openModal('modal-onboard'); }
 }
+
+/* ── auth flow ─────────────────────────────────────────────── */
+var _authMode = 'login';
+function authTab(mode){
+  _authMode = mode;
+  document.getElementById('auth-tab-login').className = 'chip'+(mode==='login'?' active':'');
+  document.getElementById('auth-tab-signup').className = 'chip'+(mode==='signup'?' active':'');
+  document.getElementById('auth-signup-fields').style.display = mode==='signup' ? '' : 'none';
+  document.getElementById('auth-go').textContent = mode==='signup' ? 'Create My Account →' : 'Sign In →';
+}
+function authErr(msg){
+  var el = document.getElementById('auth-err');
+  el.style.display = msg ? 'block' : 'none';
+  el.textContent = msg || '';
+}
+function authGo(){
+  var email = document.getElementById('au-email').value.trim();
+  var pass = document.getElementById('au-pass').value;
+  if(!email || !pass){ authErr('Email and password required'); return; }
+  var btn = document.getElementById('auth-go');
+  btn.disabled = true; btn.textContent = 'Working…';
+  var path, body;
+  if(_authMode === 'signup'){
+    var bizName = document.getElementById('au-bizname').value.trim();
+    if(!bizName){ authErr('Business name required'); btn.disabled=false; authTab('signup'); return; }
+    path = '/api/auth/signup'; body = { email: email, password: pass, businessName: bizName };
+  } else {
+    path = '/api/auth/login'; body = { email: email, password: pass };
+  }
+  fetch(API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.error) throw new Error(d.error);
+      localStorage.setItem('cc_token', d.token);
+      localStorage.removeItem('cc_demo');
+      authErr('');
+      closeModal('modal-auth');
+      loadServerState().then(boot);
+    })
+    .catch(function(e){ authErr(e.message); btn.disabled=false; authTab(_authMode); });
+}
+function enterDemo(){
+  localStorage.setItem('cc_demo', '1');
+  closeModal('modal-auth');
+  boot();
+}
+
+/* Load everything from the server: state + records + shared registry */
+function loadServerState(){
+  if(!token()) return Promise.resolve();
+  return Promise.all([
+    apiFetch('/state'),
+    apiFetch('/records').catch(function(){ return {}; }),
+    apiFetch('/registry').catch(function(){ return []; })
+  ]).then(function(res){
+    var st = res[0] || {};
+    if(st.business) state.business = Object.assign(state.business, st.business);
+    if(st.installed && Object.keys(st.installed).length) state.installed = st.installed;
+    if(st.page_order && st.page_order.length) state.pageOrder = st.page_order;
+    state.data = res[1] || {};
+    // shared registry: server-published apps merge over local ones
+    (res[2] || []).forEach(function(man){
+      var i = -1;
+      for(var k=0;k<customApps.length;k++) if(customApps[k].id===man.id) i=k;
+      if(i>=0) customApps[i] = man; else customApps.push(man);
+    });
+    saveRegistry();
+    state.onboarded = state.onboarded || Object.keys(state.installed).length > 0;
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  }).catch(function(e){
+    console.warn('Server load failed — running from local cache:', e.message);
+    toast('⚠️ Offline — using local data');
+  });
+}
+
 (window.CC_REGISTRY_READY || Promise.resolve()).then(function(){
   MODULES = window.CC_SEED_APPS || [];
   CATS    = window.CC_APP_CATS  || [];
   PRESETS = window.CC_PRESETS   || [];
-  boot();
+  if(token()){
+    loadServerState().then(boot);
+  } else if(localStorage.getItem('cc_demo')){
+    boot();
+  } else {
+    authTab('login');
+    openModal('modal-auth');
+  }
 });
 </script>
 </body>

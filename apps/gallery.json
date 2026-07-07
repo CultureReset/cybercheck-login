@@ -29,5 +29,6 @@
       "label": "Caption",
       "type": "text"
     }
-  ]
+  ],
+  "publicData": true
 }
