@@ -4,7 +4,7 @@
   "icon": "📸",
   "cat": "content",
   "price": 0,
-  "desc": "Photos of your food, boats, work, or venue.",
+  "desc": "Photos of your food, boats, work, or venue — upload from your phone or paste a URL.",
   "block": {
     "title": "Gallery",
     "sub": "Photos and highlights"
@@ -21,8 +21,8 @@
   "fields": [
     {
       "key": "url",
-      "label": "Image URL",
-      "type": "text"
+      "label": "Photo",
+      "type": "image"
     },
     {
       "key": "caption",

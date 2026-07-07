@@ -240,6 +240,7 @@
 
 <div id="toast"></div>
 <input type="file" id="app-file" accept=".json,application/json" style="display:none" onchange="importAppFile(this)">
+<input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleImageFile(this)">
 
 <script src="js/app-registry.js"></script>
 <script>
@@ -740,6 +741,11 @@ function openRec(modId, idx){
     var v = rec[f.key]!=null?rec[f.key]:'';
     if(f.type==='select') return '<label>'+esc(f.label)+'</label><select id="rf-'+f.key+'">'+f.options.map(function(o){return '<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select>';
     if(f.type==='textarea') return '<label>'+esc(f.label)+'</label><textarea rows="3" id="rf-'+f.key+'">'+esc(v)+'</textarea>';
+    if(f.type==='image') return '<label>'+esc(f.label)+'</label>'+
+      '<div style="display:flex;gap:8px">'+
+      '<input id="rf-'+f.key+'" type="text" placeholder="https://… or upload →" value="'+esc(v)+'">'+
+      '<button type="button" class="btn btn-outline" style="flex-shrink:0" onclick="pickImage(\'rf-'+f.key+'\')">📷 Upload</button></div>'+
+      '<div id="rf-'+f.key+'-prev" style="margin-top:6px">'+(v&&/^(https?:|data:image)/.test(v)?'<img src="'+esc(v)+'" style="max-height:70px;border-radius:8px">':'')+'</div>';
     return '<label>'+esc(f.label)+'</label><input id="rf-'+f.key+'" type="'+(f.type==='number'?'number':f.type==='date'?'date':'text')+'" placeholder="'+esc(f.ph||'')+'" value="'+esc(v)+'">';
   }).join('');
   openModal('modal-rec');
@@ -773,6 +779,44 @@ function delRec(modId, idx){
   save(); renderPage();
 }
 
+/* ── image upload: any image field, any app ────────────────
+   Signed in: uploads to the platform (entity-media bucket) and fills
+   the field with the hosted URL. Demo mode: keeps the image as a
+   data-URL so previews still work offline. ── */
+var _imgTarget = null;
+function pickImage(inputId){
+  _imgTarget = inputId;
+  document.getElementById('img-file').click();
+}
+function handleImageFile(input){
+  var f = input.files && input.files[0];
+  input.value = '';
+  if(!f || !_imgTarget) return;
+  if(!/^image\//.test(f.type)){ toast('That file is not an image'); return; }
+  if(f.size > 6*1024*1024){ toast('Keep images under 6MB'); return; }
+  var target = _imgTarget;
+  var reader = new FileReader();
+  reader.onload = function(){
+    var dataUrl = String(reader.result);
+    function setVal(url){
+      var el = document.getElementById(target);
+      if(el){ el.value = url; }
+      var prev = document.getElementById(target+'-prev');
+      if(prev) prev.innerHTML = '<img src="'+esc(url)+'" style="max-height:70px;border-radius:8px">';
+    }
+    if(!token()){ setVal(dataUrl); toast('Photo added (demo — stored locally)'); return; }
+    toast('Uploading…');
+    apiFetch('/upload', { method:'POST', body: JSON.stringify({
+      image: dataUrl.split(',')[1], mime: f.type
+    })}).then(function(d){
+      if(d.error) throw new Error(d.error);
+      setVal(d.url);
+      toast('📷 Photo uploaded');
+    }).catch(function(e){ toast('Upload failed: '+e.message); });
+  };
+  reader.readAsDataURL(f);
+}
+
 /* ── business settings ── */
 function openBizSettings(){
   recCtx = null;
@@ -783,8 +827,8 @@ function openBizSettings(){
     '<label>Tagline</label><input id="bz-tag" value="'+esc(b.tagline)+'">'+
     '<label>Phone</label><input id="bz-phone" value="'+esc(b.phone)+'">'+
     '<label>Emoji / logo</label><input id="bz-emoji" value="'+esc(b.emoji)+'" maxlength="4">'+
-    '<label>Logo image URL (optional — overrides emoji)</label><input id="bz-logo" value="'+esc(b.logo||'')+'" placeholder="https://…/logo.jpg">'+
-    '<label>Hero photo URL (top of your page)</label><input id="bz-hero" value="'+esc(b.hero||'')+'" placeholder="https://…/hero.jpg">'+
+    '<label>Logo image (optional — overrides emoji)</label><div style="display:flex;gap:8px"><input id="bz-logo" value="'+esc(b.logo||'')+'" placeholder="https://… or upload →"><button type="button" class="btn btn-outline" style="flex-shrink:0" onclick="pickImage(\'bz-logo\')">📷</button></div>'+
+    '<label>Hero photo (top of your page)</label><div style="display:flex;gap:8px"><input id="bz-hero" value="'+esc(b.hero||'')+'" placeholder="https://… or upload →"><button type="button" class="btn btn-outline" style="flex-shrink:0" onclick="pickImage(\'bz-hero\')">📷</button></div>'+
     '<label>Accent color</label><input id="bz-accent" type="color" value="'+esc(b.accent||'#22c3a6')+'" style="height:44px;padding:4px">';
   document.getElementById('rec-save').onclick = function(){
     b.name=document.getElementById('bz-name').value;

@@ -21,6 +21,11 @@
       "type": "text"
     },
     {
+      "key": "booking",
+      "label": "Booking / trip",
+      "type": "text"
+    },
+    {
       "key": "date",
       "label": "Signed date",
       "type": "date"

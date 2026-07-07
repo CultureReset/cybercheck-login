@@ -1,0 +1,70 @@
+{
+  "id": "fleet",
+  "name": "Fleet & Boats",
+  "icon": "⛵",
+  "cat": "booking",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Your boats, jet skis, carts or vehicles — photos, capacity and rates. Shows on your page as a fleet lineup.",
+  "block": {
+    "title": "Our Fleet",
+    "sub": "Boats, rates and capacity"
+  },
+  "publicData": true,
+  "setup": [],
+  "dataKey": "fleet_items",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "text",
+      "ph": "24ft Pontoon — \"Salt Life\""
+    },
+    {
+      "key": "type",
+      "label": "Type",
+      "type": "text",
+      "ph": "Pontoon / Jet ski / Golf cart"
+    },
+    {
+      "key": "capacity",
+      "label": "Capacity",
+      "type": "number"
+    },
+    {
+      "key": "rate_hourly",
+      "label": "Hourly rate ($)",
+      "type": "number"
+    },
+    {
+      "key": "rate_half",
+      "label": "Half-day rate ($)",
+      "type": "number"
+    },
+    {
+      "key": "rate_full",
+      "label": "Full-day rate ($)",
+      "type": "number"
+    },
+    {
+      "key": "url",
+      "label": "Photo",
+      "type": "image"
+    },
+    {
+      "key": "desc",
+      "label": "Description",
+      "type": "textarea"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "active",
+        "maintenance",
+        "retired"
+      ]
+    }
+  ]
+}

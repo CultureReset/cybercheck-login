@@ -1,0 +1,50 @@
+{
+  "id": "addons",
+  "name": "Add-ons & Extras",
+  "icon": "➕",
+  "cat": "commerce",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Upsells on bookings — coolers, ice, captains, photo packages, tube rentals.",
+  "block": {
+    "title": "Extras & Add-ons",
+    "sub": "Make your trip even better"
+  },
+  "publicData": true,
+  "setup": [],
+  "dataKey": "addons",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Add-on",
+      "type": "text",
+      "ph": "Cooler with ice"
+    },
+    {
+      "key": "price",
+      "label": "Price ($)",
+      "type": "number"
+    },
+    {
+      "key": "per",
+      "label": "Charged per",
+      "type": "select",
+      "options": [
+        "booking",
+        "person",
+        "hour",
+        "day"
+      ]
+    },
+    {
+      "key": "url",
+      "label": "Photo",
+      "type": "image"
+    },
+    {
+      "key": "desc",
+      "label": "Details",
+      "type": "text"
+    }
+  ]
+}

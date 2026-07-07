@@ -4,7 +4,7 @@
   "icon": "🗓️",
   "cat": "booking",
   "price": 0,
-  "desc": "Open slots, blocked dates and capacity. Powers \"Live Availability\" on your page.",
+  "desc": "Open slots, blackout dates and capacity. Blocked dates instantly close your public checkout.",
   "block": {
     "title": "Live Availability",
     "sub": "See open dates and time slots"
