@@ -356,6 +356,7 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
    ============================================================ */
 var CORE_PAGES = [
   {id:'overview', name:'Overview', icon:'📊'},
+  {id:'calendar', name:'Calendar', icon:'🗓️'},
   {id:'mypage',   name:'My Page',  icon:'📱'},
   {id:'appstore', name:'App Store',icon:'🛍️'},
   {id:'studio',   name:'Build an App', icon:'🧪'}
@@ -397,6 +398,7 @@ function renderPage(){
     else if(currentPage==='appstore') host.innerHTML = pageStore();
     else if(currentPage==='mypage') host.innerHTML = pageBuilder();
     else if(currentPage==='studio') host.innerHTML = pageStudio();
+    else if(currentPage==='calendar'){ host.innerHTML = pageCalendar(); loadCalendar(); }
     else host.innerHTML = pageModule(currentPage);
     if(currentPage==='mypage') renderPreview('pv-host');
   }catch(e){
@@ -1126,6 +1128,107 @@ function unpublishApp(id){
   saveRegistry(); renderPage(); toast('Unpublished');
 }
 
+/* ============================================================
+   UNIFIED CALENDAR — every date-claiming event from every source
+   (direct bookings, manual blocks, external platforms) in one view.
+   ============================================================ */
+var calY = new Date().getFullYear(), calM = new Date().getMonth();
+var calEntries = [], calSelDay = null;
+
+var CAL_COLORS = {
+  direct:    '#22c3a6',
+  manual:    '#8593ab',
+  block:     '#5b6577',
+  fareharbor:'#5aa4e8',
+  airbnb:    '#ff5a5f',
+  vrbo:      '#2a6ebb',
+  ical:      '#b28cff',
+  'default': '#e2a54c'
+};
+function calColor(e){
+  if(e.kind==='block') return CAL_COLORS.block;
+  var src = (e.source||'').split(':')[0];
+  return CAL_COLORS[src] || CAL_COLORS['default'];
+}
+
+function pageCalendar(){
+  return '<div class="page active">'+
+    '<div class="page-head"><div><h1>🗓️ Calendar</h1>'+
+    '<p>One calendar, every source — direct bookings, your blocks, and anything imported from outside platforms. What claims a date here blocks your public checkout.</p></div></div>'+
+    '<div class="builder-wrap">'+
+      '<div class="card"><div id="cal-host" class="muted small">Loading…</div>'+
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px" class="small muted" id="cal-legend"></div></div>'+
+      '<div><div class="nav-label" style="padding-left:0" id="cal-day-title">Pick a day</div><div id="cal-day"></div></div>'+
+    '</div></div>';
+}
+
+function loadCalendar(){
+  if(!token()){
+    document.getElementById('cal-host').innerHTML = '<div class="empty">The unified calendar is a live-account feature — create an account to see every booking source in one place.</div>';
+    return;
+  }
+  var month = calY + '-' + String(calM+1).padStart(2,'0');
+  apiFetch('/calendar?month=' + month).then(function(d){
+    calEntries = d.entries || [];
+    renderCalGrid();
+  }).catch(function(e){
+    document.getElementById('cal-host').innerHTML = '<div class="empty">Could not load calendar: '+esc(e.message)+'</div>';
+  });
+}
+
+function calEntriesOn(ds){
+  return calEntries.filter(function(e){
+    if(e.status!=='active') return false;
+    var end = e.end_date || e.date;
+    return e.date <= ds && ds <= end;
+  });
+}
+
+function renderCalGrid(){
+  var host = document.getElementById('cal-host'); if(!host) return;
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var first = new Date(calY, calM, 1).getDay(), days = new Date(calY, calM+1, 0).getDate();
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+    '<button class="btn btn-outline btn-sm" onclick="calNavM(-1)">‹</button>'+
+    '<b>'+months[calM]+' '+calY+'</b>'+
+    '<button class="btn btn-outline btn-sm" onclick="calNavM(1)">›</button></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){ html+='<div class="small muted" style="text-align:center;font-weight:800;padding:2px 0">'+d+'</div>'; });
+  for(var i=0;i<first;i++) html+='<div></div>';
+  for(var d=1;d<=days;d++){
+    var ds = calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var here = calEntriesOn(ds);
+    var dots = here.slice(0,4).map(function(e){
+      return '<span style="width:7px;height:7px;border-radius:50%;background:'+calColor(e)+';display:inline-block"></span>';
+    }).join('');
+    var sel = calSelDay===ds;
+    html += '<div onclick="calPick(\''+ds+'\')" style="min-height:52px;border:1.5px solid '+(sel?'var(--primary)':'var(--card-border)')+';border-radius:9px;padding:4px 6px;cursor:pointer;background:'+(here.length?'rgba(34,195,166,.05)':'transparent')+'">'+
+      '<div class="small" style="font-weight:700">'+d+'</div>'+
+      '<div style="display:flex;gap:2px;flex-wrap:wrap;margin-top:2px">'+dots+(here.length>4?'<span class="small muted">+'+(here.length-4)+'</span>':'')+'</div></div>';
+  }
+  html += '</div>';
+  host.innerHTML = html;
+  // legend from the sources actually present
+  var srcs = {};
+  calEntries.forEach(function(e){ srcs[e.kind==='block'?'block':(e.source||'').split(':')[0]] = true; });
+  document.getElementById('cal-legend').innerHTML = Object.keys(srcs).map(function(k){
+    var c = k==='block' ? CAL_COLORS.block : (CAL_COLORS[k]||CAL_COLORS['default']);
+    return '<span><span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block;margin-right:5px"></span>'+esc(k)+'</span>';
+  }).join('');
+  if(calSelDay) renderCalDay();
+}
+
+function calNavM(d){ calM+=d; if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;} calSelDay=null; var el=document.getElementById('cal-day'); if(el) el.innerHTML=''; loadCalendar(); }
+function calPick(ds){ calSelDay=ds; renderCalGrid(); renderCalDay(); }
+function renderCalDay(){
+  var el = document.getElementById('cal-day'); if(!el) return;
+  document.getElementById('cal-day-title').textContent = calSelDay;
+  var here = calEntriesOn(calSelDay);
+  el.innerHTML = (here.length ? here.map(function(e){
+    return '<div class="sec-row"><span style="width:10px;height:10px;border-radius:50%;background:'+calColor(e)+';flex-shrink:0"></span>'+
+      '<span class="nm">'+esc(e.title||e.kind)+'<span>'+esc(e.kind)+' · '+esc(e.source)+(e.start_time?' · '+esc(e.start_time):'')+(e.party?' · '+e.party+' guests':'')+(e.end_date&&e.end_date!==e.date?' · thru '+esc(e.end_date):'')+'</span></span></div>';
+  }).join('') : '<div class="empty">Nothing on this day — it\'s open.</div>');
+}
 /* ============================================================
    ONBOARDING — industry presets are starter bundles, not code
    ============================================================ */
