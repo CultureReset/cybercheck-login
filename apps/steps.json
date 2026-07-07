@@ -1,0 +1,21 @@
+{
+  "id": "steps",
+  "name": "How It Works",
+  "icon": "👣",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Numbered steps that explain your process — booking, check-in, the day-of, anything. Universal.",
+  "section": { "layout": "steps" },
+  "block": { "title": "How It Works", "sub": "Your process, step by step" },
+  "publicData": true,
+  "dataKey": "steps",
+  "setup": [
+    { "key": "heading", "label": "Section heading", "type": "text", "def": "How It Works" }
+  ],
+  "fields": [
+    { "key": "title", "label": "Step title", "type": "text", "ph": "Book online" },
+    { "key": "desc", "label": "Description", "type": "textarea" },
+    { "key": "icon", "label": "Icon (emoji)", "type": "text", "ph": "📱" }
+  ]
+}

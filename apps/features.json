@@ -1,0 +1,21 @@
+{
+  "id": "features",
+  "name": "Why Choose Us",
+  "icon": "⭐",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Highlight cards — what makes you different. Icon, title and a line each. Any industry.",
+  "section": { "layout": "features" },
+  "block": { "title": "Why Choose Us", "sub": "Your selling points" },
+  "publicData": true,
+  "dataKey": "features",
+  "setup": [
+    { "key": "heading", "label": "Section heading", "type": "text", "def": "Why Choose Us" }
+  ],
+  "fields": [
+    { "key": "icon", "label": "Icon (emoji)", "type": "text", "ph": "⭐" },
+    { "key": "title", "label": "Title", "type": "text", "ph": "Locally owned" },
+    { "key": "desc", "label": "Description", "type": "textarea" }
+  ]
+}

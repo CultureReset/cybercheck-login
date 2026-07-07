@@ -1,0 +1,15 @@
+{
+  "id": "richtext",
+  "name": "Text Section",
+  "icon": "📝",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "A free-form heading + paragraph for anything the other sections don't cover. The universal catch-all.",
+  "section": { "layout": "richtext", "singleton": true },
+  "block": { "title": "Text Section", "sub": "Any custom copy" },
+  "setup": [
+    { "key": "heading", "label": "Heading", "type": "text" },
+    { "key": "body", "label": "Body text", "type": "textarea" }
+  ]
+}

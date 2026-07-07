@@ -1,0 +1,20 @@
+{
+  "id": "checklist",
+  "name": "What's Included",
+  "icon": "✅",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "A checklist of what's included (or not) — gear, amenities, what to bring. Works for any business.",
+  "section": { "layout": "checklist" },
+  "block": { "title": "What's Included", "sub": "What guests get" },
+  "publicData": true,
+  "dataKey": "checklist_items",
+  "setup": [
+    { "key": "heading", "label": "Section heading", "type": "text", "def": "What's Included" }
+  ],
+  "fields": [
+    { "key": "text", "label": "Item", "type": "text", "ph": "All gear & bait" },
+    { "key": "included", "label": "Included?", "type": "select", "options": ["Included", "Not included"], "def": "Included" }
+  ]
+}

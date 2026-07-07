@@ -637,6 +637,13 @@ function renderPreview(hostId, extraId, extraCfg){
   var linkRows = blocks.map(function(bl){
     try{
       var t = bl.cfg.label || bl.m.block.title;
+      // content-section apps preview as a labeled page section, not a tap row
+      if(bl.m.section){
+        var sub = bl.cfg.headline || bl.cfg.heading || bl.m.block.sub || '';
+        return '<div class="pv-link" style="border-style:dashed'+(bl.isNew?';outline:2px solid '+accent+';outline-offset:2px':'')+'">'+
+          '<div class="i">'+(bl.m.icon||'🧩')+'</div><div><b>'+esc(t)+'</b>'+
+          '<span>📄 page section'+(sub?' · '+esc(String(sub).slice(0,32)):'')+'</span></div></div>';
+      }
       var thumbs = '';
       if(bl.m.dataKey){
         var recs = (state.data[bl.m.dataKey]||[]).filter(function(r){ return r.url && /^https?:/i.test(r.url); }).slice(0,3);

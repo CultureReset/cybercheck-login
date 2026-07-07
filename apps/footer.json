@@ -1,0 +1,15 @@
+{
+  "id": "footer",
+  "name": "Footer",
+  "icon": "📋",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "A closing line, policies and small print at the bottom of your page. Universal.",
+  "section": { "layout": "footer", "singleton": true },
+  "block": { "title": "Footer", "sub": "Bottom-of-page small print" },
+  "setup": [
+    { "key": "tagline", "label": "Closing line", "type": "text", "ph": "Family-owned on the Gulf Coast since 2012" },
+    { "key": "policies", "label": "Policies / small print", "type": "textarea", "ph": "Cancellations 24h in advance. Weather refunds honored." }
+  ]
+}

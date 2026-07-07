@@ -1,9 +1,11 @@
 [
   {
     "id": "restaurant",
-    "em": "🍽️",
+    "em": "\ud83c\udf7d\ufe0f",
     "name": "Restaurant / Bar",
     "mods": [
+      "hero",
+      "about",
       "menu",
       "specials",
       "events",
@@ -15,15 +17,27 @@
       "gallery",
       "messaging",
       "customers",
-      "qr-codes"
+      "qr-codes",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Restaurant"
   },
   {
     "id": "charter",
-    "em": "🎣",
+    "em": "\ud83c\udfa3",
     "name": "Charter / Tours",
     "mods": [
+      "hero",
+      "about",
+      "steps",
+      "features",
+      "checklist",
+      "highlight",
+      "cta",
+      "contact",
+      "footer",
       "services",
       "book-charter",
       "availability",
@@ -44,9 +58,11 @@
   },
   {
     "id": "rental",
-    "em": "🚤",
+    "em": "\ud83d\udea4",
     "name": "Boat / Rentals",
     "mods": [
+      "hero",
+      "about",
       "services",
       "book-boat",
       "availability",
@@ -60,15 +76,20 @@
       "fleet",
       "addons",
       "inventory",
-      "locations"
+      "locations",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Rentals"
   },
   {
     "id": "salon",
-    "em": "✂️",
+    "em": "\u2702\ufe0f",
     "name": "Salon / Services",
     "mods": [
+      "hero",
+      "about",
       "services",
       "book-hairstylist",
       "availability",
@@ -79,30 +100,40 @@
       "reviews",
       "hours",
       "messaging",
-      "customers"
+      "customers",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Salon"
   },
   {
     "id": "creator",
-    "em": "🎤",
+    "em": "\ud83c\udfa4",
     "name": "Artist / Creator",
     "mods": [
+      "hero",
+      "about",
       "events",
       "song-request",
       "tipjar",
       "links",
       "gallery",
       "forms",
-      "messaging"
+      "messaging",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Artist"
   },
   {
     "id": "lodging",
-    "em": "🏖️",
+    "em": "\ud83c\udfd6\ufe0f",
     "name": "Condo / Lodging",
     "mods": [
+      "hero",
+      "about",
       "properties",
       "book-lodging",
       "availability",
@@ -110,15 +141,20 @@
       "payments",
       "email-parser",
       "messaging",
-      "customers"
+      "customers",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Lodging"
   },
   {
     "id": "fitness",
-    "em": "🧘",
+    "em": "\ud83e\uddd8",
     "name": "Gym / Classes",
     "mods": [
+      "hero",
+      "about",
       "book-class",
       "memberships",
       "gift-cards",
@@ -126,15 +162,20 @@
       "hours",
       "reviews",
       "messaging",
-      "customers"
+      "customers",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Fitness"
   },
   {
     "id": "photographer",
-    "em": "📸",
+    "em": "\ud83d\udcf8",
     "name": "Photographer",
     "mods": [
+      "hero",
+      "about",
       "services",
       "book-photographer",
       "client-galleries",
@@ -143,13 +184,16 @@
       "reviews",
       "links",
       "messaging",
-      "customers"
+      "customers",
+      "cta",
+      "contact",
+      "footer"
     ],
     "type": "Photographer"
   },
   {
     "id": "blank",
-    "em": "🧩",
+    "em": "\ud83e\udde9",
     "name": "Start Blank",
     "mods": [
       "links"
