@@ -1,0 +1,40 @@
+{
+  "id": "locations",
+  "name": "Locations & Pickup Points",
+  "icon": "📍",
+  "cat": "content",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Docks, marinas, pickup spots and second locations — with directions and photos.",
+  "block": {
+    "title": "Where to Find Us",
+    "sub": "Docks, pickup points & directions"
+  },
+  "publicData": true,
+  "setup": [],
+  "dataKey": "locations",
+  "fields": [
+    {
+      "key": "name",
+      "label": "Location name",
+      "type": "text",
+      "ph": "Dock A — Orange Beach Marina"
+    },
+    {
+      "key": "address",
+      "label": "Address",
+      "type": "text"
+    },
+    {
+      "key": "url",
+      "label": "Photo or map link",
+      "type": "image"
+    },
+    {
+      "key": "note",
+      "label": "Instructions",
+      "type": "textarea",
+      "ph": "Park in the gravel lot, walk past the fuel dock"
+    }
+  ]
+}

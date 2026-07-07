@@ -32,7 +32,10 @@
       "gallery",
       "messaging",
       "customers",
-      "email-parser"
+      "email-parser",
+      "fleet",
+      "addons",
+      "locations"
     ],
     "type": "Charter"
   },
@@ -50,7 +53,11 @@
       "hours",
       "gallery",
       "messaging",
-      "customers"
+      "customers",
+      "fleet",
+      "addons",
+      "inventory",
+      "locations"
     ],
     "type": "Rentals"
   },

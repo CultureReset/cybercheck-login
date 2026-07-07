@@ -41,5 +41,9 @@
   "oauth-instagram.json",
   "oauth-square.json",
   "reward-offers.json",
-  "guest-videos.json"
+  "guest-videos.json",
+  "fleet.json",
+  "addons.json",
+  "inventory.json",
+  "locations.json"
 ]

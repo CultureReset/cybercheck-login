@@ -1,0 +1,44 @@
+{
+  "id": "inventory",
+  "name": "Inventory",
+  "icon": "📦",
+  "cat": "commerce",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Track stock, rental gear and equipment — quantity, rate and condition.",
+  "setup": [],
+  "dataKey": "inventory",
+  "fields": [
+    {
+      "key": "item",
+      "label": "Item",
+      "type": "text"
+    },
+    {
+      "key": "qty",
+      "label": "Quantity",
+      "type": "number"
+    },
+    {
+      "key": "rate",
+      "label": "Rate ($)",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "available",
+        "low",
+        "out",
+        "maintenance"
+      ]
+    },
+    {
+      "key": "note",
+      "label": "Note",
+      "type": "text"
+    }
+  ]
+}
