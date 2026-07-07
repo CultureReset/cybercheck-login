@@ -39,5 +39,7 @@
   "qr-redirect.json",
   "oauth-google.json",
   "oauth-instagram.json",
-  "oauth-square.json"
+  "oauth-square.json",
+  "reward-offers.json",
+  "guest-videos.json"
 ]
