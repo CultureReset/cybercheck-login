@@ -1,0 +1,38 @@
+{
+  "id": "guest-videos",
+  "name": "Guest Photos & Videos",
+  "icon": "🎥",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Customers submit videos of their trip after a completed booking. Approve to award them points — free authentic content for you.",
+  "author": "CyberCheck",
+  "setup": [],
+  "dataKey": "ugc_videos",
+  "fields": [
+    {
+      "key": "url",
+      "label": "Video URL",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Guest phone",
+      "type": "text"
+    },
+    {
+      "key": "booking_id",
+      "label": "Booking",
+      "type": "text"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "confirmed",
+        "declined"
+      ]
+    }
+  ]
+}

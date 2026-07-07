@@ -1,0 +1,36 @@
+{
+  "id": "reward-offers",
+  "name": "Reward Offers",
+  "icon": "🎁",
+  "cat": "engage",
+  "price": 0,
+  "desc": "Define what Gulf Perks points are worth at your business — customers redeem, you get a proven local through the door.",
+  "author": "CyberCheck",
+  "block": {
+    "title": "Loyalty Rewards",
+    "sub": "Redeem your Gulf Perks points here"
+  },
+  "publicData": true,
+  "setup": [],
+  "dataKey": "reward_offers",
+  "fields": [
+    {
+      "key": "title",
+      "label": "Reward",
+      "type": "text",
+      "ph": "Free appetizer"
+    },
+    {
+      "key": "points",
+      "label": "Points cost",
+      "type": "number",
+      "ph": "500"
+    },
+    {
+      "key": "detail",
+      "label": "Details / limits",
+      "type": "text",
+      "ph": "Dine-in only"
+    }
+  ]
+}
