@@ -1,0 +1,29 @@
+{
+  "id": "reminders",
+  "name": "Booking Reminders",
+  "icon": "⏰",
+  "cat": "engage",
+  "type": "automation",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Texts every guest the day before their booking — fewer no-shows, zero effort. Runs automatically on the platform clock.",
+  "automation": {
+    "trigger": "before_start_24h",
+    "action": "sms",
+    "template": "[{business}] Reminder: {title} tomorrow{time}. Need to change it? {manage}"
+  },
+  "setup": [
+    {
+      "key": "template",
+      "label": "Reminder message",
+      "type": "textarea",
+      "def": "[{business}] Reminder: {title} tomorrow{time}. Need to change it? {manage}"
+    },
+    {
+      "key": "vars",
+      "label": "Available tags",
+      "type": "static",
+      "def": "{business} {name} {title} {date} {time} {manage}"
+    }
+  ]
+}

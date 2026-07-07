@@ -895,7 +895,7 @@ var AUTO_ACTIONS = [
   {id:'email',  label:'Send email'},
   {id:'notify', label:'Notify owner'}
 ];
-function trigLabel(id){ var t=dataStreams().filter(function(x){return x.id===id})[0]; return t?t.label:('New '+id+' entry'); }
+function trigLabel(id){ if(id==='before_start_24h') return '24 hours before a booking starts'; var t=dataStreams().filter(function(x){return x.id===id})[0]; return t?t.label:('New '+id+' entry'); }
 function actLabel(id){ var a=AUTO_ACTIONS.filter(function(x){return x.id===id})[0]; return a?a.label:id; }
 
 function fireTrigger(dataKey, rec){
@@ -1373,10 +1373,71 @@ function renderCalDay(){
   var el = document.getElementById('cal-day'); if(!el) return;
   document.getElementById('cal-day-title').textContent = calSelDay;
   var here = calEntriesOn(calSelDay);
-  el.innerHTML = (here.length ? here.map(function(e){
-    return '<div class="sec-row"><span style="width:10px;height:10px;border-radius:50%;background:'+calColor(e)+';flex-shrink:0"></span>'+
-      '<span class="nm">'+esc(e.title||e.kind)+'<span>'+esc(e.kind)+' · '+esc(e.source)+(e.start_time?' · '+esc(e.start_time):'')+(e.party?' · '+e.party+' guests':'')+(e.end_date&&e.end_date!==e.date?' · thru '+esc(e.end_date):'')+'</span></span></div>';
-  }).join('') : '<div class="empty">Nothing on this day — it\'s open.</div>');
+  if(!here.length){ el.innerHTML = '<div class="empty">Nothing on this day — it\'s open.</div>'; return; }
+
+  /* DEPARTURE MANIFEST — bookings grouped by time slot: who's coming,
+     party size, phone, waiver on file, one-tap check-in. Blocks and
+     imports list below the rosters. */
+  var groups = {}, other = [];
+  here.forEach(function(e){
+    if(e.kind==='block' || ['cancelled','declined'].indexOf(((e.record||{}).status)||'')!==-1){ other.push(e); return; }
+    var t = e.start_time || (e.end_date && e.end_date!==e.date ? 'Stays' : 'All day');
+    (groups[t] = groups[t] || []).push(e);
+  });
+  var signedRefs = {};
+  (state.data.waivers||[]).forEach(function(w){ if(w.booking_ref) signedRefs[String(w.booking_ref)] = true; });
+  var waiversOn = !!state.installed.waivers || (state.data.waivers||[]).length>0;
+
+  var html = Object.keys(groups).sort().map(function(t){
+    var seats = groups[t].reduce(function(s,e){ return s + (parseInt(e.party,10)||1); }, 0);
+    var rows = groups[t].map(function(e){
+      var rec = e.record||{};
+      var name = rec.customer || rec.name || e.title || 'Guest';
+      var checked = !!rec.checked_in;
+      var waiv = waiversOn ? (signedRefs[String(e.ref_id)] ? '<span title="Waiver signed" style="color:var(--primary);font-weight:800">✍️✓</span>' : '<span title="Waiver NOT signed" style="color:#c96a2b;font-weight:800">✍️✗</span>') : '';
+      return '<div class="sec-row" style="align-items:center">'+
+        '<span style="width:10px;height:10px;border-radius:50%;background:'+calColor(e)+';flex-shrink:0"></span>'+
+        '<span class="nm">'+esc(name)+(e.party?' <b style="color:var(--text-muted);font-weight:700">×'+e.party+'</b>':'')+
+          '<span>'+esc(e.title||'')+(rec.resource?' · '+esc(rec.resource):'')+(rec.addons?' · +'+esc(rec.addons):'')+' · '+esc(rec.status||e.source)+(e.end_date&&e.end_date!==e.date?' · thru '+esc(e.end_date):'')+'</span></span>'+
+        '<span style="display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0">'+waiv+
+        (rec.phone?'<a class="btn btn-outline btn-sm" href="tel:'+esc(rec.phone)+'" style="text-decoration:none">📞</a>':'')+
+        (checked
+          ? '<span style="color:var(--primary);font-weight:800;font-size:12px">✓ Checked in</span>'
+          : '<button class="btn btn-primary btn-sm" onclick="checkIn(\''+esc(e.ref_id)+'\')">Check in</button>')+
+        '</span></div>';
+    }).join('');
+    return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px">'+
+      '<b style="font-size:13px">🕐 '+esc(t)+'</b><span class="small muted">'+groups[t].length+' booking'+(groups[t].length>1?'s':'')+' · '+seats+' guest'+(seats>1?'s':'')+'</span></div>'+rows+'</div>';
+  }).join('');
+
+  if(other.length) html += other.map(function(e){
+    return '<div class="sec-row" style="opacity:.7"><span style="width:10px;height:10px;border-radius:50%;background:'+calColor(e)+';flex-shrink:0"></span>'+
+      '<span class="nm">'+esc(e.title||e.kind)+'<span>'+esc(e.kind)+' · '+esc(e.source)+(((e.record||{}).status)?' · '+esc(e.record.status):'')+'</span></span></div>';
+  }).join('');
+  el.innerHTML = html;
+}
+/* one-tap check-in from the manifest — writes checked_in onto the record */
+function checkIn(refId){
+  var entry = calEntries.filter(function(e){ return String(e.ref_id)===String(refId); })[0];
+  if(!entry) return;
+  var rec = entry.record || {};
+  rec.checked_in = new Date().toISOString();
+  entry.record = rec;
+  // find the local record too (dashboard tables stay in sync)
+  Object.keys(state.data).forEach(function(k){
+    (state.data[k]||[]).forEach(function(r){ if(String(r._id||'')===String(refId)) r.checked_in = rec.checked_in; });
+  });
+  if(token()){
+    var dataKey = null;
+    Object.keys(state.installed).forEach(function(id){
+      var m = state.installed[id] && state.installed[id].manifest;
+      if(m && m.dataKey && (state.data[m.dataKey]||[]).some(function(r){ return String(r._id||'')===String(refId); })) dataKey = m.dataKey;
+    });
+    apiFetch('/records/'+encodeURIComponent(dataKey||'bookings')+'/'+encodeURIComponent(refId), {
+      method:'PATCH', body: JSON.stringify({ record: rec })
+    }).then(function(){ toast('✓ Checked in'); }).catch(function(e){ toast('⚠️ Saved locally — '+e.message); });
+  } else toast('✓ Checked in (demo)');
+  save(); renderCalDay();
 }
 /* ============================================================
    ONBOARDING — industry presets are starter bundles, not code
