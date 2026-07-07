@@ -9,12 +9,29 @@
     "title": "Get Tickets",
     "sub": "Adults & kids pricing, instant confirmation"
   },
+  "booking": {
+    "mode": "slots",
+    "slots": "10:00 AM, 1:00 PM, 4:00 PM, Sunset",
+    "slot_capacity": 40
+  },
   "setup": [
     {
       "key": "label",
       "label": "Button text",
       "type": "text",
       "def": "Get Tickets"
+    },
+    {
+      "key": "slot_times",
+      "label": "Departure times (comma-separated)",
+      "type": "text",
+      "def": "10:00 AM, 1:00 PM, 4:00 PM, Sunset"
+    },
+    {
+      "key": "slot_capacity",
+      "label": "Bookings per departure",
+      "type": "number",
+      "def": "40"
     },
     {
       "key": "adult",

@@ -9,6 +9,11 @@
     "title": "Book an Appointment",
     "sub": "Pick a service, stylist and time"
   },
+  "booking": {
+    "mode": "slots",
+    "slots": "9:00 AM, 10:30 AM, 12:00 PM, 1:30 PM, 3:00 PM, 4:30 PM",
+    "slot_capacity": 1
+  },
   "setup": [
     {
       "key": "label",
@@ -21,6 +26,18 @@
       "label": "No-show deposit % (0 = none)",
       "type": "number",
       "def": "0"
+    },
+    {
+      "key": "slot_times",
+      "label": "Appointment times (comma-separated)",
+      "type": "text",
+      "def": "9:00 AM, 10:30 AM, 12:00 PM, 1:30 PM, 3:00 PM, 4:30 PM"
+    },
+    {
+      "key": "slot_capacity",
+      "label": "Clients per time (chairs)",
+      "type": "number",
+      "def": "1"
     }
   ],
   "dataKey": "salon_bookings",

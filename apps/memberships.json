@@ -1,0 +1,78 @@
+{
+  "id": "memberships",
+  "name": "Memberships & Packages",
+  "icon": "💳",
+  "cat": "booking",
+  "price": 0,
+  "author": "CyberCheck",
+  "desc": "Recurring memberships and punch-card packages — monthly unlimited, 10-class packs, VIP tiers. Guests sign up from your page, you track who's active.",
+  "block": {
+    "title": "Memberships",
+    "sub": "Join & save on every visit"
+  },
+  "checkout": true,
+  "booking": {
+    "mode": "none"
+  },
+  "setup": [
+    {
+      "key": "label",
+      "label": "Button text",
+      "type": "text",
+      "def": "Become a Member"
+    },
+    {
+      "key": "plans",
+      "label": "Plans offered (comma-separated)",
+      "type": "text",
+      "def": "Monthly Unlimited $89, 10-Class Pack $120, VIP Annual $799"
+    }
+  ],
+  "dataKey": "memberships",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Member",
+      "type": "text"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "plan",
+      "label": "Plan",
+      "type": "select",
+      "optionsFrom": "plans",
+      "priced": true
+    },
+    {
+      "key": "date",
+      "label": "Start date",
+      "type": "date"
+    },
+    {
+      "key": "renews",
+      "label": "Renews / expires",
+      "type": "date"
+    },
+    {
+      "key": "credits",
+      "label": "Credits left",
+      "type": "number"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "select",
+      "options": [
+        "pending",
+        "active",
+        "paused",
+        "expired",
+        "cancelled"
+      ]
+    }
+  ]
+}

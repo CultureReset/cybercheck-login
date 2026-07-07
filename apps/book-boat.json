@@ -9,6 +9,10 @@
     "title": "Rent a Boat",
     "sub": "See boats, rates and open slots"
   },
+  "booking": {
+    "mode": "date",
+    "resource": "fleet_items"
+  },
   "setup": [
     {
       "key": "label",

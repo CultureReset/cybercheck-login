@@ -716,6 +716,7 @@ function pageModule(id){
 
   var extra = '';
   if(id==='ai-concierge') extra = aiExtra();
+  if(id==='payments') extra = paymentsExtra();
   if(m.type==='automation') extra = autoExtra(m);
 
   return '<div class="page active">'+
@@ -927,6 +928,110 @@ function autoExtra(m){
     (rows ? '<div style="overflow-x:auto"><table class="data"><thead><tr><th>When</th><th>Action</th><th>Message</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
           : '<div class="empty">No runs yet. Add a record that matches the trigger (e.g. a booking) and watch it fire.</div>')+
     '</div>';
+}
+
+/* ============================================================
+   PAYMENTS — attach your own Stripe (Connect OAuth or secret
+   key) or Square (OAuth or credentials). Money goes straight to
+   the business's own account; the platform never holds funds.
+   ============================================================ */
+function paymentsExtra(){
+  if(!token()){
+    return '<div class="card" style="margin-top:16px"><b style="font-size:14px">🔌 Connect your processor</b>'+
+      '<p class="muted small" style="margin:6px 0 0">Sign in to your account to connect Stripe or Square — demo mode can\'t hold payment credentials.</p></div>';
+  }
+  setTimeout(loadPayStatus, 0);
+  return '<div class="card" style="margin-top:16px"><b style="font-size:14px">💜 Stripe</b>'+
+    '<div id="pay-stripe" style="margin-top:10px"><span class="muted small">Checking connection…</span></div></div>'+
+    '<div class="card" style="margin-top:16px"><b style="font-size:14px">◻️ Square</b>'+
+    '<div id="pay-square" style="margin-top:10px"><span class="muted small">Checking connection…</span></div></div>';
+}
+function payFetch(path, opts){
+  opts = opts || {};
+  opts.headers = authHeaders();
+  return fetch(API + path, opts).then(function(r){ return r.json().then(function(d){ d._status=r.status; return d; }); });
+}
+function loadPayStatus(){
+  payFetch('/api/stripe/status').then(function(s){
+    var el = document.getElementById('pay-stripe'); if(!el) return;
+    var connected = s.connected || s.manualKey || s.testKey;
+    el.innerHTML = connected
+      ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<span style="color:var(--primary);font-weight:800">✓ Connected'+(s.accountId?' — '+esc(s.accountId):s.manualKey?' — your key':' — test key')+'</span>'+
+        '<button class="btn btn-danger btn-sm" onclick="stripeDisconnect()">Disconnect</button></div>'+
+        '<p class="muted small" style="margin:8px 0 0">Checkout payments on your public page go directly to this Stripe account.</p>'
+      : '<p class="muted small" style="margin:0 0 10px">Not connected. Two ways to attach:</p>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+        '<button class="btn btn-primary btn-sm" onclick="stripeConnect()">Connect with Stripe →</button>'+
+        '<span class="muted small">or paste a secret key:</span></div>'+
+        '<div style="display:flex;gap:8px;margin-top:8px"><input id="sk-key" type="password" placeholder="sk_live_… / sk_test_…" style="max-width:280px">'+
+        '<button class="btn btn-outline btn-sm" onclick="stripeSaveKey()">Save key</button></div>'+
+        '<div class="muted small" id="sk-msg" style="margin-top:6px"></div>';
+  }).catch(function(){ var el=document.getElementById('pay-stripe'); if(el) el.innerHTML='<span class="muted small">⚠️ Could not reach the payments service.</span>'; });
+  payFetch('/api/square/status').then(function(s){
+    var el = document.getElementById('pay-square'); if(!el) return;
+    var connected = !!(s.connected || (s.key && s.key.status==='connected') || s.hasKey);
+    el.innerHTML = connected
+      ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<span style="color:var(--primary);font-weight:800">✓ Connected'+(s.locationId?' — location '+esc(s.locationId):'')+'</span>'+
+        '<button class="btn btn-danger btn-sm" onclick="squareDisconnect()">Disconnect</button></div>'
+      : '<p class="muted small" style="margin:0 0 10px">Not connected.</p>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+        '<button class="btn btn-primary btn-sm" onclick="squareConnect()">Connect with Square →</button>'+
+        '<span class="muted small">or enter credentials:</span></div>'+
+        '<div style="display:grid;gap:8px;margin-top:8px;max-width:340px">'+
+        '<input id="sq-token" type="password" placeholder="Access token">'+
+        '<input id="sq-app" placeholder="Application ID">'+
+        '<input id="sq-loc" placeholder="Location ID">'+
+        '<div style="display:flex;gap:8px"><select id="sq-mode" style="max-width:150px"><option value="production">Production</option><option value="sandbox">Sandbox</option></select>'+
+        '<button class="btn btn-outline btn-sm" onclick="squareSave()">Save</button></div></div>'+
+        '<div class="muted small" id="sq-msg" style="margin-top:6px"></div>';
+  }).catch(function(){ var el=document.getElementById('pay-square'); if(el) el.innerHTML='<span class="muted small">⚠️ Could not reach the payments service.</span>'; });
+}
+function stripeConnect(){
+  payFetch('/api/stripe/connect-url').then(function(d){
+    if(d.url) location.href = d.url;
+    else toast('⚠️ '+(d.error||'Stripe Connect not available yet'));
+  }).catch(function(){ toast('⚠️ Could not start Stripe Connect'); });
+}
+function stripeSaveKey(){
+  var k = (document.getElementById('sk-key').value||'').trim();
+  var msg = document.getElementById('sk-msg');
+  if(!/^sk_(test|live)_/.test(k)){ msg.textContent='That doesn\'t look like a Stripe secret key (sk_live_… / sk_test_…).'; return; }
+  msg.textContent = 'Verifying with Stripe…';
+  payFetch('/api/stripe/save-key', { method:'POST', body: JSON.stringify({ secret_key:k }) }).then(function(d){
+    if(d.error){ msg.textContent = '⚠️ '+d.error; return; }
+    toast('✓ Stripe key attached'); loadPayStatus();
+  }).catch(function(){ msg.textContent='⚠️ Could not save the key — try again.'; });
+}
+function stripeDisconnect(){
+  if(!confirm('Disconnect Stripe? Checkout payments on your page will stop until you reconnect.')) return;
+  payFetch('/api/stripe/disconnect', { method:'POST', body:'{}' }).then(function(){ toast('Stripe disconnected'); loadPayStatus(); });
+}
+function squareConnect(){
+  payFetch('/api/square/connect-url').then(function(d){
+    if(d.url) location.href = d.url;
+    else toast('⚠️ '+(d.error||'Square Connect not available yet'));
+  }).catch(function(){ toast('⚠️ Could not start Square Connect'); });
+}
+function squareSave(){
+  var msg = document.getElementById('sq-msg');
+  var body = {
+    access_token: (document.getElementById('sq-token').value||'').trim(),
+    app_id: (document.getElementById('sq-app').value||'').trim(),
+    location_id: (document.getElementById('sq-loc').value||'').trim(),
+    mode: document.getElementById('sq-mode').value
+  };
+  if(!body.access_token || !body.app_id || !body.location_id){ msg.textContent='All three fields are required.'; return; }
+  msg.textContent = 'Verifying with Square…';
+  payFetch('/api/square/save-credentials', { method:'POST', body: JSON.stringify(body) }).then(function(d){
+    if(d.error){ msg.textContent='⚠️ '+d.error; return; }
+    toast('✓ Square attached'); loadPayStatus();
+  }).catch(function(){ msg.textContent='⚠️ Could not save — try again.'; });
+}
+function squareDisconnect(){
+  if(!confirm('Disconnect Square?')) return;
+  payFetch('/api/square/disconnect', { method:'DELETE' }).then(function(){ toast('Square disconnected'); loadPayStatus(); });
 }
 
 /* ============================================================
