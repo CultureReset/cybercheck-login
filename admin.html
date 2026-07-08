@@ -12759,11 +12759,32 @@
           '<td style="padding:10px 8px;display:flex;gap:6px;flex-wrap:wrap;">' +
             '<a href="https://gcr-unified.vercel.app/business/' + encodeURIComponent(e.slug||'') + '" target="_blank" class="btn btn-sm" style="background:#e8f7fa;color:#0b6475;border:1px solid #b9e7ef;font-size:11px;" title="View live on GCR">View</a>' +
             '<button onclick="openEntEditor(\'' + e.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+            '<button onclick="promptInviteOwner(\'' + escHtml(e.slug||'') + '\',\'' + escHtml(e.name).replace(/'/g,"\\'") + '\')" class="btn btn-outline btn-sm" title="Email this business a login invite">✉️ Invite</button>' +
             '<button onclick="deleteEntity(\'' + e.id + '\',\'' + escHtml(e.name).replace(/'/g,"\\'") + '\')" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">Delete</button>' +
           '</td>' +
           '</tr>';
       }).join('');
       document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
+    }
+
+    async function promptInviteOwner(slug, name) {
+      if (!slug) { toast('This entity has no slug set', 'error'); return; }
+      var email = prompt('Send a login invite for "' + name + '" to which email address?');
+      if (!email) return;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Enter a valid email address', 'error'); return; }
+
+      try {
+        var r = await fetch(API_BASE + '/api/admin/invite-business', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('cc_admin_token') },
+          body: JSON.stringify({ entity_slug: slug, email: email })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed to send invite');
+        toast('✅ Invite sent to ' + email, 'success');
+      } catch (e) {
+        toast('Failed to send invite: ' + e.message, 'error');
+      }
     }
 
     function filterEntities() {

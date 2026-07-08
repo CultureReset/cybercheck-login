@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Set Up Your Account</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .card{background:#1e293b;border:1px solid #334155;border-radius:18px;padding:32px 28px;width:100%;max-width:400px;}
+  .icon{font-size:36px;margin-bottom:12px;}
+  h1{font-size:20px;font-weight:800;margin-bottom:6px;}
+  .biz-name{color:#38bdf8;font-weight:700;font-size:15px;margin-bottom:20px;}
+  .field{margin-bottom:14px;}
+  label{display:block;font-size:12px;color:#94a3b8;margin-bottom:5px;font-weight:600;}
+  input{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:11px 12px;color:#f1f5f9;font-size:15px;}
+  input:focus{outline:none;border-color:#0b7a75;}
+  .btn{width:100%;padding:13px;background:#0b7a75;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;margin-top:8px;}
+  .btn:active{background:#065f5b;}
+  .btn:disabled{opacity:.5;}
+  .error{background:#450a0a;border:1px solid #7f1d1d;color:#fca5a5;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px;}
+  .loading,.done{text-align:center;color:#94a3b8;}
+  .done .icon{color:#4ade80;}
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="loading">Loading invite...</div>
+</div>
+
+<script>
+const API_BASE = 'https://gcr-api-clean.vercel.app';
+const params = new URLSearchParams(window.location.search);
+const token = params.get('token');
+const card = document.getElementById('card');
+
+async function init() {
+  if (!token) { card.innerHTML = '<div class="error">No invite token provided.</div>'; return; }
+
+  try {
+    const r = await fetch(`${API_BASE}/api/auth/invite/${token}`);
+    const d = await r.json();
+    if (!r.ok) { card.innerHTML = `<div class="error">${d.error || 'Invalid invite link'}</div>`; return; }
+
+    card.innerHTML = `
+      <div class="icon">🔑</div>
+      <h1>Set Up Your Account</h1>
+      <div class="biz-name">${escHtml(d.business_name)}</div>
+      <div class="field"><label>Email</label><input type="email" value="${escHtml(d.email)}" disabled></div>
+      <div class="field"><label>Create a Password</label><input type="password" id="password" placeholder="At least 8 characters"></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="password2" placeholder="Re-enter password"></div>
+      <div id="form-error"></div>
+      <button class="btn" id="submit-btn" onclick="submitClaim()">Create Account</button>
+    `;
+  } catch (e) {
+    card.innerHTML = '<div class="error">Could not load this invite. Please try again.</div>';
+  }
+}
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+async function submitClaim() {
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+  const errEl = document.getElementById('form-error');
+  errEl.innerHTML = '';
+
+  if (password.length < 8) { errEl.innerHTML = '<div class="error">Password must be at least 8 characters</div>'; return; }
+  if (password !== password2) { errEl.innerHTML = '<div class="error">Passwords don\'t match</div>'; return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  try {
+    const r = await fetch(`${API_BASE}/api/auth/accept-invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Could not create account');
+
+    localStorage.setItem('cc_token', d.token);
+    card.innerHTML = '<div class="done"><div class="icon">✅</div><h1>You\'re all set!</h1><p style="margin-top:8px;">Taking you to your dashboard...</p></div>';
+    setTimeout(() => { window.location.href = '/app-dashboard.html'; }, 1200);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+    errEl.innerHTML = `<div class="error">${escHtml(e.message)}</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

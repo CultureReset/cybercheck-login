@@ -339,6 +339,26 @@ const CC = (function() {
     getWaiverLink:      function() { return get('/api/dashboard/waivers/link'); },
     createWaiverLink:   function(d) { return post('/api/dashboard/waivers/link', d); },
 
+    // POLICIES (deposit + cancellation/refund terms)
+    getPolicies:    function() { return get('/api/dashboard/policies'); },
+    updatePolicies: function(d) { return put('/api/dashboard/policies', d); },
+
+    // DOCUMENT UPLOADS (waiver PDF, cancellation/refund policy PDF, etc.)
+    uploadDocument: function(d) { return post('/api/dashboard/documents/upload', d); },
+    deleteDocument: function(kind) { return del('/api/dashboard/documents/' + kind); },
+
+    // MENU EDITOR BRIDGE (deep-link into menu-editor.html with no separate PIN entry)
+    getMenuEditorLink: function() { return get('/api/dashboard/menu-editor-link'); },
+
+    // TRANSPORTATION (brokered ride/pickup dispatch)
+    getTransportSettings:    function() { return get('/api/transportation/company/settings'); },
+    updateTransportSettings: function(d) { return patch('/api/transportation/company/settings', d); },
+    getTransportProviders:   function() { return get('/api/transportation/providers'); },
+    addTransportProvider:    function(d) { return post('/api/transportation/providers', d); },
+    updateTransportProvider: function(id, d) { return patch('/api/transportation/providers/' + id, d); },
+    deleteTransportProvider: function(id) { return del('/api/transportation/providers/' + id); },
+    getTransportRequests:    function() { return get('/api/transportation/requests'); },
+
     // COUPONS
     getCoupons:    function() { return get('/api/dashboard/coupons'); },
     createCoupon:  function(d) { cacheClear('getCoupons'); return post('/api/dashboard/coupons', d); },
@@ -398,6 +418,16 @@ const CC = (function() {
     getBlackoutDates:   function() { return get('/api/dashboard/availability/blocks'); },
     addBlackoutDate:    function(d) { cacheClear('getBlackout'); return post('/api/dashboard/availability/block', d); },
     deleteBlackoutDate: function(id) { cacheClear('getBlackout'); return del('/api/dashboard/availability/block/' + id); },
+
+    // CALENDAR SYNC (iCal export to Airbnb/VRBO/Google Calendar)
+    getIcalFeedUrl:      function() { return get('/api/dashboard/ical/feed-url'); },
+    regenerateIcalFeed:  function() { return post('/api/dashboard/ical/regenerate'); },
+
+    // CALENDAR SYNC — external calendar import (Airbnb/VRBO -> GCR)
+    getExternalCalendars:    function() { return get('/api/dashboard/ical/external'); },
+    addExternalCalendar:     function(d) { return post('/api/dashboard/ical/external', d); },
+    deleteExternalCalendar:  function(id) { return del('/api/dashboard/ical/external/' + id); },
+    syncExternalCalendarNow: function(id) { return post('/api/dashboard/ical/external/' + id + '/sync-now'); },
 
     // ACTIVITY LOG
     getActivity: function() { return get('/api/dashboard/activity'); },
