@@ -339,6 +339,14 @@ const CC = (function() {
     getWaiverLink:      function() { return get('/api/dashboard/waivers/link'); },
     createWaiverLink:   function(d) { return post('/api/dashboard/waivers/link', d); },
 
+    // POLICIES (deposit + cancellation/refund terms)
+    getPolicies:    function() { return get('/api/dashboard/policies'); },
+    updatePolicies: function(d) { return put('/api/dashboard/policies', d); },
+
+    // DOCUMENT UPLOADS (waiver PDF, cancellation/refund policy PDF, etc.)
+    uploadDocument: function(d) { return post('/api/dashboard/documents/upload', d); },
+    deleteDocument: function(kind) { return del('/api/dashboard/documents/' + kind); },
+
     // COUPONS
     getCoupons:    function() { return get('/api/dashboard/coupons'); },
     createCoupon:  function(d) { cacheClear('getCoupons'); return post('/api/dashboard/coupons', d); },
