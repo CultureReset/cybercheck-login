@@ -347,6 +347,15 @@ const CC = (function() {
     uploadDocument: function(d) { return post('/api/dashboard/documents/upload', d); },
     deleteDocument: function(kind) { return del('/api/dashboard/documents/' + kind); },
 
+    // TRANSPORTATION (brokered ride/pickup dispatch)
+    getTransportSettings:    function() { return get('/api/transportation/company/settings'); },
+    updateTransportSettings: function(d) { return patch('/api/transportation/company/settings', d); },
+    getTransportProviders:   function() { return get('/api/transportation/providers'); },
+    addTransportProvider:    function(d) { return post('/api/transportation/providers', d); },
+    updateTransportProvider: function(id, d) { return patch('/api/transportation/providers/' + id, d); },
+    deleteTransportProvider: function(id) { return del('/api/transportation/providers/' + id); },
+    getTransportRequests:    function() { return get('/api/transportation/requests'); },
+
     // COUPONS
     getCoupons:    function() { return get('/api/dashboard/coupons'); },
     createCoupon:  function(d) { cacheClear('getCoupons'); return post('/api/dashboard/coupons', d); },

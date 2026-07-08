@@ -112,6 +112,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span>Policies</span>
         </div>
+        <div class="nav-item" data-page="transportation" data-biz-type="boat_rental,charter,jet_ski_rental,kayak_rental,hotel,condo,vacation_rental,photographer,salon,spa,retail,restaurant,bar,cafe,food_truck,service">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="15" height="12" rx="2"/><path d="M16 10h4l3 4v4h-7"/><circle cx="6" cy="20" r="2"/><circle cx="17.5" cy="20" r="2"/></svg>
+          <span>Transportation</span>
+        </div>
         <div class="nav-item" data-page="waitlist" data-biz-type="boat_rental,charter,jet_ski_rental">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           <span>Waitlist</span>
@@ -884,6 +888,93 @@
               </div>
             </div>
             <div id="policies-settings"></div>
+          </div>
+        </div>
+
+        <!-- TRANSPORTATION -->
+        <div class="page-section" id="page-transportation" data-biz-type="boat_rental,charter,jet_ski_rental,kayak_rental,hotel,condo,vacation_rental,photographer,salon,spa,retail,restaurant,bar,cafe,food_truck,service">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Offer Transportation</h3>
+                <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Turn this on to receive ride/pickup requests — from your own customers, or as an add-on from any other GCR booking (a fishing charter, a hotel stay, anything). GCR brokers the request out to your registered drivers by text; they bid, the customer confirms.</p>
+              </div>
+              <label class="toggle"><input type="checkbox" id="transport-offer-toggle"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Drivers &amp; Vehicles</h3>
+              <button class="btn btn-primary btn-sm" onclick="openTransportProviderModal()">+ Add Driver</button>
+            </div>
+            <div id="transport-providers-list"></div>
+            <div class="empty-state" id="transport-providers-empty">
+              <h3>No drivers registered</h3>
+              <p>Add a driver so you can start receiving ride requests.</p>
+              <button class="btn btn-primary" onclick="openTransportProviderModal()">Add First Driver</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>Requests &amp; Leads</h3></div>
+            <div id="transport-requests-list"></div>
+            <div class="empty-state" id="transport-requests-empty">
+              <h3>No requests yet</h3>
+              <p>Ride requests dispatched to your drivers will show up here.</p>
+            </div>
+          </div>
+
+          <!-- Add/Edit Driver Modal -->
+          <div id="transport-provider-modal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,.5);">
+            <div class="card" style="width:100%;max-width:440px;margin:0 16px;padding:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Add Driver</h3>
+                <button class="btn btn-outline btn-sm" onclick="closeTransportProviderModal()">✕</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Driver Name</label>
+                  <input id="transport-driver-name" type="text" class="form-input" style="width:100%;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Phone (receives dispatch texts)</label>
+                  <input id="transport-driver-phone" type="tel" class="form-input" style="width:100%;">
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;">
+                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Vehicle Type</label>
+                    <select id="transport-vehicle-type" class="form-input" style="width:100%;">
+                      <option value="sedan">Sedan</option>
+                      <option value="suv">SUV</option>
+                      <option value="van">Van</option>
+                      <option value="cargo_van">Cargo Van</option>
+                      <option value="truck">Truck</option>
+                    </select>
+                  </div>
+                  <div style="flex:1;">
+                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Capacity</label>
+                    <input id="transport-capacity" type="number" min="1" value="4" class="form-input" style="width:100%;">
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Make</label><input id="transport-vehicle-make" type="text" class="form-input" style="width:100%;"></div>
+                  <div style="flex:1;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Model</label><input id="transport-vehicle-model" type="text" class="form-input" style="width:100%;"></div>
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Color</label><input id="transport-vehicle-color" type="text" class="form-input" style="width:100%;"></div>
+                  <div style="flex:1;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Plate</label><input id="transport-vehicle-plate" type="text" class="form-input" style="width:100%;"></div>
+                </div>
+                <div style="display:flex;gap:20px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" id="transport-handles-passengers" checked> Passengers</label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" id="transport-handles-luggage"> Luggage</label>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button class="btn btn-outline" onclick="closeTransportProviderModal()">Cancel</button>
+                <button id="transport-provider-save-btn" class="btn btn-primary" onclick="saveTransportProvider()">Save Driver</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1817,6 +1908,7 @@
   <script src="js/coupons.js?v=4"></script>
   <script src="js/waivers.js?v=5"></script>
   <script src="js/policies.js?v=1"></script>
+  <script src="js/transportation.js?v=1"></script>
   <script src="js/waitlist.js?v=4"></script>
   <script src="js/billing.js?v=4"></script>
   <script src="js/calendar-view.js?v=4"></script>
