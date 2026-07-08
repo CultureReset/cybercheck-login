@@ -399,6 +399,10 @@ const CC = (function() {
     addBlackoutDate:    function(d) { cacheClear('getBlackout'); return post('/api/dashboard/availability/block', d); },
     deleteBlackoutDate: function(id) { cacheClear('getBlackout'); return del('/api/dashboard/availability/block/' + id); },
 
+    // CALENDAR SYNC (iCal export to Airbnb/VRBO/Google Calendar)
+    getIcalFeedUrl:      function() { return get('/api/dashboard/ical/feed-url'); },
+    regenerateIcalFeed:  function() { return post('/api/dashboard/ical/regenerate'); },
+
     // ACTIVITY LOG
     getActivity: function() { return get('/api/dashboard/activity'); },
 
