@@ -255,6 +255,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Tonight Cards 📅</span>
         </div>
+        <div class="nav-item" data-page="tripswipe-points" onclick="showPage('tripswipe-points');loadPointsConfig()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Points &amp; Rewards 👑</span>
+        </div>
+        <div class="nav-item" data-page="tripswipe-sms-qr" onclick="showPage('tripswipe-sms-qr');loadTripSwipeQR()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14h1v1h-1zM14 20h1v1h-1zM17 17h1v1h-1zM20 20h1v1h-1z"/></svg>
+          <span>Text Sign-Up QR Codes 🔳</span>
+        </div>
         <div class="nav-item" data-page="platform-auth" onclick="showPage('platform-auth');loadAuthConfig()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>Auth Settings 🔐</span>
@@ -4989,6 +4997,49 @@
 
       <!-- ═══════════════════════════════════════════════════════════════ -->
       <!-- ── TONIGHT CARDS ── -->
+      <div id="page-tripswipe-points" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>👑 Points &amp; Rewards</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Set how many points each action earns and the reward tiers. Points roll over trip to trip. Changes apply immediately.</div>
+        </div>
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 14px;">Earn amounts</h3>
+          <div id="pc-earn-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;"></div>
+        </div>
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0;">Reward tiers</h3>
+            <button onclick="pcAddTier()" style="padding:7px 14px;background:var(--card-border);color:var(--text);border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">+ Add tier</button>
+          </div>
+          <div id="pc-tiers-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button onclick="savePointsConfig()" style="padding:11px 22px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">💾 Save Changes</button>
+          <span id="pc-save-msg" style="font-size:13px;color:var(--text-muted);"></span>
+        </div>
+      </div>
+
+      <!-- ── TEXT SIGN-UP QR CODES ── -->
+      <div id="page-tripswipe-sms-qr" class="page-content" style="display:none;">
+        <div class="page-header">
+          <h1>🔳 Text Sign-Up QR Codes</h1>
+          <div style="font-size:13px;color:var(--text-muted);">Each code opens Messages pre-filled with "BEACHES" — one tap to send, one tap on the reply link to sign in. Make one per table, flyer, or sign so you know exactly where every sign-up came from.</div>
+        </div>
+
+        <div class="card" style="padding:20px;margin-bottom:20px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;">
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;">Where is this going? (label)</label>
+              <input id="tsqr-label" type="text" placeholder="e.g. Dockside Bar — Table 5" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;" onkeydown="if(event.key==='Enter')tsqrCreate()">
+            </div>
+            <button onclick="tsqrCreate()" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Generate QR Code</button>
+          </div>
+          <span id="tsqr-create-msg" style="font-size:13px;color:var(--text-muted);display:block;margin-top:8px;"></span>
+        </div>
+
+        <div id="tsqr-list" style="display:flex;flex-direction:column;gap:14px;"></div>
+      </div>
+
       <div id="page-tripswipe-tonight" class="page-content" style="display:none;">
         <div class="page-header">
           <h1>📅 Tonight Cards</h1>
@@ -21041,6 +21092,156 @@
 
     // ── Tonight Cards ──
     var _tcCards = [];
+
+    var _pcConfig = { earn: {}, tiers: [] };
+    var PC_EARN_LABELS = { review:'Review', photo:'Photo', video:'Video', check_in:'Check-in', verified_booking:'Verified booking', social_tag:'Social tag', super_like:'Super like', save:'Save' };
+    async function loadPointsConfig() {
+      var token = getAuthToken();
+      try {
+        var r = await fetch(API_BASE + '/api/tourist/points-config', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = r.ok ? await r.json() : { config: null };
+        _pcConfig = d.config || { earn: {}, tiers: [] };
+        _pcConfig.earn = _pcConfig.earn || {};
+        _pcConfig.tiers = _pcConfig.tiers || [];
+        renderPointsConfig();
+      } catch(e) { console.error('loadPointsConfig', e); }
+    }
+    function renderPointsConfig() {
+      var keys = Object.keys(PC_EARN_LABELS);
+      Object.keys(_pcConfig.earn).forEach(function(k){ if (keys.indexOf(k) < 0) keys.push(k); });
+      var esc = function(s){ return String(s == null ? '' : s).replace(/"/g,'&quot;'); };
+      document.getElementById('pc-earn-grid').innerHTML = keys.map(function(k){
+        var label = PC_EARN_LABELS[k] || k;
+        var val = _pcConfig.earn[k] != null ? _pcConfig.earn[k] : 0;
+        return '<div><label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;">' + label + '</label>' +
+          '<input type="number" data-earn="' + k + '" value="' + val + '" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>';
+      }).join('');
+      document.getElementById('pc-tiers-list').innerHTML = _pcConfig.tiers.map(function(t, i){
+        return '<div style="display:flex;gap:8px;align-items:center;" data-tier="' + i + '">' +
+          '<input type="text" data-tf="name" value="' + esc(t.name) + '" placeholder="Tier name" style="width:120px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">' +
+          '<input type="number" data-tf="min" value="' + (t.min||0) + '" placeholder="Min pts" style="width:100px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">' +
+          '<input type="text" data-tf="perks" value="' + esc(t.perks) + '" placeholder="Perks" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">' +
+          '<button onclick="pcRemoveTier(' + i + ')" style="background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;">&times;</button></div>';
+      }).join('') || '<div style="color:var(--text-muted);font-size:13px;">No tiers yet.</div>';
+    }
+    function pcCollect() {
+      var earn = {};
+      document.querySelectorAll('#pc-earn-grid [data-earn]').forEach(function(el){ earn[el.getAttribute('data-earn')] = parseInt(el.value) || 0; });
+      var tiers = [];
+      document.querySelectorAll('#pc-tiers-list [data-tier]').forEach(function(row){
+        var name = row.querySelector('[data-tf="name"]').value.trim();
+        var min = parseInt(row.querySelector('[data-tf="min"]').value) || 0;
+        var perks = row.querySelector('[data-tf="perks"]').value.trim();
+        if (name) tiers.push({ name: name, min: min, perks: perks });
+      });
+      tiers.sort(function(a,b){ return a.min - b.min; });
+      return { earn: earn, tiers: tiers };
+    }
+    function pcAddTier() { _pcConfig = pcCollect(); _pcConfig.tiers.push({ name:'', min:0, perks:'' }); renderPointsConfig(); }
+    function pcRemoveTier(i) { _pcConfig = pcCollect(); _pcConfig.tiers.splice(i,1); renderPointsConfig(); }
+    async function savePointsConfig() {
+      var token = getAuthToken();
+      var body = pcCollect();
+      var msg = document.getElementById('pc-save-msg');
+      msg.textContent = 'Saving…';
+      try {
+        var r = await fetch(API_BASE + '/api/tourist/points-config', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (r.ok) { _pcConfig = body; renderPointsConfig(); msg.textContent = '✓ Saved'; setTimeout(function(){ msg.textContent=''; }, 2500); }
+        else { var d = await r.json().catch(function(){return{};}); msg.textContent = 'Error: ' + (d.error || r.status); }
+      } catch(e) { msg.textContent = 'Network error'; }
+    }
+
+    // ── Text Sign-Up QR Codes ──────────────────────────────────────────────
+    var _tsqrCodes = [];
+    var _tsqrScansCache = {};
+    async function loadTripSwipeQR() {
+      var token = getAuthToken();
+      try {
+        var r = await fetch(API_BASE + '/api/sms/qr-codes', { headers: { 'Authorization': 'Bearer ' + token } });
+        var d = r.ok ? await r.json() : { codes: [] };
+        _tsqrCodes = d.codes || [];
+        renderTripSwipeQR();
+      } catch(e) { console.error('loadTripSwipeQR', e); }
+    }
+    function renderTripSwipeQR() {
+      var list = document.getElementById('tsqr-list');
+      if (!_tsqrCodes.length) { list.innerHTML = '<div class="card" style="padding:20px;color:var(--text-muted);font-size:13px;">No QR codes yet — generate one above.</div>'; return; }
+      var esc = function(s){ return String(s == null ? '' : s).replace(/"/g,'&quot;'); };
+      list.innerHTML = _tsqrCodes.map(function(c){
+        var qrImg = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(c.sms_link);
+        return '<div class="card" style="padding:20px;display:flex;gap:20px;flex-wrap:wrap;">' +
+          '<img src="' + qrImg + '" width="120" height="120" style="border-radius:8px;background:#fff;padding:6px;flex-shrink:0;" alt="QR code">' +
+          '<div style="flex:1;min-width:220px;">' +
+            '<div style="font-weight:700;font-size:15px;color:var(--text);">' + esc(c.label) + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Code ' + esc(c.keyword) + ' &middot; ' + c.scans + ' sign-up' + (c.scans === 1 ? '' : 's') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;font-family:monospace;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;padding:8px 10px;word-break:break-all;">' + esc(c.sms_link) + '</div>' +
+            '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">' +
+              '<button onclick="tsqrCopy(\'' + c.id + '\')" style="padding:6px 12px;background:var(--card-border);color:var(--text);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">📋 Copy link</button>' +
+              '<button onclick="tsqrToggleScans(\'' + c.id + '\')" id="tsqr-toggle-' + c.id + '" style="padding:6px 12px;background:var(--card-border);color:var(--text);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">▸ Who signed up</button>' +
+              '<button onclick="tsqrDelete(\'' + c.id + '\')" style="padding:6px 12px;background:none;color:#ef4444;border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Delete</button>' +
+            '</div>' +
+            '<div id="tsqr-scans-' + c.id + '" style="display:none;margin-top:12px;border-top:1px solid var(--card-border);padding-top:12px;"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    function tsqrCopy(id) {
+      var c = _tsqrCodes.find(function(x){ return String(x.id) === String(id); });
+      if (!c) return;
+      navigator.clipboard.writeText(c.sms_link).then(function(){ toast('Link copied', 'success'); }).catch(function(){ toast('Could not copy', 'error'); });
+    }
+    async function tsqrToggleScans(id) {
+      var box = document.getElementById('tsqr-scans-' + id);
+      var btn = document.getElementById('tsqr-toggle-' + id);
+      if (!box) return;
+      var open = box.style.display !== 'none';
+      if (open) { box.style.display = 'none'; btn.textContent = '▸ Who signed up'; return; }
+      box.style.display = 'block';
+      btn.textContent = '▾ Who signed up';
+      box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Loading…</div>';
+      try {
+        if (!_tsqrScansCache[id]) {
+          var token = getAuthToken();
+          var r = await fetch(API_BASE + '/api/sms/qr-codes/' + id + '/scans', { headers: { 'Authorization': 'Bearer ' + token } });
+          var d = r.ok ? await r.json() : { scans: [] };
+          _tsqrScansCache[id] = d.scans || [];
+        }
+        var scans = _tsqrScansCache[id];
+        if (!scans.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">No one has texted this code yet.</div>'; return; }
+        box.innerHTML = scans.map(function(s){
+          var when = new Date(s.created_at).toLocaleString();
+          return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--card-border);">' +
+            '<span>' + (s.name ? s.name + ' — ' : '') + s.phone + '</span>' +
+            '<span style="color:var(--text-muted);font-size:12px;white-space:nowrap;">' + when + '</span></div>';
+        }).join('');
+      } catch(e) { box.innerHTML = '<div style="font-size:12px;color:#ef4444;">Could not load.</div>'; }
+    }
+    async function tsqrCreate() {
+      var input = document.getElementById('tsqr-label');
+      var label = input.value.trim();
+      var msg = document.getElementById('tsqr-create-msg');
+      if (!label) { msg.textContent = 'Enter a label first.'; return; }
+      var token = getAuthToken();
+      msg.textContent = 'Generating…';
+      try {
+        var r = await fetch(API_BASE + '/api/sms/qr-codes', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: label }) });
+        var d = await r.json().catch(function(){ return {}; });
+        if (!r.ok) { msg.textContent = 'Error: ' + (d.error || r.status); return; }
+        input.value = '';
+        msg.textContent = '';
+        toast('QR code generated', 'success');
+        await loadTripSwipeQR();
+      } catch(e) { msg.textContent = 'Network error'; }
+    }
+    async function tsqrDelete(id) {
+      if (!confirm('Delete this QR code? Its scan history will be removed too.')) return;
+      var token = getAuthToken();
+      try {
+        var r = await fetch(API_BASE + '/api/sms/qr-codes/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        if (r.ok) { toast('Deleted', 'success'); delete _tsqrScansCache[id]; loadTripSwipeQR(); }
+        else { var d = await r.json().catch(function(){return{};}); toast('Error: ' + (d.error || r.status), 'error'); }
+      } catch(e) { toast('Network error', 'error'); }
+    }
 
     async function loadTonightCards() {
       var token = getAuthToken();
