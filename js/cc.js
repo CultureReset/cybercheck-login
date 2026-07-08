@@ -403,6 +403,12 @@ const CC = (function() {
     getIcalFeedUrl:      function() { return get('/api/dashboard/ical/feed-url'); },
     regenerateIcalFeed:  function() { return post('/api/dashboard/ical/regenerate'); },
 
+    // CALENDAR SYNC — external calendar import (Airbnb/VRBO -> GCR)
+    getExternalCalendars:    function() { return get('/api/dashboard/ical/external'); },
+    addExternalCalendar:     function(d) { return post('/api/dashboard/ical/external', d); },
+    deleteExternalCalendar:  function(id) { return del('/api/dashboard/ical/external/' + id); },
+    syncExternalCalendarNow: function(id) { return post('/api/dashboard/ical/external/' + id + '/sync-now'); },
+
     // ACTIVITY LOG
     getActivity: function() { return get('/api/dashboard/activity'); },
 

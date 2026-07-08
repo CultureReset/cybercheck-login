@@ -550,6 +550,46 @@
               <p>This account needs to be connected to a Gulf Coast Radar business listing before a calendar sync link can be created.</p>
             </div>
           </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Import from Airbnb, VRBO, FareHarbor &amp; Peak</h3>
+                <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">Paste a calendar export (.ics) link from another platform here — GCR checks it hourly and blocks those same dates on your GCR calendar, so you never get double-booked.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openExternalCalendarModal()">+ Connect Calendar</button>
+            </div>
+            <div id="external-cal-list"></div>
+            <div class="empty-state" id="external-cal-empty">
+              <h3>No external calendars connected</h3>
+              <p>Connect Airbnb, VRBO, or another platform's calendar export link to keep GCR in sync automatically.</p>
+            </div>
+          </div>
+
+          <!-- Connect External Calendar Modal -->
+          <div id="external-cal-modal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,.5);">
+            <div class="card" style="width:100%;max-width:420px;margin:0 16px;padding:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Connect External Calendar</h3>
+                <button class="btn btn-outline btn-sm" onclick="closeExternalCalendarModal()">✕</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Source</label>
+                  <input id="external-cal-label" type="text" class="form-input" placeholder="e.g. Airbnb, VRBO, FareHarbor" style="width:100%;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Calendar (.ics) Link</label>
+                  <input id="external-cal-url" type="url" class="form-input" placeholder="https://www.airbnb.com/calendar/ical/..." style="width:100%;">
+                  <p style="font-size:12px;color:var(--text-muted);margin:6px 0 0;">Find this under that platform's calendar settings — usually labeled "Export Calendar" or "iCal Link."</p>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeExternalCalendarModal()">Cancel</button>
+                <button id="external-cal-save-btn" class="btn btn-primary" onclick="saveExternalCalendar()">Connect</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ADD-ONS & DOCKS -->
