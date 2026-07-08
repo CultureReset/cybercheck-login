@@ -347,6 +347,9 @@ const CC = (function() {
     uploadDocument: function(d) { return post('/api/dashboard/documents/upload', d); },
     deleteDocument: function(kind) { return del('/api/dashboard/documents/' + kind); },
 
+    // MENU EDITOR BRIDGE (deep-link into menu-editor.html with no separate PIN entry)
+    getMenuEditorLink: function() { return get('/api/dashboard/menu-editor-link'); },
+
     // TRANSPORTATION (brokered ride/pickup dispatch)
     getTransportSettings:    function() { return get('/api/transportation/company/settings'); },
     updateTransportSettings: function(d) { return patch('/api/transportation/company/settings', d); },
