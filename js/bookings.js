@@ -79,42 +79,61 @@ async function loadBookingsQuiet() {
 
 function mapApiBookings(apiData) {
   return apiData.map(function(b) {
+    // The real universal bookings row: entity_slug-keyed with date/start_time/
+    // total_price/deposit_paid, payment state in details jsonb, and the booked
+    // thing generalized as offering_name/offering_kind (a boat, a charter
+    // trip, a salon service, a room — same field for every industry). Legacy
+    // boat-rental fields remain as fallbacks for pre-GCR rows only.
+    var det = b.details || {};
+    var total = (b.total_price != null ? parseFloat(b.total_price) : null);
+    if (total == null || isNaN(total)) total = b.total || 0;
+    var deposit = (b.deposit_paid != null ? parseFloat(b.deposit_paid) : null);
+    if (deposit == null || isNaN(deposit)) deposit = b.deposit || 0;
     return {
       id: b.id || b.booking_id,
       customerName: b.customer_name || '',
-      customerEmail: b.customer_email || '',
-      customerPhone: b.customer_phone || '',
+      customerEmail: b.email || b.customer_email || '',
+      customerPhone: b.phone || b.customer_phone || '',
       date: b.date || b.booking_date || '',
-      timeSlot: (b.rental_time_slots && b.rental_time_slots.name) || b.booking_time || '',
+      endDate: b.end_date || '',
+      timeSlot: b.start_time || (b.rental_time_slots && b.rental_time_slots.name) || b.booking_time || det.time || '',
+      // "boats" kept as the render key, but it's the booked offering for ANY
+      // industry now: charter trip, room, session, service, or an actual boat.
       boats: (function() {
+        if (b.offering_name) return [{ type: b.offering_name, qty: b.qty || 1, kind: b.offering_kind || null }];
+        if (det.resource) return [{ type: det.resource, qty: b.qty || 1 }];
         if (Array.isArray(b.boats) && b.boats.length > 0) {
           return b.boats.map(function(bt) { return { type: bt.type || bt.name || 'Boat', qty: bt.qty || 1 }; });
         }
         if (b.fleet_type_id) return [{ type: (b.fleet_types && b.fleet_types.name) || 'Boat', qty: b.qty || 1 }];
         return [];
       }()),
-      guests: b.party_size || 1,
+      guests: b.party_size || det.party || 1,
+      tierBreakdown: det.tier_breakdown || '',  // "2× Adult, 1× Kid, 1× Under 2 (free)"
       addons: (function() {
-        var raw = b.addons;
+        var raw = b.addons || det.addons;
         if (!raw) return [];
-        if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch(e) { return [raw]; } }
+        if (typeof raw === 'string') {
+          try { raw = JSON.parse(raw); } catch(e) { return raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+        }
         if (!Array.isArray(raw)) return [];
         return raw.map(function(a) { return typeof a === 'string' ? a : (a.name || ''); }).filter(Boolean);
       }()),
-      subtotal: b.subtotal || 0,
-      platformFee: (b.total || 0) - (b.subtotal || 0),
-      total: b.total || 0,
-      deposit: b.deposit || 0,
-      balanceDue: (b.total || 0) - (b.deposit || 0),
+      subtotal: b.subtotal || total,
+      platformFee: b.subtotal ? (total - b.subtotal) : 0,
+      total: total,
+      deposit: deposit,
+      balanceDue: total - deposit,
       status: b.status || 'pending',
-      paymentStatus: b.payment_status || 'unpaid',
-      stripePaymentId: b.payment_id || '',
-      notes: b.notes || '',
+      paymentStatus: det.payment_status || b.payment_status || 'unpaid',
+      stripePaymentId: det.payment_id || b.payment_id || '',
+      notes: b.special_requests || b.notes || det.notes || '',
+      confirmationCode: b.confirmation_code || '',
       createdAt: b.created_at || '',
       smsDelivered: b.sms_delivered || false,
       reviewRequested: b.review_requested || false,
-      bookingToken: b.booking_token || '',
-      source: b.payment_provider || 'direct',  // wix | direct | ai | phone
+      bookingToken: b.manage_token || b.booking_token || '',
+      source: b.source || b.payment_provider || 'direct',  // public_page | dashboard | wix | ai | phone
       _apiId: b.id
     };
   });
@@ -387,7 +406,12 @@ function renderBookingsTable() {
   filtered.forEach(function(b) {
     var statusBadge = getStatusBadge(b.status);
     var payBadge = getPaymentBadge(b.paymentStatus);
-    var boatSummary = b.boats.map(function(bt) { return bt.qty + 'x ' + bt.type.replace(' Circle Boat', ''); }).join(', ');
+    // works for any industry: "Sunset Dolphin Cruise", "2x Pontoon", "Gel Manicure"
+    var boatSummary = b.boats.map(function(bt) {
+      var label = String(bt.type || '').replace(' Circle Boat', '');
+      return (bt.qty && bt.qty > 1 ? bt.qty + 'x ' : '') + label;
+    }).join(', ');
+    if (b.tierBreakdown) boatSummary += (boatSummary ? ' — ' : '') + b.tierBreakdown;
     var dateFormatted = formatBookingDate(b.date);
     var isUnpaid = b.paymentStatus !== 'paid' && b.paymentStatus !== 'deposit_paid';
 
@@ -489,8 +513,8 @@ async function confirmBooking(id) {
   renderBookingsTable();
   toast('Booking ' + id + ' confirmed! SMS sent to ' + b.customerName);
   if (typeof sendOwnerWhatsApp === 'function') {
-    var boats = (b.boats || []).map(function(bt) { return bt.qty + 'x ' + bt.type; }).join(', ') || 'Boat';
-    sendOwnerWhatsApp('BOOKING CONFIRMED\nCustomer: ' + b.customerName + '\nPhone: ' + (b.customerPhone || '') + '\nDate: ' + b.date + '\nTime: ' + (b.timeSlot || '') + '\nBoats: ' + boats + '\nTotal: $' + (b.total || '0'));
+    var booked = (b.boats || []).map(function(bt) { return (bt.qty && bt.qty > 1 ? bt.qty + 'x ' : '') + bt.type; }).join(', ') || 'Booking';
+    sendOwnerWhatsApp('BOOKING CONFIRMED\nCustomer: ' + b.customerName + '\nPhone: ' + (b.customerPhone || '') + '\nDate: ' + b.date + '\nTime: ' + (b.timeSlot || '') + '\nBooked: ' + booked + '\nTotal: $' + (b.total || '0'));
   }
 }
 
