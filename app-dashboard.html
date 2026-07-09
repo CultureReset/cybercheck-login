@@ -169,11 +169,17 @@
           <span>FAQ</span>
         </div>
 
-        <!-- App Store -->
+        <!-- Platform — modular-dashboard.html is the REAL module manager
+             (wired to /api/platform + entity_modules); the old app-store.html
+             talked to the dead legacy /api/apps registry and is retired. -->
         <div class="nav-section-label">Platform</div>
-        <div class="nav-item" onclick="location.href='app-store.html'">
+        <div class="nav-item" onclick="location.href='setup-booking.html'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Set Up Bookings</span>
+        </div>
+        <div class="nav-item" onclick="location.href='modular-dashboard.html'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M3 9l2.45-4.9A2 2 0 017.24 3h9.52a2 2 0 011.8 1.1L21 9"/><path d="M12 3v6"/></svg>
-          <span>App Store</span>
+          <span>Apps & Modules</span>
         </div>
 
         <!-- Settings & Billing -->

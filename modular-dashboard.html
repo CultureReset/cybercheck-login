@@ -277,7 +277,16 @@ function save(){
    With an account: state, records, and the app registry live on the
    server; localStorage is the offline cache. Without an account
    (demo mode): everything stays local. */
-function token(){ return localStorage.getItem('cc_token') || ''; }
+function token(){
+  // same precedence as js/cc.js: admin view-as (per-tab) → Supabase session → legacy cc_token
+  var va = sessionStorage.getItem('cc_view_as_token');
+  if (va) return va;
+  try {
+    var sbKey = Object.keys(localStorage).find(function(k){ return k.indexOf('sb-') === 0 && k.indexOf('-auth-token') === k.length - 11; });
+    if (sbKey) { var s = JSON.parse(localStorage.getItem(sbKey)); if (s && s.access_token) return s.access_token; }
+  } catch(e){}
+  return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || '';
+}
 function authHeaders(){ return { 'Authorization':'Bearer '+token(), 'Content-Type':'application/json' }; }
 function apiFetch(path, opts){
   opts = opts || {};

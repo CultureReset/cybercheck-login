@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set Up Bookings — CyberCheck</title>
+<link rel="stylesheet" href="css/dashboard.css">
+<style>
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; }
+  .wizard-wrap { max-width: 640px; margin: 0 auto; padding: 32px 18px 80px; }
+  .wizard-head { text-align: center; margin-bottom: 28px; }
+  .wizard-head h1 { font-size: 24px; margin: 0 0 6px; }
+  .wizard-head p { color: var(--text-muted); font-size: 14px; margin: 0; }
+  .steps-bar { display: flex; gap: 6px; margin: 22px 0 26px; }
+  .steps-bar span { flex: 1; height: 5px; border-radius: 3px; background: var(--card-border); }
+  .steps-bar span.done { background: var(--primary); }
+  .wcard { background: var(--card, #fff); border: 1px solid var(--card-border); border-radius: 12px; padding: 22px; margin-bottom: 16px; }
+  .wcard h2 { font-size: 17px; margin: 0 0 6px; }
+  .wcard .sub { color: var(--text-muted); font-size: 13px; margin: 0 0 16px; }
+  .choice { display: block; border: 2px solid var(--card-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+  .choice.active { border-color: var(--primary); background: rgba(59,130,246,.06); }
+  .choice b { display: block; font-size: 15px; margin-bottom: 3px; }
+  .choice small { color: var(--text-muted); font-size: 12.5px; line-height: 1.45; display: block; }
+  label.f { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin: 12px 0 4px; }
+  input[type=text], input[type=number], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 14px; box-sizing: border-box; font-family: inherit; }
+  textarea { resize: vertical; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btnbar { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+  .btn { padding: 12px 22px; border-radius: 8px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-ghost { background: none; border: 1px solid var(--card-border); color: var(--text); }
+  .offer-row { border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .tier-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; margin-top: 8px; align-items: center; }
+  .tier-row input { padding: 8px 10px; font-size: 13px; }
+  .mini { font-size: 12px; color: var(--text-muted); }
+  .addlink { color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; display: inline-block; margin-top: 6px; }
+  .done-big { text-align: center; padding: 30px 10px; }
+  .done-big .emoji { font-size: 46px; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #111827; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; display: none; z-index: 50; }
+</style>
+</head>
+<body>
+<div class="wizard-wrap">
+  <div class="wizard-head">
+    <h1>Set up your bookings</h1>
+    <p id="wiz-bizline">Loading your business…</p>
+  </div>
+  <div class="steps-bar" id="steps-bar"><span></span><span></span><span></span><span></span></div>
+
+  <!-- STEP 1: reservation vs booking -->
+  <div class="wcard" id="step-1">
+    <h2>How do customers book with you?</h2>
+    <p class="sub">Reservations and bookings are different — pick what fits how you actually run.</p>
+    <label class="choice" data-flow="reservation" onclick="pickFlow(this)">
+      <b>🍽️ Reservations</b>
+      <small>Hold a time and party size — no money collected up front. Right for restaurants and walk-in style businesses. You confirm each request.</small>
+    </label>
+    <label class="choice" data-flow="booking" onclick="pickFlow(this)">
+      <b>🎟️ Bookings</b>
+      <small>A committed purchase of a spot, trip, session, or stay — with deposit, cancellation, and refund terms. Right for charters, cruises, rentals, photographers, salons, condos.</small>
+    </label>
+    <label class="choice" data-flow="both" onclick="pickFlow(this)">
+      <b>Both</b>
+      <small>Take table reservations AND sell bookable experiences (for example a restaurant that also runs a sunset cruise).</small>
+    </label>
+    <div class="btnbar"><span></span><button class="btn btn-primary" onclick="goStep(2)">Continue →</button></div>
+  </div>
+
+  <!-- STEP 2: behavior -->
+  <div class="wcard" id="step-2" style="display:none;">
+    <h2>How your times work</h2>
+    <p class="sub">These drive the live availability customers see. You can change any of it later in Apps &amp; Modules.</p>
+    <label class="f">Time slots (comma-separated — leave blank for date-only or check-in/out booking)</label>
+    <input type="text" id="cfg-slots" placeholder="8:00 AM, 12:30 PM, 4:00 PM">
+    <div class="row2">
+      <div><label class="f">Capacity per slot / day</label><input type="number" id="cfg-capacity" min="1" placeholder="6"></div>
+      <div><label class="f">Max party size</label><input type="number" id="cfg-maxparty" min="1" placeholder="12"></div>
+    </div>
+    <label class="f">Online booking closes how many hours before start?</label>
+    <input type="number" id="cfg-cutoff" min="0" placeholder="12">
+    <div class="btnbar"><button class="btn btn-ghost" onclick="goStep(1)">← Back</button><button class="btn btn-primary" onclick="goStep(3)">Continue →</button></div>
+  </div>
+
+  <!-- STEP 3: what you accept -->
+  <div class="wcard" id="step-3" style="display:none;">
+    <h2>What you accept</h2>
+    <p class="sub">Shown to every customer before they book, and on your public page. This is your protection — write it how you mean it.</p>
+    <div class="row2">
+      <div><label class="f">Deposit</label><input type="number" id="pol-deposit" min="0" placeholder="50"></div>
+      <div><label class="f">Deposit type</label>
+        <select id="pol-deposit-type"><option value="">None</option><option value="flat">$ flat</option><option value="percent">% of total</option></select>
+      </div>
+    </div>
+    <label class="f">Cancellation policy</label>
+    <textarea id="pol-cancel" rows="3" placeholder="Free cancellation up to 24 hours before start. Inside 24 hours the deposit is non-refundable."></textarea>
+    <label class="f">Refund policy</label>
+    <textarea id="pol-refund" rows="3" placeholder="Weather cancellations by the captain are fully refunded or rescheduled — your choice."></textarea>
+    <div class="btnbar"><button class="btn btn-ghost" onclick="goStep(2)">← Back</button><button class="btn btn-primary" onclick="goStep(4)">Continue →</button></div>
+  </div>
+
+  <!-- STEP 4: offerings + tiers -->
+  <div class="wcard" id="step-4" style="display:none;">
+    <h2>What can people book?</h2>
+    <p class="sub">Your trips, sessions, services, rooms, or rentals — each with its own pricing. Add per-person tiers for things like Adult / Kid / Under-2-free.</p>
+    <div id="offer-list"></div>
+    <span class="addlink" onclick="addOffering()">+ Add another</span>
+    <div class="btnbar"><button class="btn btn-ghost" onclick="goStep(3)">← Back</button><button class="btn btn-primary" id="finish-btn" onclick="finishSetup()">Finish setup ✓</button></div>
+  </div>
+
+  <!-- DONE -->
+  <div class="wcard" id="step-done" style="display:none;">
+    <div class="done-big">
+      <div class="emoji">🎉</div>
+      <h2>Your booking setup is live</h2>
+      <p class="sub" id="done-summary"></p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn btn-primary" onclick="location.href='modular-dashboard.html'">Open Apps &amp; Modules</button>
+        <button class="btn btn-ghost" onclick="location.href='app-dashboard.html'">Back to Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script src="js/supabase-client.js?v=5"></script>
+<script src="js/industry-map.js?v=1"></script>
+<script src="js/cc.js?v=5"></script>
+<script src="js/app-registry.js?v=4"></script>
+<script>
+var API = window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
+var _flow = null, _entity = null, _presetId = 'blank', _step = 1;
+
+// preset id → the booking app installed for the "booking" flow
+var BOOKING_APP_BY_PRESET = {
+  restaurant: 'booking', charter: 'book-charter', rental: 'book-boat',
+  lodging: 'book-lodging', salon: 'book-hairstylist', photographer: 'book-photographer',
+  fitness: 'book-class', service: 'booking', shopping: 'ordering', creator: 'booking',
+  park: 'booking', blank: 'booking'
+};
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(function(){ t.style.display='none'; }, 2600); }
+function authHeaders(){ return { 'Authorization': 'Bearer ' + (CC.getToken() || ''), 'Content-Type': 'application/json' }; }
+
+function pickFlow(el){
+  document.querySelectorAll('#step-1 .choice').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+  _flow = el.dataset.flow;
+}
+
+function goStep(n){
+  if (n === 2 && !_flow) { toast('Pick reservations, bookings, or both first'); return; }
+  _step = n;
+  [1,2,3,4].forEach(function(i){ document.getElementById('step-'+i).style.display = i===n ? '' : 'none'; });
+  document.querySelectorAll('#steps-bar span').forEach(function(s,i){ s.classList.toggle('done', i < n); });
+  if (n === 4 && !document.querySelector('.offer-row')) addOffering();
+}
+
+function addOffering(){
+  var d = document.createElement('div');
+  d.className = 'offer-row';
+  d.innerHTML =
+    '<div class="row2">' +
+      '<div><label class="f">Name</label><input type="text" class="of-name" placeholder="Sunset Dolphin Cruise / Deluxe Gulf-View Condo / Gel Manicure"></div>' +
+      '<div><label class="f">Base price ($ — blank if tiers only)</label><input type="number" class="of-price" min="0" step="0.01"></div>' +
+    '</div>' +
+    '<label class="f">Description</label><input type="text" class="of-desc" placeholder="What is it, how long, what\'s included">' +
+    '<div class="row2">' +
+      '<div><label class="f">Capacity (people it fits)</label><input type="number" class="of-cap" min="1"></div>' +
+      '<div><label class="f">Priced per</label><select class="of-unit"><option value="person">person</option><option value="hour">hour</option><option value="day">day</option><option value="night">night</option><option value="flat">flat / whole thing</option></select></div>' +
+    '</div>' +
+    '<div class="tiers"></div>' +
+    '<span class="addlink" onclick="addTier(this)">+ Add price tier (Adult / Kid / Under 2 free…)</span>' +
+    '<span class="addlink" style="margin-left:14px;color:#dc2626;" onclick="this.closest(\'.offer-row\').remove()">Remove</span>';
+  document.getElementById('offer-list').appendChild(d);
+}
+
+function addTier(link){
+  var d = document.createElement('div');
+  d.className = 'tier-row';
+  d.innerHTML =
+    '<input type="text" class="t-label" placeholder="Adult / Kid / Senior / Under 2">' +
+    '<input type="number" class="t-price" min="0" step="0.01" placeholder="$ (0 = free)">' +
+    '<input type="number" class="t-agemin" min="0" placeholder="age min">' +
+    '<input type="number" class="t-agemax" min="0" placeholder="age max">' +
+    '<span class="addlink" style="color:#dc2626;" onclick="this.parentElement.remove()">✕</span>';
+  link.closest('.offer-row').querySelector('.tiers').appendChild(d);
+}
+
+async function finishSetup(){
+  var btn = document.getElementById('finish-btn');
+  btn.disabled = true; btn.textContent = 'Setting up…';
+  try {
+    // 1. Policies (dual-written server-side: checkout columns + entity_policies)
+    var dep = document.getElementById('pol-deposit').value;
+    await fetch(API + '/api/dashboard/policies', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({
+      deposit_amount: dep === '' ? null : Number(dep),
+      deposit_type: document.getElementById('pol-deposit-type').value || null,
+      cancellation_policy: document.getElementById('pol-cancel').value || null,
+      refund_policy: document.getElementById('pol-refund').value || null
+    })});
+
+    // 2. Offerings + tiers
+    var offers = document.querySelectorAll('.offer-row');
+    var created = 0, tiersCreated = 0;
+    for (var i = 0; i < offers.length; i++) {
+      var o = offers[i];
+      var name = o.querySelector('.of-name').value.trim();
+      if (!name) continue;
+      var res = await fetch(API + '/api/dashboard/section-data/offerings', { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+        name: name,
+        description: o.querySelector('.of-desc').value || null,
+        price_from: parseFloat(o.querySelector('.of-price').value) || null,
+        capacity: parseInt(o.querySelector('.of-cap').value, 10) || null,
+        unit: o.querySelector('.of-unit').value,
+        kind: 'offering', section: 'services', active: true
+      })});
+      var off = await res.json();
+      if (!res.ok || !off.id) continue;
+      created++;
+      var tiers = o.querySelectorAll('.tier-row');
+      for (var j = 0; j < tiers.length; j++) {
+        var t = tiers[j];
+        var label = t.querySelector('.t-label').value.trim();
+        if (!label) continue;
+        var tr = await fetch(API + '/api/dashboard/section-data/offering_prices', { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+          offering_id: off.id,
+          label: label,
+          price: parseFloat(t.querySelector('.t-price').value) || 0,
+          age_min: t.querySelector('.t-agemin').value === '' ? null : parseInt(t.querySelector('.t-agemin').value, 10),
+          age_max: t.querySelector('.t-agemax').value === '' ? null : parseInt(t.querySelector('.t-agemax').value, 10),
+          sort_order: j
+        })});
+        if (tr.ok) tiersCreated++;
+      }
+    }
+
+    // 3. Install the app(s) via the real platform state (same snapshot shape
+    //    modular-dashboard.html writes)
+    await window.CC_REGISTRY_READY;
+    var apps = window.CC_SEED_APPS || [];
+    function manifest(id){ return apps.find(function(a){ return a.id === id; }); }
+    var wanted = [];
+    if (_flow === 'reservation' || _flow === 'both') wanted.push('reserve-table');
+    if (_flow === 'booking' || _flow === 'both') wanted.push(BOOKING_APP_BY_PRESET[_presetId] || 'booking');
+    var config = {
+      slot_times: document.getElementById('cfg-slots').value || '',
+      slot_capacity: document.getElementById('cfg-capacity').value || '',
+      max_party: document.getElementById('cfg-maxparty').value || '',
+      cutoff_hours: document.getElementById('cfg-cutoff').value || '',
+      deposit: document.getElementById('pol-deposit').value || ''
+    };
+    var stRes = await fetch(API + '/api/platform/state', { headers: authHeaders() });
+    var st = stRes.ok ? await stRes.json() : {};
+    var installed = (st && st.installed) || {};
+    var maxSort = 0; Object.keys(installed).forEach(function(k){ maxSort = Math.max(maxSort, installed[k].sort || 0); });
+    var installedNow = [];
+    wanted.forEach(function(id){
+      var m = manifest(id);
+      if (!m || installed[id]) return; // never clobber an existing install
+      installed[id] = { config: JSON.parse(JSON.stringify(config)), enabled: true, showOnPublic: !!m.block, sort: ++maxSort, installedAt: new Date().toISOString(), manifest: JSON.parse(JSON.stringify(m)) };
+      installedNow.push(m.name || id);
+    });
+    await fetch(API + '/api/platform/state', { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+      business: (st && st.business) || { name: (_entity && _entity.name) || '' },
+      installed: installed,
+      page_order: (st && st.page_order) || []
+    })});
+
+    document.getElementById('step-4').style.display = 'none';
+    document.querySelectorAll('#steps-bar span').forEach(function(s){ s.classList.add('done'); });
+    document.getElementById('done-summary').textContent =
+      (installedNow.length ? installedNow.join(' + ') + ' installed. ' : '') +
+      created + ' offering' + (created === 1 ? '' : 's') +
+      (tiersCreated ? ' with ' + tiersCreated + ' price tier' + (tiersCreated === 1 ? '' : 's') : '') +
+      ' added. Policies saved to your page and checkout.';
+    document.getElementById('step-done').style.display = '';
+  } catch (e) {
+    toast('Something failed: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Finish setup ✓';
+  }
+}
+
+(async function boot(){
+  var session = await CC.getSession();
+  if (!session) { location.href = 'login.html'; return; }
+  var b = session.business || {};
+  _entity = b;
+  _presetId = CC_INDUSTRY.presetId(b.entity_type, b.entity_subtype);
+  document.getElementById('wiz-bizline').textContent =
+    (b.name || 'Your business') + ' · ' + (b.entity_subtype || b.entity_type || 'business').replace(/_/g, ' ');
+  // sensible default flow per industry
+  var defaultFlow = _presetId === 'restaurant' ? 'reservation' : 'booking';
+  var el = document.querySelector('#step-1 .choice[data-flow="' + defaultFlow + '"]');
+  if (el) pickFlow(el);
+})();
+</script>
+</body>
+</html>
