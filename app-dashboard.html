@@ -1899,6 +1899,7 @@
     })();
   </script>
   <script src="js/supabase-client.js?v=5"></script>
+  <script src="js/industry-map.js?v=1"></script>
   <script src="js/cc.js?v=5"></script>
   <script src="js/upload.js?v=4"></script>
   <script src="shared-data.js?v=4"></script>
@@ -2043,9 +2044,20 @@
         status: USER_CONFIG._fromApi ? 'active' : 'draft'
       };
 
+      // GCR entities carry entity_type/entity_subtype (raw DB values like
+      // "vacation-rental" or "fishing_charter") — normalize to the nav's
+      // bucket vocabulary or the sidebar renders blank for hundreds of types.
+      var sb = session.business || {};
+      if (sb.entity_type || sb.entity_subtype) {
+        _business.entity_type = sb.entity_type;
+        _business.entity_subtype = sb.entity_subtype;
+        _business.type = CC_INDUSTRY.navType(sb.entity_type, sb.entity_subtype);
+        if (sb.name) _business.name = sb.name;
+      }
+
       document.getElementById('sidebar-biz-name').textContent = _business.name;
       document.getElementById('sidebar-biz-type').textContent =
-        _business.type.charAt(0).toUpperCase() + _business.type.slice(1);
+        (_business.entity_subtype || _business.type || '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
 
       setupNavForType(_business.type);
       // Show/hide nav items based on business type
