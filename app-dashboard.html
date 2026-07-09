@@ -283,7 +283,7 @@
                   <option value="$">$ · Budget</option>
                   <option value="$$">$$ · Moderate</option>
                   <option value="$$$">$$$ · Upscale</option>
-                  <option value="$$$$">$$$$ · Fine Dining</option>
+                  <option value="$$$$">$$$$ · Premium</option>
                 </select>
               </div>
             </div>
@@ -325,23 +325,23 @@
             <div style="display:flex;flex-wrap:wrap;gap:12px;">
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-outdoor-seating"> Outdoor Seating</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-live-music"> Live Music</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-delivery"> Delivery</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-dine-in"> Dine-In</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-takeout"> Takeout</label>
+              <label data-biz-type="restaurant,bar,cafe,food_truck" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-delivery"> Delivery</label>
+              <label data-biz-type="restaurant,bar,cafe,food_truck" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-dine-in"> Dine-In</label>
+              <label data-biz-type="restaurant,bar,cafe,food_truck" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-takeout"> Takeout</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-good-for-groups"> Good for Groups</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-good-for-children"> Kid Friendly</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-wheelchair"> Wheelchair Accessible</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-parking"> Parking</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-serves-beer"> Beer</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-serves-wine"> Wine</label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-serves-cocktails"> Cocktails</label>
+              <label data-biz-type="restaurant,bar,cafe,food_truck" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-serves-beer"> Beer</label>
+              <label data-biz-type="restaurant,bar,cafe,food_truck" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-serves-wine"> Wine</label>
+              <label data-biz-type="restaurant,bar,cafe,food_truck" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="prof-serves-cocktails"> Cocktails</label>
             </div>
           </div>
           <div class="card">
             <div class="card-header"><h3>Business Hours</h3></div>
             <div id="hours-editor"></div>
           </div>
-          <div class="card">
+          <div class="card" data-biz-type="restaurant,bar,cafe,food_truck">
             <div class="card-header"><h3>🍺 Happy Hour Schedule</h3></div>
             <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Set when happy hour is active — a "NOW" badge appears on the QR menu during those hours.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="hh-day-btns">
