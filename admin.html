@@ -12759,12 +12759,33 @@
           '<td style="padding:10px 8px;display:flex;gap:6px;flex-wrap:wrap;">' +
             '<a href="https://gcr-unified.vercel.app/business/' + encodeURIComponent(e.slug||'') + '" target="_blank" class="btn btn-sm" style="background:#e8f7fa;color:#0b6475;border:1px solid #b9e7ef;font-size:11px;" title="View live on GCR">View</a>' +
             '<button onclick="openEntEditor(\'' + e.id + '\')" class="btn btn-outline btn-sm">Edit</button>' +
+            '<button onclick="openViewAsDashboard(\'' + escHtml(e.slug||'') + '\')" class="btn btn-sm" style="background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;font-size:11px;" title="Open this business\'s live owner dashboard (view-as)">📊 Dashboard</button>' +
             '<button onclick="promptInviteOwner(\'' + escHtml(e.slug||'') + '\',\'' + escHtml(e.name).replace(/'/g,"\\'") + '\')" class="btn btn-outline btn-sm" title="Email this business a login invite">✉️ Invite</button>' +
             '<button onclick="deleteEntity(\'' + e.id + '\',\'' + escHtml(e.name).replace(/'/g,"\\'") + '\')" class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">Delete</button>' +
           '</td>' +
           '</tr>';
       }).join('');
       document.getElementById('ent-table-body').innerHTML = html || '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">No entities yet.</td></tr>';
+    }
+
+    // Open THIS business's actual live owner dashboard (view-as) — mints a
+    // short-lived entity-scoped token server-side and opens app-dashboard.html
+    // in a new tab. The token rides sessionStorage in that tab only, so the
+    // admin session here is untouched.
+    async function openViewAsDashboard(slug) {
+      if (!slug) { toast('This entity has no slug set', 'error'); return; }
+      try {
+        var r = await fetch(API_BASE + '/api/admin/view-as', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('cc_admin_token') },
+          body: JSON.stringify({ entity_slug: slug })
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed to open dashboard');
+        window.open('app-dashboard.html?view_as=' + encodeURIComponent(d.token), '_blank');
+      } catch (e) {
+        toast('Failed to open dashboard: ' + e.message, 'error');
+      }
     }
 
     async function promptInviteOwner(slug, name) {

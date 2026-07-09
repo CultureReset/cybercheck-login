@@ -10,6 +10,12 @@ const CC = (function() {
 
   // ---- Token / Session ----
   function getToken() {
+    // Admin view-as (per-tab): when an admin opens a business's dashboard via
+    // admin.html's "Open Dashboard", the short-lived entity-scoped JWT lives
+    // in sessionStorage so THIS tab shows that business while the admin's own
+    // session in other tabs is untouched. Must win over the Supabase session.
+    var viewAs = sessionStorage.getItem('cc_view_as_token');
+    if (viewAs) return viewAs;
     try {
       var sbKey = Object.keys(localStorage).find(function(k) {
         return k.startsWith('sb-') && k.endsWith('-auth-token');
@@ -142,6 +148,14 @@ const CC = (function() {
   }
 
   async function getSession() {
+    // Admin view-as: the entity-scoped token wins and the business is always
+    // fetched fresh from the API (never the localStorage cache — that's
+    // shared across tabs and belongs to the admin's own session).
+    if (sessionStorage.getItem('cc_view_as_token')) {
+      var vaProfile = await get('/api/dashboard/profile');
+      if (vaProfile) return { user: { id: 'view-as', email: '' }, business: vaProfile, viewAs: true };
+      return null;
+    }
     // Try Supabase session first
     if (window.supabase && window.supabase.auth) {
       try {

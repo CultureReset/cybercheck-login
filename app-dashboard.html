@@ -1875,11 +1875,25 @@
     window.META_WHATSAPP_CONFIG_ID = '';
   </script>
   <script>
+    // Admin view-as bootstrap — admin.html's "Open Dashboard" opens this page
+    // with ?view_as=<short-lived entity-scoped JWT>. Stash it per-tab
+    // (sessionStorage) so js/cc.js sends it on every API call, then strip the
+    // token from the URL so it never lands in history/bookmarks.
+    (function() {
+      var m = window.location.search.match(/[?&]view_as=([^&]+)/);
+      if (m) {
+        sessionStorage.setItem('cc_view_as_token', decodeURIComponent(m[1]));
+        history.replaceState(null, '', window.location.pathname);
+      }
+    })();
+  </script>
+  <script>
     // Auth guard — checks localStorage directly before any client loads
     (function() {
+      var viewAs = sessionStorage.getItem('cc_view_as_token');
       var sbToken = localStorage.getItem('sb-mkepugvdlktfsossumox-auth-token'); // cyber check — the live DB (js/supabase-client.js)
       var legacyToken = localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token');
-      if (!sbToken && !legacyToken) {
+      if (!viewAs && !sbToken && !legacyToken) {
         window.location.replace('login.html');
       }
     })();
