@@ -84,7 +84,7 @@ function mapApiBookings(apiData) {
       customerName: b.customer_name || '',
       customerEmail: b.customer_email || '',
       customerPhone: b.customer_phone || '',
-      date: b.booking_date || '',
+      date: b.date || b.booking_date || '',
       timeSlot: (b.rental_time_slots && b.rental_time_slots.name) || b.booking_time || '',
       boats: (function() {
         if (Array.isArray(b.boats) && b.boats.length > 0) {
