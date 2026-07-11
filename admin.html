@@ -14198,16 +14198,67 @@
       }
       el.innerHTML = _currentEntitySections.map(function(s) {
         var typeLabel = { rich_text:'About text', bullets:'Bullets', grouped_items:'Menu/Tickets/Drinks', cards:'Cards', gallery:'Photos', reviews:'Reviews', hours:'Hours', location:'Location' }[s.section_type] || s.section_type;
+        var thumb = s.image_url
+          ? '<img src="' + escHtml(s.image_url) + '" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border);">'
+          : '<div style="width:52px;height:52px;border-radius:8px;border:1px dashed var(--card-border);display:grid;place-items:center;color:var(--text-muted);font-size:18px;">📷</div>';
         return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;">' +
+          thumb +
           '<div style="flex:1;">' +
             '<strong style="font-size:14px;">' + escHtml(s.section_label) + '</strong>' +
             ' <span style="font-size:12px;color:var(--text-muted);background:var(--bg);padding:2px 8px;border-radius:10px;">' + escHtml(s.section_type) + '</span>' +
             '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">key: ' + escHtml(s.section_key) + ' · ' + typeLabel + '</div>' +
           '</div>' +
+          '<input type="file" accept="image/*" style="display:none;" id="secphoto-' + s.id + '" onchange="uploadSectionPhoto(this,\'' + s.id + '\')">' +
+          '<button onclick="document.getElementById(\'secphoto-' + s.id + '\').click()" class="btn btn-outline btn-sm">' + (s.image_url ? 'Change Photo' : '📷 Add Photo') + '</button>' +
+          (s.image_url ? '<button onclick="removeSectionPhoto(\'' + s.id + '\')" class="btn btn-outline btn-sm" title="Remove photo">✕ Photo</button>' : '') +
           '<button onclick="openSecContentEditor(\'' + s.id + '\',\'' + s.section_type + '\',\'' + escHtml(s.section_label) + '\')" class="btn btn-outline btn-sm">Edit Content</button>' +
           '<button onclick="deleteEntSection(\'' + s.id + '\')" class="btn btn-sm btn-danger">×</button>' +
           '</div>';
       }).join('');
+    }
+
+    // Upload a banner photo for one section: push the file to the shared
+    // upload-image endpoint (entity-media bucket), then PATCH the section's
+    // image_url. No full sections re-save needed.
+    async function uploadSectionPhoto(fileInput, sectionId) {
+      if (!sectionId || !fileInput.files[0]) return;
+      var token = getAuthToken();
+      try {
+        var fd = new FormData();
+        fd.append('image', fileInput.files[0]);
+        fd.append('entity_slug', _currentEntitySlug || '');
+        var up = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd
+        });
+        var ud = await up.json();
+        if (!up.ok) throw new Error(ud.error || 'Upload failed');
+        var url = ud.url || ud.image_url || '';
+        var path = ud.path || ud.image_path || null;
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/image', {
+          method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: url, image_path: path })
+        });
+        if (!r.ok) { var e = await r.json(); throw new Error(e.error || 'Save failed'); }
+        var sec = _currentEntitySections.find(function(x){ return x.id === sectionId; });
+        if (sec) { sec.image_url = url; sec.image_path = path; }
+        renderEntSections();
+        toast('Section photo saved', 'success');
+      } catch (err) { toast('Photo: ' + err.message, 'error'); }
+    }
+
+    async function removeSectionPhoto(sectionId) {
+      var token = getAuthToken();
+      try {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/image', {
+          method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: null, image_path: null })
+        });
+        if (!r.ok) { var e = await r.json(); throw new Error(e.error || 'Remove failed'); }
+        var sec = _currentEntitySections.find(function(x){ return x.id === sectionId; });
+        if (sec) { sec.image_url = null; sec.image_path = null; }
+        renderEntSections();
+        toast('Section photo removed', 'success');
+      } catch (err) { toast('Photo: ' + err.message, 'error'); }
     }
 
     function openAddSectionModal() {
