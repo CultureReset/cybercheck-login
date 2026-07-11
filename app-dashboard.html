@@ -1512,6 +1512,57 @@
     <input type="hidden" id="inv-form-id">
   </div></div>
 
+  <div class="modal-overlay" id="modal-room"><div class="modal">
+    <div class="modal-header"><h3 id="room-modal-title">Add Room</h3><button class="modal-close" onclick="closeModal('modal-room')">&times;</button></div>
+    <div class="form-group"><label>Room / Unit Name</label><input type="text" id="room-form-name" placeholder="Unit 302 — Gulf View King"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Bedrooms</label><input type="number" id="room-form-bedrooms" min="0" placeholder="2"></div>
+      <div class="form-group"><label>Bathrooms</label><input type="number" id="room-form-bathrooms" min="0" step="0.5" placeholder="2"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Max Guests</label><input type="number" id="room-form-capacity" min="1" placeholder="6"></div>
+      <div class="form-group"><label>Nightly Price ($)</label><input type="number" id="room-form-price" min="0" step="0.01" placeholder="249"></div>
+    </div>
+    <div class="form-group"><label>Minimum Nights</label><input type="number" id="room-form-min-nights" min="1" value="1"></div>
+    <input type="hidden" id="room-form-id">
+
+    <div id="room-calendar-section" style="display:none;border-top:1px solid var(--card-border);margin-top:14px;padding-top:14px;">
+      <input type="hidden" id="room-cal-unit-id">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <h4 style="margin:0;font-size:14px;">Availability</h4>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-outline btn-sm" onclick="roomCalPrevMonth()">&lsaquo;</button>
+          <span id="room-cal-month-label" style="min-width:120px;text-align:center;font-weight:600;font-size:13px;"></span>
+          <button class="btn btn-outline btn-sm" onclick="roomCalNextMonth()">&rsaquo;</button>
+        </div>
+      </div>
+      <div class="calendar-grid" id="room-calendar-grid"></div>
+
+      <h4 style="margin:16px 0 8px;font-size:14px;">Connect a calendar for this unit</h4>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Paste this unit's Airbnb/Vrbo/Track export link — bookings there will block these dates here too.</p>
+      <div class="form-row">
+        <select id="room-cal-provider" style="padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
+          <option value="airbnb">Airbnb</option>
+          <option value="vrbo">Vrbo</option>
+          <option value="track">Track</option>
+          <option value="google">Google Calendar</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="text" id="room-cal-ical-url" placeholder="https://.../calendar.ics" style="flex:1;">
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="connectRoomCalendar()">Connect</button>
+      <div id="room-cal-feed-list" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="modal-footer" style="display:flex;justify-content:space-between;">
+      <button class="btn btn-outline" id="room-delete-btn" style="color:var(--danger);border-color:var(--danger);" onclick="deleteRoomConfirm()">Remove Room</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="closeModal('modal-room')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRoom()">Save</button>
+      </div>
+    </div>
+  </div></div>
+
   <!-- Addon Modal -->
   <div class="modal-overlay" id="modal-addon"><div class="modal">
     <div class="modal-header"><h3>Add Add-on / Dock</h3><button class="modal-close" onclick="closeModal('modal-addon')">&times;</button></div>

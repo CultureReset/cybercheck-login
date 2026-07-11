@@ -429,6 +429,22 @@ const CC = (function() {
     deleteExternalCalendar:  function(id) { return del('/api/dashboard/ical/external/' + id); },
     syncExternalCalendarNow: function(id) { return post('/api/dashboard/ical/external/' + id + '/sync-now'); },
 
+    // ROOMS & UNITS (condo/hotel/vacation_rental — bookable_resources, one row per unit)
+    getUnits:    function() { return get('/api/dashboard/units'); },
+    createUnit:  function(d) { cacheClear('getUnits'); return post('/api/dashboard/units', d); },
+    updateUnit:  function(id, d) { cacheClear('getUnits'); return put('/api/dashboard/units/' + id, d); },
+    deleteUnit:  function(id) { cacheClear('getUnits'); return del('/api/dashboard/units/' + id); },
+
+    // Per-unit availability (reads the blocked-dates + quote endpoints on /api/availability, not /api/dashboard)
+    getUnitAvailability: function(resourceId, from, to) {
+      var qs = '?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+      return get('/api/availability/resource/' + resourceId + qs);
+    },
+    getUnitQuote: function(resourceId, checkin, checkout) {
+      var qs = '?checkin=' + encodeURIComponent(checkin) + '&checkout=' + encodeURIComponent(checkout);
+      return get('/api/availability/resource/' + resourceId + '/quote' + qs);
+    },
+
     // ACTIVITY LOG
     getActivity: function() { return get('/api/dashboard/activity'); },
 
