@@ -657,6 +657,7 @@
             <button onclick="switchEntTab('team')" id="enttab-team" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">👥 Team</button>
             <button onclick="switchEntTab('blog')" id="enttab-blog" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📰 Blog</button>
             <button onclick="switchEntTab('sechours')" id="enttab-sechours" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🕐 Sec. Hours</button>
+            <button onclick="switchEntTab('availability')" id="enttab-availability" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">⚡ Availability</button>
           </div>
 
           <div style="padding:28px;" id="ent-editor-body">
@@ -987,6 +988,54 @@
                 <button onclick="openAddFaq()" class="btn btn-primary btn-sm">+ Add FAQ</button>
               </div>
               <div id="faqs-list" style="display:grid;gap:10px;"></div>
+            </div>
+
+            <!-- AVAILABILITY TAB -->
+            <div id="enttab-availability-content" style="display:none;">
+              <h3 style="margin:0 0 4px;font-size:16px;">⚡ Today's Availability</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">Manual for now — live scraping from Booking.com/FareHarbor/Square is a separate follow-up. Turning this off hides it everywhere (card badge, profile page, and the AI chat) without losing the number.</p>
+              <div style="display:grid;gap:14px;max-width:480px;">
+                <label style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;">
+                  <input type="checkbox" id="avail-visible" style="width:18px;height:18px;">
+                  Show availability on this business's profile
+                </label>
+                <div>
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Status</label>
+                  <select id="avail-status" class="form-input">
+                    <option value="unknown">Unknown</option>
+                    <option value="available">Available</option>
+                    <option value="limited">Limited</option>
+                    <option value="booked">Fully booked</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;">
+                    <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Total capacity</label>
+                    <input type="number" id="avail-total" class="form-input" min="0">
+                  </div>
+                  <div style="flex:1;">
+                    <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Spots remaining</label>
+                    <input type="number" id="avail-remaining" class="form-input" min="0">
+                  </div>
+                </div>
+                <div style="border-top:1px solid var(--card-border);padding-top:14px;">
+                  <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Last-minute deal text (optional — e.g. "2 spots left on tonight's sunset cruise")</label>
+                  <input type="text" id="avail-deal-text" class="form-input" style="width:100%;">
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;">
+                    <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Original price (optional)</label>
+                    <input type="number" id="avail-orig-price" class="form-input" min="0" step="0.01">
+                  </div>
+                  <div style="flex:1;">
+                    <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Last-minute price (optional)</label>
+                    <input type="number" id="avail-deal-price" class="form-input" min="0" step="0.01">
+                  </div>
+                </div>
+                <div id="avail-last-updated" style="font-size:12px;color:var(--text-muted);"></div>
+                <button onclick="saveAvailabilityTab()" class="btn btn-primary" style="width:fit-content;">Save Availability</button>
+                <div style="font-size:11px;color:var(--text-muted);">5 or fewer spots remaining, or a last-minute deal text, auto-posts to the public Deals page. Refilling spots or turning this off automatically pulls that deal down.</div>
+              </div>
             </div>
 
             <!-- TEAM TAB -->
@@ -13062,7 +13111,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours'].forEach(function(t) {
+      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours','availability'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -13083,6 +13132,7 @@
       if (tab === 'team'     && _currentEntitySlug) loadTeamTab();
       if (tab === 'blog'     && _currentEntitySlug) loadBlogTab();
       if (tab === 'sechours' && _currentEntitySlug) loadSecHoursTab();
+      if (tab === 'availability' && _currentEntitySlug) loadAvailabilityTab();
     }
 
     var loadEntityForEdit = function(entityId) { openEntEditor(entityId); };
@@ -13237,6 +13287,51 @@
 
     // ── FAQS TAB ─────────────────────────────────────
     var _faqItems = [];
+    // ── AVAILABILITY TAB ─────────────────────────────
+    async function loadAvailabilityTab() {
+      var slug = _currentEntitySlug;
+      var today = new Date().toISOString().split('T')[0];
+      document.getElementById('avail-visible').checked = true;
+      document.getElementById('avail-status').value = 'unknown';
+      document.getElementById('avail-total').value = '';
+      document.getElementById('avail-remaining').value = '';
+      document.getElementById('avail-deal-text').value = '';
+      document.getElementById('avail-orig-price').value = '';
+      document.getElementById('avail-deal-price').value = '';
+      document.getElementById('avail-last-updated').textContent = '';
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/availability', {headers:gcrAuthHeaders()});
+        var data = res.ok ? await res.json() : {availability:[]};
+        var rows = data.availability || [];
+        var todayRow = rows.find(function(r){ return r.availability_date === today; });
+        if (todayRow) {
+          document.getElementById('avail-visible').checked = todayRow.visible_on_profile !== false;
+          document.getElementById('avail-status').value = todayRow.status || 'unknown';
+          document.getElementById('avail-total').value = todayRow.total_capacity != null ? todayRow.total_capacity : '';
+          document.getElementById('avail-remaining').value = todayRow.remaining_spots != null ? todayRow.remaining_spots : '';
+          document.getElementById('avail-deal-text').value = todayRow.last_minute_deal || '';
+          document.getElementById('avail-orig-price').value = todayRow.original_price != null ? todayRow.original_price : '';
+          document.getElementById('avail-deal-price').value = todayRow.last_minute_price != null ? todayRow.last_minute_price : '';
+          if (todayRow.last_updated) document.getElementById('avail-last-updated').textContent = 'Last updated: ' + new Date(todayRow.last_updated).toLocaleString();
+        }
+      } catch(e) { console.error('loadAvailabilityTab', e); }
+    }
+    function saveAvailabilityTab() {
+      var slug = _currentEntitySlug;
+      var body = {
+        visible_on_profile: document.getElementById('avail-visible').checked,
+        status: document.getElementById('avail-status').value,
+        total_capacity: document.getElementById('avail-total').value ? parseInt(document.getElementById('avail-total').value, 10) : null,
+        remaining_spots: document.getElementById('avail-remaining').value ? parseInt(document.getElementById('avail-remaining').value, 10) : null,
+        last_minute_deal: document.getElementById('avail-deal-text').value || null,
+        original_price: document.getElementById('avail-orig-price').value ? parseFloat(document.getElementById('avail-orig-price').value) : null,
+        last_minute_price: document.getElementById('avail-deal-price').value ? parseFloat(document.getElementById('avail-deal-price').value) : null,
+      };
+      fetch(GCR_API + '/api/admin/gcr/entities/' + slug + '/availability', {
+        method:'PUT', headers:gcrAuthHeaders(), body: JSON.stringify(body)
+      }).then(function(r){ if (r.ok) { alert('Saved.'); loadAvailabilityTab(); } else alert('Failed to save.'); });
+    }
+
     async function loadFaqsTab() {
       var slug = _currentEntitySlug;
       try {
