@@ -1331,9 +1331,15 @@ async function wcGalleryRemove(i) {
   // Delete from media table so server doesn't re-add it to gallery on next load.
   // NOTE: We intentionally do NOT delete the file from Supabase Storage so any
   // section (dock, about, fleet, etc.) that uses this URL continues to load.
-  if (urlToRemove && supabase) {
+  if (urlToRemove) {
     try {
-      await supabase.from('media').delete().eq('url', urlToRemove);
+      // Row-only delete through the API (storage object intentionally kept —
+      // other sections may still reference this URL); server scopes to site.
+      await fetch((window.CC_API_BASE || 'https://gcr-api-clean.vercel.app') + '/api/dashboard/media/file', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || '') },
+        body: JSON.stringify({ url: urlToRemove })
+      });
     } catch(e) {
       console.warn('Media table delete error:', e);
     }
@@ -1397,13 +1403,17 @@ async function wcGalRemoveDuplicates() {
   }
 
   // Delete dupe media records from Supabase so server can't re-add them
-  if (dupeUrls.length && supabase) {
+  if (dupeUrls.length) {
     if (status) status.textContent = `Removing ${dupeUrls.length} duplicate${dupeUrls.length!==1?'s':''}…`;
     for (const url of dupeUrls) {
       try {
-        await supabase.from('media').delete().eq('url', url);
-        const pathMatch = url.split('/storage/v1/object/public/media/');
-        if (pathMatch[1]) await supabase.storage.from('media').remove([decodeURIComponent(pathMatch[1])]);
+        // API removes both the media row and the storage object (it derives
+        // the storage path from the public URL, scoped to this site)
+        await fetch((window.CC_API_BASE || 'https://gcr-api-clean.vercel.app') + '/api/dashboard/media/file', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || '') },
+          body: JSON.stringify({ url })
+        });
       } catch(e) {}
     }
   }
