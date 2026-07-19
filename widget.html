@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Availability</title>
+<style>
+  :root{--bg:#ffffff;--ink:#16202a;--muted:#68737f;--line:#e5e8ec;--open:#1e8e4b;--open-bg:#e7f5ec;--lim:#b96e12;--lim-bg:#fdf1df;--full:#c03434;--full-bg:#fbeaea;--accent:#0d7d74}
+  [data-theme="dark"]{--bg:#151a21;--ink:#e8ebee;--muted:#93a0ad;--line:#2a323c;--open:#5fc084;--open-bg:#173322;--lim:#e0a45c;--lim-bg:#382a14;--full:#e77;--full-bg:#3c2020;--accent:#3cc2b4}
+  *{box-sizing:border-box;margin:0}
+  body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:14px;font-size:14px}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .head h1{font-size:15px;font-weight:700}
+  .nav{display:flex;gap:4px;align-items:center}
+  .nav button{border:1px solid var(--line);background:none;color:var(--ink);border-radius:7px;width:28px;height:28px;font-size:14px;cursor:pointer}
+  .nav .m{font-weight:700;font-size:13px;min-width:104px;text-align:center}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .dow{font-size:10px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;padding:3px 0}
+  .day{aspect-ratio:1;border:1px solid var(--line);border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;min-height:34px;position:relative}
+  .day.pad{border:none}
+  .day.past{opacity:.35}
+  .day .n{font-weight:600}
+  .day .r{font-size:9px;font-weight:700;line-height:1}
+  .day.open{background:var(--open-bg);border-color:transparent}.day.open .r{color:var(--open)}
+  .day.limited{background:var(--lim-bg);border-color:transparent}.day.limited .r{color:var(--lim)}
+  .day.full,.day.blocked{background:var(--full-bg);border-color:transparent}.day.full .r,.day.blocked .r{color:var(--full)}
+  .legend{display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px}
+  .cta{display:block;margin-top:12px;background:var(--accent);color:#fff;text-decoration:none;text-align:center;font-weight:700;border-radius:9px;padding:11px;font-size:14px}
+  .foot{margin-top:8px;text-align:center;font-size:10.5px}
+  .foot a{color:var(--muted);text-decoration:none}
+  .err{color:var(--full);font-size:13px;padding:20px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="head">
+  <h1 id="w-name">Availability</h1>
+  <div class="nav"><button id="prev" aria-label="Previous month">‹</button><span class="m" id="w-month"></span><button id="next" aria-label="Next month">›</button></div>
+</div>
+<div class="grid" id="w-grid"></div>
+<div class="legend">
+  <span><i style="background:var(--open)"></i>Open</span>
+  <span><i style="background:var(--lim)"></i>Few left</span>
+  <span><i style="background:var(--full)"></i>Booked</span>
+</div>
+<a class="cta" id="w-book" href="#" target="_top" style="display:none">Book Now</a>
+<div class="foot"><a id="w-brand" href="#" target="_blank" rel="noopener">Availability by CyberCheck</a></div>
+
+<script>
+(function(){
+  'use strict';
+  var qs = new URLSearchParams(location.search);
+  var SLUG = qs.get('slug') || (location.pathname.match(/\/widget\/([^\/?]+)/) || [])[1] || '';
+  var API = qs.get('api') || window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
+  if (qs.get('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
+  var now = new Date();
+  var cur = { y: now.getFullYear(), m: now.getMonth() }; // m 0-based
+  var todayKey = now.toISOString().slice(0, 10);
+  var bookHref = null;
+
+  function monthStr(y, m) { return y + '-' + String(m + 1).padStart(2, '0'); }
+
+  function render(days) {
+    var grid = document.getElementById('w-grid');
+    grid.innerHTML = '';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){
+      var el = document.createElement('div'); el.className = 'dow'; el.textContent = d; grid.appendChild(el);
+    });
+    var byDate = {};
+    (days || []).forEach(function(d){ byDate[d.date] = d; });
+    var first = new Date(Date.UTC(cur.y, cur.m, 1));
+    var daysInMonth = new Date(Date.UTC(cur.y, cur.m + 1, 0)).getUTCDate();
+    for (var i = 0; i < first.getUTCDay(); i++) {
+      var pad = document.createElement('div'); pad.className = 'day pad'; grid.appendChild(pad);
+    }
+    for (var day = 1; day <= daysInMonth; day++) {
+      var key = monthStr(cur.y, cur.m) + '-' + String(day).padStart(2, '0');
+      var info = byDate[key];
+      var el2 = document.createElement('div');
+      var cls = 'day';
+      if (info) {
+        if (info.status === 'available') cls += ' open';
+        else if (info.status === 'limited') cls += ' limited';
+        else if (info.status === 'full' || info.status === 'blocked') cls += ' ' + info.status;
+      }
+      if (key < todayKey) cls += ' past';
+      el2.className = cls;
+      var label = '';
+      if (info && info.status !== 'blocked' && info.remaining != null && info.remaining > 0) label = info.remaining + ' left';
+      else if (info && (info.status === 'full' || info.status === 'blocked')) label = 'booked';
+      el2.innerHTML = '<span class="n">' + day + '</span>' + (label ? '<span class="r">' + label + '</span>' : '');
+      grid.appendChild(el2);
+    }
+    var names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('w-month').textContent = names[cur.m] + ' ' + cur.y;
+  }
+
+  function load() {
+    fetch(API + '/api/gcr/entity/' + encodeURIComponent(SLUG) + '/availability-month?month=' + monthStr(cur.y, cur.m))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ render(j.days || []); })
+      .catch(function(){ render([]); });
+  }
+
+  function loadEntity() {
+    fetch(API + '/api/gcr/entity/' + encodeURIComponent(SLUG))
+      .then(function(r){ return r.json(); })
+      .then(function(e){
+        if (e && e.name) document.getElementById('w-name').textContent = e.name;
+        bookHref = (e && (e.booking_url || e.reservation_url)) || null;
+        var btn = document.getElementById('w-book');
+        // Prefer the business's own booking flow; fall back to the CyberCheck page
+        btn.href = bookHref || (location.origin + '/p/' + SLUG);
+        btn.style.display = 'block';
+        document.getElementById('w-brand').href = location.origin + '/p/' + SLUG;
+      })
+      .catch(function(){});
+  }
+
+  document.getElementById('prev').onclick = function(){ cur.m--; if (cur.m < 0) { cur.m = 11; cur.y--; } load(); };
+  document.getElementById('next').onclick = function(){ cur.m++; if (cur.m > 11) { cur.m = 0; cur.y++; } load(); };
+
+  if (!SLUG) { document.getElementById('w-grid').innerHTML = '<div class="err" style="grid-column:1/-1">No business specified</div>'; }
+  else { loadEntity(); load(); }
+})();
+</script>
+</body>
+</html>
