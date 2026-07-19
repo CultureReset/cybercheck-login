@@ -82,42 +82,21 @@ async function getSupabaseBusiness() {
   if (!session) return null;
 
   try {
-    // Look up user record to get site_id
-    var { data: user, error: userErr } = await supabase
-      .from('users')
-      .select('site_id, name, role')
-      .eq('auth_id', session.user.id)
-      .single();
-
-    if (userErr || !user) {
-      var email = session.user.email;
-      var { data: userByEmail } = await supabase
-        .from('users')
-        .select('site_id, name, role')
-        .eq('email', email)
-        .single();
-      if (!userByEmail) {
-        console.error('User lookup failed by auth_id and email');
-        return null;
-      }
-      await supabase.from('users').update({ auth_id: session.user.id }).eq('email', email);
-      user = userByEmail;
-    }
-    _siteId = user.site_id;
-
-    // Get business record
-    var { data: biz, error: bizErr } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('site_id', user.site_id)
-      .single();
-
-    if (bizErr || !biz) {
-      console.error('Business lookup failed:', bizErr ? bizErr.message : 'No business record found');
+    // The server verifies the Supabase session token, does the users/businesses
+    // lookups (and the auth_id backfill) itself, and returns everything in one
+    // call — the browser no longer queries those tables with the anon key.
+    var res = await fetch((window.CC_API_BASE || 'https://gcr-api-clean.vercel.app') + '/api/auth/oauth-sync', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token }
+    });
+    var out = null;
+    try { out = await res.json(); } catch (e2) {}
+    if (!res.ok || !out || out.error || !out.business) {
+      console.error('Business lookup failed:', (out && out.error) || ('HTTP ' + res.status));
       return null;
     }
-
-    _business = biz;
+    _siteId = out.user && out.user.site_id;
+    _business = out.business;
     return _business;
   } catch (e) {
     console.error('Failed to load business:', e);

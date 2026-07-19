@@ -71,68 +71,53 @@ async function uploadToSupabase(file, folder) {
 
   // Resize before upload (gallery/media skip resize entirely — original quality)
   file = await resizeImageFile(file, folder);
-  if (!supabase || !file) return null;
-  var siteId = getSiteId();
-  if (!siteId) { await getSupabaseBusiness(); siteId = getSiteId(); }
-  if (!siteId) { toast('Not logged in', 'error'); return null; }
+  if (!file) return null;
 
-  // Build path: {site_id}/{folder}/{timestamp}-{filename}
-  var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  var path = siteId + '/' + (folder || 'general') + '/' + Date.now() + '-' + safeName;
-
-  var { data, error } = await supabase.storage.from('media').upload(path, file, {
-    cacheControl: '3600',
-    upsert: false
-  });
-
-  if (error) {
-    console.error('Upload error:', error);
-    toast('Upload failed: ' + error.message, 'error');
+  // Files flow through gcr-api-clean — the browser never writes to storage
+  // directly. The server scopes the path/row to the caller's site.
+  var fd = new FormData();
+  fd.append('file', file, file.name);
+  fd.append('folder', folder || 'general');
+  try {
+    var res = await fetch(_uploadApiBase() + '/api/dashboard/media/upload', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _uploadToken() },
+      body: fd
+    });
+    var out = null;
+    try { out = await res.json(); } catch (e) {}
+    if (!res.ok || !out || out.error) {
+      console.error('Upload error:', out && out.error);
+      toast('Upload failed: ' + ((out && out.error) || ('HTTP ' + res.status)), 'error');
+      return null;
+    }
+    return out.url;
+  } catch (e) {
+    console.error('Upload error:', e);
+    toast('Upload failed: ' + e.message, 'error');
     return null;
   }
+}
 
-  // Get public URL
-  var { data: urlData } = supabase.storage.from('media').getPublicUrl(data.path);
-  var publicUrl = urlData.publicUrl;
-
-  // Record in media table
-  var { error: insertError } = await supabase.from('media').insert({
-    site_id: siteId,
-    url: publicUrl,
-    filename: file.name,
-    file_type: file.type.startsWith('image/') ? 'image' : file.type.split('/')[0],
-    file_size: file.size,
-    folder: folder || 'general',
-    title: file.name
-  });
-
-  if (insertError) {
-    console.error('Media record failed:', insertError);
-    // Remove the orphaned file from storage so nothing is stranded
-    await supabase.storage.from('media').remove([data.path]);
-    toast('Upload failed — could not save file record.', 'error');
-    return null;
-  }
-
-  return publicUrl;
+function _uploadApiBase() {
+  return window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
+}
+function _uploadToken() {
+  return localStorage.getItem('cc_token') || sessionStorage.getItem('cc_token') || '';
 }
 
 async function deleteFromSupabase(mediaId, storagePath) {
-  if (!supabase) return false;
-  var siteId = getSiteId();
-  if (!siteId) return false;
-
-  // Delete from storage if path provided
-  if (storagePath) {
-    await supabase.storage.from('media').remove([storagePath]);
+  try {
+    var res = await fetch(_uploadApiBase() + '/api/dashboard/media/file', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _uploadToken() },
+      body: JSON.stringify({ media_id: mediaId || null, storage_path: storagePath || null })
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Media delete failed:', e);
+    return false;
   }
-
-  // Delete from media table
-  if (mediaId) {
-    await supabase.from('media').delete().eq('id', mediaId).eq('site_id', siteId);
-  }
-
-  return true;
 }
 
 // Upload multiple files, returns array of public URLs
