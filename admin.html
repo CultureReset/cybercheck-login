@@ -658,6 +658,7 @@
             <button onclick="switchEntTab('blog')" id="enttab-blog" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📰 Blog</button>
             <button onclick="switchEntTab('sechours')" id="enttab-sechours" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🕐 Sec. Hours</button>
             <button onclick="switchEntTab('availability')" id="enttab-availability" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">⚡ Availability</button>
+            <button onclick="switchEntTab('profile')" id="enttab-profile" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📦 Profile</button>
             <button onclick="switchEntTab('daily')" id="enttab-daily" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🐟 Daily</button>
             <button onclick="switchEntTab('access')" id="enttab-access" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🔑 Access</button>
           </div>
@@ -696,6 +697,17 @@
                   <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Square Footage</label><input id="ent-sqft" type="number" min="0" placeholder="e.g. 1500" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 </div></div>
                 <div style="border-top:1px solid var(--card-border);padding-top:14px;margin-top:14px;"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">Highlights &amp; Attributes</label><div style="margin-bottom:12px;"><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Highlights <span style="font-size:10px;color:var(--text-muted);">(What guests will see/experience)</span></label><textarea id="ent-highlights" placeholder="One highlight per line, e.g.&#10;Waterfront views&#10;Live music on weekends&#10;Fresh local seafood" style="width:100%;height:80px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div><div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Attributes <span style="font-size:10px;color:var(--text-muted);">(e.g. Pet-friendly, Wheelchair accessible)</span></label><textarea id="ent-attributes" placeholder="One attribute per line, e.g.&#10;Pet-friendly&#10;Wheelchair accessible&#10;Reservation required" style="width:100%;height:80px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div></div>
+                <div style="border-top:1px solid var(--card-border);padding-top:14px;margin-top:14px;"><label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">About Block (shows on the public profile)</label>
+                  <div style="margin-bottom:12px;"><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Known For (one per line — public tag chips)</label><textarea id="ent-known-for" placeholder="Fresh Gulf seafood&#10;Sunset views&#10;Live music" style="width:100%;height:70px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
+                  <div style="margin-bottom:12px;"><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Good For (one per line — public tag chips)</label><textarea id="ent-good-for" placeholder="Families&#10;Date night&#10;Large groups" style="width:100%;height:70px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
+                  <div style="margin-bottom:12px;"><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">What Makes It Different</label><textarea id="ent-different" placeholder="One short paragraph shown in the Experience section" style="width:100%;height:70px;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Duration Text (e.g. "4 hours")</label><input id="ent-duration-text" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                    <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Email</label><input id="ent-email" type="email" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                    <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price From ($)</label><input id="ent-price-from" type="number" step="0.01" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                    <div><label style="display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;">Price Unit (e.g. person, hour, night)</label><input id="ent-price-unit" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                  </div>
+                </div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Google Places ID</label><input id="ent-google-places-id" type="text" placeholder="ChIJ..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Address</label><input id="ent-address" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">City</label><input id="ent-city" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -993,6 +1005,12 @@
             </div>
 
             <!-- AVAILABILITY TAB -->
+            <div id="enttab-profile-content" style="display:none;">
+              <h3 style="margin:0 0 4px;font-size:16px;">📦 Profile Sections</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 6px;">Everything the public GCR profile displays for this business type, editable in one place. Sections shown match the business type.</p>
+              <label style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);margin-bottom:14px;cursor:pointer;"><input type="checkbox" id="profile-show-all" onchange="loadProfileTab()"> Show sections for every business type</label>
+              <div id="profile-sections-root"></div>
+            </div>
             <div id="enttab-access-content" style="display:none;">
               <h3 style="margin:0 0 4px;font-size:16px;">🔑 Who can edit this business</h3>
               <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">Assign a dashboard user to this business by email. They must already have a CyberCheck account. Assigned users can edit only this business from their own dashboard.</p>
@@ -13099,6 +13117,12 @@
         // Load highlights and attributes
         var highlightsEl = document.getElementById('ent-highlights'); if (highlightsEl) highlightsEl.value = (e.highlights || []).join('\n');
         var attributesEl = document.getElementById('ent-attributes'); if (attributesEl) attributesEl.value = (e.attributes || []).join('\n');
+        // About block + scalars that only existed in the split biz-dashboard editor
+        var knownForEl = document.getElementById('ent-known-for'); if (knownForEl) knownForEl.value = (e.known_for || []).join('\n');
+        var goodForEl = document.getElementById('ent-good-for'); if (goodForEl) goodForEl.value = (e.good_for || []).join('\n');
+        sv('ent-different', e.what_makes_it_different); sv('ent-duration-text', e.duration_text);
+        sv('ent-email', e.email); sv('ent-price-from', e.price_from); sv('ent-price-unit', e.price_unit);
+        ENTITY_FLAGS.forEach(function(f) { var el = document.getElementById('entflag-' + f.key); if (el) el.checked = !!e[f.key]; });
         // Fill hours
         var DAY_MAP = {Monday:'mon',Tuesday:'tue',Wednesday:'wed',Thursday:'thu',Friday:'fri',Saturday:'sat',Sunday:'sun'};
         ['mon','tue','wed','thu','fri','sat','sun'].forEach(function(d) {
@@ -13141,7 +13165,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours','availability','daily','access'].forEach(function(t) {
+      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours','availability','profile','daily','access'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -13165,6 +13189,7 @@
       if (tab === 'availability' && _currentEntitySlug) loadAvailabilityTab();
       if (tab === 'daily'    && _currentEntitySlug) loadDailyTab();
       if (tab === 'access'   && _currentEntitySlug) loadAccessTab();
+      if (tab === 'profile'  && _currentEntitySlug) loadProfileTab();
     }
 
     var loadEntityForEdit = function(entityId) { openEntEditor(entityId); };
@@ -13179,6 +13204,233 @@
       if (!el) return;
       if (!items || !items.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">' + (emptyMsg || 'None yet.') + '</p>'; return; }
       el.innerHTML = items.map(renderFn).join('');
+    }
+
+    // ── PROFILE SECTIONS TAB ──────────────────────────
+    // Same type mapping the API uses (gcr.js) so the tab shows exactly the
+    // sections the public profile renders for this business type.
+    var PROFILE_TYPE_GROUPS = {
+      food: ['restaurant','coffee','dessert','bakery','bar'],
+      stay: ['hotel','condo','vacation-rental'],
+      activity: ['activity'], service: ['service'], shopping: ['shopping'], park: ['park'],
+    };
+    var ENTITY_FLAGS = [
+      {key:'waterfront',label:'Waterfront'},{key:'outdoor_seating',label:'Outdoor seating'},{key:'live_music',label:'Live music'},
+      {key:'delivery',label:'Delivery'},{key:'takeout',label:'Takeout'},{key:'dine_in',label:'Dine-in'},{key:'curbside_pickup',label:'Curbside pickup'},
+      {key:'reservable',label:'Takes reservations'},{key:'allows_dogs',label:'Dog friendly'},{key:'kids_friendly',label:'Kid friendly'},{key:'alcohol',label:'Serves alcohol'},
+      {key:'good_for_groups',label:'Good for groups'},{key:'good_for_children',label:'Good for children'},{key:'good_for_watching_sports',label:'Good for watching sports'},
+      {key:'offers_transportation',label:'Offers transportation'},
+      {key:'wheelchair_accessible_entrance',label:'♿ Accessible entrance'},{key:'wheelchair_accessible_restroom',label:'♿ Accessible restroom'},{key:'wheelchair_accessible_parking',label:'♿ Accessible parking'},
+      {key:'serves_breakfast',label:'Breakfast'},{key:'serves_brunch',label:'Brunch'},{key:'serves_lunch',label:'Lunch'},{key:'serves_dinner',label:'Dinner'},{key:'serves_dessert',label:'Dessert'},
+      {key:'serves_coffee',label:'Coffee'},{key:'serves_wine',label:'Wine'},{key:'serves_beer',label:'Beer'},{key:'serves_cocktails',label:'Cocktails'},{key:'serves_vegetarian',label:'Vegetarian options'},
+    ];
+    // fields: t = text (default) | num | bool | textarea | time | date
+    var PROFILE_SECTIONS = [
+      {kind:'announcements', label:'📣 Announcements (banner on the public page)', group:'all',
+        fields:[{k:'message',label:'Message'},{k:'type',label:'Type (info/alert/promo)'},{k:'starts_at',label:'Starts',t:'date'},{k:'ends_at',label:'Ends',t:'date'},{k:'active',label:'Active',t:'bool'}],
+        row:function(r){ return '<strong>'+esc(r.message||'')+'</strong> <span style="color:var(--text-muted)">'+(r.type||'')+(r.active?' · live':' · off')+'</span>'; }},
+      {kind:'order-links', label:'🛵 Order Links (DoorDash, Uber Eats…)', group:'food',
+        fields:[{k:'label',label:'Label'},{k:'url',label:'URL'},{k:'type',label:'Platform'}],
+        row:function(r){ return '<strong>'+esc(r.label||'')+'</strong> <span style="color:var(--text-muted)">'+esc(r.url||'')+'</span>'; }},
+      {kind:'meeting-points', label:'📍 Meeting Points', group:'activity',
+        fields:[{k:'name',label:'Name'},{k:'address',label:'Address'},{k:'instructions',label:'Instructions'},{k:'parking_note',label:'Parking note'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">'+esc(r.address||'')+'</span>'; }},
+      {kind:'fish-species', label:'🎣 Fish Species', group:'activity',
+        fields:[{k:'species',label:'Species'},{k:'season',label:'Season'}],
+        row:function(r){ return '<strong>'+esc(r.species||'')+'</strong> <span style="color:var(--text-muted)">'+esc(r.season||'')+'</span>'; }},
+      {kind:'what-to-bring', label:'🎒 What To Bring', group:'activity',
+        fields:[{k:'item',label:'Item'}],
+        row:function(r){ return esc(r.item||''); }},
+      {kind:'room-types', label:'🛏 Room Types', group:'stay',
+        fields:[{k:'name',label:'Name'},{k:'description',label:'Description'},{k:'beds',label:'Beds',t:'num'},{k:'bedrooms',label:'Bedrooms',t:'num'},{k:'bathrooms',label:'Bathrooms',t:'num'},{k:'sleeps',label:'Sleeps',t:'num'},{k:'sqft',label:'Sqft',t:'num'},{k:'floor',label:'Floor'},{k:'view',label:'View'},{k:'price_per_night',label:'$/night',t:'num'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">sleeps '+(r.sleeps||'?')+(r.price_per_night?' · $'+r.price_per_night+'/night':'')+'</span>'; }},
+      {kind:'amenities', label:'✨ Amenities', group:'stay',
+        fields:[{k:'name',label:'Name'},{k:'category',label:'Category'},{k:'icon',label:'Icon (emoji)'}],
+        row:function(r){ return (r.icon?esc(r.icon)+' ':'')+'<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">'+esc(r.category||'')+'</span>'; }},
+      {kind:'property-fees', label:'💵 Property Fees', group:'stay',
+        fields:[{k:'name',label:'Name'},{k:'amount',label:'Amount',t:'num'},{k:'type',label:'Type (flat/percent/night)'},{k:'mandatory',label:'Mandatory',t:'bool'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">$'+(r.amount||0)+' '+(r.type||'')+(r.mandatory?' · required':'')+'</span>'; }},
+      {kind:'stay-links', label:'🔗 Stay Links (Airbnb, VRBO…)', group:'stay',
+        fields:[{k:'label',label:'Label'},{k:'url',label:'URL'},{k:'platform',label:'Platform'}],
+        row:function(r){ return '<strong>'+esc(r.label||'')+'</strong> <span style="color:var(--text-muted)">'+esc(r.platform||'')+'</span>'; }},
+      {kind:'service-categories', label:'🗂 Service Categories', group:'service',
+        fields:[{k:'name',label:'Name'},{k:'sort_order',label:'Order',t:'num'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">id '+r.id+'</span>'; }},
+      {kind:'service-menu', label:'💇 Service Menu', group:'service',
+        fields:[{k:'name',label:'Name'},{k:'description',label:'Description'},{k:'price',label:'Price',t:'num'},{k:'duration_minutes',label:'Minutes',t:'num'},{k:'category_id',label:'Category ID (from list above)'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">$'+(r.price||0)+(r.duration_minutes?' · '+r.duration_minutes+' min':'')+'</span>'; }},
+      {kind:'service-packages', label:'🎁 Service Packages', group:'service',
+        fields:[{k:'name',label:'Name'},{k:'description',label:'Description'},{k:'price',label:'Price',t:'num'},{k:'includes',label:'Includes'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">$'+(r.price||0)+'</span>'; }},
+      {kind:'class-schedule', label:'📅 Class Schedule', group:'service',
+        fields:[{k:'class_name',label:'Class'},{k:'day_of_week',label:'Day (0=Sun…6=Sat)',t:'num'},{k:'start_time',label:'Start (HH:MM)',t:'time'},{k:'duration_minutes',label:'Minutes',t:'num'},{k:'capacity',label:'Capacity',t:'num'}],
+        row:function(r){ return '<strong>'+esc(r.class_name||'')+'</strong> <span style="color:var(--text-muted)">day '+(r.day_of_week??'?')+' · '+(r.start_time||'')+'</span>'; }},
+      {kind:'product-categories', label:'🗂 Product Categories', group:'shopping',
+        fields:[{k:'name',label:'Name'},{k:'sort_order',label:'Order',t:'num'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">id '+r.id+'</span>'; }},
+      {kind:'products', label:'🛍 Products', group:'shopping',
+        fields:[{k:'name',label:'Name'},{k:'description',label:'Description'},{k:'price',label:'Price',t:'num'},{k:'in_stock',label:'In stock',t:'bool'},{k:'category_id',label:'Category ID (from list above)'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong> <span style="color:var(--text-muted)">$'+(r.price||0)+(r.in_stock===false?' · out of stock':'')+'</span>'; }},
+      {kind:'facilities', label:'🚻 Facilities', group:'park',
+        fields:[{k:'name',label:'Name'},{k:'available',label:'Available',t:'bool'}],
+        row:function(r){ return '<strong>'+esc(r.name||'')+'</strong>'+(r.available===false?' <span style="color:var(--text-muted)">unavailable</span>':''); }},
+      {kind:'spot-rules', label:'📜 Rules', group:'park',
+        fields:[{k:'rule',label:'Rule'}],
+        row:function(r){ return esc(r.rule||''); }},
+    ];
+    var PROFILE_SINGLETONS = [
+      {kind:'activity-details', label:'⏱ Activity Details', group:'activity',
+        fields:[{k:'duration_hours',label:'Duration (hours)',t:'num'},{k:'difficulty',label:'Difficulty'},{k:'min_age',label:'Min age',t:'num'},{k:'group_size_max',label:'Max group size',t:'num'},{k:'notes',label:'Notes',t:'textarea'}]},
+      {kind:'property-details', label:'🏨 Property Details', group:'stay',
+        fields:[{k:'check_in_time',label:'Check-in time'},{k:'check_out_time',label:'Check-out time'},{k:'star_rating',label:'Star rating',t:'num'},{k:'total_rooms',label:'Total rooms',t:'num'}]},
+      {kind:'access-info', label:'🚗 Access Info', group:'park',
+        fields:[{k:'entry_point',label:'Entry point'},{k:'parking_note',label:'Parking note'},{k:'fee',label:'Fee'}]},
+    ];
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function profileGroupFor(entityType) {
+      for (var g in PROFILE_TYPE_GROUPS) { if (PROFILE_TYPE_GROUPS[g].indexOf(entityType) !== -1) return g; }
+      return null;
+    }
+    function profileInput(kind, f) {
+      var id = 'pr-' + kind + '-' + f.k;
+      var base = 'padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:7px;color:var(--text);font-size:13px;';
+      if (f.t === 'bool') return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);"><input type="checkbox" id="'+id+'"> '+esc(f.label)+'</label>';
+      if (f.t === 'textarea') return '<textarea id="'+id+'" placeholder="'+esc(f.label)+'" style="'+base+'width:100%;height:60px;grid-column:1/-1;resize:vertical;"></textarea>';
+      var type = f.t === 'num' ? 'number" step="any' : (f.t === 'date' ? 'date' : (f.t === 'time' ? 'time' : 'text'));
+      return '<input type="'+type+'" id="'+id+'" placeholder="'+esc(f.label)+'" style="'+base+'min-width:120px;flex:1;">';
+    }
+    async function loadProfileTab() {
+      var slug = _currentEntitySlug;
+      var root = document.getElementById('profile-sections-root');
+      root.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
+      var showAll = document.getElementById('profile-show-all').checked;
+      try {
+        var entRes = await fetch(GCR_API + '/api/gcr/entity/' + encodeURIComponent(slug) + '?t=' + Date.now());
+        var ent = await entRes.json();
+        var group = profileGroupFor(ent.entity_type);
+        var visible = function(g) { return showAll || g === 'all' || g === group; };
+        var html = '';
+        // amenity flags — every business type shows chips on the public page
+        html += '<div style="border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:14px;">' +
+          '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">🏷 Amenity Flags <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(the chips + amenities list on the public page)</span></div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;">' +
+          ENTITY_FLAGS.map(function(f){ return '<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer;"><input type="checkbox" id="entflag-'+f.key+'"'+(ent[f.key]?' checked':'')+'> '+f.label+'</label>'; }).join('') +
+          '</div><button onclick="saveEntFlags()" style="margin-top:12px;padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;">Save Flags</button>' +
+          '<span id="entflags-status" style="font-size:12px;color:var(--text-muted);margin-left:10px;"></span></div>';
+        PROFILE_SINGLETONS.forEach(function(s) {
+          if (!visible(s.group)) return;
+          html += '<div style="border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:14px;" id="prbox-'+s.kind+'">' +
+            '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+s.label+'</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">' + s.fields.map(function(f){ return profileInput(s.kind, f); }).join('') + '</div>' +
+            '<button onclick="saveProfileSingleton(\''+s.kind+'\')" style="margin-top:10px;padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;">Save</button>' +
+            '<span id="prstatus-'+s.kind+'" style="font-size:12px;color:var(--text-muted);margin-left:10px;"></span></div>';
+        });
+        PROFILE_SECTIONS.forEach(function(s) {
+          if (!visible(s.group)) return;
+          html += '<div style="border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:14px;" id="prbox-'+s.kind+'">' +
+            '<div style="font-size:14px;font-weight:700;margin-bottom:10px;">'+s.label+'</div>' +
+            '<div id="prlist-'+s.kind+'" style="margin-bottom:10px;"><p style="color:var(--text-muted);font-size:12px;">Loading…</p></div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">' + s.fields.map(function(f){ return profileInput(s.kind, f); }).join('') +
+            '<button onclick="addProfileRow(\''+s.kind+'\')" style="padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;">Add</button></div></div>';
+        });
+        root.innerHTML = html;
+        PROFILE_SINGLETONS.forEach(function(s) { if (visible(s.group)) loadProfileSingleton(s); });
+        PROFILE_SECTIONS.forEach(function(s) { if (visible(s.group)) refreshProfileRows(s); });
+      } catch (e) {
+        root.innerHTML = '<p style="color:#e05252;font-size:13px;">' + e.message + '</p>';
+      }
+    }
+    async function refreshProfileRows(s) {
+      var el = document.getElementById('prlist-' + s.kind);
+      if (!el) return;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/profile-rows/' + s.kind + '?t=' + Date.now(), { headers: gcrAuthHeaders() });
+        var rows = await res.json();
+        if (!res.ok) throw new Error(rows.error || 'Load failed');
+        if (!rows.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">None yet.</p>'; return; }
+        el.innerHTML = rows.map(function(r) {
+          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--card-border);border-radius:7px;margin-bottom:6px;font-size:13px;">' +
+            '<div>' + s.row(r) + '</div>' +
+            '<button onclick="deleteProfileRow(\''+s.kind+'\',\''+r.id+'\')" style="padding:5px 10px;background:none;border:1px solid var(--card-border);border-radius:6px;color:#e05252;font-size:11px;cursor:pointer;flex:none;">Delete</button></div>';
+        }).join('');
+      } catch (e) {
+        el.innerHTML = '<p style="color:#e05252;font-size:12px;">' + e.message + '</p>';
+      }
+    }
+    function profileSectionByKind(kind) {
+      return PROFILE_SECTIONS.filter(function(s){ return s.kind === kind; })[0] || PROFILE_SINGLETONS.filter(function(s){ return s.kind === kind; })[0];
+    }
+    function collectProfileFields(s) {
+      var body = {};
+      s.fields.forEach(function(f) {
+        var el = document.getElementById('pr-' + s.kind + '-' + f.k);
+        if (!el) return;
+        if (f.t === 'bool') { body[f.k] = el.checked; return; }
+        var v = el.value.trim();
+        if (v === '') return;
+        body[f.k] = (f.t === 'num') ? (parseFloat(v) || 0) : v;
+      });
+      return body;
+    }
+    async function addProfileRow(kind) {
+      var s = profileSectionByKind(kind);
+      var body = collectProfileFields(s);
+      if (!Object.keys(body).length) { alert('Fill in at least one field'); return; }
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/profile-rows/' + kind, {
+          method: 'POST', headers: gcrAuthHeaders(), body: JSON.stringify(body) });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Add failed');
+        s.fields.forEach(function(f) { var el = document.getElementById('pr-' + kind + '-' + f.k); if (el) { if (f.t === 'bool') el.checked = false; else el.value = ''; } });
+        refreshProfileRows(s);
+      } catch (e) { alert(e.message); }
+    }
+    async function deleteProfileRow(kind, id) {
+      if (!confirm('Delete this row?')) return;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/profile-rows/' + kind + '/' + id, { method: 'DELETE', headers: gcrAuthHeaders() });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Delete failed');
+        refreshProfileRows(profileSectionByKind(kind));
+      } catch (e) { alert(e.message); }
+    }
+    async function loadProfileSingleton(s) {
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/profile-singleton/' + s.kind + '?t=' + Date.now(), { headers: gcrAuthHeaders() });
+        var row = await res.json();
+        if (!res.ok) return;
+        s.fields.forEach(function(f) {
+          var el = document.getElementById('pr-' + s.kind + '-' + f.k);
+          if (!el) return;
+          if (f.t === 'bool') el.checked = !!row[f.k];
+          else el.value = (row[f.k] === null || row[f.k] === undefined) ? '' : row[f.k];
+        });
+      } catch (e) { /* leave blank */ }
+    }
+    async function saveProfileSingleton(kind) {
+      var s = profileSectionByKind(kind);
+      var status = document.getElementById('prstatus-' + kind);
+      status.textContent = 'Saving…';
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/profile-singleton/' + kind, {
+          method: 'PUT', headers: gcrAuthHeaders(), body: JSON.stringify(collectProfileFields(s)) });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Save failed');
+        status.textContent = 'Saved.';
+      } catch (e) { status.textContent = e.message; }
+    }
+    async function saveEntFlags() {
+      var status = document.getElementById('entflags-status');
+      status.textContent = 'Saving…';
+      var payload = {};
+      ENTITY_FLAGS.forEach(function(f) { var el = document.getElementById('entflag-' + f.key); if (el) payload[f.key] = el.checked; });
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug, {
+          method: 'PATCH', headers: gcrAuthHeaders(), body: JSON.stringify({ entity: payload }) });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Save failed');
+        status.textContent = 'Saved.';
+      } catch (e) { status.textContent = e.message; }
     }
 
     // ── ACCESS TAB (who can edit this business) ───────
@@ -13635,6 +13887,13 @@
         sqft: parseInt(document.getElementById('ent-sqft').value) || null,
         highlights: (document.getElementById('ent-highlights').value || '').split('\n').map(s => s.trim()).filter(Boolean),
         attributes: (document.getElementById('ent-attributes').value || '').split('\n').map(s => s.trim()).filter(Boolean),
+        known_for: (document.getElementById('ent-known-for').value || '').split('\n').map(s => s.trim()).filter(Boolean),
+        good_for: (document.getElementById('ent-good-for').value || '').split('\n').map(s => s.trim()).filter(Boolean),
+        what_makes_it_different: document.getElementById('ent-different').value || null,
+        duration_text: document.getElementById('ent-duration-text').value || null,
+        email: document.getElementById('ent-email').value || null,
+        price_from: parseFloat(document.getElementById('ent-price-from').value) || null,
+        price_unit: document.getElementById('ent-price-unit').value || null,
         google_places_id: document.getElementById('ent-google-places-id').value || null,
         address_line_1: document.getElementById('ent-address').value,
         city: document.getElementById('ent-city').value,
