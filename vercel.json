@@ -24,6 +24,18 @@
     {
       "source": "/manage/:id",
       "destination": "/manage.html"
+    },
+    {
+      "source": "/live/:slug",
+      "destination": "/song-request.html?slug=:slug"
+    },
+    {
+      "source": "/daily/:slug",
+      "destination": "/menu-update.html?slug=:slug"
+    },
+    {
+      "source": "/q/:code",
+      "destination": "/q.html?c=:code"
     }
   ],
   "headers": [
