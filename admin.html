@@ -678,7 +678,7 @@
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Phone</label><input id="ent-phone" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Rating</label><input id="ent-rating" type="number" step="0.1" min="0" max="5" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Review Count</label><input id="ent-review-count" type="number" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
-                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Hero Image URL</label><input id="ent-hero" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
+                <div style="grid-column:1/-1"><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Hero Image</label><div style="display:flex;gap:8px;align-items:center;"><input id="ent-hero" type="text" placeholder="URL — or upload a file →" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"><label style="padding:9px 14px;background:var(--primary);color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">📤 Upload<input type="file" accept="image/*" onchange="uploadHeroImage(this)" style="display:none;"></label></div><span id="ent-hero-status" style="font-size:11px;color:var(--text-muted);"></span></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Website URL</label><input id="ent-website" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Directions URL</label><input id="ent-directions" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Booking URL <span style="color:var(--primary);font-size:11px;">(Book Now button)</span></label><input id="ent-booking" type="text" placeholder="https://..." style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
@@ -14061,6 +14061,29 @@
           if (thumb && url) thumb.innerHTML = '<img src="' + escHtml(url) + '" style="width:100%;height:100%;object-fit:cover;">';
         }
       } catch(err) { toast(err.message, 'error'); }
+    }
+
+    async function uploadHeroImage(fileInput) {
+      if (!fileInput.files[0]) return;
+      var status = document.getElementById('ent-hero-status');
+      status.textContent = 'Uploading…';
+      try {
+        var formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('entity_slug', _currentEntitySlug || '');
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + getAuthToken() }, body: formData
+        });
+        var d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Upload failed');
+        var url = d.url || d.image_url || '';
+        if (!url) throw new Error('No URL returned');
+        document.getElementById('ent-hero').value = url;
+        status.textContent = 'Uploaded — hit Save Info to apply.';
+      } catch (err) {
+        status.textContent = '';
+        toast('Hero upload: ' + err.message, 'error');
+      } finally { fileInput.value = ''; }
     }
 
     async function uploadMenuItemImage(fileInput, id, table) {
