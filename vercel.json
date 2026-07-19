@@ -8,6 +8,22 @@
     {
       "source": "/wavegent/:slug",
       "destination": "/api/wavegent/:slug"
+    },
+    {
+      "source": "/p/:slug",
+      "destination": "/biz.html"
+    },
+    {
+      "source": "/book/:slug/:app",
+      "destination": "/book.html"
+    },
+    {
+      "source": "/waiver/:slug",
+      "destination": "/waiver.html"
+    },
+    {
+      "source": "/manage/:id",
+      "destination": "/manage.html"
     }
   ],
   "headers": [
