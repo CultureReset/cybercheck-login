@@ -305,7 +305,7 @@ function render(){
       '</div><div class="paynote" id="promo-msg">'+(sel.promo?'✓ '+esc(sel.promo.off)+' off applied':'')+'</div>';
     inner = '<h2>'+(bmode()==='none'?'Confirm your order':'Confirm your booking')+'</h2><div class="sum">'+rows+'</div>'+
       promoBox+
-      (due>0 ? '<div id="pay-el"></div><div class="paynote">🔒 Secure payment — processed by Stripe, paid directly to '+esc(b.name||'the business')+'.</div>' : '')+
+      (due>0 ? '<div id="pay-el"></div><div class="paynote" id="pay-note">🔒 Secure payment — processed by Stripe, paid directly to '+esc(b.name||'the business')+'.</div>' : '')+
       '<div class="err" id="cf-err"></div>'+
       btnRow(true, due>0 ? 'Pay $'+due.toFixed(2)+' & Book →' : 'Confirm Booking →', 'doSubmit()');
   }
@@ -530,8 +530,15 @@ var stripeCfg = null;
 function mountPayment(){
   var due = dueNow();
   var host = document.getElementById('pay-el');
+  // no card charge possible → make the whole screen say ONE thing: this is a request
+  function requestMode(msg){
+    host.innerHTML = '<div class="paynote">'+msg+'</div>';
+    var note = document.getElementById('pay-note'); if(note) note.style.display='none';
+    var btn = document.querySelector('.btn.next'); if(btn) btn.textContent='Request Booking →';
+    stripeCfg = null; paymentIntentId = null;
+  }
   fetch(API+'/api/stripe/config').then(function(r){return r.json();}).then(function(cfg){
-    if(!cfg.publishableKey){ host.innerHTML='<div class="paynote">Payment will be collected by the business directly.</div>'; stripeCfg=null; return; }
+    if(!cfg.publishableKey){ requestMode('No payment due now — the business will confirm your booking and collect payment directly.'); return; }
     stripeCfg = cfg;
     return fetch(API+'/api/stripe/create-payment-intent',{method:'POST',headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ amount: due, site_id: PAGE.site_id, description: (PAGE.business.name||'')+' — '+BLOCK.title })})
@@ -547,8 +554,7 @@ function mountPayment(){
       });
   }).catch(function(e){
     console.warn('payment unavailable:', e.message);
-    host.innerHTML = '<div class="paynote">Online payment unavailable right now — your booking will be sent as a request and the business will follow up.</div>';
-    stripeCfg = null; paymentIntentId = null;
+    requestMode('Online payment unavailable right now — your booking will be sent as a request and the business will follow up.');
   });
 }
 function loadStripeJs(){
