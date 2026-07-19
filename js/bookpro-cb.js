@@ -10,8 +10,9 @@
     'use strict';
 
     var API = window.CC_API_BASE || 'https://gcr-api-clean.vercel.app';
-    // public checkout/booking pages live on the public site, not on this dashboard domain
-    var PUB = (window.CC_PUBLIC_BASE || 'https://gulfcoastradar.com').replace(/\/$/, '');
+    // public checkout/booking pages live on THIS site — the share link a
+    // business hands out is a CyberCheck URL, like FareHarbor's booking links
+    var PUB = (window.CC_PUBLIC_BASE || location.origin).replace(/\/$/, '');
     var TOKEN_KEY = 'cc_token'; // same token the CyberCheck dashboard uses — one account everywhere
 
     function token() { return localStorage.getItem(TOKEN_KEY) || ''; }
