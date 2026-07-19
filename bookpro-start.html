@@ -261,7 +261,7 @@
       <label>Direct booking checkout</label>
       <div class="linkbox"><input id="d-book" readonly><button class="btn sm" onclick="copyLink('d-book')">Copy</button><a class="btn sm" id="d-book-open" target="_blank">Open</a></div>
     </div>
-    <a class="btn primary" style="width:100%;text-align:center" href="bookpro-dashboard.html">Go to my dashboard →</a>
+    <a class="btn primary" style="width:100%;text-align:center" href="modular-dashboard.html">Go to my dashboard →</a>
     <p class="hint" style="text-align:center;margin-top:10px">Next step in the dashboard: connect your Stripe so payments land in your account.</p>
   </div>
 </div>
@@ -312,7 +312,7 @@ function doAuth() {
     return CB.plat('/state').then(function (st) {
       if (st && st.business && st.business.slug && !st.fresh) {
         if (confirm('This account already has "' + st.business.name + '" set up. Open your dashboard instead? (Cancel re-runs setup and overwrites its apps.)')) {
-          location.href = 'bookpro-dashboard.html'; return;
+          location.href = 'modular-dashboard.html'; return;
         }
         S.biz.name = S.biz.name || st.business.name;
         S.biz.phone = S.biz.phone || st.business.phone;
@@ -594,7 +594,7 @@ if (CB.token()) {
   CB.plat('/state').then(function (st) {
     if (st && st.business && st.business.slug && !st.fresh) {
       if (confirm('You already have "' + st.business.name + '" set up. Open your dashboard? (Cancel starts a fresh setup for this account.)')) {
-        location.href = 'bookpro-dashboard.html';
+        location.href = 'modular-dashboard.html';
         return;
       }
       S.biz.name = st.business.name; S.biz.phone = st.business.phone || '';
