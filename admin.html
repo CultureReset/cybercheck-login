@@ -658,6 +658,8 @@
             <button onclick="switchEntTab('blog')" id="enttab-blog" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">📰 Blog</button>
             <button onclick="switchEntTab('sechours')" id="enttab-sechours" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🕐 Sec. Hours</button>
             <button onclick="switchEntTab('availability')" id="enttab-availability" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">⚡ Availability</button>
+            <button onclick="switchEntTab('daily')" id="enttab-daily" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🐟 Daily</button>
+            <button onclick="switchEntTab('access')" id="enttab-access" style="padding:12px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:14px;cursor:pointer;white-space:nowrap;">🔑 Access</button>
           </div>
 
           <div style="padding:28px;" id="ent-editor-body">
@@ -991,6 +993,34 @@
             </div>
 
             <!-- AVAILABILITY TAB -->
+            <div id="enttab-access-content" style="display:none;">
+              <h3 style="margin:0 0 4px;font-size:16px;">🔑 Who can edit this business</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">Assign a dashboard user to this business by email. They must already have a CyberCheck account. Assigned users can edit only this business from their own dashboard.</p>
+              <div id="access-owners-list" style="margin-bottom:16px;"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;max-width:560px;">
+                <input type="email" id="access-assign-email" placeholder="user@email.com" style="flex:1;min-width:200px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                <select id="access-assign-role" style="padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                  <option value="owner">Owner</option>
+                  <option value="manager">Manager</option>
+                  <option value="staff">Staff</option>
+                </select>
+                <button onclick="assignAccessUser()" style="padding:10px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Assign</button>
+              </div>
+              <p id="access-status" style="font-size:12px;color:var(--text-muted);margin:10px 0 0;"></p>
+            </div>
+            <div id="enttab-daily-content" style="display:none;">
+              <h3 style="margin:0 0 4px;font-size:16px;">🐟 Daily Features</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">Catch of the day, daily rotations, and day-specific features shown on the public page and menus.</p>
+              <div id="daily-features-list" style="margin-bottom:16px;"></div>
+              <div style="display:grid;gap:8px;max-width:560px;">
+                <input type="text" id="daily-new-name" placeholder="Feature name (e.g. Catch of the Day)" style="padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                <input type="text" id="daily-new-value" placeholder="Today's value (e.g. Red Snapper)" style="padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="daily-new-price" placeholder="Price (optional)" style="flex:1;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                  <button onclick="addDailyFeature()" style="padding:10px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Add</button>
+                </div>
+              </div>
+            </div>
             <div id="enttab-availability-content" style="display:none;">
               <h3 style="margin:0 0 4px;font-size:16px;">⚡ Today's Availability</h3>
               <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;">Manual for now — live scraping from Booking.com/FareHarbor/Square is a separate follow-up. Turning this off hides it everywhere (card badge, profile page, and the AI chat) without losing the number.</p>
@@ -13111,7 +13141,7 @@
     }
 
     function switchEntTab(tab) {
-      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours','availability'].forEach(function(t) {
+      ['info','hours','photos','tags','features','content','sections','pages','wavegent','rawdata','pricing','schedule','faqs','team','blog','sechours','availability','daily','access'].forEach(function(t) {
         var btn = document.getElementById('enttab-' + t);
         var con = document.getElementById('enttab-' + t + '-content');
         if (!btn || !con) return;
@@ -13133,6 +13163,8 @@
       if (tab === 'blog'     && _currentEntitySlug) loadBlogTab();
       if (tab === 'sechours' && _currentEntitySlug) loadSecHoursTab();
       if (tab === 'availability' && _currentEntitySlug) loadAvailabilityTab();
+      if (tab === 'daily'    && _currentEntitySlug) loadDailyTab();
+      if (tab === 'access'   && _currentEntitySlug) loadAccessTab();
     }
 
     var loadEntityForEdit = function(entityId) { openEntEditor(entityId); };
@@ -13147,6 +13179,110 @@
       if (!el) return;
       if (!items || !items.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">' + (emptyMsg || 'None yet.') + '</p>'; return; }
       el.innerHTML = items.map(renderFn).join('');
+    }
+
+    // ── ACCESS TAB (who can edit this business) ───────
+    async function loadAccessTab() {
+      var slug = _currentEntitySlug;
+      var box = document.getElementById('access-owners-list');
+      box.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
+      try {
+        var res = await fetch(GCR_API + '/api/admin/link-user?entity_slug=' + encodeURIComponent(slug), { headers: gcrAuthHeaders() });
+        var rows = await res.json();
+        if (!res.ok) throw new Error(rows.error || 'Load failed');
+        renderList('access-owners-list', rows, function(r) {
+          var email = (r.user && r.user.email) || 'unknown';
+          var name = (r.user && r.user.name) ? ' · ' + r.user.name : '';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;">' +
+            '<div style="font-size:14px;"><strong>' + email + '</strong>' + name +
+            ' <span style="font-size:12px;color:var(--text-muted);">(' + (r.role || 'owner') + ')</span></div>' +
+            '<button onclick="removeAccessUser(\'' + email.replace(/'/g, "\\'") + '\')" style="padding:6px 12px;background:none;border:1px solid var(--card-border);border-radius:6px;color:#e05252;font-size:12px;cursor:pointer;">Remove</button></div>';
+        }, 'Nobody is assigned to this business yet.');
+      } catch (e) {
+        box.innerHTML = '<p style="color:#e05252;font-size:13px;">' + e.message + '</p>';
+      }
+    }
+    async function assignAccessUser() {
+      var email = document.getElementById('access-assign-email').value.trim();
+      var role = document.getElementById('access-assign-role').value;
+      var status = document.getElementById('access-status');
+      if (!email) { status.textContent = 'Enter an email.'; return; }
+      status.textContent = 'Assigning…';
+      try {
+        var res = await fetch(GCR_API + '/api/admin/link-user', {
+          method: 'POST', headers: gcrAuthHeaders(),
+          body: JSON.stringify({ user_email: email, entity_slug: _currentEntitySlug, role: role })
+        });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Assign failed');
+        status.textContent = 'Assigned ' + email + '.';
+        document.getElementById('access-assign-email').value = '';
+        loadAccessTab();
+      } catch (e) { status.textContent = e.message; }
+    }
+    async function removeAccessUser(email) {
+      if (!confirm('Remove ' + email + ' from this business?')) return;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/link-user', {
+          method: 'DELETE', headers: gcrAuthHeaders(),
+          body: JSON.stringify({ user_email: email, entity_slug: _currentEntitySlug })
+        });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Remove failed');
+        loadAccessTab();
+      } catch (e) { alert(e.message); }
+    }
+
+    // ── DAILY FEATURES TAB ────────────────────────────
+    async function loadDailyTab() {
+      var slug = _currentEntitySlug;
+      var box = document.getElementById('daily-features-list');
+      box.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
+      try {
+        // cache-buster: the public entity endpoint sends cache headers meant for
+        // the consumer site; the editor always needs the fresh row set
+        var res = await fetch(GCR_API + '/api/gcr/entity/' + encodeURIComponent(slug) + '?t=' + Date.now());
+        var ent = await res.json();
+        if (!res.ok) throw new Error(ent.error || 'Load failed');
+        renderList('daily-features-list', ent.daily_features || [], function(f) {
+          var val = f.value ? ' — ' + f.value : '';
+          var price = f.price ? ' · $' + f.price : '';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;margin-bottom:8px;">' +
+            '<div style="font-size:14px;"><strong>' + (f.feature_name || f.label || '') + '</strong>' + val + price + '</div>' +
+            '<button onclick="deleteDailyFeature(\'' + f.id + '\')" style="padding:6px 12px;background:none;border:1px solid var(--card-border);border-radius:6px;color:#e05252;font-size:12px;cursor:pointer;">Delete</button></div>';
+        }, 'No daily features yet.');
+      } catch (e) {
+        box.innerHTML = '<p style="color:#e05252;font-size:13px;">' + e.message + '</p>';
+      }
+    }
+    async function addDailyFeature() {
+      var name = document.getElementById('daily-new-name').value.trim();
+      var value = document.getElementById('daily-new-value').value.trim();
+      var price = document.getElementById('daily-new-price').value.trim();
+      if (!name) { alert('Feature name required'); return; }
+      var body = { feature_name: name };
+      if (value) body.value = value;
+      if (price) body.price = parseFloat(price) || null;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/entities/' + _currentEntitySlug + '/daily-features', {
+          method: 'POST', headers: gcrAuthHeaders(), body: JSON.stringify(body)
+        });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Add failed');
+        document.getElementById('daily-new-name').value = '';
+        document.getElementById('daily-new-value').value = '';
+        document.getElementById('daily-new-price').value = '';
+        loadDailyTab();
+      } catch (e) { alert(e.message); }
+    }
+    async function deleteDailyFeature(id) {
+      if (!confirm('Delete this daily feature?')) return;
+      try {
+        var res = await fetch(GCR_API + '/api/admin/gcr/daily-features/' + id, { method: 'DELETE', headers: gcrAuthHeaders() });
+        var out = await res.json();
+        if (!res.ok || out.error) throw new Error(out.error || 'Delete failed');
+        loadDailyTab();
+      } catch (e) { alert(e.message); }
     }
 
     // ── PRICING TAB ───────────────────────────────────
