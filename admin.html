@@ -22629,7 +22629,7 @@
   async function adminLoadApps() {
     var token = getAuthToken();
     try {
-      var r = await fetch(API_BASE + '/apps', { headers: { 'Authorization': 'Bearer ' + token } });
+      var r = await fetch(API_BASE + '/api/admin/apps', { headers: { 'Authorization': 'Bearer ' + token } });
       _adminApps = r.ok ? await r.json() : [];
       adminRenderApps();
     } catch(e) { console.warn('Failed to load apps:', e); }
@@ -22709,7 +22709,7 @@
     if (!d.app_id || !d.name) { toast('App ID and Name required', 'error'); return; }
 
     var token = getAuthToken();
-    var url = API_BASE + '/admin/apps' + (appId ? '/' + appId : '');
+    var url = API_BASE + '/api/admin/apps' + (appId ? '/' + appId : '');
     var r = await fetch(url, { method: appId ? 'PUT' : 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
     var res = await r.json();
     if (res.error) { toast(res.error, 'error'); return; }
@@ -22721,7 +22721,7 @@
   async function adminDeleteApp(appId) {
     if (!confirm('Delete app "' + appId + '"? This will uninstall it from all businesses.')) return;
     var token = getAuthToken();
-    var r = await fetch(API_BASE + '/admin/apps/' + appId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+    var r = await fetch(API_BASE + '/api/admin/apps/' + appId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
     var d = await r.json();
     if (d.error) { toast(d.error, 'error'); return; }
     toast('App deleted', 'success');
@@ -22763,7 +22763,7 @@
   async function adminLoadBizApps() {
     var token = getAuthToken();
     try {
-      var r = await fetch(API_BASE + '/admin/businesses?include_apps=true', { headers: { 'Authorization': 'Bearer ' + token } });
+      var r = await fetch(API_BASE + '/api/admin/businesses?include_apps=true', { headers: { 'Authorization': 'Bearer ' + token } });
       _adminBizApps = r.ok ? await r.json() : [];
       adminRenderBizApps();
     } catch(e) { console.warn('Failed to load biz apps:', e); }
@@ -22818,7 +22818,7 @@
 
   async function adminAddBizApp(siteId, appId) {
     var token = getAuthToken();
-    var r = await fetch(API_BASE + '/admin/site-apps', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteId, app_id: appId }) });
+    var r = await fetch(API_BASE + '/api/admin/site-apps', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteId, app_id: appId }) });
     var d = await r.json();
     if (d.error) { toast(d.error, 'error'); return; }
     toast('App added', 'success');
@@ -22828,7 +22828,7 @@
 
   async function adminRemoveBizApp(siteId, appId) {
     var token = getAuthToken();
-    var r = await fetch(API_BASE + '/admin/site-apps', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteId, app_id: appId }) });
+    var r = await fetch(API_BASE + '/api/admin/site-apps', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteId, app_id: appId }) });
     var d = await r.json();
     if (d.error) { toast(d.error, 'error'); return; }
     toast('App removed', 'success');
@@ -22858,7 +22858,7 @@
       return;
     }
 
-    if (!currentEntityId) {
+    if (!_currentEntityId) {
       toast('No entity selected', 'error');
       return;
     }
@@ -22869,14 +22869,14 @@
 
     try {
       const token = getAuthToken();
-      const response = await fetch(API_BASE + '/admin/gcr/parse-raw-data', {
+      const response = await fetch(API_BASE + '/api/admin/gcr/parse-raw-data', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + token,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          entity_id: currentEntityId,
+          entity_id: _currentEntityId,
           data_type: dataType,
           raw_data: rawData
         })
@@ -22927,14 +22927,14 @@
     const dataType = window.parsedDataType;
 
     try {
-      const response = await fetch(API_BASE + '/admin/gcr/save-parsed-items', {
+      const response = await fetch(API_BASE + '/api/admin/gcr/save-parsed-items', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + token,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          entity_id: currentEntityId,
+          entity_id: _currentEntityId,
           data_type: dataType,
           items: window.parsedRawItems
         })
@@ -22952,7 +22952,7 @@
       document.getElementById('raw-data-result').style.display = 'none';
 
       // Reload entity data
-      loadEntity(currentEntityId);
+      openEntEditor(_currentEntityId);
     } catch (err) {
       toast('Save failed: ' + err.message, 'error');
     }
