@@ -21042,6 +21042,11 @@
     }
 
     // ── Tourists ──
+    function formatPhone(phone) {
+      var digits = String(phone || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
+      if (digits.length !== 10) return phone || '—';
+      return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6);
+    }
     async function loadTSTourists() {
       document.getElementById('ts-tourists-body').innerHTML =
         '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
@@ -21076,8 +21081,13 @@
 
         document.getElementById('ts-tourists-body').innerHTML = tourists.map(function(t, idx) {
           var saves = t.saves_count || 0;
+          var isPhone = t.signup_channel === 'phone' || !!t.phone;
           var email = t.email || '—';
-          var name = t.name || email.split('@')[0];
+          var name = t.name || (isPhone ? formatPhone(t.phone) : email.split('@')[0]);
+          // Phone signups get a synthetic <phone>@gcr.tourist placeholder as
+          // their real auth email — showing that is meaningless, show the
+          // actual phone number instead.
+          var contactLine = isPhone ? formatPhone(t.phone) : email;
           var dest = t.destination || '—';
           var arrival = t.arrival ? t.arrival.slice(0,10) : '';
           var departure = t.departure ? t.departure.slice(0,10) : '';
@@ -21086,15 +21096,18 @@
           var swipes = prefs.swipe_counts || { like: 0, nope: 0, super: 0 };
           var swipeStr = (swipes.like || 0) + '♥ ' + (swipes.nope || 0) + '💔 ' + (swipes.super || 0) + '✓';
           var topTags = (prefs.top_tags || []).slice(0, 3).join(', ') || '—';
-          var source = t.setup_complete
+          var channelBadge = isPhone
+            ? '<span style="background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">📱 Phone' + (t.sms_opt_in ? '' : ' · opted out') + '</span>'
+            : '<span style="background:#f5f3ff;color:#6d28d9;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">✉️ Email</span>';
+          var setupBadge = t.setup_complete
             ? '<span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">✓ Setup Done</span>'
             : '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">Signed Up</span>';
           return '<tr style="border-bottom:1px solid var(--card-border);">' +
             '<td style="padding:12px 16px;">' +
               '<div style="font-weight:600;font-size:14px;">' + escHtml(name) + '</div>' +
-              '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(email) + '</div>' +
+              '<div style="font-size:12px;color:var(--text-muted);">' + escHtml(contactLine) + '</div>' +
             '</td>' +
-            '<td style="padding:12px 16px;">' + source + '</td>' +
+            '<td style="padding:12px 16px;"><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">' + channelBadge + setupBadge + '</div></td>' +
             '<td style="padding:12px 16px;font-size:13px;">' + escHtml(dest) + '</td>' +
             '<td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">' + escHtml(dates) + '</td>' +
             '<td style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text);">' + escHtml(swipeStr) + '</td>' +
