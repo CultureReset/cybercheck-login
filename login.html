@@ -326,7 +326,10 @@
     function getDashboardUrl(biz, subdomain) {
       var suffix = subdomain ? '?user=' + encodeURIComponent(subdomain) : '';
       if (biz && biz.site_id === CIRCLE_BOATS_SITE_ID) return 'beachside-circle-boats-dashboard.html' + suffix;
-      return 'app-dashboard.html' + suffix;
+      // Default owner dashboard is the modular one — it's what routes/platform.js
+      // backs, and it resolves the business through entity_owners. app-dashboard.html
+      // only ever knew GET /api/apps (empty table in production) and is retired.
+      return 'modular-dashboard.html' + suffix;
     }
 
     // Check if already logged in

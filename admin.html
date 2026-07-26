@@ -2686,11 +2686,25 @@
           <div style="display:flex;gap:10px;">
             <select id="leads-filter-source" onchange="loadLeads()" style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
               <option value="">All Sources</option>
-              <option value="launch-gcr-cybercheck">GCR Launch Page</option>
               <option value="sales-site-index">CyberCheck Homepage</option>
-              <option value="sales-site-booking">Bookings Page</option>
-              <option value="sales-site-reviews">Reviews Page</option>
-              <option value="sales-site-restaurants">Restaurants Page</option>
+              <optgroup label="Industry pages">
+                <option value="sales-site-restaurants">Restaurants &amp; Bars</option>
+                <option value="sales-site-charters">Fishing Charters</option>
+                <option value="sales-site-rentals">Boat &amp; Watersport Rentals</option>
+                <option value="sales-site-lodging">Condos &amp; Vacation Rentals</option>
+                <option value="sales-site-salons">Salons, Spas &amp; Barbers</option>
+                <option value="sales-site-home-services">HVAC, Plumbing &amp; Electrical</option>
+                <option value="sales-site-activities">Tours &amp; Activities</option>
+                <option value="sales-site-photographers">Photographers</option>
+                <option value="sales-site-artists">Artists &amp; Live Music</option>
+                <option value="sales-site-services">Local Service Businesses</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="launch-gcr-cybercheck">GCR Launch Page</option>
+                <option value="nfc-card-matt">NFC Business Card</option>
+                <option value="sales-site-booking">Bookings Page (legacy)</option>
+                <option value="sales-site-reviews">Reviews Page (legacy)</option>
+              </optgroup>
             </select>
             <select id="leads-filter-status" onchange="loadLeads()" style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;">
               <option value="">All Status</option>
