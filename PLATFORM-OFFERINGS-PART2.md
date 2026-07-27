@@ -619,4 +619,46 @@ Everything that is a separately sellable thing:
 
 ---
 
-*Compiled from dashboard.zip (472 files), CyberMate pitch deck (16 slides), CyberCheck FOH pitch deck (15 slides), and 2 product infographics.*
+# 21. aWavegent Guest Concierge — full pitch set (4 segment variants)
+
+Previously only flagged as a one-line naming-conflict note ("aWavegent = guest-facing pre-arrival concierge, unrelated to admin-side Wavegent page-builder"). Four full landing pages exist, each targeting a different buyer segment with the same core product:
+
+**The core pitch (identical across all 4):** A chat widget that sits ON TOP of the operator's existing website/booking/PMS stack — explicitly "not a PMS replacement." Answers repetitive pre-arrival guest questions (check-in time, parking, amenities, policy questions) automatically, then expands into local recommendations (restaurants, activities, rainy-day options) and eventually upsells/referrals. Positioned as support-load relief first, revenue layer second. Pilot-first rollout ("start with a property group, prove it, expand").
+
+| Variant | Target buyer | Distinct framing |
+|---|---|---|
+| `operator_confident_launch_page.html` | Vacation rental operators, broad | Aggressive market-timing pitch: "This is getting launched either way — the question is who gets there first." Explicit "who's NOT a fit" section (cheap-chatbot shoppers, full-stack replacers) to filter for serious operators only. |
+| `hotel_boutique_resort_landing_page.html` | Hotels & boutique resorts | Front-desk relief framing — "premium brand experience," reduces calls about parking/check-in/amenities. |
+| `vacation_rental_management_company_landing_page(_2).html` | Multi-property management companies | Scale framing — "one concierge layer across your rental inventory," peak-season support-load relief, property-count intake field (1-25/26-100/101-500/500+). |
+| `phone_booking_replacement_landing_page_2.html` | Charters, photographers, rentals, service businesses still booking by phone | **Different product, same family** — not the concierge chat, a starter booking PAGE (confirmation + reminder texts + customer tracking) explicitly framed as the cheap first offer, with "verified reviews, source tracking, local discovery" pitched as later add-ons once the page is live. |
+
+All 4 share one sales script structure: Problem (what they deal with today) → What it costs them → The old way vs. the aWavegent way (compare cards) → Example Q&A the concierge handles → What's included → CTA form. Useful if building an actual sales deck — this is a tested, repeatable page template, not just copy.
+
+# 22. Three architecture diagrams (previously unreadable — tool was decoding them as raw text, not images)
+
+Fixed and re-read at native+cropped resolution. These are precise systems diagrams, not marketing material, and they resolve the "is GCR the same as the business CRM" confusion directly.
+
+**Diagram 1 — "CyberCheck + Gulf Coast Radar Ecosystem."** Confirms a clean 3-tier model:
+- **CyberCheck Core** = one shared data layer (structured business data, entity/parent-child relationships, offerings/resources/prices, customer identity & consent, permissions/analytics) — this is the spine everything else reads from.
+- **Gulf Coast Radar (GCR)** = the public discovery/trip-planning layer built on top of Core — local search, itinerary planning, AI concierge, live availability, TripSwipe.
+- **CyberCheck Bookings** = explicitly labeled **"Independent Product... a standalone booking platform that can also power GCR."** Universal booking engine, native checkout or external handoff, payments/deposits/waivers/waitlists.
+- **CyberCheck Reviews** = explicitly labeled **"Independent Product... a standalone review platform that can also display on GCR."** Verified reviews with evidence from bookings/receipts/QR/POS.
+- Confirmed real parent→child hub examples: Phoenix West II (condo building) → Unit 100K/1207/DP2; Zeke's Landing (marina) → Charters/Rentals/Dolphin Cruises; Tin Wharf → Restaurants/Store/Attractions; Salon → Stylists/Staff.
+- **Direct answer to "is GCR entity management the same as the business CRM":** No. GCR is the public discovery surface; Core is the shared data spine; Bookings and Reviews are separate products that plug into both. A business's `entity` (GCR listing) and its dashboard account are different records on the same spine, not the same thing.
+
+**Diagram 2 — "CyberCheck Connect" (email-to-automation, already documented in §5.8/PART1), new detail:** positions explicitly against **Zapier, Make, Parabola, and IFTTT** ("The Competition" vs. "Our Advantage" comparison table) — a third distinct competitive framing alongside the Toast/OpenTable/Mailchimp-style SaaS-replacement pitch and the FareHarbor/PeekPro-style booking-platform pitch. Confirms real source platforms named: Gmail, Airbnb, Booking.com, VRBO, Stripe, and others — closely matches (not identical to) the 24 extractors actually implemented in `gcr-api-clean/routes/email-parser.js`.
+
+**Diagram 3 — "SavvyCheck Bookings + Reviews Platform — Universal Flow Chart."** Note the brand name here is "SavvyCheck," not "CyberCheck" — reads as an alternate/white-label name for specifically the Bookings+Reviews independent-product pair from Diagram 1. This is the most technically precise document in the whole upload set — an actual system design, not sales copy:
+- **Intake pipeline:** Receive Data (API webhook / iCal / email-CSV) → Verify & Authenticate (signature check, OAuth/API key, source validation) → Normalize & Map (external objects → internal schema) → Deduplicate & Idempotency (external-ID matching, prevent duplicate) → Event Classification (new booking / update / cancellation / payment-refund).
+- **Core database tables named explicitly:** Business & Account, Catalog (offerings/categories/images/policies), Pricing (plans/categories/add-ons/fees/deposits), Bookings (quotes/bookings/participants/resource allocations/status history), Resources & Staff (staff/vehicles/rooms/equipment/groups), Availability (rules/calendar claims/exceptions/holds/projections), Payments (charges/refunds/invoicing/transactions), Reviews (eligibility/invitations/ratings/responses/moderation).
+- **12 named universal booking flow patterns** (this is more precise than anything in the earlier sections — use this as the actual spec for "the universal booking engine"): Appointment, Public Signature/Waiver, Hourly Rental, Restaurant Reservation, Class/Session, Ticket/Event, Long-term Rental/Application, Package/Combination, Multi-day Rental, Overnight Stay, Service Request, Recurring Booking. Each has its own field sequence (e.g., Restaurant Reservation: Location → Party Size → Date/Time → Confirm; Multi-day Rental: Asset → Start Date → Duration → Price → Pay).
+- **Review flow:** Booking Completed → Check Eligibility → Send Review Invitation (SMS/email, secure short-lived link) → Customer Submits Review → Moderation & Fraud Check → Publish Review (display on business page, optionally syndicate to GCR).
+- **Integration sync loop:** Dashboard Updates → Webhooks/API Push → Conflict Detection (double-booking, changes) → Receive & Sync → System in Sync.
+- Named third-party sources broader than the live codebase currently handles: FareHarbor, Peek, Viator, Xola, Booking.com, Resy, Square, Checkfront, Shopify, Priceline. Cross-check against `gcr-api-clean/routes/email-parser.js`'s 24 extractors — overlap confirmed on FareHarbor/Peek/Booking.com/Resy/Square; Viator, Xola, Checkfront, Shopify, Priceline are not yet implemented there.
+- **Data security section, explicit:** Row-Level Security, Encryption, Audit Logs, Backups, Compliance.
+
+If a booking-engine rebuild happens, this diagram — not my earlier generic GoHighLevel/FareHarbor comparison — is the actual spec to build against.
+
+---
+
+*Compiled from dashboard.zip (472 files), CyberMate pitch deck (16 slides), CyberCheck FOH pitch deck (15 slides), 2 product infographics, 4 aWavegent concierge landing pages, and 3 architecture diagrams.*
