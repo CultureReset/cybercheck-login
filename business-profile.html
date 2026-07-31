@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071827">
+<title>Business Profile</title>
+<style>
+:root{
+  --navy:#071827;--navy2:#0b2c43;--teal:#18c7b5;--teald:#078a7e;--orange:#ff7a1a;
+  --paper:#f4f8fa;--white:#fff;--ink:#102535;--muted:#657984;--line:#dbe6ea;
+  --green:#159767;--red:#c23636;--shadow:0 18px 55px rgba(5,28,44,.12);--safe:env(safe-area-inset-bottom,0px)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--paper)}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink);line-height:1.5}
+a{text-decoration:none;color:inherit}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:720px;margin:0 auto;min-height:100vh;background:#fff;box-shadow:var(--shadow)}
+.loader{display:flex;align-items:center;justify-content:center;gap:10px;min-height:60vh;color:var(--muted);font-size:.9rem}
+.spinner{width:18px;height:18px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--teal);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Hero */
+.hero{position:relative;padding:18px 16px 26px;color:#fff;background:linear-gradient(145deg,#061522,#0b3a56 70%,#0d4860)}
+.hero.has-image{background-size:cover;background-position:center}
+.hero-top{display:flex;justify-content:space-between;align-items:center;font-size:.7rem;color:rgba(255,255,255,.7);font-weight:800}
+.hero-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.badge{font-size:.68rem;font-weight:850;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.12)}
+.badge.open{background:rgba(21,151,103,.28);color:#b7ffe0}
+.badge.closed{background:rgba(194,54,54,.28);color:#ffd0d0}
+.hero h1{font-size:clamp(1.7rem,7vw,2.4rem);margin:12px 0 4px;letter-spacing:-.03em;line-height:1.05}
+.hero .sub{color:rgba(255,255,255,.8);font-size:.92rem;max-width:560px}
+.hero .meta{color:rgba(255,255,255,.68);font-size:.82rem;margin-top:8px}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:11px 16px;border-radius:13px;border:1px solid transparent;font-weight:850;font-size:.84rem}
+.btn.primary{background:linear-gradient(135deg,var(--orange),#ff9d4a);color:#fff}
+.btn.ghost{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+.btn.light{background:#fff;color:var(--ink);border-color:var(--line)}
+
+/* content */
+.content{padding:16px}
+.section{margin-top:20px}
+.section h2{font-size:1.02rem;margin:0 0 10px;letter-spacing:-.01em}
+.section h2 .n{color:var(--muted);font-weight:700;font-size:.8rem;margin-left:5px}
+.card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+
+/* family / parent-child */
+.family{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#f9fbfc;font-size:.83rem}
+.family a{color:var(--teald);font-weight:850}
+
+/* hours */
+.hours-grid{display:grid;gap:6px}
+.hours-row{display:flex;justify-content:space-between;font-size:.85rem;padding:6px 0;border-bottom:1px solid var(--line)}
+.hours-row:last-child{border-bottom:0}
+.hours-row.today{font-weight:850;color:var(--teald)}
+
+/* photos */
+.photo-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.photo-scroll img{width:150px;height:112px;object-fit:cover;border-radius:12px;flex:none;background:var(--line)}
+
+/* menu */
+.menu-section{margin-bottom:16px}
+.menu-section h3{font-size:.86rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 8px}
+.menu-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.menu-item:last-child{border-bottom:0}
+.menu-item .mi-name{font-weight:800;font-size:.9rem}
+.menu-item .mi-desc{color:var(--muted);font-size:.78rem;margin-top:2px}
+.menu-item .mi-opts{color:var(--muted);font-size:.72rem;margin-top:3px;font-style:italic}
+.menu-item .mi-price{font-weight:850;font-size:.86rem;white-space:nowrap}
+
+/* events / specials */
+.list-card{display:flex;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}
+.list-card .lc-date{flex:none;width:52px;text-align:center;font-weight:850;color:var(--teald);font-size:.78rem}
+.list-card .lc-body strong{display:block;font-size:.88rem}
+.list-card .lc-body span{color:var(--muted);font-size:.78rem}
+
+/* reviews */
+.review{border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:8px}
+.review .stars{color:#ef9b1e;font-size:.85rem}
+.review p{margin:8px 0 4px;font-size:.85rem;color:#425965}
+.review small{color:var(--muted)}
+
+/* faq */
+details{border:1px solid var(--line);border-radius:14px;padding:0 14px;margin-top:7px;background:#fff}
+summary{cursor:pointer;list-style:none;font-weight:850;padding:13px 26px 13px 0;position:relative;font-size:.88rem}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";position:absolute;right:0;top:10px;font-size:1.2rem;color:var(--teald)}
+details[open] summary:after{content:"–"}
+details p{color:var(--muted);padding:0 0 13px;margin:0;font-size:.83rem}
+
+/* generic sections (entity_sections) */
+.rich-section{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.rich-section img{width:100%;height:140px;object-fit:cover;display:block;background:var(--line)}
+.rich-section .rs-body{padding:13px}
+.rich-section h3{margin:0 0 4px;font-size:.95rem}
+.rich-section .rs-sub{color:var(--muted);font-size:.8rem;margin-bottom:8px}
+.rs-items{display:grid;gap:8px}
+.rs-item{display:flex;justify-content:space-between;gap:10px;font-size:.83rem}
+.rs-item span.price{color:var(--muted);white-space:nowrap}
+
+/* policies / facts */
+.kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv{border:1px solid var(--line);border-radius:12px;padding:10px}
+.kv b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px}
+.kv span{font-size:.85rem}
+
+.footer{text-align:center;padding:22px 16px calc(22px + var(--safe));color:var(--muted);font-size:.72rem}
+.error{padding:40px 20px;text-align:center;color:var(--red)}
+.error small{display:block;color:var(--muted);margin-top:6px}
+
+@media(min-width:760px){
+  .kv-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="app" class="loader"><div class="spinner"></div><span>Loading business profile…</span></div>
+</div>
+
+<script>
+const API = 'https://gcr-api-clean.vercel.app/api/gcr';
+
+function getParam(name){ return new URLSearchParams(location.search).get(name); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(v){ if (v === null || v === undefined || v === '') return ''; const n = Number(v); return isNaN(n) ? esc(v) : '$' + n.toFixed(2).replace(/\.00$/,''); }
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtTime(t){
+  if (!t) return '';
+  const m = String(t).match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return esc(t);
+  let h = parseInt(m[1],10); const min = m[2];
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if (h === 0) h = 12;
+  return `${h}:${min} ${ampm}`;
+}
+function fmtDate(d){
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  if (isNaN(dt)) return esc(d);
+  return `${MONTHS[dt.getMonth()]} ${dt.getDate()}`;
+}
+
+// ── Section renderers — each returns '' if it has nothing to show ──────────
+
+function renderHero(entity, hours){
+  const openRow = (hours||[]).find(h => h.day_of_week === new Date().getDay());
+  let statusBadge = '';
+  if (openRow) {
+    statusBadge = openRow.is_closed
+      ? `<span class="badge closed">Closed today</span>`
+      : `<span class="badge open">● Open today ${fmtTime(openRow.opens_at)}–${fmtTime(openRow.closes_at)}</span>`;
+  }
+  const city = [entity.city, entity.state].filter(Boolean).join(', ');
+  const heroStyle = entity.hero_image_url
+    ? ` has-image" style="background-image:linear-gradient(180deg,rgba(6,20,32,.35),rgba(6,20,32,.86)),url('${esc(entity.hero_image_url)}')"`
+    : '"';
+  const actions = [
+    entity.booking_url ? {label:'Book Now', url:entity.booking_url, cls:'primary'} : null,
+    entity.reservation_url ? {label:'Reserve', url:entity.reservation_url, cls:'primary'} : null,
+    entity.order_url ? {label:'Order Online', url:entity.order_url, cls:'ghost'} : null,
+    entity.phone ? {label:'📞 Call', url:`tel:${entity.phone}`, cls:'ghost'} : null,
+    entity.directions_url ? {label:'Directions', url:entity.directions_url, cls:'ghost'}
+      : (entity.formatted_address ? {label:'Directions', url:`https://maps.google.com/?q=${encodeURIComponent(entity.formatted_address)}`, cls:'ghost'} : null),
+    entity.website_url ? {label:'Website', url:entity.website_url, cls:'ghost'} : null,
+  ].filter(Boolean);
+
+  return `
+  <header class="hero${heroStyle}>
+    <div class="hero-top"><span>${esc(entity.entity_subtype || entity.entity_type || '')}</span><span>${city}</span></div>
+    <div class="hero-badges">
+      ${statusBadge}
+      ${entity.rating ? `<span class="badge">★ ${Number(entity.rating).toFixed(1)}${entity.review_count ? ` (${entity.review_count})` : ''}</span>` : ''}
+      ${entity.price_range ? `<span class="badge">${esc(entity.price_range)}</span>` : ''}
+    </div>
+    <h1>${esc(entity.name)}</h1>
+    ${entity.description ? `<p class="sub">${esc(entity.description)}</p>` : (entity.subtitle ? `<p class="sub">${esc(entity.subtitle)}</p>` : '')}
+    ${entity.formatted_address ? `<div class="meta">📍 ${esc(entity.formatted_address)}</div>` : ''}
+    ${actions.length ? `<div class="hero-actions">${actions.map(a => `<a class="btn ${a.cls}" href="${esc(a.url)}" target="_blank" rel="noopener">${a.label}</a>`).join('')}</div>` : ''}
+  </header>`;
+}
+
+function renderFamily(entity, childCount, isHub, parent){
+  if (isHub && childCount) {
+    return `<div class="section family"><span>Part of a group with <b>${childCount}</b> related listings</span><a href="?s=${encodeURIComponent(entity.slug)}#family-list" onclick="loadChildren(event,'${esc(entity.slug)}')">View all →</a></div><div id="family-list"></div>`;
+  }
+  if (parent && parent.name) {
+    return `<div class="section family"><span>Part of <b>${esc(parent.name)}</b></span><a href="?s=${encodeURIComponent(parent.slug)}">View parent →</a></div>`;
+  }
+  return '';
+}
+
+function renderHours(hours, secondaryHours){
+  if (!hours || !hours.length) return '';
+  const todayIdx = new Date().getDay();
+  const rows = DAYS.map((name, idx) => {
+    const row = hours.find(h => h.day_of_week === idx);
+    const text = !row ? 'Closed' : (row.is_closed ? 'Closed' : `${fmtTime(row.opens_at)} – ${fmtTime(row.closes_at)}`);
+    return `<div class="hours-row${idx===todayIdx?' today':''}"><span>${name}</span><span>${text}</span></div>`;
+  }).join('');
+  const secondary = (secondaryHours||[]).length
+    ? `<div class="card" style="margin-top:8px"><b style="font-size:.8rem">Additional hours</b>${secondaryHours.map(s => `<div class="hours-row"><span>${esc(s.hours_type||'')}</span><span>${fmtTime(s.opens_at)}–${fmtTime(s.closes_at)}</span></div>`).join('')}</div>`
+    : '';
+  return `<div class="section"><h2>Hours</h2><div class="card hours-grid">${rows}</div>${secondary}</div>`;
+}
+
+function renderPhotos(photos){
+  if (!photos || !photos.length) return '';
+  const sorted = [...photos].sort((a,b) => (a.sort_order||0)-(b.sort_order||0));
+  return `<div class="section"><h2>Photos <span class="n">${photos.length}</span></h2>
+    <div class="photo-scroll">${sorted.map(p => `<img src="${esc(p.url)}" alt="${esc(p.caption||'')}" loading="lazy">`).join('')}</div>
+  </div>`;
+}
+
+// menu_sections / drink_sections / happy_hour_sections each arrive as
+// [{id, section_name, sort_order, ..., items:[{item_name, description, price, is_available, ...}]}]
+// — items are already nested per section by the API, no grouping needed here.
+function renderMenuLike(title, sections, isDrink){
+  if (!sections || !sections.length) return '';
+  const ordered = [...sections].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const body = ordered.map(sec => {
+    const items = (sec.items||[]).filter(i => i.is_available !== false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    if (!items.length) return '';
+    return `
+    <div class="menu-section">
+      <h3>${esc(sec.section_name)}</h3>
+      ${items.map(item => `
+        <div class="menu-item">
+          <div>
+            <div class="mi-name">${esc(item.item_name)}${isDrink && item.is_on_tap ? ' 🚰' : ''}</div>
+            ${item.description ? `<div class="mi-desc">${esc(item.description)}</div>` : ''}
+          </div>
+          <div class="mi-price">${money(item.price)}</div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+  if (!body) return '';
+  return `<div class="section"><h2>${title}</h2><div class="card">${body}</div></div>`;
+}
+
+function renderHappyHour(sections, entity){
+  const hasSections = sections && sections.length;
+  if (!hasSections && !entity.hh_start) return '';
+  const timeLine = entity.hh_start ? `<div class="mi-desc" style="margin-bottom:8px">${esc(entity.hh_days||'')} · ${fmtTime(entity.hh_start)}–${fmtTime(entity.hh_end)}${entity.hh_description ? ' — ' + esc(entity.hh_description) : ''}</div>` : '';
+  const ordered = hasSections ? [...sections].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)) : [];
+  const body = ordered.map(sec => {
+    const items = (sec.items||[]).filter(i => i.is_available !== false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    if (!items.length) return '';
+    return `<div class="menu-section"><h3>${esc(sec.section_name)}</h3>${items.map(item => `
+      <div class="menu-item"><div><div class="mi-name">${esc(item.item_name)}</div>${item.description?`<div class="mi-desc">${esc(item.description)}</div>`:''}</div>
+      <div class="mi-price">${item.original_price?`<span style="text-decoration:line-through;color:var(--muted);font-weight:600;margin-right:5px">${money(item.original_price)}</span>`:''}${money(item.price)}</div></div>`).join('')}</div>`;
+  }).join('');
+  if (!timeLine && !body) return '';
+  return `<div class="section"><h2>Happy Hour</h2><div class="card">${timeLine}${body}</div></div>`;
+}
+
+function renderEvents(events){
+  if (!events || !events.length) return '';
+  const upcoming = events.filter(e => e.is_active !== false).sort((a,b)=>(a.event_date||'').localeCompare(b.event_date||''));
+  if (!upcoming.length) return '';
+  return `<div class="section"><h2>Events</h2>${upcoming.map(e => `
+    <div class="list-card">
+      <div class="lc-date">${e.recurring ? esc((e.day_of_week!=null?DAYS[e.day_of_week]:'').slice(0,3)) : fmtDate(e.event_date)}</div>
+      <div class="lc-body">
+        <strong>${esc(e.event_name)}${e.artist_name?` — ${esc(e.artist_name)}`:''}</strong>
+        <span>${e.start_time?fmtTime(e.start_time):''}${e.cover_charge?` · ${money(e.cover_charge)} cover`:''}</span>
+        ${e.description?`<div class="mi-desc">${esc(e.description)}</div>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderSpecials(specials){
+  if (!specials || !specials.length) return '';
+  const active = specials.filter(s => s.is_active !== false);
+  if (!active.length) return '';
+  return `<div class="section"><h2>Specials</h2>${active.map(s => `
+    <div class="list-card">
+      <div class="lc-date">${s.days ? esc(String(s.days).slice(0,3)) : '🏷️'}</div>
+      <div class="lc-body">
+        <strong>${esc(s.special_name)}</strong>
+        <span>${s.discount_text ? esc(s.discount_text) : (s.discount_value ? `${s.discount_value}${s.discount_type==='percent'?'% off':' off'}` : '')}</span>
+        ${s.description?`<div class="mi-desc">${esc(s.description)}</div>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderReviews(reviews){
+  if (!reviews || !reviews.length) return '';
+  const approved = reviews.filter(r => r.approved !== false).slice(0, 8);
+  if (!approved.length) return '';
+  return `<div class="section"><h2>Reviews <span class="n">${reviews.length}</span></h2>${approved.map(r => `
+    <div class="review">
+      <div class="stars">${'★'.repeat(Math.round(r.rating||5))}${'☆'.repeat(5-Math.round(r.rating||5))}</div>
+      ${r.title?`<strong style="display:block;margin-top:6px;font-size:.85rem">${esc(r.title)}</strong>`:''}
+      <p>${esc(r.body||'')}</p>
+      <small>${esc(r.reviewer_name||'Verified customer')}${r.verified_purchase?' · Verified':''}</small>
+    </div>`).join('')}</div>`;
+}
+
+function renderFaqs(faqs){
+  if (!faqs || !faqs.length) return '';
+  return `<div class="section"><h2>Questions</h2>${faqs.map(f => `<details><summary>${esc(f.question)}</summary><p>${esc(f.answer)}</p></details>`).join('')}</div>`;
+}
+
+function renderPolicies(policies){
+  if (!policies || !policies.length) return '';
+  return `<div class="section"><h2>Policies</h2>${policies.map(p => `<details><summary>${esc(p.title || p.type || p.policy_type)}</summary><p>${esc(p.body || p.content || '')}</p></details>`).join('')}</div>`;
+}
+
+// `sections` (the API's flexible offerings/marina/charter/rental pack) already
+// nests items per section as sec.items — each item may carry .tiers (age/season
+// price breakdowns from price_tiers or offering_prices).
+function renderSections(sections){
+  if (!sections || !sections.length) return '';
+  const active = [...sections].filter(s => s.is_active !== false).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  if (!active.length) return '';
+  const rendered = active.map(sec => {
+    const items = [...(sec.items||[])].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+    if (!items.length) return '';
+    return `<div class="rich-section">
+      ${sec.image_url ? `<img src="${esc(sec.image_url)}" alt="">` : ''}
+      <div class="rs-body">
+        <h3>${sec.icon?esc(sec.icon)+' ':''}${esc(sec.section_name)}</h3>
+        ${sec.subtitle ? `<div class="rs-sub">${esc(sec.subtitle)}</div>` : ''}
+        <div class="rs-items">${items.map(it => `
+          <div class="rs-item">
+            <span>${esc(it.item_name)}${it.description?` — <span style="color:var(--muted)">${esc(it.description)}</span>`:''}${it.duration?` <span style="color:var(--muted)">(${esc(it.duration)})</span>`:''}</span>
+            <span class="price">${it.price_label ? esc(it.price_label) : (it.price_from ? `${money(it.price_from)}${it.price_to?`–${money(it.price_to)}`:''}` : '')}</span>
+          </div>
+          ${(it.tiers||[]).length ? `<div style="padding-left:10px;margin-bottom:4px">${it.tiers.map(t => `
+            <div class="rs-item" style="font-size:.78rem"><span style="color:var(--muted)">${esc(t.label||'')}</span><span class="price">${money(t.price)}</span></div>`).join('')}</div>` : ''}
+        `).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if (!rendered) return '';
+  return `<div class="section"><h2>More</h2>${rendered}</div>`;
+}
+
+function renderIndustryFacts(facts){
+  if (!facts || typeof facts !== 'object') return '';
+  const entries = Object.entries(facts).filter(([k,v]) => v !== null && v !== '' && v !== undefined && k !== 'entity_slug');
+  if (!entries.length) return '';
+  const label = k => k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<div class="section"><h2>Details</h2><div class="kv-grid">${entries.map(([k,v]) => `
+    <div class="kv"><b>${esc(label(k))}</b><span>${esc(Array.isArray(v) ? v.join(', ') : v)}</span></div>`).join('')}</div></div>`;
+}
+
+function renderTags(tags){
+  if (!tags || !tags.length) return '';
+  return `<div class="section"><div style="display:flex;flex-wrap:wrap;gap:6px">${tags.map(t => `<span class="badge" style="background:#eef4f6;color:#425968">${esc(t.tag_name || t)}</span>`).join('')}</div></div>`;
+}
+
+function renderFooter(entity){
+  const links = [
+    entity.social_instagram ? `<a href="${entity.social_instagram.includes('http')?esc(entity.social_instagram):`https://instagram.com/${esc(entity.social_instagram)}`}" target="_blank" rel="noopener">Instagram</a>` : '',
+    entity.social_facebook ? `<a href="${esc(entity.social_facebook)}" target="_blank" rel="noopener">Facebook</a>` : '',
+    entity.social_tiktok ? `<a href="${esc(entity.social_tiktok)}" target="_blank" rel="noopener">TikTok</a>` : '',
+  ].filter(Boolean).join(' · ');
+  return `<div class="footer">${links ? links + '<br>' : ''}Powered by CyberCheck</div>`;
+}
+
+// ── Assemble ─────────────────────────────────────────────────────────────────
+
+function render(data){
+  // The API spreads every entity column directly onto the root response
+  // object (routes/gcr.js buildFullEntity: `return {...entity, ...}`, sent
+  // as-is via res.json(entity) with no wrapper) — there is no data.entity.
+  // `entity` below just means "this same object, read as the business record."
+  const entity = data;
+  const {
+    hours = [], secondary_hours = [], photos = [], tags = [],
+    events = [], specials = [], reviews = [], faqs = [], policies = [],
+    sections = [],
+    menu_sections = [], drink_sections = [], happy_hour_sections = [],
+    industry_facts = null,
+    child_count = 0, is_hub = false, parent = null,
+  } = data;
+
+  document.title = entity.name || 'Business Profile';
+
+  const blocks = [
+    renderHero(entity, hours),
+    `<div class="content">`,
+    renderFamily(entity, child_count, is_hub, parent),
+    renderMenuLike('Menu', menu_sections, false),
+    renderMenuLike('Drinks', drink_sections, true),
+    renderHappyHour(happy_hour_sections, entity),
+    renderEvents(events),
+    renderSpecials(specials),
+    renderSections(sections),
+    renderIndustryFacts(industry_facts),
+    renderPhotos(photos),
+    renderHours(hours, secondary_hours),
+    renderTags(tags),
+    renderReviews(reviews),
+    renderFaqs(faqs),
+    renderPolicies(policies),
+    `</div>`,
+    renderFooter(entity),
+  ].join('');
+
+  document.getElementById('app').outerHTML = `<div id="app">${blocks}</div>`;
+}
+
+window.loadChildren = async function(evt, slug){
+  evt.preventDefault();
+  const el = document.getElementById('family-list');
+  if (!el) return;
+  el.innerHTML = `<div class="loader" style="min-height:0;padding:16px"><div class="spinner"></div></div>`;
+  try {
+    const res = await fetch(`${API}/entities/${encodeURIComponent(slug)}/children`);
+    const kids = await res.json();
+    const list = Array.isArray(kids) ? kids : (kids.children || kids.entities || []);
+    el.innerHTML = `<div class="section"><div class="card" style="display:grid;gap:8px">${list.map(k => `
+      <a href="?s=${encodeURIComponent(k.slug)}" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:.85rem">
+        <span>${esc(k.name)}</span><span style="color:var(--teald)">View →</span>
+      </a>`).join('')}</div></div>`;
+  } catch (e) {
+    el.innerHTML = '';
+  }
+};
+
+async function load(){
+  const slug = getParam('s') || getParam('slug') || getParam('id');
+  if (!slug){
+    document.getElementById('app').innerHTML = `<div class="error">No business specified.<small>Use ?s=business-slug in the URL.</small></div>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/entity/${encodeURIComponent(slug)}`);
+    if (!res.ok) throw new Error(`Not found (${res.status})`);
+    const data = await res.json();
+    if (!data || !data.name || !data.slug) throw new Error('No data returned for this business.');
+    render(data);
+  } catch (e) {
+    document.getElementById('app').innerHTML = `<div class="error">Couldn't load this business page.<small>${esc(e.message)}</small></div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
