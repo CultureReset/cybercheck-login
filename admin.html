@@ -17444,7 +17444,7 @@
         : '';
 
       var cells = codes.map(function(c) {
-        var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        var url = c.scan_url || ('https://gcr-api-clean.vercel.app/api/qr/r/' + c.code);
         var qrImg = qrApiBase + encodeURIComponent(url);
         var labelHtml = '';
         if (labelMode === 'both')   labelHtml = '<div style="font-size:9pt;text-align:center;margin-top:2pt;line-height:1.2;word-break:break-word;max-width:' + size + 'in;"><strong>#' + c.seq_number + '</strong><br>' + (c.label||'') + '</div>';
@@ -17500,7 +17500,7 @@
       for (var i = 0; i < codes.length; i += batchSize) {
         var batch = codes.slice(i, i + batchSize);
         await Promise.all(batch.map(async function(c) {
-          var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+          var url = c.scan_url || ('https://gcr-api-clean.vercel.app/api/qr/r/' + c.code);
           var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=' + size + 'x' + size + '&format=png&data=' + encodeURIComponent(url);
           var filename = 'qr_' + String(c.seq_number).padStart(4,'0') + (c.label ? '_' + c.label.replace(/[^a-z0-9]/gi,'_').slice(0,30) : '') + '.png';
           try {
@@ -17595,7 +17595,7 @@
         var cx = margin + rowOffsetX + col*cellW, cy = margin + row*cellH;
         var qx = cx + gutter, qy = cy + gutter;
         if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
-        var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        var url = c.scan_url || ('https://gcr-api-clean.vercel.app/api/qr/r/' + c.code);
         try { doc.addImage(_qrPng(url, imgPx), 'PNG', qx, qy, p.size, p.size); } catch(e) {}
         if (p.cropMarks) {
           doc.setDrawColor(170); doc.setLineWidth(0.006); doc.setLineDashPattern([0.05,0.05], 0);
@@ -17648,7 +17648,7 @@
         var cx = (margin + rowOffsetX + col*cellW)*DPI, cy = (margin + row*cellH)*DPI;
         var qx = cx + gutter*DPI, qy = cy + gutter*DPI;
         if ((i % 5) === 0) { status.textContent = 'Rendering ' + (i+1) + '/' + codes.length + '…'; await new Promise(function(r){ setTimeout(r,0); }); }
-        var url = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        var url = c.scan_url || ('https://gcr-api-clean.vercel.app/api/qr/r/' + c.code);
         var dataUrl = new QRious({ value: url, size: imgPx, level: 'M' }).toDataURL('image/png');
         var img = new Image();
         await new Promise(function(res){ img.onload=res; img.onerror=res; img.src = dataUrl; });
@@ -17920,7 +17920,7 @@
       };
 
       var rows = codes.map(function(c) {
-        var scanUrl = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        var scanUrl = c.scan_url || ('https://gcr-api-clean.vercel.app/api/qr/r/' + c.code);
         var placementIcon = c.placement === 'portable' ? '✋' : '📍';
         return '<tr style="border-top:1px solid var(--card-border);">' +
           '<td style="padding:10px 8px;font-weight:600;color:#38bdf8;">#' + (c.seq_number||'—') + '</td>' +
@@ -18280,7 +18280,7 @@
       if (!codes.length) { alert('No codes to export'); return; }
       var header = ['#','Label','Type','Location','Placement','Scan URL','Scans','Active','Created'];
       var rows = codes.map(function(c) {
-        var scanUrl = c.scan_url || ('https://gcr-unified.vercel.app/q.html?c=' + c.code);
+        var scanUrl = c.scan_url || ('https://gcr-api-clean.vercel.app/api/qr/r/' + c.code);
         return [c.seq_number, c.label, c.type, c.location||'', c.placement||'fixed', scanUrl, c.scan_count||0, c.active?'Yes':'No', c.created_at ? c.created_at.split('T')[0] : ''].map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
       });
       var csv = [header.join(',')].concat(rows).join('\n');
