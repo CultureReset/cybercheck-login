@@ -1,87 +1,20 @@
-# CyberCheck Business Dashboard Platform
+# cybercheck-login
 
-**Multi-tenant business management dashboard** - Works for ALL business types (rentals, restaurants, salons, shops, etc.)
+The original CyberCheck business platform: about a hundred static HTML pages with vanilla JavaScript for the admin and for each business (dashboards, menu editor, booking, automations, onboarding, an app store), served from Vercel and backed by the Gulf Coast Radar API.
 
-## Features
+No build step. Every page talks to [`gcr-api-clean`](https://github.com/CultureReset/gcr-api-clean); the address is set in `config.js`. This platform has been replaced by [`Admin-dashboard-main`](https://github.com/CultureReset/Admin-dashboard-main) and [`Dashboards-users-`](https://github.com/CultureReset/Dashboards-users-).
 
-### Core Modules (All Businesses)
-- 📊 **Analytics** - Traffic, conversions, revenue tracking
-- 🔍 **SEO Manager** - Meta tags, sitemap generation, schema.org
-- 📱 **Social Media** - Post to Facebook, Instagram, Twitter, TikTok, YouTube
-- 👥 **Customers** - CRM with full customer database
-- ⭐ **Reviews** - Review management and responses
-- 💬 **Messaging** - SMS notifications and customer communication
-- 🎨 **Theme Editor** - Customize colors, fonts, branding
-- 🌐 **Domain Manager** - Custom domain setup
-- 💳 **Billing** - Subscription and payment management
-- 🔗 **Connections** - OAuth integrations (Stripe, Square, Google, etc.)
+## What is here
 
-### Business-Type Specific Modules
-**Rental Businesses** (boats, bikes, equipment):
-- Fleet management
-- Availability calendar
-- Digital waivers
-- Add-ons (docks, helmets, etc.)
+| Path | What it holds |
+|---|---|
+| `*.html` (root) | The admin and business pages: admin dashboard and pricing, business dashboard, booking, menu and card builders, automations, claim a business, app store, QR tracker, tourist admin |
+| `apps/` | The installable apps the app store lists, one folder each |
+| `api/` | Vercel serverless functions used by the pages |
+| `js/`, `css/`, `tabs/`, `shared-data.js` | Shared scripts, styles and dashboard tabs |
+| `integrations/`, `migrations/`, `tools/` | Integration helpers, SQL migrations and maintenance scripts |
+| `GCR_DATA_FLOW.md`, `ADMIN_EDIT_CAPABILITIES.md`, `MENU_SYSTEMS_COMPARISON.md` | How data moves, what the admin can edit, and how the menu systems compare |
 
-**Bakery/Restaurant** (coming soon):
-- Product catalog
-- Orders management
-- Categories & variants
-- Inventory tracking
+## Run it
 
-## Tech Stack
-
-- **Frontend**: Vanilla JavaScript (no framework dependencies)
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
-- **Payments**: Stripe Connect
-- **CSS**: Custom CSS variables for easy theming
-
-## Setup
-
-1. Install Supabase and get your credentials
-2. Update `js/supabase-client.js` with your Supabase URL and anon key
-3. Deploy database schema (see backend-api repository)
-4. Open `index.html` in browser or deploy to hosting
-
-## Multi-Tenant Architecture
-
-- Each business has a unique `site_id`
-- Row Level Security (RLS) ensures data isolation
-- Same dashboard code serves all businesses
-- User sees only their business data after login
-
-## Login
-
-Default demo credentials:
-```
-Email: beachsideboats@myyahoo.com
-Password: BeachBoats2026!
-```
-
-Create new businesses using the backend API.
-
-## File Structure
-
-```
-/
-├── index.html           - Main dashboard app
-├── login.html          - Login page
-├── css/
-│   ├── dashboard.css   - Main styles
-│   └── analytics-seo-social.css - Marketing module styles
-├── js/
-│   ├── cc.js           - API client
-│   ├── analytics.js    - Analytics module
-│   ├── seo.js          - SEO manager module
-│   ├── social.js       - Social media module
-│   ├── bookings.js     - Booking management
-│   ├── customers.js    - Customer CRM
-│   ├── reviews.js      - Review management
-│   └── [27 other modules...]
-└── shared-data.js      - Configuration
-```
-
-## License
-
-Proprietary - CyberCheck Platform
+Serve the folder with any static server, or deploy it to Vercel as is; `vercel.json` holds the rewrites. Last changed August 2, 2026.
