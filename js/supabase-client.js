@@ -3,7 +3,7 @@
 // Uses same DB as gcr-api-clean for unified menu editing
 // ============================================
 const SUPABASE_URL = 'https://mkepugvdlktfsossumox.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZXB1Z3ZkbGt0ZnNvc3N1bW94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MjI0MDEsImV4cCI6MjA5NDk5ODQwMX0.27ZrHwtt0RtQvFA24w4LCH0fTKxkpvT_R1aaqvSIo3w';
+const SUPABASE_ANON_KEY = 'sb_publishable_SNFfXg2xyVrJYi_yWhDqdw_dGSoKQN9';
 
 // Save CDN reference BEFORE var declaration overwrites window.supabase
 var _supabaseLib = window.supabase;
